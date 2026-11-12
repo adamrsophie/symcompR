@@ -606,7 +606,65 @@ ask_fact <- function(e, fact) {
                        isTRUE(f[["nonzero"]]), TRUE))
   nirr <- sum(vapply(fs, function(f) isTRUE(f[["irrational"]]), TRUE))
   if (nirr == 1L && nrat == length(fs) - 1L) out["irrational"] <- TRUE
+  # Mul._eval_is_extended_real, _eval_is_extended_positive and
+  # _eval_is_extended_negative, for factors that may be infinite
+  set <- function(nm, v) if (!is.na(v) && is.na(out[nm] %||% NA)) out[nm] <<- v
+  set("extended_real", .mul_real_imag(fs, TRUE))
+  set("extended_positive", .mul_pos_neg(fs, 1L))
+  if (is_const(e$args[[1L]], "NegativeOne") || (e$args[[1L]]$type == "Integer" && e$args[[1L]]$value == -1)) {
+    rest <- fs[-1L]
+    set("extended_negative", if (length(rest) == 1L) rest[[1L]][["extended_positive"]] else .mul_pos_neg(rest, 1L))
+  } else set("extended_negative", .mul_pos_neg(fs, -1L))
   out
+}
+
+# Mul._eval_real_imag
+.mul_real_imag <- function(fs, real) {
+  zero <- FALSE
+  t_not <- NULL
+  allfin <- function() all(vapply(fs, function(f) isTRUE(f[["finite"]]), NA))
+  for (f in fs) {
+    ci <- if (isTRUE(f[["complex"]])) TRUE else f[["infinite"]]
+    if (identical(ci, FALSE) && isFALSE(f[["extended_real"]])) return(FALSE)
+    if (isTRUE(f[["imaginary"]])) {
+      real <- !real
+    } else if (isTRUE(f[["extended_real"]])) {
+      if (!isTRUE(zero)) {
+        z <- f[["zero"]]
+        if (!isTRUE(z) && identical(zero, FALSE)) zero <- z
+        else if (isTRUE(z)) return(if (allfin()) TRUE else NA)
+      }
+    } else if (isFALSE(f[["extended_real"]]) || isFALSE(f[["imaginary"]])) {
+      if (!is.null(t_not)) return(NA)
+      t_not <- f
+    } else return(NA)
+  }
+  if (!is.null(t_not)) {
+    if (isFALSE(t_not[["extended_real"]]) && real) return(zero)
+    if (isFALSE(t_not[["imaginary"]]) && !real) return(zero)
+    return(NA)
+  }
+  if (identical(zero, FALSE)) return(real)
+  if (real) return(real)
+  NA
+}
+
+# Mul._eval_pos_neg
+.mul_pos_neg <- function(fs, sign) {
+  saw_NON <- saw_NOT <- FALSE
+  for (f in fs) {
+    if (isTRUE(f[["extended_positive"]])) next
+    if (isTRUE(f[["extended_negative"]])) sign <- -sign
+    else if (isTRUE(f[["zero"]])) return(if (all(vapply(fs, function(g) isTRUE(g[["finite"]]), NA))) FALSE else NA)
+    else if (isTRUE(f[["extended_nonpositive"]])) { sign <- -sign; saw_NON <- TRUE }
+    else if (isTRUE(f[["extended_nonnegative"]])) saw_NON <- TRUE
+    else if (isFALSE(f[["positive"]])) { sign <- -sign; if (saw_NOT) return(NA); saw_NOT <- TRUE }
+    else if (isFALSE(f[["negative"]])) { if (saw_NOT) return(NA); saw_NOT <- TRUE }
+    else return(NA)
+  }
+  if (sign == 1L && !saw_NON && !saw_NOT) return(TRUE)
+  if (sign < 0L) return(FALSE)
+  NA
 }
 
 .pow_facts <- function(e) {
@@ -658,7 +716,53 @@ ask_fact <- function(e, fact) {
   if (isTRUE(fb[["nonzero"]]) && isTRUE(fb[["finite"]]) && isTRUE(fx[["finite"]]))
     out["zero"] <- FALSE
   if (isTRUE(fb[["zero"]]) && isTRUE(fx[["positive"]])) out["zero"] <- TRUE
+  set <- function(nm, v) if (length(v) == 1L && !is.na(v) && is.na(out[nm] %||% NA)) out[nm] <<- v
+  set("extended_positive", .pow_ext_positive(b, x, fb, fx))
+  set("extended_negative", .pow_ext_negative(b, x, fb, fx))
+  set("extended_real", .pow_ext_real(b, x, fb, fx))
   out
+}
+
+# Pow._eval_is_extended_positive
+.pow_ext_positive <- function(b, x, fb, fx) {
+  if (identical(b$key, x$key)) return(if (isTRUE(fb[["extended_nonnegative"]])) TRUE else NA)
+  if (isTRUE(fb[["positive"]])) return(if (isTRUE(fx[["real"]])) TRUE else NA)
+  if (isTRUE(fb[["extended_negative"]])) return(if (isTRUE(fx[["even"]])) TRUE else if (isTRUE(fx[["odd"]])) FALSE else NA)
+  if (isTRUE(fb[["zero"]])) return(if (isTRUE(fx[["extended_real"]])) fx[["zero"]] else NA)
+  if (isTRUE(fb[["extended_nonpositive"]])) return(if (isTRUE(fx[["odd"]])) FALSE else NA)
+  if (isTRUE(fb[["imaginary"]]) && x$type == "Integer") return(gmp::mod.bigz(gmp::numerator(x$value), 4) == 0)
+  NA
+}
+# Pow._eval_is_extended_negative
+.pow_ext_negative <- function(b, x, fb, fx) {
+  if (identical(x$key, S_Half$key) && (isTRUE(fb[["complex"]]) || isTRUE(fb[["extended_real"]]))) return(FALSE)
+  if (isTRUE(fb[["extended_negative"]])) {
+    if (isTRUE(fx[["odd"]]) && isTRUE(fb[["finite"]])) return(TRUE)
+    if (isTRUE(fx[["even"]])) return(FALSE)
+  } else if (isTRUE(fb[["extended_positive"]]) || isTRUE(fb[["zero"]])) {
+    if (isTRUE(fx[["extended_real"]])) return(FALSE)
+  } else if (isTRUE(fb[["extended_nonnegative"]])) {
+    if (isTRUE(fx[["extended_nonnegative"]])) return(FALSE)
+  } else if (isTRUE(fb[["extended_nonpositive"]]) || isTRUE(fb[["extended_real"]])) {
+    if (isTRUE(fx[["even"]])) return(FALSE)
+  }
+  NA
+}
+# Pow._eval_is_extended_real, the real base and exponent cases
+.pow_ext_real <- function(b, x, fb, fx) {
+  if (is_const(b, "E")) return(if (isTRUE(fx[["extended_real"]])) TRUE else NA)
+  real_b <- fb[["extended_real"]]; real_e <- fx[["extended_real"]]
+  if (is.na(real_b) || is.na(real_e)) return(NA)
+  if (real_b && real_e) {
+    if (isTRUE(fb[["extended_positive"]])) return(TRUE)
+    if (isTRUE(fb[["extended_nonnegative"]]) && isTRUE(fx[["extended_nonnegative"]])) return(TRUE)
+    if (isTRUE(fx[["integer"]]) && isTRUE(fb[["extended_nonzero"]])) return(TRUE)
+    if (isTRUE(fx[["integer"]]) && isTRUE(fx[["nonnegative"]])) return(TRUE)
+    if (isTRUE(fb[["extended_negative"]]) && x$type %in% c("Integer", "Rational")) return(FALSE)
+  }
+  if (real_e && isTRUE(fx[["extended_negative"]]) && isFALSE(fb[["zero"]]))
+    return(ask_fact(.pow(b, .neg(x)), "extended_real"))
+  NA
 }
 
 .function_facts <- function(e) {

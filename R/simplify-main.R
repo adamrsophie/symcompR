@@ -414,7 +414,7 @@ nc_simplify <- function(expr, deep = TRUE) {
   if (ismat) {
     expr <- doit(expr)
     tA <- "MatAdd"; tM <- "MatMul"; tP <- "MatPow"; tS <- "MatrixSymbol"
-    fA <- function(xs) do.call(MatAdd, xs); fM <- function(xs) if (length(xs) == 1L) xs[[1L]] else do.call(MatMul, xs)
+    fA <- function(xs) do.call(.madd, xs); fM <- function(xs) if (length(xs) == 1L) xs[[1L]] else do.call(.mm, xs)
     fP <- function(b, e) MatPow(b, e)
   } else {
     tA <- "Add"; tM <- "Mul"; tP <- "Pow"; tS <- "Symbol"
@@ -549,7 +549,7 @@ nc_simplify <- function(expr, deep = TRUE) {
       post <- if (is_zero_num(post_exp)) S_One else fP(post_arg, post_exp)
     }
   }
-  mulp <- function(a, b) if (ismat) { if (is_one_num(a)) b else if (is_one_num(b)) a else MatMul(a, b) } else .mul(list(a, b))
+  mulp <- function(a, b) if (ismat) { if (is_one_num(a)) b else if (is_one_num(b)) a else .mm(a, b) } else .mul(list(a, b))
   if (!is.null(simp)) {
     subterm <- fP(nc_simplify(simp[[2L]], deep = deep), simp[[3L]])
     pre <- nc_simplify(mulp(if (simp[[1L]] > 0) fM(args[seq_len(simp[[1L]])]) else S_One, pre), deep = deep)

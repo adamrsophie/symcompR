@@ -6,7 +6,7 @@
 
 .free_sym_list <- function(e) {
   t <- e$type
-  if (t == "Symbol" || t == "Dummy") return(stats::setNames(list(e), e$key))
+  if (t == "Symbol" || t == "Dummy" || t == "MatrixSymbol") return(stats::setNames(list(e), e$key))
   if (!length(e$args)) return(list())
   cacheable <- nchar(e$key) < 9000L
   if (cacheable) {

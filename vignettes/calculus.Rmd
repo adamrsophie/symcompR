@@ -1,0 +1,322 @@
+---
+title: "Calculus: derivatives, limits, series, and sums"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Calculus: derivatives, limits, series, and sums}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+This vignette covers differentiation, limits, series expansions, symbolic
+sums and products, finite differences, and the tools for studying a function
+on an interval: singularities, extrema, monotonicity, periodicity, and
+interval arithmetic with `AccumBounds`. Integration has its own vignette.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); t <- Symbol("t")
+h <- Symbol("h")
+n <- Symbol("n", integer = TRUE); k <- Symbol("k", integer = TRUE)
+f <- Function("f"); g <- Function("g")
+```
+
+## Derivatives
+
+symcompR provides a `diff()` method for symbolic expressions. The variables
+follow the expression; a number after a variable gives the order of
+differentiation with respect to it.
+
+```{r}
+diff(sin(x) * exp(x), x)
+diff(atan(x), x)
+diff(x^4, x, 3)
+diff(x^2 * y^3, x, y)
+diff(x^2 * y^3, x, 2, y)
+```
+
+Derivatives of undefined functions stay unevaluated, and the product and
+chain rules are applied as usual.
+
+```{r}
+diff(f(x) * g(x), x)
+diff(f(x), x, 2)
+```
+
+`Derivative()` builds an unevaluated derivative, which `doit()` evaluates.
+This is useful to display a derivative or to build differential equations.
+
+```{r}
+d <- Derivative(cos(x)^2, x)
+d
+doit(d)
+```
+
+`idiff()` differentiates implicitly: for the circle $x^2 + y^2 = 4$ it
+returns $dy/dx$ with $y$ treated as a function of $x$.
+
+```{r}
+idiff(x^2 + y^2 - 4, y, x)
+```
+
+## Limits
+
+`limit(e, x, x0)` computes the limit of `e` as `x` approaches `x0`. It uses
+the Gruntz algorithm, so it handles essential singularities and limits at
+infinity. The default direction is from the right (`"+"`); `"-"` takes the
+limit from the left.
+
+```{r}
+limit(sin(x) / x, x, 0)
+limit((1 + 1 / x)^x, x, oo)
+limit((x - sin(x)) / x^3, x, 0)
+limit(x^x, x, 0)
+limit(sqrt(x^2 + x) - x, x, oo)
+limit(log(x) / x, x, oo)
+limit(sym_factorial(n) / n^n, n, oo)
+```
+
+One sided limits differ at a pole or a jump:
+
+```{r}
+limit(1 / x, x, 0, "+")
+limit(1 / x, x, 0, "-")
+limit(exp(-1 / x), x, 0, "-")
+```
+
+With `"+-"` the two sided limit is required, and an error is raised when the
+sides disagree.
+
+```{r}
+tryCatch(limit(abs(x) / x, x, 0, "+-"), error = function(e) conditionMessage(e))
+```
+
+When an expression oscillates, the limit is the set of accumulation points,
+returned as an `AccumBounds` interval (see below).
+
+```{r}
+limit(sin(1 / x), x, 0)
+```
+
+`Limit()` is the unevaluated form, and `gruntz()` calls the core algorithm
+directly.
+
+```{r}
+L <- Limit(sin(x) / x, x, 0)
+L
+doit(L)
+gruntz(exp(x) / x^100, x, oo)
+```
+
+## Series expansions
+
+`series(e, x, x0, n)` computes the expansion of `e` around `x0` up to, but
+not including, order `n`. The default is `x0 = 0` and `n = 6`. The result
+carries an order term `O()` that records the truncation.
+
+```{r}
+series(cos(x), x)
+series(exp(x), x, 0, 4)
+series(tan(x), x, 0, 8)
+series(sin(x) / x, x, 0, 6)
+series(exp(x), x, 1, 3)
+series(cos(x), x, sym_pi, 4)
+```
+
+Laurent series, fractional powers, logarithmic terms, and expansions at
+infinity are supported.
+
+```{r}
+series(1 / sin(x), x, 0, 4)
+series(sqrt(x) * exp(x), x, 0, 3)
+series(x^x, x, 0, 3)
+series(gamma(x), x, 0, 2)
+series(exp(1 / x), x, oo, 3)
+series(atan(x), x, oo, 6)
+```
+
+`removeO()` drops the order term, `getO()` extracts it, and order terms can
+be manipulated directly: they absorb all higher order terms.
+
+```{r}
+removeO(series(log(1 + x), x, 0, 5))
+getO(x + x^2 + O(x^4))
+O(x^2) + x^3
+```
+
+The leading term and a single Taylor coefficient are available directly.
+
+```{r}
+as_leading_term(sin(x) / x, x)
+leadterm(1 / x + x^2, x)
+taylor_term(sin(x), x, 5)
+```
+
+`residue()` computes the residue of a function at a pole.
+
+```{r}
+residue(1 / (x^2 + 1), x, sym_I)
+```
+
+## Sums
+
+`summation(f, list(k, a, b))` evaluates a sum symbolically. The bounds may be
+symbolic or infinite.
+
+```{r}
+summation(k, list(k, 1, n))
+summation(k^2, list(k, 1, n))
+factor_sym(summation(k^3, list(k, 1, n)))
+summation(2^k, list(k, 0, n - 1))
+summation(1 / (k * (k + 1)), list(k, 1, n))
+summation(1 / k^2, list(k, 1, oo))
+summation((-1)^k / (2 * k + 1), list(k, 0, oo))
+summation(x^k / sym_factorial(k), list(k, 0, oo))
+```
+
+`Sum()` is the unevaluated form. `doit()` evaluates it, and
+`is_convergent()` and `is_absolutely_convergent()` test infinite series.
+
+```{r}
+s <- Sum(1 / k^3, list(k, 1, oo))
+s
+doit(s)
+is_convergent(Sum(1 / k^2, list(k, 1, oo)))
+is_convergent(Sum(1 / k, list(k, 1, oo)))
+is_convergent(Sum((-1)^k / k, list(k, 1, oo)))
+is_absolutely_convergent(Sum((-1)^k / k, list(k, 1, oo)))
+```
+
+`gosper_sum()` applies Gosper's algorithm for hypergeometric terms directly.
+
+```{r}
+gosper_sum(k * sym_factorial(k), list(k, 0, n))
+```
+
+A `Sum` can be transformed before it is evaluated. `change_index()`
+substitutes the summation variable, `reverse_order()` and `reorder_limit()`
+reverse or swap limits, `sym_reorder()` reorders the limits by variable,
+and `sum_index()` gives the position of a variable among the limits.
+`euler_maclaurin()` returns the Euler-Maclaurin approximation of a sum and
+an error estimate.
+
+```{r}
+change_index(Sum(x, list(x, 1, n)), x, x + 1, y)
+reverse_order(Sum(x, list(x, 1, 3)), 0)
+reorder_limit(Sum(x * y, list(x, 1, 3), list(y, 1, 2)), 0, 1)
+sym_reorder(Sum(x * y, list(x, 1, 3), list(y, 1, 2)), list(x, y))
+sum_index(Sum(x * y, list(x, 1, 3), list(y, 1, 2)), y)
+euler_maclaurin(Sum(k, list(k, 1, 10)))[[1]]
+euler_maclaurin(Sum(1 / k^2, list(k, 1, oo)), 0, 2)[[1]]
+```
+
+`deltasummation()` and `deltaproduct()` handle sums and products of
+Kronecker deltas without evaluating the general case.
+
+```{r}
+i <- Symbol("i", integer = TRUE); j <- Symbol("j", integer = TRUE)
+deltasummation(KroneckerDelta(i, k), list(k, 0, oo))
+deltasummation(KroneckerDelta(i, k), list(k, 1, 3))
+deltaproduct(KroneckerDelta(i, j), list(j, 1, 3))
+```
+
+## Products
+
+`product()` and `Product()` work the same way for products.
+
+```{r}
+product(k, list(k, 1, n))
+product(2, list(k, 1, n))
+product(1 + 1 / k, list(k, 1, n))
+doit(Product(k, list(k, 1, 5)))
+```
+
+## Finite differences
+
+`differentiate_finite()` replaces derivatives by central differences.
+`finite_diff_weights()` computes the weights of a finite difference formula on
+any grid, and `apply_finite_diff()` applies them to function values.
+
+```{r}
+differentiate_finite(f(x), x)
+w <- finite_diff_weights(1, list(-1, 0, 1), 0)
+vapply(w[[2]][[3]], sstr, "")
+apply_finite_diff(1, list(x - h, x, x + h), list(f(x - h), f(x), f(x + h)), x)
+difference_delta(n^2, n)
+```
+
+The weights $-1/2, 0, 1/2$ are the familiar central difference
+$f'(x) \approx (f(x+h) - f(x-h)) / (2h)$.
+
+## Studying a function
+
+The calculus utilities answer questions about a function of one variable on
+a domain, which defaults to the real line.
+
+```{r}
+singularities(1 / (x^2 - 1), x)
+singularities(log(x), x)
+stationary_points(x^3 - 3 * x, x)
+stationary_points(sin(x), x, Interval(0, 2 * sym_pi))
+minimum(x^2 + 2 * x + 3, x)
+minimum(x^3 - 3 * x, x, Interval(-2, 3))
+maximum(-x^2 + 4 * x, x)
+maximum(sin(x), x, Interval(0, sym_pi))
+```
+
+Monotonicity and convexity:
+
+```{r}
+is_increasing(x^3, Interval(-oo, oo))
+is_strictly_increasing(exp(x))
+is_decreasing(1 / x, Interval(0, oo, TRUE))
+is_convex(x^2, x)
+is_strictly_decreasing(1 / (x^2 - 3 * x), Interval_open(Rational(3, 2), 3))
+is_monotonic(exp(x))
+```
+
+`periodicity()` returns the fundamental period, or `NULL` for a function that
+is not periodic, and `continuous_domain()` finds where a function is
+continuous.
+
+```{r}
+periodicity(sin(2 * x), x)
+periodicity(sin(x) + cos(3 * x / 2), x)
+periodicity(exp(x), x)
+continuous_domain(1 / x, x, Reals)
+continuous_domain(log(x) + sqrt(1 - x), x, Reals)
+```
+
+`euler_equations()` derives the Euler-Lagrange equations of a functional.
+For the harmonic oscillator Lagrangian $L = \dot f^2/2 - f^2/2$:
+
+```{r}
+euler_equations(diff(f(t), t)^2 / 2 - f(t)^2 / 2, f(t), t)
+```
+
+## Interval arithmetic with `AccumBounds`
+
+`AccumBounds(a, b)` represents an unknown value somewhere in $[a, b]$.
+Arithmetic on these bounds gives guaranteed enclosures, and functions such as
+`sin()` return them at infinity.
+
+```{r}
+AccumBounds(-1, 1) + AccumBounds(2, 3)
+AccumBounds(-1, 2)^2
+1 / AccumBounds(1, 2)
+ab_union(AccumBounds(1, 3), AccumBounds(2, 4))
+AccumulationBounds(-1, 1)
+AccumBounds(0, 1) * AccumBounds(-1, 3)
+sin(oo)
+limit(sin(x), x, oo)
+```
+
+`not_empty_in()` finds the values of a parameter for which a set expression
+is nonempty: here, where at least one of $x$ and $2x$ lies in $[1, 2]$.
+
+```{r}
+not_empty_in(Intersection(FiniteSet(x, 2 * x), Interval(1, 2)), x)
+```

@@ -27,7 +27,7 @@ Ops.sym <- function(e1, e2) {
     a <- as_sym(e1)
     if (.Generic == "-" && .is_seq(a)) return(.seq_coeff_mul(a, S_NegativeOne))
     if (.Generic == "-" && .is_fourier(a)) return(scale(a, -1))
-    if (.Generic == "-" && .is_matexpr(a)) return(MatMul(S_NegativeOne, a))
+    if (.Generic == "-" && .is_matexpr(a)) return(doit(MatMul(S_NegativeOne, a)))
     if (.Generic == "-" && .fps_is(a)) return(.fps_neg(a))
     # Dimension.__neg__ returns the dimension
     if (.Generic == "-" && a$type == "Dimension") return(a)
@@ -227,15 +227,17 @@ c.sym <- function(...) lapply(list(...), as_sym)
               GreaterThan = if (ge_inf(a, b)) TRUE, LessThan = if (ge_inf(b, a)) TRUE,
               StrictLessThan = if (ge_inf(a, b)) FALSE, StrictGreaterThan = if (ge_inf(b, a)) FALSE)
   if (!is.null(r)) return(if (r) S_true else S_false)
+  # is_ge reads diff.is_extended_nonnegative (the sign facts of an
+  # extended real difference)
+  sg <- function(n) {
+    v <- fd[paste0("extended_", n)][[1L]]
+    isTRUE(v) || (is.na(v %||% NA) && isTRUE(fd[[n]]))
+  }
   r <- switch(type,
-              StrictLessThan = if (isTRUE(fd[["negative"]])) TRUE
-                               else if (isTRUE(fd[["nonnegative"]])) FALSE else NA,
-              LessThan = if (isTRUE(fd[["nonpositive"]])) TRUE
-                         else if (isTRUE(fd[["positive"]])) FALSE else NA,
-              StrictGreaterThan = if (isTRUE(fd[["positive"]])) TRUE
-                                  else if (isTRUE(fd[["nonpositive"]])) FALSE else NA,
-              GreaterThan = if (isTRUE(fd[["nonnegative"]])) TRUE
-                            else if (isTRUE(fd[["negative"]])) FALSE else NA)
+              StrictLessThan = if (sg("negative")) TRUE else if (sg("nonnegative")) FALSE else NA,
+              LessThan = if (sg("nonpositive")) TRUE else if (sg("positive")) FALSE else NA,
+              StrictGreaterThan = if (sg("positive")) TRUE else if (sg("nonpositive")) FALSE else NA,
+              GreaterThan = if (sg("nonnegative")) TRUE else if (sg("negative")) FALSE else NA)
   if (is.na(r) && !length(free_symbols(d)) && isTRUE(fd[["real"]]) && !is_number_type(d) && !is_inf_const(d)) {
     # a comparable real constant: its sign from certified double bounds
     bd <- tryCatch(.nt_bounds(d), error = function(err) NULL)
@@ -521,7 +523,7 @@ def_function("Mod", nargs = 2L,
   if (q < 0 && f != q) f + 1 else f
 }
 
-# Mod's _eval_Mod hooks (Pow, factorial).
+# Mod's _eval_Mod hooks (Pow, factorial, binomial, partition).
 .mod_hook <- function(p, q) {
   if (p$type == "Pow") {
     b <- p$args[[1L]]; e <- p$args[[2L]]
@@ -557,8 +559,19 @@ def_function("Mod", nargs = 2L,
       }
     }
   }
-  # ponytail: binomial and partition hooks only act on explicit integers,
-  # which evaluate before Mod sees them; port them with unevaluated input.
+  if (p$type == "Function" && identical(p$name, "binomial")) {
+    # binomial._eval_Mod; its all-Integer branch needs an unevaluated
+    # binomial, which R never builds (binomial of integers evaluates)
+    if (any(vapply(list(p$args[[1L]], p$args[[2L]], q), function(z) identical(ask_fact(z, "integer"), FALSE), TRUE)))
+      stop(.sympy_condition("ValueError", "Integers expected for binomial Mod"))
+    return(NULL)
+  }
+  if (p$type == "Function" && identical(p$name, "partition") && q$type == "Integer") {
+    # partition._eval_Mod: Ramanujan's congruences
+    n <- p$args[[1L]]
+    for (pr in list(c(5, 4), c(7, 5), c(11, 6)))
+      if (q$value == pr[1L] && identical(fcall("Mod", list(n, q))$key, Integer(pr[2L])$key)) return(S_Zero)
+  }
   NULL
 }
 

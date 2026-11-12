@@ -106,7 +106,9 @@ Subs <- function(e, old, new) {
   }
   # Subs._hashable_content: the variables replaced by symbols named after
   # their points, so Subs objects differing only in their dummies are equal
-  reps <- lapply(seq_along(vars), function(i) list(vars[[i]], new_sym("Symbol", name = paste0("_", .str(pts[[i]])), key = paste0("SubsPt(", pts[[i]]$key, ")"))))
+  # The placeholders are plain commutative symbols with the default facts.
+  reps <- lapply(seq_along(vars), function(i) list(vars[[i]], new_sym("Symbol", name = paste0("_", .str(pts[[i]])),
+    extra = list(facts = .symbol_facts(logical()), given = logical()), key = paste0("SubsPt(", pts[[i]]$key, ")"))))
   ce <- xreplace(e, reps)
   extra <- vapply(seq_along(vars), function(i) if (.has1(e, vars[[i]])) "" else paste0(vars[[i]]$key, "=", pts[[i]]$key), "")
   key <- paste0("Subs{", ce$key, "|", paste(sort(extra[nzchar(extra)]), collapse = ","), "}")
@@ -680,7 +682,10 @@ chebyshevu_root <- function(n, k) fcall("cos", list(.mul(list(S_Pi, .rat(k + 1L,
 transpose <- function(M) t(Matrix(M))
 #' @rdname function-aliases
 #' @export
-adjoint <- function(M) t(.mat_map(Matrix(M), function(z) fcall("conjugate", list(z))))
+adjoint <- function(M) {
+  if (is_sym(M) && .is_matexpr(M)) return(.madjoint(M))
+  t(.mat_map(Matrix(M), function(z) fcall("conjugate", list(z))))
+}
 
 # ---------------------------------------------------------------------------
 # Series, simplification and transform helpers

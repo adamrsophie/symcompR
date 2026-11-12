@@ -1,0 +1,216 @@
+---
+title: "Sequences, Fourier series, and formal power series"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sequences, Fourier series, and formal power series}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+The calculus vignette covers Taylor and Laurent series with `series()`.
+This vignette covers the other series objects of SymPy: sequences, limits of
+sequences, Fourier series, formal power series with an explicit formula for
+the coefficients, holonomic functions, and rational approximation.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); z <- Symbol("z"); k <- Symbol("k")
+n <- Symbol("n", integer = TRUE)
+```
+
+## Sequences
+
+`SeqFormula()` defines a sequence by a formula, `SeqPer()` a periodic
+sequence. `sequence_terms()` lists the first terms.
+
+```{r}
+s <- SeqFormula(n^2, list(n, 0, oo))
+s
+sequence_terms(s, 5)
+sequence_terms(SeqPer(list(1, 2, 3)), 7)
+```
+
+Sequences add and multiply term by term:
+
+```{r}
+SeqFormula(n^2, list(n, 0, oo)) + SeqFormula(n^3, list(n, 0, oo))
+sequence_terms(SeqFormula(n^2, list(n, 0, oo)) + SeqFormula(n, list(n, 0, oo)), 5)
+alt <- SeqFormula(n, list(n, 0, oo)) * SeqPer(list(1, -1), list(n, 0, oo))
+sequence_terms(alt, 6)
+```
+
+`SeqAdd()` and `SeqMul()` are the classes behind `+` and `*`, and
+`EmptySequence` is the neutral sequence with no terms.
+
+```{r}
+sq_seq <- SeqFormula(n^2, list(n, 0, oo)); pp <- SeqPer(list(1, 2), list(n, 0, oo))
+unlist(lapply(sequence_terms(SeqAdd(sq_seq, pp), 5), sstr))
+unlist(lapply(sequence_terms(SeqMul(sq_seq, pp), 5), sstr))
+EmptySequence
+SeqAdd(sq_seq, EmptySequence)
+```
+
+`find_linear_recurrence()` guesses a linear recurrence from the first terms.
+For the Fibonacci numbers it finds $a_n = a_{n-1} + a_{n-2}$, and with
+`gfvar` it also returns the generating function.
+
+```{r}
+fib <- sym_sequence(fibonacci(n))
+find_linear_recurrence(fib, 10)
+find_linear_recurrence(fib, 10, gfvar = x)
+```
+
+## Limits of sequences
+
+`limit_seq()` computes the limit of a sequence as $n \to \infty$. It handles
+oscillating sequences (returning the range of accumulation points) and
+sequences defined by sums.
+
+```{r}
+limit_seq(n / (n + 1), n)
+limit_seq((-1)^n, n)
+limit_seq(harmonic(n) / log(n), n)
+limit_seq((5^n + 3^n) / (3^n + 5^n * n), n)
+limit_seq(Sum(1 / k, list(k, 1, n)) / n, n)
+```
+
+`dominant()` finds the dominant term of a sum as $n \to \infty$, and
+`difference_delta()` is the forward difference operator.
+
+```{r}
+dominant(5 * n^3 + 4 * n^2 + n + 1, n)
+dominant(2^n + n^5, n)
+difference_delta(n^2, n)
+difference_delta(n * (n + 1), n, 2)
+```
+
+`hypersimp()` returns the ratio of consecutive terms when it is a rational
+function, which shows that a term is hypergeometric.
+
+```{r}
+hypersimp(sym_factorial(k), k)
+hypersimp(sym_binomial(n, k), k)
+hypersimilar(sym_factorial(k), sym_factorial(k + 3), k)
+```
+
+## Fourier series
+
+`fourier_series(f, list(x, a, b))` computes the Fourier series of `f` on the
+interval $[a, b]$; `truncate(s, n)` returns its first `n` nonzero terms.
+
+```{r}
+s <- fourier_series(x^2, list(x, -sym_pi, sym_pi))
+truncate(s, 4)
+truncate(fourier_series(x, list(x, -sym_pi, sym_pi)), 3)
+truncate(fourier_series(sin(x)^2, list(x, -sym_pi, sym_pi)), 3)
+truncate(fourier_series(x, list(x, -1, 1)), 3)
+```
+
+The square wave:
+
+```{r}
+sq <- Piecewise(list(0, Lt(x, 0)), list(1, TRUE))
+truncate(fourier_series(sq, list(x, -sym_pi, sym_pi)), 4)
+```
+
+Series can be shifted and scaled, and `sigma_approximation()` applies
+Lanczos sigma factors that reduce the Gibbs phenomenon.
+
+```{r}
+truncate(shift(s, 1), 3)
+truncate(scale(s, 2), 3)
+sigma_approximation(fourier_series(x, list(x, -sym_pi, sym_pi)), 4)
+truncate(shiftx(fourier_series(x, list(x, -sym_pi, sym_pi)), 1), 3)
+truncate(scalex(fourier_series(x, list(x, -sym_pi, sym_pi)), 2), 3)
+```
+
+## Formal power series
+
+`fps()` computes a formal power series: unlike `series()`, it finds a
+formula for the general coefficient, so the series can be expanded to any
+order.
+
+```{r}
+fps_truncate(fps(exp(x), x))
+fps_truncate(fps(log(1 + x), x), 4)
+fps_truncate(fps(sin(x), x), 8)
+fps_truncate(fps(atan(x), x), 8)
+fps_truncate(fps(1 / (1 - x), x), 5)
+fps_term(fps(exp(x), x), 3)
+fps_polynomial(fps(exp(x), x), 4)
+```
+
+Formal power series can be integrated, multiplied, composed, and inverted:
+
+```{r}
+fps_truncate(fps_integrate(fps(exp(x), x), x), 4)
+fps_truncate(fps_product(fps(sin(x), x), fps(cos(x), x), 6), 6)
+fps_truncate(fps_compose(fps(exp(x), x), fps(sin(x), x), 5), 5)
+fps_truncate(fps_inverse(fps(exp(x), x), 5), 5)
+```
+
+`compute_fps()` is the engine behind `fps()`. It returns the coefficient
+sequence, the sequence of powers, and the independent terms.
+
+```{r}
+cf <- compute_fps(exp(x), x)
+cf[[1]]
+cf[[2]]
+```
+
+## Holonomic functions
+
+Holonomic functions have their own vignette,
+`vignette("holonomic", package = "symcompR")`.
+
+## Rational approximation
+
+`approximants()` returns the successive Padé approximants of a sequence of
+coefficients. It returns a list; `sstr()` prints each element on one line.
+The Catalan numbers have generating function
+$(1 - \sqrt{1 - 4x}) / (2x)$, and the approximants converge to it:
+
+```{r}
+vapply(approximants(list(1, 1, 2, 5, 14, 42, 132)), sstr, "")
+```
+
+For the Fibonacci numbers the approximants stop changing once they reach the
+exact rational generating function:
+
+```{r}
+vapply(approximants(lapply(1:9, fibonacci), x), sstr, "")
+```
+
+`pade()` and its alias `pade_approximant()` compute the $[m/n]$ Padé
+approximant of a function at zero from its Taylor series:
+
+```{r}
+pade(cos(x), x, 2, 2)
+pade_approximant(cos(x), x, 2, 2)
+```
+
+## Order terms and other expansions
+
+`Order()` (also `O()`) is the order symbol, which absorbs higher order
+terms. `nseries()` is the expansion engine behind `series()`, and
+`aseries()` computes asymptotic expansions at infinity.
+
+```{r}
+Order(x^2)
+Order(x^2) + x^3
+nseries(sin(x), x, 0, 6)
+nseries(exp(x), x, 0, 4)
+aseries(exp(1 / x + exp(-x)) - exp(1 / x), x, 3)
+```
+
+## Residues
+
+```{r}
+residue(1 / (x^2 + 1), x, sym_I)
+residue(exp(z) / z^3, z, 0)
+residue(cot(sym_pi * z), z, 0)
+```

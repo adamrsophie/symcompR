@@ -1,0 +1,349 @@
+---
+title: "Polynomials and algebraic numbers"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Polynomials and algebraic numbers}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+The polynomial module is the engine under much of symcompR: factoring,
+cancellation, partial fractions, root finding, and integration of rational
+functions all reduce to polynomial arithmetic. This vignette shows the
+`Poly` class, division and GCDs, factorization over different domains,
+Groebner bases, resultants, roots, Galois groups, and algebraic number
+theory.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y")
+a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c")
+```
+
+## The `Poly` class
+
+`Poly()` converts an expression into a polynomial in the given generators
+with coefficients in a domain. The domain is inferred: `ZZ` for integers,
+`QQ` for rationals, and polynomial rings such as `ZZ[y]` when other symbols
+appear in the coefficients.
+
+```{r}
+p <- Poly(x^3 - 2 * x + 1, x)
+p
+Poly(x^2 + 2 * x * y + 1, x, y)
+Poly(x^2 + y * x + 1, x)
+Poly(x^2 + 1, x, modulus = 5)
+```
+
+Polynomials support arithmetic, and the usual accessors return degree,
+coefficients, and monomials. `as_expr()` converts back to an expression.
+
+```{r}
+q <- Poly(x^2 - 1, x)
+p + q
+p * q
+p^2
+degree(p)
+LC(p)
+all_coeffs(p)
+coeffs(p)
+monoms(p)
+as_expr(p)
+```
+
+Most functions accept plain expressions as well and convert internally.
+
+```{r}
+degree(x^3 * y + x * y^4, y)
+total_degree(x^3 * y + x * y^4)
+coeff(3 * x^2 * y + x, x, 2)
+```
+
+## Division and greatest common divisors
+
+`div()` returns the quotient and remainder, `quo()` and `rem()` return one
+of them. `reduced()` divides by several polynomials at once (multivariate
+division).
+
+```{r}
+div(x^3 + 2 * x + 1, x - 1)
+quo(x^3 + 2 * x + 1, x - 1)
+rem(x^3 + 2 * x + 1, x - 1)
+div(Poly(x^3 + 2 * x + 1, x), Poly(x^2 - 1, x))
+reduced(2 * x^4 + y^2 - x^2 + y^3, list(x^3 - x, y^3 - y))
+```
+
+`gcd()` and `sym_lcm()` work for univariate and multivariate polynomials.
+`gcdex()` solves the Bezout identity $s f + t g = h$, `invert()` computes an
+inverse modulo a polynomial, and `cofactors()` returns the GCD together with
+the cofactors.
+
+```{r}
+gcd(x^2 - 1, x^2 + 2 * x + 1)
+gcd(x^2 * y - y, x * y^2 + y^2)
+sym_lcm(x^2 - 1, x^2 + 2 * x + 1)
+gcdex(x^2 - 1, x^2 + 1)
+invert(x^2 + 1, x^3 - 1)
+cofactors(x^2 - 1, x - 1)
+```
+
+## Factorization
+
+`factor_sym()` factors over the rationals by default, using Zassenhaus'
+algorithm for univariate and Wang's EEZ algorithm for multivariate
+polynomials.
+
+```{r}
+factor_sym(x^6 - 1)
+factor_sym(x^4 + 4)
+factor_sym(x^2 * y^2 - x^2 - y^2 + 1)
+```
+
+Over an algebraic extension, the Gaussian integers, or a finite field
+$\mathrm{GF}(p)$:
+
+```{r}
+factor_sym(x^2 - 2, extension = sqrt(S(2)))
+factor_sym(x^4 + 1, extension = sym_I)
+factor_sym(x^3 + 2 * x + 2, modulus = 3)
+factor_sym(x^5 + x + 1, modulus = 7)
+```
+
+The first finite field example is irreducible modulo 3. Coefficients modulo
+$p$ are printed in the symmetric range $(-p/2, p/2]$.
+
+`factor_list()` and `sqf_list()` return the factors with multiplicities.
+
+```{r}
+str(lapply(sqf_list(x^5 - 2 * x^4 + x^3)$factors,
+           function(f) list(sstr(f[[1]]), f[[2]])))
+```
+
+## Resultants and discriminants
+
+The resultant of two polynomials vanishes exactly when they have a common
+root; it eliminates a variable from a system. The discriminant vanishes when
+a polynomial has a repeated root.
+
+```{r}
+resultant(x^2 - 1, x - 2, x)
+resultant(x^2 + y^2 - 1, x - y, x)
+discriminant(a * x^2 + b * x + c, x)
+discriminant(x^3 + a * x + b, x)
+subresultants(x^2 + 2 * x + 1, x^2 - 1)
+```
+
+## Groebner bases
+
+`groebner()` computes a reduced Groebner basis with Buchberger's algorithm.
+With the lexicographic order, the last element involves only the last
+variable, which is how polynomial systems are solved.
+
+```{r}
+G <- groebner(list(x^2 + y^2 - 1, x - y), x, y, order = "lex")
+vapply(G, sstr, "")
+G <- groebner(list(x * y - 1, x^2 + y^2 - 4), x, y, order = "lex")
+vapply(G, sstr, "")
+G <- groebner(list(x^2 + y, x * y - 1), x, y, order = "grevlex")
+vapply(G, sstr, "")
+is_zero_dimensional(list(x^2 + y^2 - 1, x - y), x, y)
+```
+
+## Roots
+
+`roots()` finds roots in closed form using formulas up to degree four and
+special methods for binomials, cyclotomic polynomials, and decomposable
+polynomials. It returns a list of roots with their multiplicities stored in
+the `"multiplicity"` attribute (SymPy returns a dictionary).
+
+```{r}
+roots(x^2 - 3 * x + 2, x)
+r <- roots((x - 1)^2 * (x + 3), x)
+attr(r, "multiplicity")
+roots(x^3 - 1, x)
+roots(x^4 + 1, x)
+```
+
+`all_roots()` lists every root, repeated by multiplicity, as a plain list.
+`real_roots()` isolates the real roots exactly, `nroots()` approximates all
+roots numerically, and `count_roots()` counts the roots in an interval with
+Sturm sequences.
+
+```{r}
+all_roots(Poly(x^4 - 1, x))
+real_roots(x^3 - 2 * x)
+real_roots(x^5 - x + 1)
+nroots(x^3 - x + 1, x)
+count_roots(x^3 - 2 * x, x)
+count_roots(x^4 - 1, x, -2, 0)
+sturm(x^3 - 2 * x + 1, x)
+intervals(x^2 - 3)
+```
+
+### `CRootOf` and `RootSum`
+
+`CRootOf(f, x, k)` is the $k$-th root of $f$ (real roots first, in increasing
+order), an exact object that can be evaluated numerically. `RootSum()` sums a
+function over all roots of a polynomial without computing them.
+
+```{r}
+r0 <- CRootOf(x^5 - x + 1, x, 0)
+r0
+N(r0)
+CRootOf(x^2 - 2, x, 1)
+RootSum(x^3 + x + 1, Lambda(x, x^2))
+```
+
+The sum of the squares of the roots of $x^3 + x + 1$ is
+$e_1^2 - 2e_2 = 0 - 2 = -2$, found without solving the cubic.
+
+## Special polynomials and constructions
+
+```{r}
+cyclotomic_poly(12, x)
+legendre_poly(4, x)
+chebyshevt_poly(5, x)
+hermite_poly(4, x)
+swinnerton_dyer_poly(2, x)
+```
+
+`horner()` rewrites a polynomial for efficient evaluation, `compose()` and
+`sym_decompose()` compose and decompose polynomials, `interpolate()` finds
+the interpolating polynomial through points, and `symmetrize()` writes a
+symmetric polynomial in terms of elementary symmetric polynomials.
+
+```{r}
+horner(x^3 + 2 * x^2 + 3 * x + 4, x)
+compose(x^2 + x, x - 1, x)
+sym_decompose(x^4 + 2 * x^3 - x - 1)
+interpolate(list(c(1, 1), c(2, 4), c(3, 9)), x)
+symmetrize(x^2 + y^2)
+viete(x^2 + a * x + b, x)
+monic(3 * x^2 + 6 * x + 9)
+```
+
+`symmetrize()` shows $x^2 + y^2 = (x + y)^2 - 2xy$ with a zero remainder.
+`viete()` gives Vieta's formulas: $r_1 + r_2 = -a$ and $r_1 r_2 = b$.
+
+More classical polynomials, given by degree and variable, and the roots of
+Chebyshev polynomials:
+
+```{r}
+chebyshevu_poly(3, x)
+hermite_prob_poly(3, x)
+laguerre_poly(3, x)
+jacobi_poly(2, 1, 2, x)
+chebyshevt_root(3, 1)
+chebyshevu_root(3, 1)
+symmetric_poly(2, list(x, y, a))
+```
+
+`interpolating_poly()` gives the Lagrange interpolating polynomial through
+given points, `itermonomials()` lists all monomials up to a total degree,
+and `random_poly()` draws integer coefficients at random (so its output
+depends on the R random seed).
+
+```{r}
+expand(interpolating_poly(3, x, list(1, 2, 3), list(1, 4, 9)))
+show <- function(l) vapply(l, sstr, "")
+show(sym_ordered(itermonomials(list(x, y), 2)))
+set.seed(1)
+random_poly(x, 3)
+```
+
+## More polynomial functions
+
+The functional interface mirrors the methods of `Poly`. `LM()` and `LT()`
+are the leading monomial and term, `degree_list()` gives the degree in each
+generator, `poly_terms()` lists the terms, and `terms_gcd()` pulls out the
+common monomial. `content()` and `primitive()` split off the integer
+content.
+
+```{r}
+LM(4 * x^2 + 2 * x * y^2 + x * y + 3 * y, x, y)
+LT(4 * x^2 + 2 * x * y^2 + x * y + 3 * y, x, y)
+degree_list(x^2 + y * x + 1)
+vapply(poly_terms(x^2 + 2 * x * y^2 - y, x, y), function(t)
+  paste0("(", paste(t$monom, collapse = ", "), "): ", sstr(t$coeff)), "")
+terms_gcd(x^6 * y^2 + x^3 * y, x, y)
+content(2 * x + 4)
+show(primitive(2 * x + 4))
+is_polynomial(x^2 + 1, x)
+is_polynomial(1 / x, x)
+```
+
+Exact and pseudo division: `exquo()` divides exactly, `pdiv()`, `pquo()`,
+and `prem()` divide after multiplying by a power of the leading coefficient
+so that no fractions appear, and `pexquo()` is the exact pseudo quotient.
+`half_gcdex()` returns half of the extended Euclidean algorithm, and
+`gcd_list()` and `lcm_list()` work on lists.
+
+```{r}
+exquo(x^2 - 1, x - 1)
+show(pdiv(x^2 + 1, 2 * x - 4))
+pquo(x^2 + 1, 2 * x - 4)
+prem(x^2 + 1, 2 * x - 4)
+pexquo(x^2 - 1, 2 * x - 2)
+show(half_gcdex(x^4 - 2 * x^3 - 6 * x^2 + 12 * x + 15, x^3 + x^2 - 4 * x - 4))
+gcd_list(list(x^3 - 1, x^2 - 1, x^2 - 3 * x + 2))
+lcm_list(list(x^3 - 1, x^2 - 1, x^2 - 3 * x + 2))
+```
+
+`gff_list()` is the greatest factorial factorization, `sqf_norm()` the
+square free norm over an algebraic extension, `nth_power_roots_poly()` a
+polynomial whose roots are the n-th powers of the roots of the input,
+`ground_roots()` the roots in the coefficient domain with multiplicities,
+and `sym_trunc()` reduces the coefficients modulo an integer into a
+symmetric range.
+
+```{r}
+vapply(gff_list(x^5 + 2 * x^4 - x^3 - 2 * x^2), function(p)
+  paste0("(", sstr(p[[1]]), ", ", p[[2]], ")"), "")
+show(sqf_norm(x^2 - 2, sqrt(S(3)))[2:3])
+nth_power_roots_poly(x^4 - x^2 + 1, 2)
+minpoly(sqrt(S(2)) + sqrt(S(3)), x)
+ground_roots(x^6 - 4 * x^4 + 4 * x^3 - x^2)
+sym_trunc(2 * x^3 + 3 * x^2 + 5 * x + 7, 3)
+```
+
+`poly_from_expr()` and `parallel_poly_from_expr()` build `Poly` objects
+together with their options, `hurwitz_conditions()` and
+`schur_conditions()` give the stability conditions of a polynomial, and
+`rootof()` indexes the roots of a polynomial.
+
+```{r}
+poly_from_expr(x^2 + 2 * x)[[1]]
+parallel_poly_from_expr(list(x^2 + 1, x * y))[[1]]
+show(hurwitz_conditions(x^3 + 2 * x^2 + 3 * x + 1))
+show(schur_conditions(x^2 + x / 2 + Rational(1, 4)))
+rootof(x^3 - x - 1, x, 0)
+show(refine_root(x^2 - 3, 1, 2, eps = 1e-2))
+```
+
+`refine_root()` shrinks an isolating interval of a real root, here around
+$\sqrt 3 \approx 1.732$. `gff()`, the greatest factorial factorization as
+an expression, is not implemented in SymPy either and signals an error:
+
+```{r}
+tryCatch(gff(x^5 + 2 * x^4 - x^3 - 2 * x^2), error = conditionMessage)
+```
+
+`apart_list()` returns the structure of a partial fraction decomposition,
+`assemble_partfrac_list()` turns it back into an expression, and `numer()`
+and `denom()` take a fraction apart.
+
+```{r}
+pf <- apart_list((2 * x^3 - 2 * x) / (x^2 - 2 * x + 1))
+assemble_partfrac_list(pf)
+numer((x + 1) / (x - 1))
+denom((x + 1) / (x - 1))
+```
+
+Coefficient domains and rings are covered in
+`vignette("polynomial-domains", package = "symcompR")`, and Galois groups
+and algebraic number fields in
+`vignette("galois-number-fields", package = "symcompR")`.

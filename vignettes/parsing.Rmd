@@ -1,0 +1,135 @@
+---
+title: "Parsing"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Parsing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Expressions can be parsed from strings in SymPy syntax, from LaTeX, and
+from Mathematica syntax.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); k <- Symbol("k")
+f <- Function("f")
+```
+
+## SymPy syntax
+
+`parse_expr()` (and `sympify()`) parse a string in Python and SymPy syntax.
+Undefined names become symbols.
+
+```{r}
+parse_expr("x**2 + 3*x - 1/2")
+parse_expr("0.[3] + x!")
+parse_expr("1 + 2", evaluate = FALSE)
+simplify(parse_expr("sin(x)**2 + cos(x)**2"))
+```
+
+Transformations extend the grammar. `"implicit"` allows implicit
+multiplication and function application, as typed by hand:
+
+```{r}
+parse_expr("2x sin x", transformations = "implicit")
+parse_expr("2x", transformations = c(standard_transformations, implicit_multiplication))
+parse_expr("x^2", transformations = c(standard_transformations, convert_xor))
+parse_expr("3x^2 + 2xy", transformations = c(standard_transformations,
+           implicit_multiplication_application, convert_xor))
+parse_expr("sin**2 x", transformations = c(standard_transformations,
+           implicit_multiplication_application))
+parse_expr("x = 2", transformations = c(standard_transformations, convert_equals_signs))
+parse_expr("0.1 + 2/3", transformations = c(standard_transformations, t_rationalize))
+```
+
+`convert_xor` makes `^` mean exponentiation (in Python it is exclusive or),
+and `t_rationalize` reads decimal numbers as exact rationals.
+
+### Token transformations
+
+The transformations are functions on the token stream. Besides the
+predefined collections, the individual steps can be listed:
+`auto_symbol()` turns undefined names into symbols, `auto_number()` wraps
+numbers, `factorial_notation()` handles `!`, `repeated_decimals()` reads
+`0.[3]`, `lambda_notation()` handles `lambda`, `function_exponentiation()`
+reads `sin**2 x`, `implicit_application()` reads `sin x`, and
+`split_symbols()` splits `xy` into `x*y`. `parser_T()` selects
+transformations by number, as `T[...]` does in SymPy.
+
+```{r}
+parse_expr("x!", transformations = list(auto_symbol, auto_number, factorial_notation))
+parse_expr("0.[3]", transformations = list(auto_symbol, repeated_decimals, auto_number))
+parse_expr("lambda x: x + 1", transformations = list(lambda_notation, auto_symbol, auto_number))
+parse_expr("sin**2(x)", transformations = c(standard_transformations, list(function_exponentiation)))
+parse_expr("sin x", transformations = c(standard_transformations, list(implicit_application)))
+parse_expr("xy", transformations = c(standard_transformations, list(split_symbols, implicit_multiplication)))
+parse_expr("2x", transformations = parser_T(0:4, 8))
+keep_mu <- split_symbols_custom(function(s) s != "mu")
+parse_expr("mu xy", transformations = c(standard_transformations,
+           list(keep_mu, implicit_multiplication)))
+```
+
+## Converting R calls
+
+`sym_from_call()` converts an unevaluated R call into an expression, and
+`sympify()` converts strings and R values.
+
+```{r}
+sym_from_call(quote(x^2 + sin(y)))
+sympify("x + 1/2")
+sympify(0.5, rational = TRUE)
+```
+
+## LaTeX
+
+`parse_latex()` reads LaTeX math. Backslashes must be doubled inside R
+strings (or use raw strings, `r"(...)"`).
+
+```{r}
+parse_latex("\\frac{1 + x}{\\sqrt{y}}")
+parse_latex("x^2 + 2x + 1 = 0")
+parse_latex("\\sin^2(x) + \\cos^2(x)")
+parse_latex("\\int_0^1 x^2 dx")
+parse_latex("\\sum_{k=1}^{n} k^2")
+parse_latex(r"(\frac{d}{dx} x^3)")
+parse_latex(r"(\binom{n}{k})")
+```
+
+Integrals, sums, and derivatives are returned unevaluated; call `doit()` to
+evaluate them.
+
+```{r}
+doit(parse_latex("\\int_0^1 x^2 dx"))
+```
+
+`parse_latex_lark()` is the Lark grammar based LaTeX parser of SymPy, and
+`parse_latex_lark_all()` returns every parse of an ambiguous input.
+
+```{r}
+parse_latex_lark("2\\pi r")
+parse_latex_lark("\\frac{a}{b} + c^2")
+parse_latex_lark_all("x + y")
+```
+
+## Mathematica
+
+`parse_mathematica()` reads Mathematica syntax, including implicit
+multiplication and bracketed function calls.
+
+```{r}
+parse_mathematica("Sin[x]^2 Tan[y]")
+parse_mathematica("Log[2, 8] + 1/2")
+parse_mathematica("x*(a + b)")
+```
+
+`parse_mathematica_to_fullformlist()` stops at the FullForm stage and
+returns nested lists, with the head of each expression first.
+
+```{r}
+parse_mathematica_to_fullformlist("x + Sin[y]")
+```

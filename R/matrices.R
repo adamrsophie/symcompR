@@ -265,7 +265,7 @@ Ops.symmatrix <- function(e1, e2) {
 
 #' @export
 matrixOps.symmatrix <- function(x, y) {
-  if (.Generic == "%*%" && (.is_matexpr(x) || .is_matexpr(y))) return(MatMul(x, y))
+  if (.Generic == "%*%" && (.is_matexpr(x) || .is_matexpr(y))) return(doit(MatMul(x, y)))
   if (.Generic == "%*%") {
     x <- Matrix(x)
     y <- Matrix(y)

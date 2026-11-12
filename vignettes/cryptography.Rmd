@@ -1,0 +1,175 @@
+---
+title: "Cryptography"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Cryptography}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(symcompR)
+```
+
+This vignette covers `sympy.crypto.crypto`: classical ciphers, public key
+systems, key exchange, linear feedback shift registers, and Morse code. The
+schemes are textbook versions meant for teaching and experimentation, not
+for protecting data.
+
+## Classical ciphers
+
+The classical ciphers work on uppercase letters by default, dropping other
+characters. `AZ()` normalizes a string in the same way, and
+`check_and_join()` joins and filters text against an alphabet.
+
+```{r}
+AZ("Hello, world!")
+AZ()
+check_and_join(c("ab", "c"))
+check_and_join("abcx", "abc", filter = TRUE)
+padded_key("glee", "abcdefghijklmnopqrstuvwxyz")
+cycle_list(3, 5)
+encipher_shift("GONAVYBEATARMY", 1)
+decipher_shift("HPOBWZCFBUBSNZ", 1)
+encipher_rot13("Hello World")
+decipher_rot13("URYYBJBEYQ")
+encipher_affine("GO NAVY!", c(3, 1))
+decipher_affine("QTW", c(3, 16))
+encipher_atbash("ABC")
+decipher_atbash("ZYX")
+encipher_substitution("ABC", "BAC", "ABC")
+ct <- encipher_vigenere("meet me on monday", "encrypt")
+ct
+decipher_vigenere(ct, "encrypt")
+```
+
+The Hill cipher multiplies blocks of letters by an invertible matrix
+modulo 26:
+
+```{r}
+key <- Matrix(list(list(1, 2), list(3, 5)))
+h <- encipher_hill("meet me on monday", key)
+h
+decipher_hill(h, key)
+inv_mod(key, 26)
+```
+
+Textbook RSA with the primes 3 and 11 and public exponent 7:
+
+```{r}
+pub <- rsa_public_key(3, 11, 7)
+priv <- rsa_private_key(3, 11, 7)
+unlist(pub)
+unlist(priv)
+decipher_rsa(encipher_rsa(12, pub), priv)
+```
+
+The rail fence cipher writes the message in a zigzag over several rails:
+
+```{r}
+encipher_railfence("hello world", 3)
+decipher_railfence("horel ollwd", 3)
+```
+
+## Bifid ciphers
+
+The bifid cipher uses a Polybius square. `bifid5` (no J), `bifid6`
+(letters and digits), and `bifid10` (printable characters) are the standard
+alphabets, and the `*_square()` functions build the key square.
+
+```{r}
+bifid5
+bifid6
+nchar(bifid10)
+bifid5_square("gold bug")
+bifid6_square("gold bug")
+bifid_square("abcd")
+encipher_bifid("abc", "b", "abcd")
+decipher_bifid("bdb", "b", "abcd")
+encipher_bifid5("meet me on friday", "gold bug")
+decipher_bifid5("IEILEHFSTSFXEE", "gold bug")
+encipher_bifid6("AB", "CD")
+decipher_bifid6("CP", "CD")
+```
+
+## Kid RSA
+
+Kid RSA is a simplified RSA for teaching:
+
+```{r}
+kpub <- kid_rsa_public_key(1, 2, 1, 2)
+kpriv <- kid_rsa_private_key(1, 2, 1, 2)
+unlist(kpub)
+unlist(kpriv)
+encipher_kid_rsa(3, kpub)
+decipher_kid_rsa(encipher_kid_rsa(3, kpub), kpriv)
+```
+
+## ElGamal and Diffie-Hellman
+
+The key generators take a seed so that examples are reproducible.
+
+```{r}
+priv <- elgamal_private_key(5, seed = list(3))
+unlist(priv)
+pub <- elgamal_public_key(priv)
+unlist(pub)
+msg <- encipher_elgamal(36, pub, seed = list(3))
+unlist(msg)
+decipher_elgamal(msg, priv)
+```
+
+Diffie-Hellman key exchange: both parties arrive at the same shared key.
+
+```{r}
+dh <- list(1031, 14, 565)
+unlist(dh_public_key(dh))
+dh_shared_key(dh_public_key(dh), 1000)
+unlist(dh_private_key(5, seed = list(3)))
+```
+
+## Goldwasser-Micali and Blum-Goldwasser
+
+Two probabilistic public key systems. Goldwasser-Micali encrypts one bit at
+a time and Blum-Goldwasser uses a Blum Blum Shub generator.
+
+```{r}
+unlist(gm_private_key(7, 11))
+gpub <- gm_public_key(7, 11, seed = 0)
+unlist(gpub)
+c12 <- encipher_gm(12, gpub, seed = 1)
+unlist(c12)
+decipher_gm(c12, list(7, 11))
+unlist(bg_private_key(23, 31))
+bg_public_key(23, 31)
+cbg <- encipher_bg(15, 713, seed = 3)
+cbg
+decipher_bg(cbg, list(23, 31))
+```
+
+## Linear feedback shift registers
+
+`lfsr_sequence()` generates the output of a linear feedback shift register
+over $\mathbb{F}_p$. `lfsr_connection_polynomial()` recovers the shortest
+register that produces a sequence (the Berlekamp-Massey algorithm), and
+`lfsr_autocorrelation()` measures how random the sequence looks.
+
+```{r}
+s <- lfsr_sequence(c(1, 1, 0), c(0, 1, 1), 20, p = 2)
+unlist(lapply(s, as.integer))
+lfsr_connection_polynomial(s)
+lfsr_autocorrelation(s, 7, 3)
+```
+
+## Morse code
+
+```{r}
+m <- encode_morse("RUN SOS")
+m
+decode_morse(m)
+decode_morse("-.-|.|-.--")
+```

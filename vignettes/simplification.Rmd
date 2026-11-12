@@ -1,0 +1,404 @@
+---
+title: "Simplification"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simplification}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Symbolic results are only useful when they can be put in a convenient form.
+symcompR ports SymPy's simplification module: a general purpose
+`simplify()`, and a set of targeted functions that each perform one well
+defined transformation. The targeted functions are predictable and fast;
+`simplify()` tries many of them and keeps the shortest result.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
+a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c")
+n <- Symbol("n", integer = TRUE); k <- Symbol("k", integer = TRUE)
+```
+
+## `simplify()`
+
+`simplify()` applies a sequence of heuristics (cancellation, trigonometric,
+power and gamma function simplification, and others) and returns the
+simplest form it finds, measured by `count_ops()`.
+
+```{r}
+simplify(sin(x)^2 + cos(x)^2)
+simplify((x^3 + x^2 - x - 1) / (x^2 + 2 * x + 1))
+simplify(gamma(x) / gamma(x - 2))
+simplify(exp(x) * exp(y) / exp(x + y - 1))
+simplify(2 * sin(x) * cos(x))
+count_ops(sin(x)^2 + cos(x)^2)
+```
+
+`simplify()` never applies an identity that is false for some values of the
+symbols. $\sqrt{x^2} = x$ only holds for nonnegative $x$, so it is left alone
+until the symbol carries an assumption:
+
+```{r}
+simplify(sqrt(x^2))
+p <- Symbol("p", positive = TRUE)
+simplify(sqrt(p^2))
+```
+
+Because the result of `simplify()` depends on heuristics, code that needs a
+particular form should call the targeted function directly. The rest of this
+vignette describes those functions.
+
+## Expansion
+
+`expand()` multiplies out products and powers of sums.
+
+```{r}
+expand((x + 1)^2)
+expand((x + 2) * (x - 3))
+expand((x + y)^2 * (x - y))
+expand((x + 1)^2 / (x - 1))
+```
+
+It accepts hints that switch on other kinds of expansion. Each hint also
+exists as a standalone function: `expand_log()`, `expand_trig()`,
+`expand_power_exp()`, `expand_power_base()`, `expand_complex()`,
+`expand_func()`, `expand_mul()`, and `expand_multinomial()`.
+
+Logarithms and powers of products only split when the symbols allow it, or
+when `force = TRUE` tells symcompR to ignore assumptions:
+
+```{r}
+expand(log(x * y), log = TRUE)
+expand_log(log(x * y), force = TRUE)
+expand_log(log(a^2 * b), force = TRUE)
+expand_power_base((x * y)^z, force = TRUE)
+expand_power_exp(exp(x + y))
+```
+
+Trigonometric, complex, and special function expansion:
+
+```{r}
+expand_trig(sin(x + y))
+expand_trig(cos(2 * x))
+expand_complex(exp(x + sym_I * y))
+expand_func(gamma(x + 3))
+expand_mul(x * (y + 1))
+expand_multinomial((x + y + 1)^2)
+```
+
+## Factoring
+
+`factor_sym()` (also `sym_factor()`) factors a polynomial into irreducible
+factors over the rationals. It works for multivariate polynomials too.
+
+```{r}
+factor_sym(x^3 - x^2 + x - 1)
+factor_sym(x^2 * z + 4 * x * y * z + 4 * y^2 * z)
+factor_sym(x^4 - 4)
+```
+
+Other domains are selected with options: an algebraic extension, the
+Gaussian integers, or a finite field.
+
+```{r}
+factor_sym(x^4 - 4, extension = sqrt(S(2)))
+factor_sym(x^2 + 1, gaussian = TRUE)
+factor_sym(x^4 + 1, modulus = 2)
+```
+
+`factor_list()` returns the content and a list of factors, each paired with
+its multiplicity. `sqf()` computes only the square free decomposition, which
+is much cheaper.
+
+```{r}
+fl <- factor_list(x^5 - x^3)
+fl$coeff
+vapply(fl$factors, function(f) paste0("(", sstr(f[[1]]), ")^", f[[2]]), "")
+sqf(x^5 - x^3)
+```
+
+`factor_terms()` pulls out common factors without factoring the remaining
+polynomial, and `collect_const()` groups numerical coefficients.
+
+```{r}
+factor_terms(3 * x + 3 * y)
+factor_terms(x * (x + x * y) + x^2)
+collect_const(2 * x + 2 * y + 3 * z)
+```
+
+## Collecting terms
+
+`collect()` groups the terms of a sum by powers of an expression. `coeff()`
+extracts one coefficient.
+
+```{r}
+e <- x * y + x - 3 + 2 * x^2 - z * x^2 + x^3
+collect(e, x)
+coeff(e, x, 2)
+collect(a * x^2 + b * x^2 + a * x - b * x + c, x)
+collect(a * sin(2 * x) + b * sin(2 * x), sin(2 * x))
+rcollect((x + y * x) * (1 + x) + x, x)
+```
+
+## Rational functions
+
+`cancel()` puts a rational function in the canonical form $p/q$, with $p$ and
+$q$ expanded polynomials without common factors. `together()` combines terms
+over a common denominator without expanding, and `ratsimp()` does both.
+
+```{r}
+cancel((x^2 + 2 * x + 1) / (x^2 + x))
+cancel(1 / x + (3 * x / 2 - 2) / (x - 4))
+cancel((x * y^2 - 2 * x * y * z + x * z^2 + y^2 - 2 * y * z + z^2) / (x^2 - 1))
+together(1 / x + 1 / y + 1 / z)
+together(1 / (x + 1) + 1 / (x - 1))
+ratsimp(1 / x + 1 / y)
+fraction((x + 1) / x^2)
+```
+
+`apart()` performs the partial fraction decomposition, the inverse of
+`together()`. With `full = TRUE` it uses the Bronstein algorithm and splits
+over the roots of the denominator; `doit()` writes the result out
+explicitly.
+
+```{r}
+apart((4 * x^3 + 21 * x^2 + 10 * x + 12) / (x^4 + 5 * x^3 + 5 * x^2 + 4 * x))
+apart(1 / (x^2 + 1) / (x - 1))
+doit(apart(1 / (x^3 - 2), full = TRUE))
+```
+
+## Trigonometric simplification
+
+`trigsimp()` simplifies expressions with trigonometric and hyperbolic
+functions using the Fu et al. algorithm, and `exptrigsimp()` converts
+between exponential and hyperbolic forms.
+
+```{r}
+trigsimp(sin(x)^4 - 2 * cos(x)^2 * sin(x)^2 + cos(x)^4)
+trigsimp(sin(x) * tan(x) / sec(x))
+trigsimp(cosh(x)^2 + sinh(x)^2)
+exptrigsimp(exp(z) + exp(-z))
+```
+
+### `fu()` and the TR rules
+
+`fu()` is the full Fu, Zhong and Zeng algorithm. It searches combinations of
+transformation rules for the result with the fewest trigonometric functions.
+
+```{r}
+fu(sin(S(50))^2 + cos(S(50))^2 + sin(sym_pi / 6))
+fu(sqrt(S(3)) * cos(x) / 2 + sin(x) / 2)
+fu(1 - sin(2 * x)^2 / 4 - sin(y)^2 - cos(x)^4)
+fu(cos(4 * sym_pi / 9))
+fu(cos(x) * cos(2 * x) * cos(4 * x))
+```
+
+Each individual rule is exported under its name in the paper, from `TR0()`
+to `TR22()`, together with `TRmorrie()`, `TR10i()`, and others, so a
+transformation can be applied by hand:
+
+```{r}
+TR2(tan(x))              # tan and cot to sin and cos
+TR5(sin(x)^4)            # sin^2 to 1 - cos^2
+TR8(cos(2 * x) * cos(3 * x))  # products to sums
+TR10(sin(a + b))         # expand sums of angles
+TR10i(cos(S(1)) * cos(S(3)) + sin(S(1)) * sin(S(3)))  # and back
+TR11(sin(2 * x))         # double angles
+TRmorrie(cos(x) * cos(2 * x))
+TR22(1 + tan(x)^2)
+```
+
+The remaining rules cover reciprocal functions, products of tangents,
+squares, and powers:
+
+```{r}
+TR0(x * (x + 1))                    # plain simplification step
+TR1(2 * csc(x) + sec(x))            # sec and csc to 1/cos and 1/sin
+TR111(1 - 1 / tan(x)^2)             # negative powers to reciprocal functions
+TR2i(sin(x) / cos(x))               # ratios of sin and cos to tan
+TR3(cos(sym_pi / 2 + x))            # induced angles
+lapply(list(sin, cos, tan), function(f) TR4(f(sym_pi / 6)))  # special angles
+TR6(cos(x)^4)                       # cos^2 to 1 - sin^2
+TR7(cos(x)^2)                       # lower the degree of cos^2
+TR9(cos(S(1)) + cos(S(2)))          # sums of cos or sin to products
+TR12(tan(x + y))                    # expand tan of a sum
+TR12i((tan(x) + tan(y)) / (1 - tan(x) * tan(y)))  # and back
+TR13(tan(S(3)) * tan(S(2)))         # products of tan or cot
+TR14((cos(x) - 1) * (cos(x) + 1))   # factored powers of sin and cos
+TR15(1 - 1 / sin(x)^2)              # negative powers of sin
+TR16(1 - 1 / cos(x)^2)              # negative powers of cos
+TRpower(sin(x)^3)                   # powers to sums of multiple angles
+```
+
+`futrig()` applies a fixed sequence of these rules, `trigsimp_old()` is the
+older pattern based `trigsimp()`, and `trigsimp_groebner()` simplifies with
+a Groebner basis of the trigonometric identities. `hyper_as_trig()`
+rewrites hyperbolic functions as trigonometric ones and returns a function
+that undoes the change.
+
+```{r}
+futrig(sin(x)^4 - cos(x)^4)
+futrig(sinh(x) / cosh(x))
+trigsimp_old(sin(x)^2 + cos(x)^2)
+trigsimp_groebner(sin(x) / cos(x), hints = list(tan))
+h <- hyper_as_trig(sinh(x)^2 + cosh(x)^2)
+h[[2]](TR8(h[[1]]))
+```
+
+## Powers and logarithms
+
+`powsimp()` combines powers with the same base or the same exponent.
+Combining bases is only valid for suitable assumptions, so it needs
+`force = TRUE` for general symbols. `combine` selects which of the two
+transformations to apply.
+
+```{r}
+powsimp(x^a * x^b)
+powsimp(x^a * y^a)
+powsimp(x^a * y^a, force = TRUE)
+powsimp(exp(x) * exp(y))
+powsimp(x^a * x^b * y^a * y^b, combine = "exp")
+powsimp(x^a * x^b * y^a * y^b, combine = "base", force = TRUE)
+```
+
+`powdenest()` simplifies powers of powers, and `logcombine()` merges sums of
+logarithms.
+
+```{r}
+powdenest((x^a)^b, force = TRUE)
+powdenest(sqrt(x^2), force = TRUE)
+logcombine(log(x) + log(y), force = TRUE)
+logcombine(a * log(x) + log(y) - log(z), force = TRUE)
+```
+
+## Radicals
+
+`radsimp()` rationalizes denominators, and `sqrtdenest()` removes nested
+square roots when possible.
+
+```{r}
+radsimp(1 / (2 + sqrt(S(2))))
+radsimp(1 / (1 + sqrt(S(2)) + sqrt(S(3))))
+radsimp(x / (sqrt(x) + 1))
+sqrtdenest(sqrt(5 + 2 * sqrt(S(6))))
+sqrtdenest(sqrt(3 + 2 * sqrt(S(2))))
+```
+
+## Recognizing numbers
+
+`nsimplify()` finds a simple exact expression that is close to a floating
+point number. A list of constants can be offered as building blocks.
+
+```{r}
+nsimplify(0.333333333333333)
+nsimplify(1.4142135623730951)
+nsimplify(2.0943951023931957, list(sym_pi))
+nsimplify(0.5 + 1.5 * sym_I)
+```
+
+## Gamma functions and combinatorial expressions
+
+`gammasimp()` simplifies products and ratios of gamma functions, and
+`combsimp()` does the same for factorials and binomial coefficients.
+
+```{r}
+gammasimp(gamma(x) / gamma(x - 3))
+gammasimp(gamma(x) * gamma(1 - x))
+combsimp(sym_factorial(n) / sym_factorial(n - 3))
+combsimp(sym_binomial(n + 1, k + 1) / sym_binomial(n, k))
+```
+
+## Special functions
+
+`hyperexpand()` rewrites generalized hypergeometric functions in terms of
+elementary or simpler special functions, and `besselsimp()` simplifies Bessel
+functions.
+
+```{r}
+hyperexpand(hyper(list(1, 1), list(2), z))
+besselsimp(besselj(Rational(1, 2), z))
+```
+
+## Other helpers
+
+`signsimp()` moves minus signs into a canonical position, `separatevars()`
+writes an expression as a product of factors that each depend on fewer
+symbols, and `cse()` finds common subexpressions, which is useful before
+generating code.
+
+```{r}
+signsimp(exp(-(x - y)))
+separatevars(2 * x^2 * z * sin(y) + 2 * z * x^2)
+res <- cse(list((x + y)^2 + sin(x + y), cos(x + y)))
+res$replacements[[1]]
+res$reduced
+```
+
+`cse()` returns the replacements as pairs (here $x_0 = x + y$) and the
+reduced expressions written in terms of the new symbols.
+
+## More specialized simplifiers
+
+`collect_sqrt()` collects terms with the same square root, `collect_abs()`
+merges products of absolute values, and `split_surds()` and
+`rad_rationalize()` are the helpers behind `radsimp()`.
+
+```{r}
+collect_sqrt(sqrt(S(2)) * x + sqrt(S(2)) * y + sqrt(S(3)))
+collect_abs(Abs(x) * Abs(y) + 1 / Abs(x))
+show <- function(l) vapply(l, sstr, "")
+show(split_surds(3 * sqrt(S(3)) + sqrt(S(5)) / 7 + sqrt(S(6)) +
+                   sqrt(S(10)) + sqrt(S(15))))
+show(rad_rationalize(1, sqrt(S(2)) + 1))
+```
+
+`inversecombine()` cancels a function against its inverse,
+`nc_simplify()` shortens products of noncommutative symbols,
+`sum_simplify()` and `product_simplify()` join adjacent sums and products,
+and `kroneckersimp()` simplifies products of Kronecker deltas.
+
+```{r}
+inversecombine(asin(sin(x)))
+inversecombine(exp(log(x)) + log(exp(y)))
+A <- Symbol("A", commutative = FALSE); B <- Symbol("B", commutative = FALSE)
+nc_simplify(A * B * A * B * A * B)
+sum_simplify(Sum(x, list(x, 1, n)) + Sum(x, list(x, n + 1, 2 * n)))
+product_simplify(Product(x, list(x, 1, n)) * Product(x, list(x, n + 1, 2 * n)))
+kroneckersimp(1 + KroneckerDelta(0, k) * KroneckerDelta(1, k))
+```
+
+`ratsimpmodprime()` simplifies a rational function modulo the ideal
+generated by a list of polynomials.
+
+```{r}
+ratsimpmodprime((x + y^5 + y) / (x - y), list(x * y^5 - x - y), x, y,
+                order = "lex")
+```
+
+`posify()` replaces symbols without a sign by positive dummies, which
+allows simplifications that are only valid for positive values, and returns
+the substitution that undoes it.
+
+```{r}
+p <- posify(1 + x)
+p$expr
+show(p$reps[[1]])
+```
+
+`piecewise_simplify()` merges and drops branches of a `Piecewise`
+expression, and `simplify_univariate()` is the helper that rewrites a
+condition in one variable as a union of intervals. `denoms()` lists the
+denominators of an expression, and `distribute_or_over_and()` converts a
+logical expression to disjunctive normal form.
+
+```{r}
+piecewise_simplify(Piecewise(list(x, Eq(x, 0)), list(0, TRUE)))
+simplify_univariate(Or(And(x > 0, x < 2), And(x > 1, x < 3)))
+show(denoms(1 / x + 1 / y + 1 / (x * y)))
+distribute_or_over_and(And(Or(Not(a), b), c))
+```

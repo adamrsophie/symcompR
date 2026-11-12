@@ -1,0 +1,136 @@
+---
+title: "Polynomial domains and rings"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Polynomial domains and rings}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y")
+```
+
+This vignette covers `sympy.polys.domains`, `sympy.polys.rings`,
+`sympy.polys.fields`, and `sympy.polys.orderings`: the coefficient domains
+behind `Poly`, and the sparse polynomial rings that the algorithms use.
+
+## Domains
+
+Coefficient domains are objects: `ZZ`, `QQ`, `GF(p)`, polynomial rings
+`ZZ[x]`, fraction fields, and algebraic fields.
+
+```{r}
+ZZ[x]
+GF(7)(3) * GF(7)(5)
+frac_field(QQ, x)
+algebraic_field(QQ, sqrt(S(2)))
+construct_domain(list(1, Rational(1, 2)))[[1]]
+```
+
+`ring()` creates a sparse polynomial ring and its generators, the low level
+representation that the algorithms use.
+
+```{r}
+R <- ring("x,y", ZZ)
+R[[1]]
+X <- R[[2]]; Y <- R[[3]]
+(X + Y)^2
+```
+
+
+### Domain constructors
+
+Each SymPy domain class has a constructor. The integer and rational domains
+exist in "python" and "gmpy" flavors in SymPy; here they all give the same
+domain.
+
+```{r}
+IntegerRing()
+RationalField()
+RealField()
+ComplexField()
+RR
+CC
+ZZ_I
+QQ_I
+EX
+EXRAW
+ExpressionDomain()
+FiniteField(5)
+FF(5)
+FractionField(ZZ, x)
+PolynomialRing(QQ, x, y)
+poly_ring(ZZ, x)
+AlgebraicField(QQ, sqrt(S(3)))
+CyclotomicField(5)
+Domain(ZZ)
+Domain(3)
+list(ZZ_python(), ZZ_gmpy(), GMPYIntegerRing(), PythonIntegerRing(),
+     QQ_python(), QQ_gmpy(), GMPYRationalField())
+list(FF_python(3), FF_gmpy(3), GMPYFiniteField(3), PythonFiniteField(3))
+PythonRational(3, 6)
+```
+
+`from_sympy()` converts an expression into a domain element and
+`to_sympy()` converts it back.
+
+```{r}
+a <- from_sympy(QQ, Rational(3, 4))
+a
+to_sympy(QQ, a)
+to_sympy(GF(7), GF(7)(10))
+```
+
+## Polynomial rings and fields
+
+`ring()` and `xring()` create a ring and its generators, `vring()` also
+assigns the generators to variables, and `sring()` builds the ring from
+expressions. `field()`, `xfield()`, `vfield()`, and `sfield()` are the
+counterparts for rational function fields.
+
+```{r}
+R <- xring("x,y", ZZ)
+R[[1]]
+X <- R[[2]][[1]]; Y <- R[[2]][[2]]
+(X + Y)^2
+vring("u,v", QQ)
+(u - v)^3
+sring(list(x^2 + 2 * y, x / 3))
+K <- xfield("s,t", ZZ)
+K[[2]][[1]] / K[[2]][[2]]
+vfield("p", QQ)
+1 / (p + 1)
+sfield(list(x / y, 1 / x))
+Kf <- field("u,v", QQ)
+Kf[[1]]
+Kf[[2]] / Kf[[3]] + 1
+```
+
+## Monomials and orderings
+
+`Monomial()` is an exponent vector with optional generators. The ordering
+keys `ilex()`, `igrlex()`, and `igrevlex()` sort monomials in the inverse
+of the lexicographic, graded lexicographic, and graded reverse lexicographic
+orders.
+
+```{r}
+m <- Monomial(c(1, 2))
+m
+Monomial(c(2, 0, 1), list(x, y, Symbol("z")))
+ilex(c(1, 2))
+igrlex(c(1, 2))
+igrevlex(c(1, 2))
+```
+
+`Options()` is the option manager that `Poly` uses to process generators
+and flags.
+
+```{r}
+Options(list(x, y), list(domain = "QQ"))
+```

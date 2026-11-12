@@ -1,0 +1,447 @@
+---
+title: "Special functions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Special functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+symcompR includes the elementary and special functions of SymPy. Each one
+evaluates exactly at special points, stays symbolic elsewhere, knows its
+derivative and series expansion, can be rewritten in terms of related
+functions, and evaluates numerically with `N()`.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
+a <- Symbol("a"); b <- Symbol("b"); nu <- Symbol("nu")
+n <- Symbol("n", integer = TRUE)
+xp <- Symbol("xp", positive = TRUE)
+f <- Function("f")
+```
+
+A note on arguments: when a function also exists in base R (such as `exp()`
+or `gamma()`), a plain R number gives a plain R number. Wrap numbers in
+`S()`, `Integer()`, or `Rational()` to get exact results.
+
+```{r}
+gamma(5)
+gamma(S(5))
+sym_atan2(S(1), S(1))
+```
+
+## Elementary functions
+
+```{r}
+acos(Rational(1, 2))
+asin(S(1))
+atan(oo)
+acosh(S(1))
+sinc(0)
+log(S(8), 2)
+exp(log(x))
+log(exp(x))
+log(exp(xp))
+root(8, 3)
+cbrt(-8)
+real_root(-8, 3)
+```
+
+`log(exp(x))` is not simplified for a general symbol, because the identity
+fails for complex `x`; it holds for the positive symbol `xp`. Note also that
+`cbrt(-8)` is the principal cube root, while `real_root()` gives the real
+one.
+
+Rewriting changes the form of an expression:
+
+```{r}
+rewrite(sinh(x), "exp")
+rewrite(cos(x), "exp")
+rewrite(tan(x), "sin")
+```
+
+### Complex parts and rounding
+
+```{r}
+Abs(-3 + 4 * sym_I)
+re(exp(sym_I * x))
+arg(1 + sym_I)
+conjugate(2 + 3 * sym_I)
+sign(S(-3))
+floor(Rational(7, 2))
+ceiling(-Rational(7, 2))
+frac(Rational(7, 2))
+Max(1, x, 3, x)
+Min(xp, -1)
+```
+
+## Gamma and related functions
+
+```{r}
+gamma(Rational(1, 2))
+gamma(Rational(-3, 2))
+diff(gamma(x), x)
+rewrite(gamma(x + 1), "factorial")
+loggamma(S(3))
+polygamma(0, 1)
+polygamma(1, 1)
+diff(digamma_sym(x), x)
+sym_beta(S(2), S(3))
+rewrite(sym_beta(x, y), "gamma")
+lowergamma(1, x)
+uppergamma(1, x)
+uppergamma(Rational(1, 2), x)
+```
+
+Factorials and binomial coefficients:
+
+```{r}
+sym_factorial(S(5))
+factorial2(7)
+RisingFactorial(x, 3)
+FallingFactorial(x, 3)
+sym_binomial(10, 3)
+```
+
+## Zeta and polylogarithm
+
+```{r}
+zeta(2)
+zeta(4)
+zeta(-1)
+zeta(0)
+zeta(3)
+dirichlet_eta(1)
+polylog(2, Rational(1, 2))
+expand_func(polylog(1, x))
+lerchphi(1, 2, 1)
+```
+
+`zeta(3)` (Apéry's constant) has no known closed form, so it stays
+unevaluated.
+
+## Error functions and integrals
+
+`erf2(x, y)` is the two argument error function $\mathrm{erf}(y) - \mathrm{erf}(x)$.
+
+```{r}
+erf(0)
+erf(oo)
+erf(-x)
+diff(erf(x), x)
+rewrite(erfc(x), "erf")
+erfinv(0)
+erf2(0, x)
+series(erf(x), x, 0, 6)
+```
+
+The exponential, logarithmic, sine, cosine, and Fresnel integrals. `Li()` is
+the offset logarithmic integral, $\mathrm{li}(x) - \mathrm{li}(2)$, which
+vanishes at 2:
+
+```{r}
+diff(Ei(x), x)
+diff(li(x), x)
+Li(2)
+diff(Si(x), x)
+diff(Ci(x), x)
+Si(oo)
+rewrite(expint(1, x), "Ei")
+E1(x)
+fresnels(oo)
+diff(fresnels(x), x)
+```
+
+## Bessel and Airy functions
+
+```{r}
+diff(besselj(nu, x), x)
+besselj(0, 0)
+besseli(0, 0)
+besselj(-2, x)
+diff(bessely(0, x), x)
+diff(besselk(nu, x), x)
+rewrite(hankel1(nu, x), "besselj")
+```
+
+Bessel functions of half integer order and the spherical Bessel functions
+are elementary:
+
+```{r}
+expand_func(besselj(Rational(1, 2), x))
+expand_func(jn(0, x))
+expand_func(jn(1, x))
+```
+
+The Airy function $\mathrm{Ai}$ solves $y'' = x y$:
+
+```{r}
+airyai(0)
+diff(airyai(x), x, 2)
+```
+
+## Elliptic integrals
+
+```{r}
+elliptic_k(0)
+elliptic_e(0)
+diff(elliptic_k(x), x)
+series(elliptic_k(x), x, 0, 3)
+```
+
+## Hypergeometric functions
+
+`hyper(ap, bq, z)` is the generalized hypergeometric function
+${}_pF_q$, and `meijerg()` is the Meijer G function. `hyperexpand()`
+rewrites them in terms of named functions when possible.
+
+```{r}
+hyper(list(1, 1), list(2), z)
+hyperexpand(hyper(list(1, 1), list(2), z))
+hyperexpand(hyper(list(), list(), z))
+hyperexpand(hyper(list(Rational(1, 2)), list(Rational(3, 2)), -z^2))
+G <- meijerg(list(list(1, 1), list()), list(list(1), list(0)), z)
+G
+hyperexpand(G)
+```
+
+## Orthogonal polynomials
+
+```{r}
+legendre(3, x)
+assoc_legendre(2, 1, x)
+chebyshevt(4, x)
+chebyshevu(3, x)
+hermite(3, x)
+laguerre(3, x)
+diff(legendre(n, x), x)
+```
+
+Orthogonality of the Legendre polynomials on $[-1, 1]$:
+
+```{r}
+sym_integrate(legendre(2, x) * legendre(3, x), list(x, -1, 1))
+```
+
+Spherical harmonics:
+
+```{r}
+expand_func(Ynm(1, 0, x, y))
+```
+
+## Lambert W, Heaviside, and Dirac delta
+
+```{r}
+LambertW(0)
+LambertW(-1 / sym_E)
+LambertW(sym_E)
+diff(LambertW(x), x)
+Heaviside(0)
+diff(Heaviside(x), x)
+sym_integrate(DiracDelta(x) * cos(x), list(x, -oo, oo))
+sym_integrate(DiracDelta(x - 2) * x^2, list(x, 0, 5))
+KroneckerDelta(1, 2)
+```
+
+`SingularityFunction(x, a, n)` is the Macaulay bracket
+$\langle x - a \rangle^n$ used in beam deflection problems.
+
+```{r}
+diff(SingularityFunction(x, 3, 2), x)
+```
+
+## Piecewise functions
+
+`Piecewise()` takes pairs `list(expression, condition)`; the first condition
+that holds selects the value, and `TRUE` acts as "otherwise".
+
+```{r}
+p <- Piecewise(list(x^2, Lt(x, 0)), list(x, TRUE))
+p
+subs(p, x, -2)
+diff(p, x)
+sym_integrate(p, list(x, -1, 1))
+piecewise_fold(Piecewise(list(1, Lt(x, 0)), list(2, TRUE)) + 1)
+rewrite(Heaviside(x), "Piecewise")
+```
+
+`bspline_basis(d, knots, i, x)` is the $i$-th B-spline of degree `d` (counting
+from zero), as a piecewise polynomial.
+
+```{r}
+bspline_basis(1, list(0, 1, 2), 0, x)
+bspline_basis(2, list(0, 1, 2, 3), 0, x)
+bspline_basis_set(2, list(0, 1, 2, 3), x)[[1]]
+interpolating_spline(1, x, list(1, 2, 4), list(3, 4, 7))
+```
+
+## Numerical evaluation
+
+`N(expr, n)` evaluates to `n` significant digits.
+
+```{r}
+N(gamma(Rational(1, 3)), 30)
+N(zeta(3), 30)
+N(erf(1), 25)
+N(elliptic_k(Rational(1, 2)), 20)
+N(EulerGamma, 30)
+N(Catalan, 30)
+N(legendre(5, Rational(3, 10)), 20)
+```
+
+Some functions evaluate in double precision only, so they are limited to 15
+significant digits:
+
+```{r}
+N(besselj(0, 1))
+N(airyai(1))
+N(LambertW(1))
+N(Si(1))
+N(li(10))
+N(hyper(list(1, 2), list(3), Rational(1, 2)))
+```
+
+## More elementary functions
+
+The reciprocal trigonometric and hyperbolic functions and their inverses:
+
+```{r}
+a <- Symbol("a"); b <- Symbol("b")
+csc(sym_pi / 6)
+acsc(2)
+asec(2)
+acot(1)
+diff(acot(x), x)
+sech(0)
+asech(1)
+rewrite(coth(x), "exp")
+rewrite(coth(x), "tanh")
+rewrite(acoth(2), "log")
+rewrite(acsch(1), "log")
+diff(csch(x), x)
+im(3 + 4 * sym_I)
+```
+
+## More special functions
+
+Further Bessel, Airy, and related functions. `yn()`, `hn1()`, and `hn2()`
+are spherical Bessel and Hankel functions, and `jn_zeros()` finds zeros of
+the spherical Bessel functions numerically.
+
+```{r}
+rewrite(yn(0, x), "sin")
+expand_func(yn(1, x))
+rewrite(hankel2(0, x), "besselj")
+rewrite(hn1(0, x), "sin")
+expand_func(hn2(0, x))
+lapply(jn_zeros(0, 2), N)
+N(airybi(0))
+N(airyaiprime(0))
+airybiprime(0)
+diff(airybi(x), x)
+```
+
+Integrals and inverses: hyperbolic sine and cosine integrals, the Fresnel
+cosine integral, the imaginary error function, and inverse error functions.
+
+```{r}
+N(Chi(1))
+N(Shi(1))
+diff(Shi(x), x)
+N(fresnelc(1))
+limit(fresnelc(x), x, oo)
+rewrite(erfi(x), "erf")
+N(erfi(1))
+erfcinv(1)
+N(erfcinv(Rational(1, 2)))
+erf2inv(0, y)
+```
+
+Elliptic integrals of the first and third kind:
+
+```{r}
+N(elliptic_f(Rational(1, 2), Rational(1, 3)))
+elliptic_f(0, x)
+N(elliptic_pi(Rational(1, 3), Rational(1, 2)))
+```
+
+Orthogonal polynomials with numeric parameters, and integer sequences:
+
+```{r}
+assoc_laguerre(2, 1, x)
+gegenbauer(3, 2, x)
+jacobi(2, 1, 1, x)
+jacobi_normalized(2, 1, 1, x)
+hermite_prob(3, x)
+genocchi(6)
+lapply(0:7, tribonacci)
+lapply(0:7, andre)
+```
+
+More functions from `sympy.functions.special`: the Riemann $\xi$ function,
+Stieltjes constants, the multivariate gamma function, Owen's $T$ function,
+the Marcum $Q$ function, Jacobi theta functions, the Appell $F_1$ function,
+and the incomplete beta functions.
+
+```{r}
+riemann_xi(2)
+stieltjes(0)
+multigamma(3, 2)
+owens_t(0, a)
+N(owens_t(1, Rational(1, 2)))
+marcumq(1, 0, b)
+N(jtheta(3, 1, Rational(1, 2)))
+N(appellf1(1, 1, 1, 2, Rational(1, 2), Rational(1, 3)))
+betainc(1, 1, 0, x)
+N(betainc_regularized(2, 3, 0, Rational(1, 2)))
+Rem(7, -3)
+Rem(x^2, x)
+```
+
+The Mathieu functions are available as symbolic functions:
+
+```{r}
+mathieus(a, b, x)
+mathieuc(a, b, x)
+mathieusprime(a, b, x)
+mathieucprime(a, b, x)
+```
+
+`Ynm_c()` is the complex conjugate of the spherical harmonic and `Znm()` the
+real spherical harmonic:
+
+```{r}
+expand_func(Ynm_c(1, 0, a, b))
+expand_func(Znm(1, 0, a, b))
+```
+
+## Polar numbers and branches
+
+`exp_polar()` is an exponential that is not reduced modulo $2\pi i$, which
+keeps track of the branch on the Riemann surface of the logarithm.
+`polar_lift()`, `principal_branch()`, `periodic_argument()`, and
+`unbranched_argument()` work with such numbers, and `unpolarify()` and
+`polarify()` convert expressions.
+
+```{r}
+exp_polar(0)
+unpolarify(exp_polar(x))
+polar_lift(-1)
+polar_lift(2 * sym_I)
+principal_branch(-2, 2 * sym_pi)
+periodic_argument(exp_polar(3 * sym_I * sym_pi), 2 * sym_pi)
+unbranched_argument(exp_polar(3 * sym_I * sym_pi))
+polarify(exp(x) * y, subs = FALSE)
+```
+
+`piecewise_exclusive()` rewrites a `Piecewise` so that its conditions do not
+overlap:
+
+```{r}
+piecewise_exclusive(Piecewise(list(1, x < 0), list(2, x < 1), list(3, TRUE)))
+```

@@ -873,16 +873,20 @@ def_function("Abs",
                NULL
              },
              numeric = function(x) abs(x),
+             # Abs: extended real and nonnegative; real only for a finite
+             # argument, positive when the argument is nonzero
              facts = function(args, afs) {
                f <- afs[[1L]]
-               out <- c(commutative = TRUE, nonnegative = TRUE)
-               if (isTRUE(f[["finite"]])) out["finite"] <- TRUE
-               if (isTRUE(f[["zero"]])) out["zero"] <- TRUE
-               if (isTRUE(f[["nonzero"]]) || isTRUE(f[["imaginary"]])) out["positive"] <- TRUE
-               if (isTRUE(f[["integer"]])) out["integer"] <- TRUE
-               if (isTRUE(f[["rational"]])) out["rational"] <- TRUE
-               if (isTRUE(f[["even"]])) out["even"] <- TRUE
-               if (isTRUE(f[["odd"]])) out["odd"] <- TRUE
+               out <- c(commutative = TRUE, extended_real = TRUE, extended_negative = FALSE,
+                        extended_nonnegative = TRUE)
+               if (isTRUE(f[["finite"]])) out["real"] <- TRUE
+               if (isTRUE(f[["imaginary"]])) out["zero"] <- FALSE
+               z <- f[["zero"]]
+               if (!is.na(z)) { out["zero"] <- z; out["extended_positive"] <- !z }
+               else if (isTRUE(f[["imaginary"]])) out["extended_positive"] <- TRUE
+               if (isTRUE(f[["extended_real"]]))
+                 for (nm in c("integer", "rational", "even", "odd")) if (!is.na(f[[nm]])) out[nm] <- f[[nm]]
+               if (!is.na(f[["algebraic"]])) out["algebraic"] <- f[["algebraic"]]
                out
              },
              latex = function(a) paste0("\\left|{", a[1], "}\\right|"))
@@ -1097,19 +1101,33 @@ def_function("sign",
   }
 }
 
+# re and im: extended real; finite (so complex) for a finite argument; re is
+# zero when the argument is zero or imaginary, im when it is extended real
+.re_im_facts <- function(f, which) {
+  out <- c(commutative = TRUE, extended_real = TRUE)
+  if (isTRUE(f[["finite"]])) { out["finite"] <- TRUE; out["complex"] <- TRUE }
+  z <- if (which == "re") {
+    if (isTRUE(f[["imaginary"]]) || isTRUE(f[["zero"]])) TRUE
+    else if (isFALSE(f[["imaginary"]]) && isFALSE(f[["zero"]])) FALSE else NA
+  } else f[["extended_real"]]
+  if (!is.na(z)) out["zero"] <- z
+  if (!is.na(f[["algebraic"]])) out["algebraic"] <- f[["algebraic"]]
+  out
+}
+
 def_function("re", eval = function(args) .re_eval_s(args), numeric = Re,
              diff = function(args, i) {
                if (isTRUE(ask_fact(args[[1L]], "real"))) return(S_One)
                NULL
              },
-             facts = function(args, afs) c(commutative = TRUE, real = TRUE),
+             facts = function(args, afs) .re_im_facts(afs[[1L]], "re"),
              latex = function(a) paste0("\\operatorname{re}{\\left(", a[1], " \\right)}"))
 def_function("im", eval = function(args) .im_eval_s(args), numeric = Im,
              diff = function(args, i) {
                if (isTRUE(ask_fact(args[[1L]], "real"))) return(S_Zero)
                NULL
              },
-             facts = function(args, afs) c(commutative = TRUE, real = TRUE),
+             facts = function(args, afs) .re_im_facts(afs[[1L]], "im"),
              latex = function(a) paste0("\\operatorname{im}{\\left(", a[1], " \\right)}"))
 
 def_function("conjugate",
@@ -1285,7 +1303,8 @@ def_function("frac",
         if (i == j || !keep[j]) next
         d <- .sub(flat[[i]], flat[[j]])
         fd <- .facts(d)
-        dom <- if (is_max) isTRUE(fd[["nonnegative"]]) else isTRUE(fd[["nonpositive"]])
+        # MinMaxBase._is_connected: Ge and Le decide by is_extended_nonnegative
+        dom <- if (is_max) isTRUE(fd[["extended_nonnegative"]]) else isTRUE(fd[["extended_nonpositive"]])
         # comparable constants are compared numerically, as SymPy's MinMaxBase
         if (!dom && !length(free_symbols(d)) && isTRUE(fd[["real"]]))
           dom <- tryCatch(.is_true(if (is_max) Ge(flat[[i]], flat[[j]]) else Le(flat[[i]], flat[[j]])), error = function(e) FALSE)

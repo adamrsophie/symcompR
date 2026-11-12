@@ -1,0 +1,82 @@
+---
+title: "Lie algebras"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Lie algebras}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(symcompR)
+```
+
+This vignette covers `sympy.liealgebras`: Cartan types, Cartan matrices,
+Dynkin diagrams, root systems, and Weyl groups of the simple Lie algebras.
+
+## Cartan types and root systems
+
+The root systems of the simple Lie algebras are available through
+`CartanType()`; Weyl groups act by reflections, and `generators()` names
+the simple reflections. Roots are returned as lists of
+coordinates, shown here with `sstr()`.
+
+```{r}
+ct <- CartanType("B3")
+vapply(simple_root(ct, 3), sstr, "")
+cartan_matrix(ct)
+cartan_matrix(CartanType("G2"))
+dimension(CartanType("A3"))
+basis(CartanType("A2"))
+length(positive_roots(CartanType("E8")))
+vapply(highest_root(CartanType("A2")), sstr, "")
+W <- WeylGroup("A3")
+group_order(W)
+generators(W)
+element_order(W, "r1*r2*r3")
+matrix_form(WeylGroup("A2"), "r1*r2")
+group_name(WeylGroup("B2"))
+```
+
+
+`CartanMatrix()` and `DynkinDiagram()` accept a type given as a string or
+as a list of a series letter and a rank. `cartan_rank()` is the rank and
+`lie_algebra()` the name of the classical Lie algebra.
+
+```{r}
+CartanMatrix(list("G", 2))
+cat(DynkinDiagram(list("B", 3)), "\n")
+cat(dynkin_diagram(CartanType("F4")), "\n")
+cartan_rank(CartanType("E7"))
+lie_algebra(CartanType("C4"))
+lie_algebra(CartanType("A3"))
+basic_root(CartanType("A3"), 1, 3)
+```
+
+`RootSystem()` gives access to the simple roots, to all roots, and to sums
+of roots.
+`add_simple_roots()` adds two simple roots and `add_as_roots()` adds two
+roots, returning the sum only when it is again a root.
+
+```{r}
+rs <- RootSystem("B2")
+simple_roots(rs)
+root_space(rs)
+vapply(all_roots(rs), function(v) paste(vapply(v, sstr, ""), collapse = ", "), "")
+add_simple_roots(rs, 1, 2)
+add_as_roots(RootSystem("A3"), c(1, 0, -1, 0), c(0, 0, 1, -1))
+```
+
+## Weyl groups
+
+`coxeter_diagram()` draws the Coxeter diagram of a Weyl group, and
+`delete_doubles()` cancels repeated adjacent reflections in a word.
+
+```{r}
+cat(coxeter_diagram(WeylGroup("B2")), "\n")
+delete_doubles(WeylGroup("G2"), c("1", "1", "2", "1", "2", "2"))
+```

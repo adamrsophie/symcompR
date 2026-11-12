@@ -1,0 +1,322 @@
+---
+title: "Working with expression trees"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Working with expression trees}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Every symcompR expression is a tree: an operation (its type) applied to
+arguments, down to atoms such as symbols and numbers. This vignette shows how
+to inspect that tree, substitute into it, match patterns against it, rewrite
+it with rules, and keep parts of it unevaluated.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
+a <- Symbol("a"); b <- Symbol("b")
+f <- Function("f"); g <- Function("g")
+```
+
+Many functions here return lists of expressions. A small helper prints them
+on one line.
+
+```{r}
+show <- function(l) vapply(l, sstr, "")
+```
+
+## Inspecting structure
+
+```{r}
+e <- x^2 * sin(y) + 3
+sym_type(e)
+show(sym_args(e))
+has(e, y)
+has(e, z)
+show(free_symbols(e))
+show(atoms(e))
+show(atoms(e, "Symbol"))
+show(atoms(e, "Integer"))
+show(atoms(e, "Function"))
+```
+
+Bound variables, such as an integration variable, are not free:
+
+```{r}
+show(free_symbols(Integral(x * y, list(x, 0, 1))))
+```
+
+`count_ops()` counts the operations in an expression; with `visual = TRUE` it
+shows which ones. The simplification functions use it as a measure of
+complexity.
+
+```{r}
+count_ops(x^2 + sin(x) / y)
+count_ops(x^2 + sin(x) / y, visual = TRUE)
+```
+
+`postorder_traversal()` and `preorder_traversal()` visit every subexpression.
+`bottom_up()` rebuilds an expression by applying a function to every
+subexpression, starting from the leaves.
+
+```{r}
+length(postorder_traversal(e))
+vapply(preorder_traversal(sin(cos(x))), sstr, "")
+bottom_up(sin(2 * x) + cos(2 * x)^2, expand_trig)
+```
+
+## Substitution
+
+`subs()` replaces subexpressions; replacements given in a list are applied
+one after the other, unless `simultaneous = TRUE`. `xreplace()` replaces
+exact subtrees only, without any mathematical matching.
+
+```{r}
+subs(x^2 + y, x, 2)
+subs(x + y * z, y * z, a)
+subs(x + y, list(list(x, y), list(y, x)))
+subs(x + y, list(list(x, y), list(y, x)), simultaneous = TRUE)
+xreplace(x * y + 1, list(list(x * y, z)))
+```
+
+`Subs()` is an unevaluated substitution, used for example for derivatives
+evaluated at a point.
+
+```{r}
+Subs(diff(f(x), x), x, 0)
+doit(Subs(sin(x) * x, x, 0))
+```
+
+## Pattern matching and rewriting
+
+Wildcards, unification, rule based rewriting, and expression paths are
+covered in `vignette("pattern-matching", package = "symcompR")`.
+
+## Rewriting in terms of other functions
+
+```{r}
+rewrite(exp(x), "cos")
+```
+
+## Extracting parts
+
+```{r}
+extract_multiplicatively(2 * x, 2)
+extract_multiplicatively((x * y)^3, x^2 * y)
+extract_additively(x + 3, 2)
+as_coefficient(2 * sym_I * x, sym_I)
+```
+
+## Relations
+
+`Eq()`, `Ne()`, `Lt()`, `Le()`, `Gt()`, and `Ge()` create relations. They
+evaluate to `TRUE` or `FALSE` when the answer is determined, and stay
+symbolic otherwise.
+
+```{r}
+r <- Eq(x^2, 4)
+lhs(r)
+rhs(r)
+Ne(x, 1)
+Gt(x, 1) & Lt(x, 3)
+subs(Eq(x + 1, 3), x, 2)
+Lt(2, 3)
+```
+
+Note that `==` compares structure, not mathematical equality:
+
+```{r}
+expand((x + 1)^2) == x^2 + 2 * x + 1
+(x + 1)^2 == x^2 + 2 * x + 1
+```
+
+## Unevaluated expressions
+
+`UnevaluatedExpr()` protects a subexpression from automatic simplification
+until `doit()` is called.
+
+```{r}
+x * UnevaluatedExpr(1 / x)
+doit(x * UnevaluatedExpr(1 / x))
+```
+
+## Anonymous functions
+
+`Lambda()` creates a symbolic function; `rcall()` applies it.
+
+```{r}
+sq <- Lambda(x, x^2)
+sq
+rcall(sq, 3)
+apply_lambda(sq, 3)
+```
+
+## Singleton constants
+
+The `S_*` objects are the singletons of SymPy's `S` registry. They are
+ordinary symcompR expressions, and `TribonacciConstant` is one more named
+constant.
+
+```{r}
+show(list(S_Zero, S_One, S_NegativeOne, S_Half, S_Pi, S_E, S_I,
+          S_Infinity, S_NegativeInfinity, S_ComplexInfinity, S_NaN,
+          S_EmptySet))
+N(TribonacciConstant)
+nan
+zoo
+```
+
+## Small constructors and helpers
+
+`Add()`, `Mul()`, and `Pow()` build a sum, a product, and a power, `ln()` is
+the natural logarithm, `Id()` is the
+identity, and `Tuple()` holds a fixed sequence of expressions. `sym_name()`
+returns the name of a symbol, `is_sym()` tests for a symcompR object,
+`as_sym()` converts R values and strings, `numbered_symbols()` makes a
+run of fresh symbols, and `sym_prod()`
+multiplies a list. `sym_poly()` is the `poly()` function of SymPy.
+
+```{r}
+Add(x, y, 2)
+Mul(2, x, y)
+Pow(x, 2)
+ln(x)
+Id(x)
+Tuple(1, x)
+sym_name(x)
+c(is_sym(x), is_sym(2))
+as_sym("x + 1")
+show(numbered_symbols("y", 3))
+sym_prod(list(1, 2, 3, x))
+sym_poly(x^2 + 2 * x + 1)
+```
+
+`sym_ordered()` sorts expressions into SymPy's canonical order,
+`sym_reshape()` regroups a flat list, and `nfloat()` turns the rational
+coefficients of an expression into floats while leaving its powers exact.
+`comp()` compares two numbers to a tolerance.
+
+```{r}
+show(sym_ordered(list(x^2, x, S(1), y)))
+vapply(sym_reshape(as.list(0:5), 2), function(r) paste(unlist(r), collapse = " "), "")
+nfloat(x^2 + 2 * x / 3)
+c(comp(1, 1.001, 0.01), comp(1, 1.1, 0.01))
+```
+
+`sym_rf()` and `ff()` are the rising and falling factorials; with an
+integer second argument they expand into products.
+
+```{r}
+sym_rf(x, 3)
+ff(x, 3)
+expand(expand_func(ff(x, 3)))
+```
+
+## Integer helpers
+
+`integer_log(y, x)` returns the largest `e` with `x^e <= y` and whether the
+power is exact, `num_digits()` counts digits in a base, `trailing()` counts
+the trailing zero bits, and `arity()` counts the arguments of an R function.
+
+```{r}
+str(integer_log(125, 5))
+str(integer_log(126, 5))
+c(num_digits(123456), num_digits(255, 16), trailing(48))
+arity(function(a, b) a)
+```
+
+## Content, primitive parts, and signs
+
+`add_primitive()` and `as_content_primitive()` pull the rational content
+out of a sum, `gcd_terms()` factors out common terms without full
+factorization, and `extract_branch_factor()` splits a polar exponential
+into a principal part and a number of turns. `could_extract_minus_sign()`
+tells whether an expression reads more naturally with its sign flipped.
+
+```{r}
+show(add_primitive(2 * x + 4))
+show(as_content_primitive(2 * x + 6 * y))
+gcd_terms((x + 1)^2 * y + (x + 1) * y^2)
+show(extract_branch_factor(exp_polar(5 * sym_I * sym_pi)))
+c(could_extract_minus_sign(-x - y), could_extract_minus_sign(x - y))
+```
+
+`factor_nc()` factors expressions with noncommutative symbols, keeping the
+order of the factors.
+
+```{r}
+P <- Symbol("P", commutative = FALSE); Q <- Symbol("Q", commutative = FALSE)
+factor_nc(P * x + P * y)
+factor_nc(x * P * Q + x * Q * P)
+```
+
+## Relation constructors
+
+The relational classes have constructors under their SymPy class names, and
+`Rel()` picks the class from an operator string. `Contains()` states that
+an element lies in a set; it evaluates when the answer is known.
+
+```{r}
+Equality(x, 1)
+GreaterThan(x, 1)
+LessThan(x, 1)
+StrictGreaterThan(x, 1)
+StrictLessThan(x, 1)
+Unequality(x, 1)
+Le(x, 1)
+Rel(x, 1, "<")
+Contains(x, Interval(0, 1))
+Contains(Rational(1, 2), Interval(0, 1))
+```
+
+## Dictionaries
+
+`Dict()` is SymPy's immutable dictionary of expressions, with
+`dict_get()`, `dict_keys()`, `dict_values()`, and `dict_items()`.
+
+```{r}
+d <- Dict(list(x, y), list(1, 2))
+d
+dict_get(d, x)
+show(dict_keys(d))
+show(dict_values(d))
+show(dict_items(d))
+```
+
+## Exact numbers as gmp objects
+
+`as_bigq()` and `as_bigz()` return the exact value of a rational or integer
+as a `gmp` number.
+
+```{r}
+as_bigq(Rational(1, 3))
+as_bigz(Integer(10)^20)
+```
+
+## Dummy symbols
+
+`Dummy()` creates a symbol that is never equal to any other symbol, even one
+with the same name. It is used internally for temporary variables.
+
+```{r}
+Symbol("d") == Symbol("d")
+Dummy("d") == Dummy("d")
+```
+
+## Indexed objects
+
+`IndexedBase()` and `Idx()` represent subscripted quantities such as matrix
+entries, and `get_indices()` finds the free indices of a product, following
+the summation convention for repeated indices.
+
+```{r}
+i <- Idx("i"); j <- Idx("j")
+A <- IndexedBase("A"); v <- IndexedBase("v")
+A(i, j) * v(j)
+show(get_indices(A(i, j) * v(j))$indices)
+```

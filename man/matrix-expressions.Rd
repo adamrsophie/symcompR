@@ -47,9 +47,9 @@ OneMatrix(n, m)
 
 mat_shape(e)
 
-MatMul(..., evaluate = TRUE)
+MatMul(..., evaluate = FALSE)
 
-MatAdd(..., evaluate = TRUE)
+MatAdd(..., evaluate = FALSE)
 
 MatPow(A, k)
 
@@ -112,9 +112,9 @@ as_explicit(e)
 
 \item{...}{Matrices, or for \code{MatMul()} matrices and scalars.}
 
-\item{evaluate}{If \code{FALSE}, \code{MatAdd()} and \code{MatMul()} keep their
-arguments as given, as SymPy's default; explicit matrices are held as
-arguments either way when symbolic matrices are present.}
+\item{evaluate}{If \code{TRUE}, \code{MatAdd()} and \code{MatMul()} put their arguments
+in canonical form, as \code{\link[=doit]{doit()}} does; by default they keep them as
+given, as in SymPy. A \code{MatMul()} of scalars only is their product.}
 
 \item{k}{An exponent.}
 

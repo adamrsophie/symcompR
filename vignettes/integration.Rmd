@@ -1,0 +1,302 @@
+---
+title: "Integration and integral transforms"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Integration and integral transforms}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+symcompR ports SymPy's integration machinery: a front end,
+`sym_integrate()`, that tries several algorithms in turn (table lookup,
+the rule based integrator that mimics integration by hand, the Risch
+algorithm, the Risch-Norman heuristic, and integration with Meijer G
+functions), and the integral transforms built on top of it.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); t <- Symbol("t")
+s <- Symbol("s"); k <- Symbol("k")
+a <- Symbol("a", positive = TRUE); p <- Symbol("p", positive = TRUE)
+f <- Function("f")
+```
+
+The function is named `sym_integrate()` because `integrate()` already exists
+in base R (it does numerical integration of R functions).
+
+## Indefinite integrals
+
+`sym_integrate(e, x)` returns an antiderivative, without the constant of
+integration.
+
+```{r}
+sym_integrate(x^2, x)
+sym_integrate(1 / x, x)
+sym_integrate(x * cos(x), x)
+sym_integrate(exp(x) * sin(x), x)
+sym_integrate(log(x), x)
+sym_integrate(tan(x), x)
+sym_integrate(sin(x)^3, x)
+```
+
+Rational functions are integrated completely, and algebraic and
+transcendental integrands are handled by substitution and the Risch
+machinery.
+
+```{r}
+sym_integrate(1 / (x^2 + 1), x)
+sym_integrate(1 / (x^3 - 1), x)
+sym_integrate(sqrt(1 - x^2), x)
+sym_integrate(1 / sqrt(x^2 + 1), x)
+sym_integrate(x * exp(-x^2), x)
+```
+
+When no elementary antiderivative exists, the answer may involve special
+functions such as the error function:
+
+```{r}
+sym_integrate(exp(-x^2), x)
+```
+
+Several variables integrate one after the other:
+
+```{r}
+sym_integrate(x^2 * y, x, y)
+```
+
+## Definite and improper integrals
+
+Limits are given as `list(x, a, b)`. Infinite limits use `oo`.
+
+```{r}
+sym_integrate(x^2, list(x, 0, 1))
+sym_integrate(sin(x), list(x, 0, sym_pi))
+sym_integrate(abs(x), list(x, -1, 1))
+sym_integrate(log(x), list(x, 0, 1))
+sym_integrate(exp(-x), list(x, 0, oo))
+sym_integrate(1 / x^2, list(x, 1, oo))
+sym_integrate(1 / (1 + x^2), list(x, -oo, oo))
+sym_integrate(exp(-x^2), list(x, -oo, oo))
+sym_integrate(sin(x) / x, list(x, 0, oo))
+```
+
+Assumptions on parameters matter. With $p > 0$ the integral defining the
+gamma function converges, and symcompR recognizes it:
+
+```{r}
+sym_integrate(x^(p - 1) * exp(-x), list(x, 0, oo))
+sym_integrate(exp(-p * x), list(x, 0, oo))
+```
+
+Multiple integrals take one limit list per variable, innermost first.
+
+```{r}
+sym_integrate(x * y, list(x, 0, 1), list(y, 0, 2))
+sym_integrate(exp(-x^2 - y^2), list(x, -oo, oo), list(y, -oo, oo))
+```
+
+An exact result can be evaluated to any precision with `N()`:
+
+```{r}
+I1 <- sym_integrate(exp(-x^2), list(x, 0, 1))
+I1
+N(I1, 20)
+```
+
+## `Integral` objects
+
+`Integral()` builds an unevaluated integral, which prints, typesets, and
+evaluates on demand with `doit()`.
+
+```{r}
+J <- Integral(sqrt(x), x)
+J
+doit(J)
+doit(Integral(x^2, list(x, 0, 3)))
+latex(Integral(exp(-x^2), list(x, 0, 1)))
+```
+
+## Individual algorithms
+
+Each integration algorithm can also be called on its own.
+
+`manualintegrate()` integrates the way a person would, with substitution,
+integration by parts, and trigonometric rules. `integral_steps()` returns the
+tree of rules it applied, which can be used to explain a computation.
+
+```{r}
+manualintegrate(x * sin(x), x)
+manualintegrate(1 / (x^2 + 2 * x + 5), x)
+manualintegrate(exp(x) / (1 + exp(x)), x)
+integral_steps(x * sin(x), x)
+```
+
+`risch_integrate()` implements the Risch algorithm for elementary functions.
+It is a decision procedure: when it returns an unevaluated `Integral`, no
+elementary antiderivative exists.
+
+```{r}
+risch_integrate(x * exp(x^2), x)
+risch_integrate(x * log(x), x)
+risch_integrate(exp(-x^2), x)
+risch_integrate(1 / log(x), x)
+```
+
+`heurisch()` is the Risch-Norman heuristic, `ratint()` integrates rational
+functions, and `meijerint_indefinite()` and `meijerint_definite()` integrate
+by converting the integrand to Meijer G functions.
+
+```{r}
+heurisch(x * exp(x), x)
+ratint((x^2 + 1) / (x^2 - 1), x)
+ratint(1 / (x^2 + 2), x)
+meijerint_indefinite(x * exp(-x), x)
+meijerint_definite(exp(-x^2), x, 0, oo)
+```
+
+`meijerint_definite()` returns the value together with the condition under
+which it holds (here `True`: no condition).
+
+Lower level entry points: `heurisch_wrapper()` runs `heurisch()` and
+returns a `Piecewise` that covers the special parameter values,
+`ratint_ratpart()` and `ratint_logpart()` are the rational and logarithmic
+parts of Horowitz-Ostrogradsky rational integration, `meijerint_inversion()`
+inverts a Laplace transform with Meijer G functions, and
+`singularityintegrate()` integrates singularity functions.
+
+```{r}
+b <- Symbol("b")
+heurisch_wrapper(1 / (x^2 + b), x)
+show <- function(l) vapply(l, sstr, "")
+show(ratint_ratpart(x + 1, x^3 - 2 * x^2 + x, x))
+show(ratint_logpart(S(1), x^2 - 2, x, t)[[1]])
+meijerint_inversion(1 / (s^2 + 1), s, t)
+singularityintegrate(SingularityFunction(x, b, 3), x)
+```
+
+## Line integrals
+
+`line_integrate()` integrates along a parametric curve, given as
+`list(t, a, b, x(t), y(t))`. Integrating $x^2 + y^2$ around the unit circle
+gives its circumference:
+
+```{r}
+line_integrate(x^2 + y^2, list(t, 0, 2 * sym_pi, cos(t), sin(t)), list(x, y))
+line_integrate(x + y, list(t, 0, 1, t, t^2), list(x, y))
+```
+
+## Laplace transforms
+
+`laplace_transform(f, t, s)` computes
+$F(s) = \int_0^\infty f(t) e^{-st}\,dt$. By default it returns the
+transform, the abscissa of convergence, and auxiliary conditions; with
+`noconds = TRUE` only the transform is returned.
+
+```{r}
+L <- laplace_transform(exp(-a * t), t, s)
+L[[1]]
+L[[2]]
+laplace_transform(t^2, t, s, noconds = TRUE)
+laplace_transform(sin(a * t), t, s, noconds = TRUE)
+laplace_transform(t * exp(2 * t), t, s, noconds = TRUE)
+laplace_transform(Heaviside(t - 3), t, s, noconds = TRUE)
+laplace_transform(DiracDelta(t), t, s, noconds = TRUE)
+```
+
+The transform of a derivative brings in the initial value, which is how the
+Laplace transform turns linear ODEs into algebra:
+
+```{r}
+laplace_transform(diff(f(t), t), t, s, noconds = TRUE)
+```
+
+`inverse_laplace_transform()` goes back. The `Heaviside(t)` factor records
+that the original function is taken to vanish for $t < 0$.
+
+```{r}
+inverse_laplace_transform(1 / (s^2 + 1), s, t)
+inverse_laplace_transform(1 / (s * (s + 1)), s, t)
+inverse_laplace_transform(1 / (s - 2)^3, s, t)
+inverse_laplace_transform(exp(-2 * s) / s, s, t)
+```
+
+`LaplaceTransform()` is the unevaluated form.
+
+```{r}
+LaplaceTransform(t^2, t, s)
+doit(LaplaceTransform(t^2, t, s))
+InverseLaplaceTransform(1 / s, s, t)
+doit(InverseLaplaceTransform(1 / s, s, t))
+```
+
+`laplace_correspondence()` replaces unevaluated transforms of known
+functions by names of their transforms, `laplace_initial_conds()` inserts
+initial values, and `expand_dirac_delta()` writes an expression as a linear
+combination of Dirac deltas (a constant term and a coefficient for each
+delta).
+
+```{r}
+Fs <- Function("F")
+laplace_correspondence(LaplaceTransform(f(t), t, s), list(list(f, Fs)))
+laplace_initial_conds(s^2 * LaplaceTransform(f(t), t, s) - s * f(0) -
+                        subs(diff(f(t), t), t, 0), t, list(list(f, c(2, 4))))
+ed <- expand_dirac_delta((t^2 + 1) * DiracDelta(t - 1))
+ed[[1]]
+show(ed[[2]][[1]])
+```
+
+## Fourier, Mellin, sine, cosine, and Hankel transforms
+
+The Fourier transform uses SymPy's convention
+$F(k) = \int_{-\infty}^\infty f(x) e^{-2\pi i x k}\,dx$.
+
+```{r}
+fourier_transform(exp(-x^2), x, k)
+inverse_fourier_transform(sqrt(sym_pi) * exp(-(sym_pi * k)^2), k, x)
+fourier_transform(exp(-abs(x)), x, k)
+```
+
+The Mellin transform $\int_0^\infty x^{s-1} f(x)\,dx$ returns the transform
+and its fundamental strip.
+
+```{r}
+M <- mellin_transform(1 / (1 + x), x, s)
+M[[1]]
+M[[2]]
+mellin_transform(exp(-x), x, s, noconds = TRUE)
+inverse_mellin_transform(gamma(s), s, x, list(0, oo))
+```
+
+Sine and cosine transforms, and the Hankel transform of order $\nu$:
+
+```{r}
+sine_transform(exp(-a * x), x, k)
+cosine_transform(exp(-a * x), x, k)
+inverse_cosine_transform(sqrt(S(2)) * a / (sqrt(sym_pi) * (a^2 + k^2)), k, x)
+hankel_transform(1 / x, x, k, 0)
+inverse_hankel_transform(1 / k, k, x, 0)
+hankel_transform(exp(-a * x), x, k, 0)
+```
+
+Each transform has an unevaluated class as well: `FourierTransform()`,
+`MellinTransform()`, `SineTransform()`, `CosineTransform()`, and
+`HankelTransform()`, with inverses. Calling `doit()` on one gives the
+same result as the matching function above.
+
+```{r}
+FourierTransform(exp(-x^2), x, k)
+InverseFourierTransform(exp(-k^2), k, x)
+doit(SineTransform(exp(-x), x, k))
+CosineTransform(exp(-x), x, k)
+InverseSineTransform(1 / k, k, x)
+InverseCosineTransform(1 / (1 + k^2), k, x)
+MellinTransform(exp(-x), x, k)
+InverseMellinTransform(gamma(s), s, x, 0, oo)
+HankelTransform(exp(-x), x, k, 0)
+InverseHankelTransform(1 / k, k, x, 0)
+inverse_sine_transform(sqrt(S(2)) / (sqrt(sym_pi) * k), k, x)
+```

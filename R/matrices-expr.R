@@ -122,12 +122,16 @@ as_matexpr <- function(e) if (inherits(e, "symmatrix") || .is_matexpr(e)) e else
 .unwrap_explicit <- function(a) if (is_sym(a) && a$type == "ImmutableMatrix") as_explicit(a) else a
 
 #' @rdname matrix-expressions
-#' @param evaluate If `FALSE`, `MatAdd()` and `MatMul()` keep their
-#'   arguments as given, as SymPy's default; explicit matrices are held as
-#'   arguments either way when symbolic matrices are present.
+#' @param evaluate If `TRUE`, `MatAdd()` and `MatMul()` put their arguments
+#'   in canonical form, as [doit()] does; by default they keep them as
+#'   given, as in SymPy. A `MatMul()` of scalars only is their product.
 #' @export
-MatMul <- function(..., evaluate = TRUE) {
-  if (!isTRUE(evaluate)) return(new_sym("MatMul", lapply(lapply(list(...), as_matexpr), .as_mexpr)))
+MatMul <- function(..., evaluate = FALSE) {
+  if (!isTRUE(evaluate)) {
+    args <- lapply(lapply(list(...), as_matexpr), .as_mexpr)
+    if (!any(vapply(args, .is_matexpr, NA))) return(.mul(args))
+    return(new_sym("MatMul", args))
+  }
   flat <- list()
   for (a in list(...)) {
     a <- as_matexpr(a)
@@ -156,7 +160,7 @@ MatMul <- function(..., evaluate = TRUE) {
     ra <- vapply(flat, function(a) is_sym(a) && a$type %in% c("Integer", "Rational"), TRUE)
     ad <- vapply(flat, function(a) is_sym(a) && a$type == "MatAdd", TRUE)
     if (any(ra) && any(ad) && which(ra) != which(ad))
-      return(do.call(MatAdd, lapply(flat[ad][[1L]]$args, function(t) if (ra[1L]) MatMul(flat[[1L]], t) else MatMul(t, flat[[2L]]))))
+      return(do.call(.madd, lapply(flat[ad][[1L]]$args, function(t) if (ra[1L]) .mm(flat[[1L]], t) else .mm(t, flat[[2L]]))))
   }
   coef <- S_One
   mats <- list()
@@ -191,6 +195,10 @@ MatMul <- function(..., evaluate = TRUE) {
   new_sym("MatMul", c(if (!identical(coef$key, S_One$key)) list(coef), out))
 }
 
+# MatMul and MatAdd in canonical form, for internal use
+.mm <- function(...) MatMul(..., evaluate = TRUE)
+.madd <- function(...) MatAdd(..., evaluate = TRUE)
+
 .mterm_split <- function(t) {
   if (t$type == "MatMul" && !.is_matexpr(t$args[[1L]])) {
     rest <- t$args[-1L]
@@ -201,10 +209,10 @@ MatMul <- function(..., evaluate = TRUE) {
 
 #' @rdname matrix-expressions
 #' @export
-MatAdd <- function(..., evaluate = TRUE) {
+MatAdd <- function(..., evaluate = FALSE) {
   if (!isTRUE(evaluate)) {
     args <- lapply(lapply(list(...), as_matexpr), .as_mexpr)
-    if (!all(vapply(args, .is_matexpr, TRUE))) stop("cannot add a matrix and a scalar", call. = FALSE)
+    if (!all(vapply(args, .is_matexpr, TRUE))) stop(.sympy_condition("TypeError", "Mix of Matrix and Scalar symbols"))
     return(new_sym("MatAdd", args))
   }
   flat <- list()
@@ -233,7 +241,7 @@ MatAdd <- function(..., evaluate = TRUE) {
   terms <- list()
   for (k in names(parts)) if (!is_zero_num(coefs[[k]])) terms[[length(terms) + 1L]] <-
     if (parts[[k]]$type == "ImmutableMatrix") .as_block(.mat_map(as_explicit(parts[[k]]), function(z) .mul(list(coefs[[k]], z))))
-    else MatMul(coefs[[k]], parts[[k]])
+    else .mm(coefs[[k]], parts[[k]])
   if (!length(terms)) return(ZeroMatrix(s1[[1L]], s1[[2L]]))
   if (length(terms) == 1L) return(.unwrap_explicit(terms[[1L]]))
   ord <- order(vapply(terms, function(t) .str(.mterm_split(t)[[2L]]), ""), method = "radix")
@@ -283,6 +291,20 @@ Adjoint <- function(A) {
   new_sym("Adjoint", list(A))
 }
 
+# The adjoint() function: MatAdd._eval_adjoint and MatMul._eval_adjoint
+# adjoin the arguments (a MatMul in reverse order) and doit(); other
+# matrix expressions give an Adjoint node.
+.madjoint <- function(e) {
+  if (inherits(e, "symmatrix")) return(.mat_map(t(e), function(z) fcall("conjugate", list(z))))
+  if (!.is_matexpr(e)) return(fcall("conjugate", list(e)))
+  switch(e$type,
+    ImmutableMatrix = .madjoint(as_explicit(e)),
+    Adjoint = .unwrap_explicit(e$args[[1L]]),
+    MatAdd = do.call(.madd, lapply(e$args, function(a) .as_mexpr(.madjoint(a)))),
+    MatMul = do.call(.mm, lapply(rev(e$args), function(a) .as_mexpr(.madjoint(a)))),
+    Adjoint(e))
+}
+
 # Evaluating transpose, as SymPy's .T.
 .mtranspose <- function(e) {
   if (inherits(e, "symmatrix")) return(t(e))
@@ -292,11 +314,11 @@ Adjoint <- function(A) {
     Identity = , DiagMatrix = e,
     ZeroMatrix = ZeroMatrix(e$args[[2L]], e$args[[1L]]),
     OneMatrix = OneMatrix(e$args[[2L]], e$args[[1L]]),
-    MatAdd = do.call(MatAdd, lapply(e$args, .mtranspose)),
+    MatAdd = do.call(.madd, lapply(e$args, .mtranspose)),
     MatMul = {
       sp <- .mterm_split(e)
       ms <- if (sp[[2L]]$type == "MatMul") sp[[2L]]$args else list(sp[[2L]])
-      do.call(MatMul, c(list(sp[[1L]]), rev(lapply(ms, .mtranspose))))
+      do.call(.mm, c(list(sp[[1L]]), rev(lapply(ms, .mtranspose))))
     },
     MatPow = MatPow(.mtranspose(e$args[[1L]]), e$args[[2L]]),
     Inverse = Inverse(.mtranspose(e$args[[1L]])),
@@ -396,8 +418,8 @@ register_doit("Inverse", function(e) {
   if (a$type == "MatMul") {
     sp <- .mterm_split(a)
     ms <- if (sp[[2L]]$type == "MatMul") sp[[2L]]$args else list(sp[[2L]])
-    if (!all(vapply(ms, .is_square_expr, TRUE))) return(MatMul(.div(S_One, sp[[1L]]), Inverse(sp[[2L]])))
-    return(do.call(MatMul, c(list(.div(S_One, sp[[1L]])), rev(lapply(ms, Inverse)))))
+    if (!all(vapply(ms, .is_square_expr, TRUE))) return(.mm(.div(S_One, sp[[1L]]), Inverse(sp[[2L]])))
+    return(do.call(.mm, c(list(.div(S_One, sp[[1L]])), rev(lapply(ms, Inverse)))))
   }
   MatPow(a, S_NegativeOne)
 })
@@ -605,8 +627,8 @@ block_collapse <- function(e) {
     if (any(ids)) {
       shp <- .mshape(e)
       mats <- mats[!ids]
-      if (!length(mats)) return(MatMul(coef, Identity(shp[[1L]])))
-      if (length(mats) == 1L) return(.block_collapse(MatMul(coef, mats[[1L]])))
+      if (!length(mats)) return(.mm(coef, Identity(shp[[1L]])))
+      if (length(mats) == 1L) return(.block_collapse(.mm(coef, mats[[1L]])))
     }
     if (all(vapply(mats, function(a) a$type %in% c("BlockMatrix", "BlockDiagMatrix"), TRUE))) {
       sizes <- function(R, rows) vapply(if (rows) R else R[[1L]], function(b) .k((if (rows) .mshape(b[[1L]]) else .mshape(b))[[if (rows) 1L else 2L]]), "")
@@ -617,9 +639,9 @@ block_collapse <- function(e) {
       for (B in mats[-1L]) {
         C <- .block_rows(B)
         R <- lapply(seq_along(R), function(i) lapply(seq_along(C[[1L]]), function(j)
-          do.call(MatAdd, lapply(seq_along(C), function(k) MatMul(R[[i]][[k]], C[[k]][[j]])))))
+          do.call(.madd, lapply(seq_along(C), function(k) .mm(R[[i]][[k]], C[[k]][[j]])))))
       }
-      return(BlockMatrix(lapply(R, function(r) lapply(r, function(b) MatMul(coef, b)))))
+      return(BlockMatrix(lapply(R, function(r) lapply(r, function(b) .mm(coef, b)))))
     }
   }
   if (e$type == "MatAdd" && all(isb)) {
@@ -628,7 +650,7 @@ block_collapse <- function(e) {
     grid <- function(B) paste(vapply(B, function(r) paste(vapply(r, function(b) paste(vapply(.mshape(b), .k, ""), collapse = "x"), ""), collapse = ","), ""), collapse = ";")
     if (length(unique(vapply(Rs, grid, ""))) > 1L) return(sym_rebuild(e, args))
     return(BlockMatrix(lapply(seq_along(R), function(i) lapply(seq_along(R[[1L]]), function(j)
-      do.call(MatAdd, lapply(Rs, function(B) B[[i]][[j]]))))))
+      do.call(.madd, lapply(Rs, function(B) B[[i]][[j]]))))))
   }
   if (e$type == "Transpose" && isb[[1L]]) return(.mtranspose(BlockMatrix(.block_rows(args[[1L]]))))
   sym_rebuild(e, args)
@@ -867,6 +889,9 @@ register_latex_printer("MatrixElement", function(e) paste0("{", .latex(e$args[[1
 
 register_rebuilder("MatAdd", function(e, args) do.call(MatAdd, args))
 register_rebuilder("MatMul", function(e, args) do.call(MatMul, args))
+# MatAdd.doit and MatMul.doit: canonicalize after the arguments' doit()
+register_doit("MatAdd", function(e) do.call(.madd, e$args))
+register_doit("MatMul", function(e) do.call(.mm, e$args))
 register_rebuilder("MatPow", function(e, args) MatPow(args[[1L]], args[[2L]]))
 register_rebuilder("MatrixElement", function(e, args) MatrixElement(args[[1L]], args[[2L]], args[[3L]]))
 

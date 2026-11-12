@@ -1,0 +1,371 @@
+---
+title: "Number theory"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Number theory}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+symcompR ports `sympy.ntheory`: primality testing and prime generation,
+integer factorization, arithmetic functions, modular arithmetic and
+residues, discrete logarithms, the Chinese remainder theorem, continued
+fractions, and partitions. Integers of any size are handled with the
+[gmp](https://CRAN.R-project.org/package=gmp) package; pass a `bigz` (or a
+string) when a number does not fit in a double.
+
+```{r}
+library(symcompR)
+big <- function(s) gmp::as.bigz(s)
+```
+
+## Primes
+
+`isprime()` is a strong probable prime test that is deterministic for
+numbers below $2^{64}$ and has no known counterexample above it.
+
+```{r}
+isprime(561)
+isprime(big(2)^61 - 1)
+isprime(big(2)^127 - 1)
+is_mersenne_prime(127)
+is_gaussian_prime(3 + 2 * sym_I)
+```
+
+$561 = 3 \cdot 11 \cdot 17$ is the smallest Carmichael number: it fools the
+Fermat test for every base coprime to it, but not `isprime()`.
+
+```{r}
+is_carmichael(561)
+is_fermat_pseudoprime(561, 2)
+```
+
+Generating primes:
+
+```{r}
+nextprime(100)
+prevprime(100)
+prime(1000)
+primerange(50, 100)
+primepi(1000)
+primorial(5)
+mersenne_prime_exponent(10)
+```
+
+## Factorization
+
+`factorint()` returns the prime factorization as a named vector of
+exponents. It combines trial division, Pollard's rho and $p - 1$ methods,
+and the elliptic curve method.
+
+```{r}
+factorint(360)
+factorint(big(2)^64 - 1)
+factorint(big(2)^67 - 1)
+primefactors(360)
+factorrat(Rational(-24, 35))
+```
+
+$2^{67} - 1$ is the Mersenne number that Cole factored by hand in 1903. The
+individual methods are available too: `pollard_rho()`, `pollard_pm1()`,
+`ecm()` (elliptic curves), and `qs()` (the quadratic sieve).
+
+```{r}
+pollard_rho(8051)
+pollard_pm1(21477639576571, B = 2000)
+ecm(big("398883434337287"))
+```
+
+Perfect powers and multiplicities:
+
+```{r}
+perfect_power(6^5)
+integer_nthroot(big(10)^40 + 1, 2)
+multiplicity(2, 96)
+multiplicity_in_factorial(2, 10)
+smoothness(2^7 * 3^2)
+```
+
+## Divisors and arithmetic functions
+
+```{r}
+divisors(60)
+divisor_count(60)
+proper_divisors(28)
+divisor_sigma(60)
+divisor_sigma(60, 2)
+totient(60)
+reduced_totient(60)
+mobius(30)
+mobius(12)
+primenu(60)
+primeomega(60)
+```
+
+`totient(60)` counts the integers below 60 coprime to it; `reduced_totient()`
+is the Carmichael function, the exponent of the multiplicative group modulo
+60. These functions also accept symbols, and stay unevaluated:
+
+```{r}
+n <- Symbol("n", integer = TRUE, positive = TRUE)
+totient(n)
+```
+
+Perfect, abundant, and amicable numbers:
+
+```{r}
+is_perfect(28)
+abundance(12)
+is_amicable(220, 284)
+```
+
+## Modular arithmetic
+
+```{r}
+igcd(36, 48, 60)
+ilcm(4, 6, 10)
+mod_inverse(3, 11)
+Integer(17) %% 5
+```
+
+### Chinese remainder theorem
+
+`crt(m, v)` finds the $x$ with $x \equiv v_i \pmod{m_i}$; it returns the
+solution and the modulus. `solve_congruence()` takes the pairs
+`list(v, m)` directly.
+
+```{r}
+crt(c(3, 5, 7), c(2, 3, 2))
+solve_congruence(list(2, 3), list(3, 5), list(2, 7))
+```
+
+This is the classic puzzle of Sunzi: a number that leaves remainders 2, 3,
+and 2 when divided by 3, 5, and 7 is $23 + 105k$.
+
+### Residues and roots modulo $n$
+
+```{r}
+legendre_symbol(3, 7)
+jacobi_symbol(3, 35)
+quadratic_residues(11)
+is_quad_residue(5, 11)
+sqrt_mod(10, 13)
+sqrt_mod(10, 13, all_roots = TRUE)
+nthroot_mod(11, 3, 13, all_roots = TRUE)
+```
+
+$11$ is not a cube modulo 13, so the last list is empty.
+
+### Orders, primitive roots, and discrete logarithms
+
+```{r}
+n_order(3, 7)
+primitive_root(23)
+is_primitive_root(5, 23)
+discrete_log(41, 15, 7)
+```
+
+`discrete_log(41, 15, 7)` solves $7^k \equiv 15 \pmod{41}$, giving $k = 3$.
+
+## Continued fractions
+
+`continued_fraction()` expands a rational number or a quadratic irrational.
+The expansion of $\sqrt{7}$ is periodic: the second element is the repeating
+block.
+
+```{r}
+continued_fraction(Rational(415, 93))
+continued_fraction(sqrt(S(7)))
+continued_fraction_periodic(0, 1, 7)
+continued_fraction_reduce(c(4, 2, 6, 7))
+continued_fraction_iterator(sym_pi, 6)
+continued_fraction_convergents(c(3, 7, 15, 1, 292))
+```
+
+The convergents of $\pi$ include the famous approximations $22/7$ and
+$355/113$.
+
+`egyptian_fraction()` writes a rational number as a sum of distinct unit
+fractions:
+
+```{r}
+egyptian_fraction(Rational(4, 13))
+```
+
+so $4/13 = 1/4 + 1/18 + 1/468$.
+
+## Partitions and digits
+
+`npartitions()` counts the partitions of an integer with the
+Hardy-Ramanujan-Rademacher formula, so large arguments are fast.
+
+```{r}
+npartitions(100)
+npartitions(1000)
+```
+
+```{r}
+digits(123, 10)
+digits(255, 16)
+count_digits(1122334)
+is_palindromic(12321)
+pi_hex_digits(0, 20)
+```
+
+`digits()` returns the base followed by the digits. `pi_hex_digits()` uses
+the Bailey-Borwein-Plouffe formula to compute hexadecimal digits of $\pi$
+starting at any position, without computing the earlier ones.
+
+## Integer sequences
+
+The classical combinatorial numbers are functions that evaluate for integer
+arguments and stay symbolic otherwise.
+
+```{r}
+fibonacci(50)
+lucas(20)
+catalan(10)
+bell(10)
+bernoulli(10)
+euler(10)
+harmonic(10)
+partition(100)
+fibonacci(n)
+```
+
+## Sieves
+
+`sieve` is a shared, growing table of primes, totients, and Möbius values.
+`Sieve()` creates a fresh one.
+
+```{r}
+s <- Sieve()
+s
+class(sieve)
+```
+
+## More primality tests
+
+The probable prime tests behind `isprime()` are available individually:
+Miller-Rabin with given bases (`mr()`), the Lucas tests, the Euler and
+Euler-Jacobi tests, and Proth's test for numbers $k 2^n + 1$.
+
+```{r}
+mr(1373651, c(2, 3))
+mr(1373653, c(2, 3))
+is_lucas_prp(989)
+is_strong_lucas_prp(5459)
+is_extra_strong_lucas_prp(989)
+is_euler_pseudoprime(341, 2)
+is_euler_jacobi_pseudoprime(561, 2)
+proth_test(41)
+find_first_n_carmichaels(3)
+find_carmichael_numbers_in_range(1, 3000)
+carmichael$is_carmichael(561)
+composite(1)
+composite(1000)
+compositepi(100)
+p <- randprime(1000, 2000)
+isprime(p) && p >= 1000 && p < 2000
+```
+
+## More divisor functions
+
+Unitary divisors $d$ of $n$ have $\gcd(d, n/d) = 1$, and the antidivisors
+of $n$ are the numbers that do not divide $n$ by the largest possible
+margin.
+
+```{r}
+udivisors(60)
+udivisor_count(120)
+udivisor_sigma(18, 3)
+antidivisors(24)
+antidivisor_count(24)
+proper_divisor_count(12)
+is_abundant(12)
+is_deficient(13)
+dra(19, 12)
+drm(277777788888899, 10)
+core(24)
+core(64, 3)
+```
+
+`core(n, t)` is the $t$-th power free part of $n$: 24 is $2^2 \cdot 6$, so
+its square free part is 6.
+
+`smoothness_p()` reports, for each prime factor $p$ of $n$, how smooth
+$p - 1$ (or $p + 1$ with `m = 1`) is; this decides how well the Pollard
+$p - 1$ and Williams $p + 1$ methods work.
+
+```{r}
+smoothness_p(10431, m = 1)
+```
+
+## More modular arithmetic
+
+`crt1()` and `crt2()` split the Chinese remainder computation into a
+precomputation that depends only on the moduli and a cheap second step.
+`symmetric_residue()` is the residue closest to zero, `sqrt_mod_iter()`
+iterates over square roots, and `kronecker_symbol()` extends the Jacobi
+symbol to all integers.
+
+```{r}
+pre <- crt1(c(18, 42, 6))
+crt2(c(18, 42, 6), c(0, 0, 0), pre[[1]], pre[[2]], pre[[3]])
+symmetric_residue(5, 7)
+unlist(sqrt_mod_iter(11, 43))
+kronecker_symbol(3, 8)
+is_nthpow_residue(2, 3, 7)
+quadratic_congruence(2, 5, 3, 7)
+polynomial_congruence("x^6 - 2*x^5 - 35", 6125)
+binomial_mod(10, 2, 6)
+```
+
+`cycle_length()` finds the tail length $\mu$ and cycle length $\lambda$
+of the sequence $x_{k+1} = f(x_k)$ with Brent's algorithm:
+
+```{r}
+cycle_length(function(x) (x^2 + 12) %% 17, 4)
+```
+
+## Binomial and multinomial coefficients
+
+```{r}
+binomial_coefficients_list(5)
+binomial_coefficients(3)
+multinomial_coefficients(3, 2)
+multinomial_coefficients_iterator(2, 3)
+```
+
+## Factoring with the quadratic sieve
+
+`qs()` is the self-initializing quadratic sieve, with a bound on the
+factor base and a sieve interval; it returns the factors it finds, and
+`qs_factor()` returns them with their multiplicities. `FactorCache()` creates a cache of
+factorizations, and `factor_cache` is the cache that `factorint()` uses.
+
+```{r}
+qs(10009202107, 100, 10000)
+qs_factor(10009202107, 100, 10000)
+fc <- FactorCache(maxsize = 10)
+class(fc)
+class(factor_cache)
+```
+
+## Points on elliptic curves
+
+`EllipticCurvePoint()` creates a point in projective coordinates.
+`point_order()` finds the order of a point; on $y^2 = x^3 + 1$ the
+rational torsion group is cyclic of order 6.
+
+```{r}
+E <- EllipticCurve(0, 1)
+point_order(E$point(2, 3))
+point_order(E$point(0, 1))
+point_order(E$point(-1, 0))
+EllipticCurvePoint(2, 3, 1, E)
+```

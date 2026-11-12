@@ -1,0 +1,254 @@
+---
+title: "Arrays and tensors"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Arrays and tensors}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y")
+```
+
+This vignette covers `sympy.tensor.array` ($N$-dimensional arrays),
+`sympy.tensor.tensor` (abstract index notation), `sympy.tensor.indexed`, and
+the canonicalization algorithms of `sympy.combinatorics.tensor_can`.
+
+## Arrays
+
+`Array(data, shape)` is an $N$-dimensional array of expressions, filled in
+row major order as in SymPy. `arr_get()` reads an entry, with indices
+starting at 1 as usual in R. The helper below collects the entries of a one
+or two dimensional array into an R character vector or matrix for display.
+
+```{r}
+entries <- function(a) {
+  s <- shape(a)
+  if (length(s) == 1) return(vapply(seq_len(s), function(i) sstr(arr_get(a, i)), ""))
+  outer(seq_len(s[1]), seq_len(s[2]),
+        Vectorize(function(i, j) sstr(arr_get(a, c(i, j)))))
+}
+M <- Array(list(1, 2, 3, 4), c(2, 2))
+shape(M)
+entries(M)
+arr_get(M, c(1, 2))
+entries(tensorproduct(Array(list(1, 2)), Array(list(x, y))))
+tensorcontraction(M, c(1, 2))
+entries(permutedims(M, c(2, 1)))
+```
+
+`derive_by_array()` differentiates with respect to an array of variables, so
+applying it twice gives the Hessian.
+
+```{r}
+g <- derive_by_array(x^2 * y, list(x, y))
+entries(g)
+entries(derive_by_array(g, list(x, y)))
+```
+
+`tensordiagonal()` takes the diagonal over pairs of axes, and
+`NDimArray()` is another name for `Array()`.
+
+```{r}
+C4 <- Array(as.list(1:16), c(2, 2, 2, 2))
+entries(tensordiagonal(Array(list(1, 2, 3, 4), c(2, 2)), c(1, 2)))
+shape(tensordiagonal(C4, c(1, 2), c(3, 4)))
+shape(NDimArray(list(1, 2, 3, 4, 5, 6), c(2, 3)))
+```
+
+### Transforms over subset lattices
+
+`walsh_hadamard_transform()` and the Mobius transforms of
+`sympy.discrete.transforms` work on sequences indexed by subsets:
+
+```{r}
+walsh_hadamard_transform(list(1, 2, 3, 4))
+mobius_transform(list(1, 2, 3, 4))
+inverse_mobius_transform(list(1, 3, 4, 10))
+```
+
+### Contraction structure of indexed expressions
+
+`get_contraction_structure()` finds the summation indices of an expression
+built from `Indexed` objects, and `format_contraction_structure()` makes the
+result readable.
+
+```{r}
+i <- Idx("i"); j <- Idx("j")
+A <- IndexedBase("A"); B <- IndexedBase("B")
+format_contraction_structure(get_contraction_structure(A(i, j) * B(j)))
+format_contraction_structure(get_contraction_structure(A(i, i)))
+Indexed(A, i)
+```
+
+## Tensor index notation
+
+`TensorIndexType()` declares a kind of index (with a metric), and
+`TensorHead()` declares a tensor with given symmetries. Expressions follow
+the Einstein summation convention: a repeated upper and lower index is
+summed, and a minus sign marks a lower index. `canon_bp()` brings an
+expression to canonical form, which detects symmetry cancellations.
+
+```{r}
+L <- TensorIndexType("L", dummy_name = "L")
+idx <- tensor_indices("i, j", L)
+i <- idx$i; j <- idx$j
+A <- TensorHead("A", list(L, L), TensorSymmetry.fully_symmetric(-2))
+B <- TensorHead("B", list(L, L), TensorSymmetry.fully_symmetric(2))
+p <- TensorHead("p", list(L))
+canon_bp(A(i, j) * B(-j, -i))
+canon_bp(B(i, j) - B(j, i))
+contract_metric(L$metric(i, j) * p(-j), L$metric)
+```
+
+The contraction of an antisymmetric tensor with a symmetric one vanishes,
+and contracting with the metric raises the index of `p`.
+
+
+### Building tensor expressions
+
+`TensorIndex()` creates a single index, and `tensor_heads()` several tensor
+heads at once. `TensMul()`, `TensAdd()`, and `tensor_mul()` build products
+and sums explicitly. `get_free_indices()` and `get_dummy_indices()` report
+the free and contracted indices.
+
+```{r}
+k <- TensorIndex("k", L)
+k
+hp <- tensor_heads("q, r", list(L))
+q <- hp[[1]]; r <- hp[[2]]
+e <- tensor_mul(q(i), r(-i), p(j))
+e
+get_free_indices(e)
+get_dummy_indices(e)
+TensAdd(q(i), r(i))
+doit(TensMul(2, q(i)))
+substitute_indices(q(i) * r(j), list(i, k))
+```
+
+### Symmetries
+
+`TensorSymmetry()` describes the symmetry of a tensor through a base and
+strong generating set. `TensorSymmetry.no_symmetry()`,
+`TensorSymmetry.direct_product()`, and `TensorSymmetry.riemann()` cover the
+common cases.
+
+```{r}
+TensorSymmetry.no_symmetry(2)
+TensorSymmetry.direct_product(2, -2)
+Rm <- TensorHead("R", rep(list(L), 4), TensorSymmetry.riemann())
+TensorSymmetry(get_symmetric_group_sgs(2))
+```
+
+The Riemann tensor satisfies the cyclic identity
+$R_{ijkl} + R_{iklj} + R_{iljk} = 0$, which `riemann_cyclic_replace()` and
+`riemann_cyclic()` use to rewrite it:
+
+```{r}
+idx4 <- tensor_indices("m0, m1, m2, m3", L)
+riemann_cyclic_replace(Rm(idx4$m0, idx4$m2, idx4$m1, idx4$m3))
+riemann_cyclic(Rm(i, j, k, idx4$m0) * (Rm(-i, -j, -k, -idx4$m0) -
+                                     2 * Rm(-i, -k, -j, -idx4$m0)))
+```
+
+### Kronecker delta
+
+`contract_delta()` contracts the Kronecker delta of an index type:
+
+```{r}
+Ln <- TensorIndexType("Ln", dim = 3)
+d <- tensor_indices("a, b", Ln)
+Ln$delta
+contract_delta(Ln$delta(d$a, -d$b) * Ln$delta(d$b, -d$a), Ln$delta)
+```
+
+### Partial derivatives
+
+`PartialDerivative()` is the derivative of a tensor expression with respect
+to a tensor. `pd_perform_derivative()` evaluates it and `pd_expand()`
+distributes it over sums.
+
+```{r}
+Af <- TensorHead("Af", list(L))
+pd <- PartialDerivative(Af(i), Af(j))
+get_free_indices(pd)
+pd_perform_derivative(pd)
+pd_expand(PartialDerivative(Af(i) + q(i), Af(j)))
+```
+
+### Replacing tensors with arrays
+
+`replace_with_arrays()` evaluates an expression once the components of each
+tensor and of the metric are known. Here $H^{i}{}_{j}$ has the given
+components and the metric is $\mathrm{diag}(1, -1)$.
+
+```{r}
+H <- TensorHead("H", list(L, L))
+repl <- list(list(H(i, -j), Array(list(list(1, 2), list(3, 4)))),
+             list(L, Array(list(list(1, 0), list(0, -1)))))
+entries(replace_with_arrays(H(i, j), repl))
+entries(replace_with_arrays(H(i, j), repl, list(i, -j)))
+```
+
+`TensorManager` holds the commutation rules between tensor groups:
+
+```{r}
+class(TensorManager)
+```
+
+## Canonicalization of tensor expressions
+
+The `tensor_can` functions implement the Butler-Portugal algorithm that
+`canon_bp()` uses. A tensor expression is encoded as a permutation of index
+slots, and the symmetries as base and strong generating sets.
+`get_symmetric_group_sgs()` gives the BSGS of a symmetric or antisymmetric
+tensor, and `riemann_bsgs` that of the Riemann tensor.
+
+```{r}
+sgs2 <- get_symmetric_group_sgs(2)
+sgs2
+get_symmetric_group_sgs(3, antisym = TRUE)
+riemann_bsgs
+```
+
+`canonicalize(g, dummies, msym, ...)` returns the canonical form of the
+permutation `g`. The example is $A^{d_0 d_1} B_{d_1 d_0}$ written with slot
+order $(2, 1, 3, 0)$ and two signature slots, for symmetric $A$ and $B$.
+
+```{r}
+P <- function(...) Permutation(c(...))
+canonicalize(P(2, 1, 3, 0, 4, 5), 0:3, 0, list(sgs2[[1]], sgs2[[2]], 1, 0),
+             list(sgs2[[1]], sgs2[[2]], 1, 0))
+canonical_free(integer(), sgs2[[2]], P(1, 0, 2, 3), 2)
+```
+
+The helpers build the BSGS of products and of the dummy index symmetries:
+
+```{r}
+tensor_gens(sgs2[[1]], sgs2[[2]], list(0, 1), 0)
+gens_products(list(sgs2[[1]], sgs2[[2]], list(0, 1), 0))
+bsgs_direct_product(sgs2[[1]], sgs2[[2]], sgs2[[1]], sgs2[[2]])
+dummy_sgs(0:3, 0, 4)
+perm_af_direct_product(list(c(1, 0, 2, 3), c(0, 1, 3, 2)), list(c(1, 0)), 0)
+get_minimal_bsgs(c(1, 0), list(P(0, 2, 1, 3, 4), P(1, 0, 2, 3, 4)))
+```
+
+`get_transversals()` and `transversal2coset()` list the coset
+representatives along a base, and `double_coset_can_rep()` finds the
+canonical representative of a double coset.
+
+```{r}
+sgs3 <- get_symmetric_group_sgs(3)
+tr <- get_transversals(sgs3[[1]], sgs3[[2]])
+length(tr)
+transversal2coset(5, sgs3[[1]], tr)
+dg <- dummy_sgs(0:5, 0, 6)
+double_coset_can_rep(list(0:5), list(0), c(0, 2), dg,
+                     get_transversals(c(0, 2), dg), P(4, 1, 3, 0, 5, 2, 6, 7))
+```

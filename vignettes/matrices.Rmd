@@ -1,0 +1,406 @@
+---
+title: "Matrices and linear algebra"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Matrices and linear algebra}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+symcompR has dense matrices of symbolic expressions with exact linear
+algebra (determinants, inverses, row reduction, eigenvalues, and canonical
+forms and decompositions), and symbolic matrix expressions in which a whole
+matrix is a single symbol.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y")
+a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c")
+n <- Symbol("n", integer = TRUE)
+```
+
+## Building matrices
+
+`Matrix()` takes a list of rows, an R matrix, a vector (which becomes a
+column), or dimensions and a function of the row and column index.
+Following R, indices start at 1 (SymPy starts at 0).
+
+```{r}
+M <- Matrix(list(list(1, 2), list(3, 4)))
+M
+Matrix(matrix(1:6, nrow = 2))
+Matrix(c(1, 2, 3))
+Matrix(2, 3, function(i, j) 10 * i + j)
+```
+
+Special matrices:
+
+```{r}
+eye(3)
+zeros(2, 3)
+ones(2, 2)
+sym_diag(1, 2, 3)
+jordan_cell(a, 3)
+rot_axis3(sym_pi / 2)
+```
+
+`sym_diag()` is SymPy's `diag()`; it carries a prefix so that it does not
+mask `base::diag()`.
+
+## Indexing and shape
+
+Matrices are indexed like R matrices, and assignment works the same way.
+
+```{r}
+M[1, 2]
+M[2, ]
+M[, 1]
+dim(M)
+M2 <- M
+M2[1, 1] <- x
+M2
+```
+
+`as.matrix()` converts a numeric symbolic matrix into an ordinary R matrix.
+
+```{r}
+as.matrix(M)
+```
+
+## Arithmetic
+
+`+`, `-`, and multiplication by a scalar work as usual. Because `*` between
+two R matrices is elementwise, the same holds here; the matrix product is
+`%*%` and the matrix power `%^%`.
+
+```{r}
+M + M
+2 * M
+M * M
+M %*% M
+M %^% 2
+M %^% -1
+t(M)
+```
+
+Functions such as `subs()`, `diff()`, `N()`, and `simplify()` work entry by
+entry, and `applyfunc()` applies any function to every entry.
+
+```{r}
+P <- Matrix(list(list(1, x), list(x^2, sin(x))))
+subs(P, x, 2)
+diff(P, x)
+applyfunc(Matrix(list(list(sin(x)^2 + cos(x)^2, 1))), simplify)
+N(Matrix(list(list(sqrt(S(2)), sym_pi))), 5)
+```
+
+## Determinant, inverse, and row reduction
+
+```{r}
+sym_det(M)
+inverse(M)
+S <- Matrix(list(list(a, b), list(c, 1)))
+sym_det(S)
+inverse(S)
+adjugate(M)
+cofactor(M, 1, 2)
+permanent(M)
+```
+
+`sym_det()` uses Bareiss' fraction free elimination by default;
+`method = "berkowitz"` and `method = "laplace"` are also available. A linear
+system $Mx = v$ is solved with `solve()`:
+
+```{r}
+solve(M, Matrix(c(5, 6)))
+```
+
+`rref()` returns the reduced row echelon form and the pivot columns.
+`rank_matrix()`, `nullspace()`, `columnspace()`, and `rowspace()` describe
+the fundamental subspaces.
+
+```{r}
+S3 <- Matrix(list(list(1, 2, 3), list(4, 5, 6), list(7, 8, 9)))
+rref(S3)
+rank_matrix(S3)
+nullspace(S3)
+columnspace(S3)
+sym_trace(S3)
+```
+
+## Eigenvalues and diagonalization
+
+`charpoly()` gives the characteristic polynomial and `eigenvals()` its roots.
+Exact eigenvalues can involve radicals.
+
+```{r}
+A <- Matrix(list(list(2, 1), list(1, 2)))
+charpoly(A, x)
+eigenvals(A)
+eigenvals(M)
+```
+
+`eigenvects()` returns, for each eigenvalue, its algebraic multiplicity and a
+basis of the eigenspace.
+
+```{r}
+ev <- eigenvects(A)
+ev[[1]]$value
+ev[[1]]$vectors[[1]]
+is_diagonalizable(A)
+```
+
+`diagonalize()` returns `list(P, D)` with $A = P D P^{-1}$ and $D$
+diagonal. The order of the eigenvalues on the diagonal is not
+canonical, so the check below multiplies the factors back together.
+
+```{r}
+dg <- diagonalize(A)
+dg$P %*% dg$D %*% inverse(dg$P) == A
+sort(vapply(1:2, function(i) sstr(dg$D[i, i]), ""))
+```
+
+### Jordan normal form
+
+Not every matrix is diagonalizable. `jordan_form()` returns `list(P, J)` with
+$M = P J P^{-1}$ and $J$ in Jordan normal form.
+
+```{r}
+J3 <- Matrix(list(list(1, 1, 0), list(0, 1, 0), list(0, 0, 2)))
+is_diagonalizable(J3)
+jordan_form(J3)
+K <- Matrix(list(list(5, 4, 2, 1), list(0, 1, -1, -1),
+                 list(-1, -1, 3, 0), list(1, 1, -1, 2)))
+jordan_form(K, calc_transform = FALSE)
+```
+
+The last matrix has eigenvalues 1, 2, and 4, with a 2 by 2 Jordan block for
+the repeated eigenvalue 4.
+
+`matrix_exp()` computes the matrix exponential of a diagonalizable matrix:
+
+```{r}
+matrix_exp(Matrix(list(list(0, 1), list(-1, 0))))
+```
+
+## Decompositions
+
+```{r}
+lu <- LUdecomposition(M)
+lu$L
+lu$U
+qr <- QRdecomposition(M)
+qr$Q
+qr$R
+SPD <- Matrix(list(list(4, 2), list(2, 3)))
+cholesky(SPD)
+LDLdecomposition(SPD)
+```
+
+Check one of them: $QR$ should give back $M$.
+
+```{r}
+simplify(qr$Q %*% qr$R)
+```
+
+## Integer normal forms
+
+The Hermite normal form is the integer analogue of the reduced row echelon
+form, and the Smith normal form diagonalizes an integer matrix by unimodular
+row and column operations. Its diagonal, the invariant factors, classifies
+finitely generated abelian groups.
+
+```{r}
+hermite_normal_form(Matrix(list(list(2, 7, 17, 29, 41),
+                                list(3, 11, 19, 31, 43),
+                                list(5, 13, 23, 37, 47))))
+SN <- Matrix(list(list(12, 6, 4), list(3, 9, 6), list(2, 16, 14)))
+smith_normal_form(SN)
+invariant_factors(SN)
+```
+
+## Calculus with matrices
+
+```{r}
+jacobian(list(x^2 * y, 5 * x + sin(y)), list(x, y))
+hessian(x^3 + x * y^2, list(x, y))
+wronskian(list(sin(x), cos(x)), x)
+gradient(x^2 * y, list(x, y))
+```
+
+## Vectors
+
+Column vectors are one column matrices.
+
+```{r}
+u <- Matrix(c(1, 2, 3)); v <- Matrix(c(4, 5, 6))
+dot(u, v)
+cross(Matrix(c(1, 0, 0)), Matrix(c(0, 1, 0)))
+norm_matrix(Matrix(c(3, 4)))
+kronecker_product(M, eye(2))
+```
+
+## Matrix expressions
+
+`MatrixSymbol(name, n, m)` is a matrix whose entries are not specified.
+Products, sums, powers, transposes, and inverses of matrix symbols form
+matrix expressions, which respect noncommutativity and check shapes.
+
+```{r}
+A <- MatrixSymbol("A", 2, 2); B <- MatrixSymbol("B", 2, 2)
+A * B + A * B
+A * B - B * A
+t(A * B)
+A^-1 * A
+mat_shape(A * B)
+```
+
+Here `*` is the matrix product, because matrix symbols have no elementwise
+interpretation; `HadamardProduct()` is the elementwise product.
+
+```{r}
+HadamardProduct(A, B)
+MatrixElement(A, 0, 1)
+as_explicit(A * B)
+```
+
+`MatrixElement()` uses SymPy's zero based indices, which is also how the
+entries of an explicit matrix symbol print. `Trace()`, `Determinant()`, and
+`Inverse()` are unevaluated until `doit()`.
+
+```{r}
+doit(Trace(A + B))
+X <- MatrixSymbol("X", n, n)
+X * Identity(n)
+X + ZeroMatrix(n, n)
+t(Inverse(X))
+MatrixSlice(X, list(0, 2), list(0, 2))
+```
+
+Block matrices are built from matrix expressions.
+
+```{r}
+BlockMatrix(list(list(A, ZeroMatrix(2, 2)), list(ZeroMatrix(2, 2), B)))
+```
+
+More matrix expression classes. `MatAdd()`, `MatMul()`, and `MatPow()`
+build unevaluated sums, products, and powers, `Transpose()` and `Adjoint()`
+the (conjugate) transposes, `HadamardPower()` the elementwise power, and
+`KroneckerProduct()` the Kronecker product. `matrix_symbols()` lists the
+matrix symbols in an expression.
+
+```{r}
+C <- MatrixSymbol("C", 2, 2)
+MatAdd(A, B)
+MatMul(2, A, B)
+MatPow(A, 3)
+as_explicit(MatPow(A, 2))
+Transpose(A * B)
+doit(Transpose(A * B))
+Adjoint(A)
+HadamardPower(A, 2)
+mat_shape(KroneckerProduct(A, B))
+matrix_symbols(A * B)
+doit(Determinant(A))
+```
+
+Structured matrices: `DotProduct()` of two column vectors, the diagonal of
+a matrix (`DiagonalOf()`), a diagonal matrix from a matrix or vector
+(`DiagonalMatrix()`, `DiagMatrix()`, `diagonalize_vector()`), the matrix of
+ones, matrices defined by a function of the indices, permutation matrices,
+and permuted rows (`MatrixPermute()`).
+
+```{r}
+u <- MatrixSymbol("u", 3, 1); w <- MatrixSymbol("w", 3, 1)
+DotProduct(u, w)
+doit(DotProduct(u, w))
+as_explicit(DiagonalOf(A))
+as_explicit(DiagonalMatrix(A))
+as_explicit(DiagMatrix(u))
+as_explicit(diagonalize_vector(u))
+as_explicit(OneMatrix(2, 3))
+as_explicit(FunctionMatrix(2, 2, Lambda(list(x, y), x + y)))
+as_explicit(PermutationMatrix(Permutation(c(1, 2, 0))))
+as_explicit(MatrixPermute(A, Permutation(c(1, 0))))
+doit(Permanent(Matrix(list(list(1, 2), list(3, 4)))))
+```
+
+Block matrices: `BlockDiagMatrix()` is block diagonal, `block_collapse()`
+evaluates block arithmetic, and `blockcut()` cuts a matrix into blocks.
+
+```{r}
+BlockDiagMatrix(A, B)
+block_collapse(BlockMatrix(list(list(A, B))) * BlockDiagMatrix(B, C))
+block_collapse(BlockDiagMatrix(A, B) + BlockDiagMatrix(B, C))
+as_explicit(blockcut(Matrix(4, 4, f = 0:15), c(2, 2), c(2, 2)))
+```
+
+## More matrix functions
+
+```{r}
+M <- Matrix(list(list(1, 2), list(3, 4)))
+transpose(M)
+det_quick(M)
+inv_quick(M)
+per(M)
+rowspace(Matrix(list(list(1, 2), list(2, 4))))[[1]]
+set.seed(1)
+randMatrix(2, 3)
+cofactor_matrix(M)
+minor(M, 1, 2)
+trace_matrix(M)
+is_square(M)
+is_symmetric(M)
+is_symmetric(Matrix(list(list(1, 2), list(2, 1))))
+is_zero_matrix(zeros(2, 2))
+vec(M)
+hadamard_product(M, M)
+matrix_multiply_elementwise(M, M)
+diag_matrix(1, 2, 3)
+adjoint(M)
+pinv(Matrix(list(list(1, 2, 3))))
+pinv(Matrix(list(list(1, 0), list(0, 2), list(0, 0))))
+GramSchmidt(list(Matrix(list(1, 1, 0)), Matrix(list(1, 0, 1))))
+GramSchmidt(list(Matrix(list(1, 1, 0)), Matrix(list(1, 0, 1))), orthonormal = TRUE)
+```
+
+`minor(M, i, j)` uses R's indices, starting at 1.
+
+Sparse and banded matrices:
+
+```{r}
+SparseMatrix(2, 2, list(list(0, 0, 1), list(1, 1, 5)))
+ImmutableSparseMatrix(2, 2, list(list(0, 1, 3)))
+MutableSparseMatrix(2, 2, list(list(1, 0, 7)))
+banded(3, list("0" = 1, "-1" = c(2, 3)))
+```
+
+Rotation matrices: `rot_axis1()` to `rot_axis3()` rotate the coordinate
+frame, `rot_ccw_axis1()` to `rot_ccw_axis3()` rotate vectors
+counterclockwise, and `rot_givens()` is a Givens rotation in a coordinate
+plane.
+
+```{r}
+rot_axis1(sym_pi / 2)
+rot_axis2(sym_pi / 2)
+rot_ccw_axis1(sym_pi / 2)
+rot_ccw_axis2(sym_pi / 2)
+rot_ccw_axis3(sym_pi / 2)
+rot_givens(0, 1, sym_pi / 3)
+```
+
+Linear systems and other constructions: `linear_eq_to_matrix()` extracts
+the coefficient matrix and right hand side, `casoratian()` is the
+Casoratian of sequences (the discrete Wronskian), and `symarray()` is a
+matrix of indexed symbols.
+
+```{r}
+k <- Symbol("k", integer = TRUE)
+linear_eq_to_matrix(list(x + 2 * y - 3, 3 * x - y + 1), list(x, y))
+casoratian(list(1, 2^k), k)
+symarray("a", c(2, 2))
+```

@@ -1,0 +1,262 @@
+---
+title: "Logic and sets"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Logic and sets}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+This vignette covers Boolean algebra (normal forms, minimization, and
+satisfiability) and sets: intervals, finite sets, the number sets, image
+sets, condition sets, ranges, set operations, and transfinite ordinals. The
+predicate based assumptions system (`ask()`, `refine()`, and `assuming()`)
+has its own vignette.
+
+```{r}
+library(symcompR)
+p <- Symbol("p"); q <- Symbol("q"); r <- Symbol("r")
+w <- Symbol("w"); x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
+n <- Symbol("n", integer = TRUE)
+```
+
+## Boolean expressions
+
+Symbols double as Boolean variables. `And()`, `Or()`, `Not()`, `Xor()`,
+`Implies()`, `Equivalent()`, and `ITE()` (if then else) build Boolean
+functions, and `&`, `|`, and `!` work as operators.
+
+```{r}
+And(p, Or(q, Not(p)))
+(p & q) | !r
+Implies(p, q)
+Equivalent(p, q)
+Xor(p, q)
+And(p, TRUE)
+```
+
+Truth values are substituted with `subs()`, and `truth_table()` lists all
+assignments.
+
+```{r}
+subs(And(p, q), list(list(p, S_true), list(q, S_false)))
+truth_table(Implies(p, q))
+```
+
+### Normal forms and simplification
+
+```{r}
+to_cnf(Or(And(p, q), r))
+to_dnf(And(Or(p, q), r))
+to_nnf(Not(Implies(p, q)))
+eliminate_implications(Implies(p, q))
+is_cnf(And(Or(p, q), r))
+to_cnf(Equivalent(p, Or(q, r)), simplify = TRUE)
+```
+
+`simplify_logic()` finds a minimal equivalent expression with the
+Quine-McCluskey algorithm.
+
+```{r}
+simplify_logic(Or(And(p, q), And(p, Not(q))))
+simplify_logic((!p & !q & !r) | (!p & !q & r))
+simplify_logic(Implies(p, q) & Implies(q, p), form = "cnf")
+```
+
+`SOPform()` and `POSform()` build a minimal sum of products or product of
+sums from the minterms of a truth table (the rows where the function is
+true), optionally with "don't care" rows. Minterms are given as row
+numbers, so `c(3, 7)` over `x, y, z` means the rows `011` and `111`.
+
+```{r}
+SOPform(list(x, y, z), c(3, 7))
+SOPform(list(x, y, z), c(1, 2, 5, 6))
+POSform(list(w, x, y, z), c(1, 3, 7, 11, 15), dontcares = c(0, 2, 5))
+```
+
+### Satisfiability
+
+`satisfiable()` runs the DPLL algorithm. It returns a satisfying assignment,
+or `FALSE` when there is none. `valid()` tests whether an expression is a
+tautology.
+
+```{r}
+satisfiable(And(p, Not(q)))
+satisfiable(And(p, Not(p)))
+length(satisfiable(Or(p, q), all_models = TRUE))
+valid(Or(p, Not(p)))
+```
+
+The remaining connectives are `Nand()`, `Nor()`, and the if then else
+function `ITE()`. `is_dnf()` and `is_nnf()` test for disjunctive and
+negation normal form.
+
+```{r}
+Nand(TRUE, FALSE)
+Nor(TRUE, FALSE)
+Nand(x > 0, y > 0)
+Nor(x > 0, y > 0)
+ITE(TRUE, p, q)
+c(is_dnf(Or(And(p, q), r)), is_dnf(And(p, Or(q, r))))
+c(is_nnf(And(Not(p), q)), is_nnf(Not(And(p, q))))
+distribute_or_over_and(And(Or(Not(p), q), r))
+```
+
+`bool_map()` decides whether two Boolean functions are the same up to a
+renaming of variables, and returns the renaming.
+
+```{r}
+bool_map(Or(And(p, q), Not(p)), Or(And(x, y), Not(x)))
+```
+
+## Assumptions
+
+The assumptions system, with `ask()` and `refine()`, has its own vignette,
+`vignette("assumptions", package = "symcompR")`.
+
+## Sets
+
+### Intervals and finite sets
+
+`Interval(a, b)` is closed by default; `left_open` and `right_open` change
+that, and `Interval_open()`, `Interval_Lopen()`, and `Interval_Ropen()` are
+shortcuts.
+
+```{r}
+Interval(0, 1)
+Interval(0, 1, TRUE, FALSE)
+Interval_open(0, 1)
+Interval_Lopen(0, 1)
+Interval_Ropen(0, 1)
+FiniteSet(1, 2, 3)
+```
+
+Set operations simplify their result whenever they can.
+
+```{r}
+Union(Interval(0, 1), Interval(2, 3), Interval(1, 2))
+Union(Interval(0, 1), EmptySet)
+Intersection(Interval(0, 1), UniversalSet)
+PowerSet(FiniteSet(1, 2))
+DisjointUnion(FiniteSet(1, 2), FiniteSet(3))
+Intersection(Interval(0, 5), Interval(3, 10))
+Complement(Interval(0, 5), Interval(1, 2))
+Complement(Reals, FiniteSet(0))
+SymmetricDifference(Interval(0, 3), Interval(2, 5))
+Union(FiniteSet(1, 2, 3), FiniteSet(3, 4))
+Intersection(FiniteSet(1, 2, 3), Interval(2, 5))
+ProductSet(FiniteSet(1, 2), FiniteSet(3, 4))
+```
+
+Membership, inclusion, and measure:
+
+```{r}
+contains(Interval(0, 1), Rational(1, 2))
+contains(Interval(0, 1), x)
+is_subset(Interval(0, 1), Interval(-1, 2))
+measure(Union(Interval(0, 1), Interval(2, 4)))
+boundary(Interval(0, 1, TRUE))
+set_inf(Union(Interval(0, 1), Interval(2, 4)))
+set_sup(Union(Interval(0, 1), Interval(2, 4)))
+```
+
+`contains()` returns a condition when membership depends on a symbol, and
+`as_relational()` turns a set into the equivalent condition.
+
+```{r}
+as_relational(Union(Interval(0, 1), Interval(2, 3)), x)
+```
+
+### Number sets and ranges
+
+`Naturals`, `Naturals0`, `Integers`, `Rationals`, `Reals`, and `Complexes`
+are the standard number sets. `Range()` is an arithmetic progression of
+integers, possibly infinite.
+
+```{r}
+is_subset(Naturals, Integers)
+Naturals0
+Rationals
+Complexes
+contains(Rationals, Rational(1, 2))
+Intersection(Integers, Interval(-2.5, 2))
+Range(1, 10, 3)
+contains(Range(1, 10, 3), 7)
+Intersection(Range(1, 10, 3), Interval(3, 8))
+Range(0, oo, 2)
+```
+
+### Image sets and condition sets
+
+`ImageSet(f, S)` is the image $\{f(s) : s \in S\}$; `imageset()` simplifies
+it when possible. `ConditionSet(x, cond, S)` is $\{x \in S : \text{cond}\}$.
+These are the sets that `solveset()` returns for periodic and unsolved
+equations.
+
+```{r}
+squares <- ImageSet(Lambda(x, x^2), Naturals)
+squares
+contains(squares, 4)
+imageset(Lambda(x, 2 * x), Integers)
+imageset(Lambda(x, x^2), Interval(-2, 1))
+ConditionSet(x, Eq(sin(x), x), Interval(0, 1))
+```
+
+### Complex regions
+
+`ComplexRegion()` describes a region of the complex plane as a product of
+intervals, in rectangular or polar form.
+
+```{r}
+R1 <- ComplexRegion(ProductSet(Interval(2, 3), Interval(4, 6)))
+contains(R1, Rational(5, 2) + Rational(9, 2) * sym_I)
+Intersection(ComplexRegion(ProductSet(Interval(1, 3), Interval(-1, 1))), Reals)
+ComplexRegion(ProductSet(Interval(0, 1), Interval(0, 2 * sym_pi)), polar = TRUE)
+```
+
+`a_interval()`, `b_interval()`, and `psets()` return the parts of a
+region, `complex_region_from_real()` embeds a set of reals, and
+`normalize_theta_set()` reduces a set of angles to $[0, 2\pi)$.
+
+```{r}
+R2 <- ComplexRegion(ProductSet(Interval(1, 2), Interval(3, 4)))
+a_interval(R2)
+b_interval(R2)
+psets(R2)[[1]]
+complex_region_from_real(Interval(1, 2))
+normalize_theta_set(Interval(9 * sym_pi / 2, 5 * sym_pi))
+normalize_theta_set(Interval(-3 * sym_pi / 2, sym_pi / 2))
+```
+
+### Set arithmetic
+
+`SetExpr()` wraps a set so that arithmetic acts on all of its elements, which
+is interval arithmetic for intervals.
+
+```{r}
+SetExpr(Interval(0, 1)) + 1
+SetExpr(Interval(1, 2)) * SetExpr(Interval(10, 20))
+```
+
+## Ordinals
+
+symcompR implements ordinal numbers below $\varepsilon_0$ in Cantor normal
+form. `ord_omega` is $\omega$, and ordinal arithmetic is not commutative:
+
+```{r}
+w <- ord_omega
+w + 1
+1 + w
+1 + w == w
+(w + 3) * (w + 2)
+Ordinal(OmegaPower(3, 2), OmegaPower(1, 4), OmegaPower(0, 7))
+is_successor_ordinal(w^2 + 1)
+is_limit_ordinal(w^2)
+ord0
+ord0 + 1
+ordinal_degree(w^2 + w * 3 + 1)
+```

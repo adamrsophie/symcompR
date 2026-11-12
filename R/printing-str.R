@@ -465,5 +465,7 @@ toString.sym <- function(x, ...) .str_top(x)
 # that is a Basic but not an Expr (a coordinate system, for one)
 .NON_EXPR_TYPES <- c("CoordSystem", "Patch", "Manifold", "Point", "Object", "Str",
                      # Quantity.is_number and Dimension.is_number are False
-                     "Quantity", "Dimension")
+                     "Quantity", "Dimension",
+                     # MatrixSymbol.free_symbols is the symbol itself
+                     "MatrixSymbol")
 .expr_is_number <- function(f) !length(free_symbols(f)) && !.has_undef(f) && !.has_type(f, .NON_EXPR_TYPES)

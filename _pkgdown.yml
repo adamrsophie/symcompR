@@ -7,9 +7,425 @@ template:
 
 navbar:
   structure:
-    left: [intro, reference, news]
+    left: [intro, reference, articles, news]
     right: [search, lightswitch, github]
 
 home:
   sidebar:
     structure: [links, license, citation, authors, dev]
+
+articles:
+- title: Core algebra
+  navbar: Core algebra
+  contents:
+  - expressions
+  - simplification
+  - assumptions
+  - pattern-matching
+  - polynomials
+  - polynomial-domains
+  - matrices
+  - logic-and-sets
+- title: Calculus and equations
+  navbar: Calculus and equations
+  contents:
+  - calculus
+  - integration
+  - series-and-sequences
+  - holonomic
+  - special-functions
+  - solvers
+- title: Discrete mathematics and algebra
+  navbar: Discrete mathematics and algebra
+  contents:
+  - number-theory
+  - combinatorics
+  - permutation-groups
+  - fp-groups
+  - galois-number-fields
+  - lie-algebras
+  - categories
+  - cryptography
+- title: Geometry and physics
+  navbar: Geometry and physics
+  contents:
+  - geometry
+  - vector-calculus
+  - tensors
+  - differential-geometry
+  - physics-units
+- title: Input, output, and utilities
+  navbar: Input, output, and utilities
+  contents:
+  - printing
+  - code-printers
+  - parsing
+  - other-modules
+  - aliases-and-conditions
+
+reference:
+- title: Symbols, numbers, and expressions
+  desc: Creating symbols and numbers, constructing expressions, and converting between R and symbolic values.
+  contents:
+  - Symbol
+  - Dummy
+  - Function
+  - Lambda
+  - Integer
+  - constants
+  - Tuple
+  - Dict
+  - Eq
+  - sym-operators
+  - core-helpers
+  - UnevaluatedExpr
+  - Indexed
+  - array-aliases
+  - as_sym
+  - sympify
+  - as.numeric.sym
+  - as_bigq
+  - is_sym
+  - function-aliases
+  - sympy-exceptions
+  - sympy_seed
+  - interactive-session
+  - misc-helpers
+  - utility-helpers
+- title: Inspecting and transforming expressions
+  desc: Structure, traversal, substitution, pattern matching, and rewriting.
+  contents:
+  - sym_type
+  - sym_args
+  - sym_name
+  - atoms
+  - has
+  - free_symbols
+  - preorder_traversal
+  - count_ops
+  - subs
+  - doit
+  - rewrite
+  - sym_match
+  - WildFunction
+  - unify
+  - strategies
+  - EPath
+  - extract-methods
+  - could_extract_minus_sign
+  - as_content_primitive
+- title: Assumptions
+  desc: Assumptions attached to symbols and the predicate based assumptions system.
+  contents:
+  - assumptions
+  - assumption-queries
+  - 'Q'
+  - ask_fact
+  - assumptions-context
+- title: Numerical evaluation
+  contents:
+  - 'N'
+  - lambdify
+  - nsimplify
+- title: Printing
+  contents:
+  - sstr
+  - pretty
+  - latex
+  - mathml
+  - TableForm
+  - printing-helpers
+  - code-printers
+  - more-code-printers
+  - plot.sym
+  - textplot
+- title: Parsing
+  contents:
+  - parse_expr
+  - parse_expr_transformations
+  - parser_T
+  - parse_latex
+  - parse_latex_lark
+  - parse_latex_lark_all
+  - parse_mathematica
+- title: Simplification
+  contents:
+  - simplify
+  - expand
+  - sym_factor
+  - factor_terms
+  - collect
+  - collect_const
+  - cancel
+  - together
+  - apart
+  - fraction
+  - denoms
+  - trigsimp
+  - fu
+  - powsimp
+  - radsimp
+  - signsimp
+  - gammasimp
+  - besselsimp
+  - kroneckersimp
+  - hyperexpand
+  - nc_simplify
+  - factor_nc
+  - piecewise_simplify
+  - separatevars
+  - cse
+  - ratsimpmodprime
+  - simplify-helpers
+- title: Calculus
+  contents:
+  - diff.sym
+  - Derivative
+  - idiff
+  - differentiate_finite
+  - calculus-utils
+  - limit
+  - gruntz
+  - series
+  - 'O'
+  - taylor_term
+  - summation
+  - sum-limits
+  - series-helpers
+  - AccumBounds
+- title: Integration and integral transforms
+  contents:
+  - sym_integrate
+  - ratint
+  - heurisch
+  - risch_integrate
+  - meijerint_indefinite
+  - integral_steps
+  - line_integrate
+  - laplace_transform
+  - fourier_transform
+  - mellin_transform
+  - integral-transforms
+  - transform-helpers
+- title: Sequences and series objects
+  contents:
+  - sequences
+  - limit_seq
+  - fourier_series
+  - fps
+  - holonomic
+  - pade
+  - approximants
+- title: Solvers
+  contents:
+  - solve.sym
+  - solveset
+  - linsolve
+  - more-solvers
+  - substitution
+  - solver-helpers
+  - nsolve
+  - abs-inequalities
+  - solve_univariate_inequality
+  - reduce_rational_inequalities
+  - not_empty_in
+  - rsolve
+  - rsolve-parts
+  - dsolve
+  - pdsolve
+  - diophantine
+- title: Polynomials
+  contents:
+  - Poly
+  - poly-aliases
+  - polys-extra
+  - degree
+  - div
+  - gcd
+  - primitive
+  - sym_factor
+  - resultant
+  - groebner
+  - compose
+  - roots
+  - nroots
+  - CRootOf
+  - RootSum
+  - is_polynomial
+  - Monomial
+  - binomial_coefficients
+  - Options
+  - domains
+  - construct_domain
+  - rings
+  - galois_group
+  - tschirnhausen_transformation
+- title: Algebraic number theory
+  contents:
+  - AlgebraicNumber
+  - primitive_element
+  - round_two
+- title: Matrices and linear algebra
+  contents:
+  - Matrix
+  - matrix-builders
+  - matrix-constructions
+  - dot
+  - sym_det
+  - charpoly
+  - jordan_form
+  - LUdecomposition
+  - hermite_normal_form
+  - matrix_exp
+  - jacobian
+  - matrix-expressions
+- title: Number theory
+  contents:
+  - isprime
+  - prime
+  - Sieve
+  - factorint
+  - FactorCache
+  - pollard_rho
+  - ecm
+  - qs_factor
+  - perfect_power
+  - multiplicity
+  - smoothness
+  - divisors
+  - totient
+  - mersenne_prime_exponent
+  - core
+  - integer-helpers
+  - crt
+  - sqrt_mod
+  - is_nthpow_residue
+  - quadratic_congruence
+  - n_order
+  - discrete_log
+  - continued_fraction
+  - egyptian_fraction
+  - npartitions
+  - digits
+  - pi_hex_digits
+  - extract_fundamental_discriminant
+  - EllipticCurve
+- title: Combinatorics and permutation groups
+  contents:
+  - Permutation
+  - Cycle
+  - PermutationGroup
+  - SymmetricGroup
+  - Coset
+  - TransitiveSubgroups
+  - get_perm_group
+  - perm_af_direct_product
+  - perm_group_presentation
+  - orbit_homomorphism
+  - PolycyclicGroup
+  - Polyhedron
+  - permutations
+  - iterables
+  - multiset_enumeration
+  - prufer_from_tree
+- title: Free groups and finitely presented groups
+  contents:
+  - FreeGroup
+  - word_array_form
+  - FpGroup
+  - FpSubgroup
+  - fp_str
+  - fp_to_perm_group
+  - CosetTable
+  - coset_table_options
+  - transversal2coset
+  - low_index_subgroups
+  - reidemeister_presentation
+  - simplify_presentation
+  - RewritingSystem
+  - GroupHomomorphism
+- title: Logic
+  contents:
+  - And
+  - eliminate_implications
+  - simplify_logic
+  - SOPform
+  - satisfiable
+  - bool_map
+  - truth_table
+- title: Sets
+  contents:
+  - sets
+  - imageset
+  - Range
+  - ComplexRegion
+  - SetExpr
+  - as_relational
+  - ordinals
+- title: Special functions
+  contents:
+  - elementary-functions
+  - special-functions
+  - special-functions-extra
+  - Piecewise
+  - bsplines
+- title: Geometry
+  contents:
+  - Point
+  - geometry-3d
+  - geometry-aliases
+- title: Vectors
+  contents:
+  - CoordSys3D
+  - AxisOrienter
+  - lame_coefficients
+  - VectorAdd
+  - magnitude
+  - express
+  - grad
+  - Del
+  - Gradient
+  - Cross
+  - ParametricRegion
+  - ImplicitRegion
+  - ParametricIntegral
+- title: Arrays and tensors
+  contents:
+  - Array
+  - TensorHead
+  - tensor-indices
+  - tensor-expressions
+  - PartialDerivative
+  - replace_with_arrays
+  - TensorManager
+  - tensor-bsgs
+  - canonicalize
+  - canonical_free
+  - double_coset_can_rep
+  - dummy_sgs
+- title: Differential geometry, Lie algebras, quaternions, and categories
+  contents:
+  - diffgeom
+  - liealgebras
+  - Quaternion
+  - categories
+  - diagram_drawing
+- title: Physical units
+  contents:
+  - physics_units
+  - Quantity
+  - Prefix
+  - Dimension
+  - DimensionSystem
+  - UnitSystem
+  - set_quantity_dimension
+  - convert_to
+- title: Statistics
+  contents:
+  - Normal
+- title: Discrete transforms and cryptography
+  contents:
+  - convolution
+  - discrete-aliases
+  - ntt
+  - crypto

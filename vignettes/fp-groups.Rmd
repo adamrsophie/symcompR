@@ -1,0 +1,413 @@
+---
+title: "Free groups and finitely presented groups"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Free groups and finitely presented groups}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(symcompR)
+```
+
+This vignette covers the port of `sympy.combinatorics.free_groups`,
+`fp_groups`, `coset_table`, `rewritingsystem`, `homomorphisms`, and `pc_groups`.
+Permutation groups have their own vignette,
+`vignette("permutation-groups", package = "symcompR")`.
+
+## Free groups and words
+
+`free_group()` returns the free group followed by its generators.
+`FreeGroup()` takes a character vector of generator names, and
+`xfree_group()` returns the group and a list of generators. Words simplify
+automatically when they are multiplied.
+
+```{r}
+fg <- free_group("x, y, z")
+F <- fg[[1]]; x <- fg[[2]]; y <- fg[[3]]; z <- fg[[4]]
+F
+FreeGroup(c("a", "b"))$rank
+xfree_group("u, v")[[2]]
+fg_index(F, y)
+fg_slice(F, 1, 3)
+fp_contains(F, x * y)
+word_prod(F, list(x, y, x^-1))
+fp_str(word_inverse(x * y * x^-1))
+fp_str(word_commutator(x * y, y))
+```
+
+The representation of a word as syllables (maximal powers of a single
+generator):
+
+```{r}
+w <- x^5 * y * x^2 * y^-4 * x
+w
+word_len(w)
+number_syllables(w)
+word_array_form(w)
+word_ext_rep(x * z)
+word_letter_form(x^3 * y^-1)
+word_letter_form_elm(x^2 * z^-1)
+exponent_syllable(w, 2)
+generator_syllable(w, 3)
+exponent_sum(w, x)
+generator_count(w, y)
+```
+
+Subwords use the letter positions, counted from 0:
+
+```{r}
+subword(w, 2, 6)
+sub_syllables(w, 1, 2)
+substituted_word(w, 3, 9, z)
+subword_index(x^2 * y^-4 * x, y^-2)
+cyclic_subword(x * y * z, 4, 6)
+word_contains(w, y)
+word_index(x^2 * y * x, y)
+contains_generators(x^-1 * y^3)
+is_dependent(x^2 * y^-4 * x, y^2)
+is_independent(x^2 * y^-4 * x, z)
+power_of(x^4, x^-1)
+is_identity_word(x^2 * x^-2)
+word_order(x^0)
+word_order(x)
+```
+
+Cyclic reduction removes a generator and its inverse from the two ends, and
+the cyclic conjugates of a word are the cyclic shifts of its letters.
+
+```{r}
+cyclic_reduction(x^2 * y * x^-1)
+identity_cyclic_reduction(x^2 * y * x^-1)
+is_cyclically_reduced(x * y * x)
+is_cyclic_conjugate(x * y * z, z * x * y)
+cyclic_conjugates(x * y * x^-1)
+```
+
+Eliminating a generator replaces each of its occurrences by another word:
+
+```{r}
+eliminate_word(x^2 * y^3 * x^-1 * y, x, y)
+eliminate_words(x^2 * y^-3 * x^-1 * y, list(y, x^2))
+eliminate_words(x^2 * y^-3 * x^-1 * y, word_dict(list(y, x^2), list(z, y)))
+```
+
+## Finitely presented groups
+
+`FpGroup()` builds a group from a free group and a list of relators.
+`fp_group()` and `xfp_group()` are the functional forms. The Todd-Coxeter
+coset enumeration finds the order when it is finite. The presentation below
+is the dihedral group of order 8.
+
+```{r}
+fg2 <- free_group("x, y")
+F2 <- fg2[[1]]; x <- fg2[[2]]; y <- fg2[[3]]
+D4 <- FpGroup(F2, list(x^4, y^2, (x * y)^2))
+fp_order(D4)
+fp_order(fp_group(F2, list(x^2, y^3, (x * y)^5))[[1]])
+fp_order(xfp_group(F2, list(x^2, y^2, (x * y)^3))[[1]])
+fp_is_abelian(D4)
+fp_is_cyclic(D4)
+fp_is_nilpotent(D4)
+fp_is_solvable(FpGroup(F2, list(x^3, y^2, (x * y)^5)))
+fp_abelian_invariants(D4)
+fp_center(D4)
+length(fp_elements(D4))
+fp_index(D4, list(x))
+fp_most_frequent_generator(FpGroup(F2, list(x^3, y^5, (x * y)^2)))
+fps_contains(FpSubgroup(D4, list(x, y)), fp_random(D4))
+```
+
+Series and subgroups are computed through an isomorphic permutation group
+(`fp_to_perm_group()`):
+
+```{r}
+group_order(fp_to_perm_group(D4)[[1]])
+vapply(fp_composition_series(D4), group_order, 0)
+length(fp_derived_series(D4))
+length(fp_lower_central_series(D4))
+fp_derived_subgroup(D4)
+length(fp_centralizer(D4, list(x)))
+fps_order(FpSubgroup(D4, fp_normal_closure(D4, list(y))))
+fp_quotient(FpGroup(F2, list(x^4, y^2)), list(x^2))$relators
+```
+
+`FpSubgroup()` is a subgroup given by generating words, and `fp_subgroup()`
+returns a presentation of a subgroup as a new `FpGroup`.
+
+```{r}
+H <- FpSubgroup(D4, list(x^2, y))
+fps_order(H)
+fps_contains(H, x^2 * y)
+fps_contains(H, x)
+fp_order(fps_to_FpGroup(H))
+K <- fp_subgroup(D4, list(x))
+fp_order(K)
+```
+
+Word problems are solved with a rewriting system:
+
+```{r}
+A4 <- FpGroup(F2, list(x^3, y^3, (x * y)^2))
+fp_equals(A4, x * y, y * x)
+fp_reduce(A4, x * y * x * y * x)
+fp_make_confluent(A4)
+```
+
+## Coset enumeration
+
+`fp_coset_enumeration()` runs the Todd-Coxeter procedure for the cosets of
+a subgroup. The relator based (HLT) strategy is `coset_enumeration_r()` and
+the coset table based (Felsch) strategy is `coset_enumeration_c()`.
+`modified_coset_enumeration_r()` also records how each coset was reached.
+Each row of the table lists the images of a coset under $x, x^{-1}, y,
+y^{-1}$.
+
+```{r}
+G <- FpGroup(F2, list(x^4, y^2, x * y * x^-1 * y))
+fp_coset_table(G, list(x))
+C <- fp_coset_enumeration(G, list(x * y))
+C$table
+coset_enumeration_r(G, list(x))$table
+coset_enumeration_c(G, list(x))$table
+modified_coset_enumeration_r(G, list(x))$table
+coset_table_options(max_stack_size = 500)
+```
+
+`CosetTable()` creates an empty table, and the `ct_` functions are the
+building blocks of the enumeration. The example enumerates the cosets of
+$\langle x \rangle$ in the group with relators $x^2, y^3, (xy)^3$ step by
+step.
+
+```{r}
+f <- FpGroup(F2, list(x^2, y^3, (x * y)^3))
+C <- CosetTable(f, list(x))
+ct_A(C)
+ct_n(C)
+ct_scan_and_fill(C, 0, x)
+C$table
+ct_define(C, 0, y)
+C$table
+ct_scan_and_fill(C, 0, y^3)
+ct_is_complete(C)
+for (alpha in 0:3) for (r in f$relators)
+  if (alpha < length(C$table) && C$p[alpha + 1] == alpha) ct_scan_and_fill(C, alpha, r)
+ct_is_complete(C)
+ct_compress(C)
+ct_standardize(C)
+C$table
+ct_omega(C)
+lapply(0:3, function(i) ct_coset_representative(C, i))
+ct_copy(C)$table
+```
+
+The other low level steps are `ct_define_c()`, `ct_scan()`, `ct_scan_c()`,
+`ct_scan_check()`, `ct_scan_and_fill_c()`, `ct_look_ahead()`,
+`ct_process_deductions()`, `ct_process_deductions_check()`, `ct_switch()`,
+`ct_merge()`, `ct_rep()`, `ct_coincidence()`, `ct_coincidence_c()`,
+`ct_conjugates()`, and the modified forms `ct_modified_define()`,
+`ct_modified_scan()`, `ct_modified_scan_and_fill()`, `ct_modified_merge()`,
+`ct_modified_rep()`, and `ct_modified_coincidence()`, which keep track of
+the words that connect cosets.
+
+```{r}
+C2 <- CosetTable(f, list())
+ct_define_c(C2, 0, x)
+ct_scan_c(C2, 0, x^2)
+ct_scan_check(C2, 0, x^2)
+ct_scan(C2, 0, y)
+ct_scan_and_fill_c(C2, 0, y^3)
+C2$table
+ct_look_ahead(C2)
+ct_rep(C2, 1)
+length(ct_conjugates(C2, f$relators))
+Cm <- CosetTable(f, list(x))
+ct_modified_define(Cm, 0, y)
+ct_modified_scan(Cm, 0, y^3, Cm$grp$identity)
+ct_modified_scan_and_fill(Cm, 0, x * y, Cm$grp$identity)
+Cm$table
+ct_modified_rep(Cm, 1)
+```
+
+When two cosets turn out to be equal, `ct_coincidence()` (or
+`ct_coincidence_c()` for the coset table based strategy) identifies them,
+`ct_merge()` records the merge of two classes, and `ct_switch()` swaps two
+cosets. The modified versions also carry the connecting words. A compact
+printer shows each table row and the class representatives `C$p`.
+
+```{r}
+rows <- function(C) paste0(vapply(C$table, function(r)
+  paste(ifelse(is.na(r), "-", r), collapse = " "), ""), collapse = " | ")
+C3 <- CosetTable(f, list())
+ct_define(C3, 0, x); ct_define(C3, 0, y); ct_define(C3, 1, y)
+rows(C3)
+ct_coincidence(C3, 1, 2)
+rows(C3)
+C3$p
+C4 <- CosetTable(f, list())
+ct_define_c(C4, 0, x); ct_define_c(C4, 0, y)
+ct_coincidence_c(C4, 1, 2)
+rows(C4)
+C5 <- CosetTable(f, list())
+ct_define(C5, 0, x); ct_define(C5, 0, y)
+unlist(ct_merge(C5, 1, 2, list()))
+C5$p
+C7 <- CosetTable(f, list())
+ct_define(C7, 0, x); ct_define(C7, 0, y)
+ct_switch(C7, 1, 2)
+rows(C7)
+C6 <- CosetTable(f, list())
+ct_modified_define(C6, 0, x); ct_modified_define(C6, 0, y)
+unlist(ct_modified_merge(C6, 1, 2, C6$grp$identity, list()))
+C8 <- CosetTable(f, list())
+ct_modified_define(C8, 0, x); ct_modified_define(C8, 0, y)
+ct_modified_coincidence(C8, 1, 2, C8$grp$identity)
+rows(C8)
+```
+
+`low_index_subgroups()` finds all subgroups up to a given index, and
+`first_in_class()` is the test it uses to discard duplicate tables.
+
+```{r}
+L <- low_index_subgroups(FpGroup(F2, list(x^2, y^3, (x * y)^4)), 4)
+length(L)
+first_in_class(L[[2]])
+```
+
+## Presentations of subgroups
+
+`reidemeister_presentation()` computes a presentation of a subgroup, and
+`simplify_presentation()` removes redundant generators and relators with
+the elimination techniques `elimination_technique_1()` and
+`elimination_technique_2()`.
+
+```{r}
+f5 <- FpGroup(F2, list(x^3, y^5, (x * y)^2))
+reidemeister_presentation(f5, list(y))
+reidemeister_presentation(FpGroup(F2, list(x^2, y^2)), list(x * y))
+simplify_presentation(FpGroup(F2, list(x^2 * y^-1, y^3)))
+elimination_technique_1(list(x, y), list(x * y^2, y^3), F2$identity)
+elimination_technique_2(FpGroup(F2, list(x^2 * y^-1, y^3)))
+```
+
+`perm_group_presentation()` goes the other way and finds a presentation of
+a permutation group.
+
+```{r}
+P <- perm_group_presentation(DihedralGroup(3))
+fp_order(P)
+```
+
+## Rewriting systems
+
+`fp_rewriting_system()` and `RewritingSystem()` return the rewriting system
+of a group. The Knuth-Bendix completion makes it confluent.
+
+```{r}
+fg3 <- free_group("a, b")
+a <- fg3[[2]]; b <- fg3[[3]]
+Ab <- FpGroup(fg3[[1]], list(a * b * a^-1 * b^-1))
+R <- fp_rewriting_system(Ab)
+rws_is_confluent(R)
+rws_rules(R)
+rws_reduce(R, b * a)
+rws_reduce_using_automaton(R, b^-1 * a)
+rws_make_confluent(R)
+R2 <- RewritingSystem(FpGroup(fg3[[1]], list(a^3, b^3, (a * b)^2)))
+rws_set_max(R2, 20)
+rws_add_rule(R2, a^3, fg3[[1]]$identity)
+rws_is_confluent(R2)
+```
+
+## Homomorphisms
+
+`homomorphism()` defines a homomorphism by the images of the generators
+and returns a `GroupHomomorphism` object. The `hom_` functions query it.
+
+```{r}
+A4p <- AlternatingGroup(4)
+T <- homomorphism(A4, A4p, list(x, y),
+                  list(Permutation(0, 1, 2, size = 4), Permutation(1, 2, 3)))
+hom_is_injective(T)
+hom_is_surjective(T)
+hom_is_isomorphism(T)
+hom_is_trivial(T)
+group_order(hom_image(T))
+fps_order(hom_kernel(T))
+hom_apply(T, x * y)
+hom_invert(T, Permutation(0, 1, 2, size = 4))
+is_isomorphic(A4, A4p)
+group_isomorphism(A4, A4p)[[1]]
+```
+
+For permutation groups, a homomorphism can be restricted, composed, and
+inverted on subgroups:
+
+```{r}
+D <- DihedralGroup(4)
+Tr <- homomorphism(D, D, D$gens, D$gens)
+V <- PermutationGroup(list(Permutation(list(c(0, 2), c(1, 3)))))
+hom_images(hom_restrict_to(Tr, V))
+group_order(hom_invert_subgroup(Tr, V))
+T2 <- homomorphism(D, D, D$gens, list(D$gens[[1]]^2, D$gens[[2]]))
+group_order(hom_image(hom_compose(Tr, T2)))
+Tf <- homomorphism(Ab, FpGroup(fg3[[1]], list(a^2, b^2, (a * b)^2)),
+                   list(a, b), list(a, a))
+length(hom_factor(Tf))
+```
+
+`orbit_homomorphism()` maps a group onto its action on an orbit, and
+`block_homomorphism()` onto its action on a block system.
+
+```{r}
+S4 <- SymmetricGroup(4)
+To <- orbit_homomorphism(S4, list(0, 1, 2, 3))
+group_order(hom_image(To))
+Tb <- block_homomorphism(DihedralGroup(4), c(0, 1, 0, 1))
+group_order(hom_image(Tb))
+group_order(hom_kernel(Tb))
+```
+
+## Polycyclic groups
+
+A solvable permutation group has a polycyclic presentation.
+`perm_polycyclic_group()` computes it and returns a `PolycyclicGroup` with
+a collector (`Collector`) that rewrites words into collected normal form.
+
+```{r}
+P3 <- perm_polycyclic_group(CyclicGroup(9))
+pc_length(P3)
+pc_is_prime_order(P3)
+K3 <- P3$collector
+x0 <- K3$free_group$generators[[1]]
+collected_word(K3, x0^13)
+minimal_uncollected_subword(K3, x0^-2)
+pc_presentation(K3)
+pc_relations(K3)
+```
+
+The collector also gives the exponent vector, the depth, and the leading
+exponent of an element, and decides membership in a subgroup through an
+induced polycyclic generating sequence.
+
+```{r}
+S3 <- SymmetricGroup(3)
+PS <- perm_polycyclic_group(S3)
+CH <- PS$collector
+g <- Permutation(c(1, 0, 2))
+exponent_vector(CH, g)
+pc_depth(CH, g)
+leading_exponent(CH, g)
+ip <- induced_pcgs(CH, list(g))
+ip
+constructive_membership_test(CH, ip, g)
+PC <- PolycyclicGroup(PS$pcgs, PS$pc_series, PS$relative_order)
+pc_length(PC)
+K <- Collector(PS$pcgs, PS$pc_series, PS$relative_order)
+exponent_vector(K, Permutation(c(1, 2, 0)))
+```

@@ -1,0 +1,83 @@
+---
+title: "Categories"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Categories}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(symcompR)
+```
+
+This vignette covers `sympy.categories`: objects, morphisms, their
+composition, diagrams, categories, and the drawing of commutative diagrams.
+
+## Objects and morphisms
+
+
+```{r}
+Ao <- Object("A"); Bo <- Object("B"); Co <- Object("C")
+f <- NamedMorphism(Ao, Bo, "f"); g <- NamedMorphism(Bo, Co, "g")
+g * f
+morphism_domain(g * f)
+codomain(g * f)
+```
+
+`IdentityMorphism()` is the identity of an object and `CompositeMorphism()`
+a composition of morphisms; `components()` lists the factors and
+`flatten_morphism()` replaces a composite by a single named morphism.
+
+```{r}
+Do <- Object("D"); h <- NamedMorphism(Co, Do, "h")
+morphism_name(f)
+IdentityMorphism(Ao)
+codomain(IdentityMorphism(Ao))
+cm <- CompositeMorphism(f, g)
+components(cm)
+flatten_morphism(h * g * f, "u")
+```
+
+## Diagrams and categories
+
+A `Diagram` has premises (the morphisms that are given) and conclusions
+(the morphisms that are claimed to exist), each with a set of properties.
+
+```{r}
+d <- Diagram(list(f, g))
+premises(d)
+conclusions(d)
+diagram_objects(d)
+hom(d, Ao, Bo)
+is_subdiagram(Diagram(list(f, g, h)), d)
+d2 <- Diagram(list(list(f, "unique"), list(g, "unique")),
+              list(list(g * f, "unique")))
+conclusions(d2)
+subdiagram_from_objects(d2, FiniteSet(Ao, Bo))
+K <- Category("K", FiniteSet(Ao, Bo), list(d))
+K
+category_objects(K)
+commutative_diagrams(K)
+```
+
+## Drawing diagrams
+
+`DiagramGrid()` places the objects of a diagram on a grid, and
+`xypic_draw_diagram()` renders the diagram as Xy-pic code for LaTeX.
+`XypicDiagramDrawer()` is the drawer object behind it, and
+`ArrowStringDescription()` describes one arrow.
+
+```{r}
+grid <- DiagramGrid(Diagram(list(f, g)))
+grid$width
+grid$height
+grid_get(grid, 1, 1)
+cat(xypic_draw_diagram(Diagram(list(f, g))), "\n")
+class(XypicDiagramDrawer())
+cat(format(ArrowStringDescription("mm", "", 0, "", "", "d", "r", "_", "f")), "\n")
+```

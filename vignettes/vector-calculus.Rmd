@@ -1,0 +1,241 @@
+---
+title: "Vector calculus"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vector calculus}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); t <- Symbol("t"); theta <- Symbol("theta")
+a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c")
+```
+
+This vignette covers `sympy.vector`: coordinate systems, vectors and
+dyadics, the differential operators, orientation of coordinate systems,
+and integration over parametric and implicit regions.
+
+## Coordinate systems and vectors
+
+`CoordSys3D()` creates a Cartesian coordinate system with base scalars
+`N$x`, `N$y`, `N$z` and base vectors `N$i`, `N$j`, `N$k`. Vectors are built
+from them with ordinary arithmetic.
+
+```{r}
+N <- CoordSys3D("N")
+v <- 3 * N$i + 4 * N$j
+v
+magnitude(v)
+normalize(v)
+dot(N$i + 2 * N$j, 3 * N$i - N$k)
+cross(N$i, N$j)
+cross(N$i + N$j, N$j + N$k)
+to_matrix(N$x * N$i + 2 * N$j, N)
+matrix_to_vector(Matrix(list(1, 2, 3)), N)
+```
+
+
+The classes behind vectors can be used directly. `BaseScalar()` and
+`BaseVector()` are the coordinate variables and unit vectors,
+`VectorAdd()`, `VectorMul()`, and `VectorZero()` build vectors,
+`measure_number()` is the coefficient of a base vector, and
+`vector_equals()` tests equality. `Dot()` and `Cross()` are the unevaluated
+products.
+
+```{r}
+BaseScalar(0, N)
+BaseVector(1, N)
+VectorAdd(a * N$i, b * N$j)
+VectorMul(3, N$k)
+VectorZero()
+measure_number(a * N$i)
+vector_equals(N$i + N$j, N$j + N$i)
+Dot(N$i, N$j)
+doit(Dot(N$i + N$j, N$j))
+Cross(N$i, N$j)
+doit(Cross(N$i, N$j))
+components(a * N$i + b * N$k)
+base_scalars(N)
+base_vectors(N)
+orthogonalize(N$i + N$j, N$i, orthonormal = TRUE)
+```
+
+## Differential operators
+
+```{r}
+grad(N$x^2 * N$y + N$z)
+gradient(N$x^2 * N$y)
+divergence(N$x * N$i + N$y * N$j + N$z * N$k)
+curl(-N$y * N$i + N$x * N$j)
+laplacian(N$x^2 + N$y^2 + N$z^2)
+directional_derivative(N$x * N$y * N$z, N$i + N$j)
+```
+
+A field is conservative when it is the gradient of a scalar potential, and
+solenoidal when its divergence vanishes.
+
+```{r}
+F <- N$y * N$z * N$i + N$x * N$z * N$j + N$x * N$y * N$k
+is_conservative(F)
+scalar_potential(F, N)
+is_solenoidal(-N$y * N$i + N$x * N$j)
+```
+
+`separate()` splits a vector into its components in each coordinate system
+it involves.
+
+```{r}
+separate(N$x * N$i + N$y * N$j)
+```
+
+
+The operators also exist as unevaluated objects, `Gradient()`,
+`Divergence()`, `Curl()`, and `Laplacian()`, which `doit()` evaluates, and
+as methods of the del operator `Del()`.
+
+```{r}
+Gradient(N$x * N$y * N$z)
+doit(Divergence(N$x * N$i + N$z^2 * N$j))
+doit(Curl(N$x * N$i + N$y * N$j + N$z * N$k))
+doit(Laplacian(N$x^2 + N$y^2 + N$z^2))
+delop <- Del()
+del_gradient(delop, N$x^2 * N$y, doit = TRUE)
+del_dot(delop, N$x * N$i + N$y * N$j, doit = TRUE)
+del_cross(delop, -N$y * N$i + N$x * N$j, doit = TRUE)
+scalar_potential_difference(F, N, N$origin, locate_new(N, "P1", N$i + N$j + N$k)$origin)
+```
+
+## Rotated, translated, and curvilinear systems
+
+`orient_new_axis()` creates a coordinate system rotated about an axis, and
+`express()` rewrites vectors in another system.
+
+```{r}
+A <- orient_new_axis(N, "A", theta, N$k)
+express(A$i, N)
+rotation_matrix(A, N)
+```
+
+`create_new()` with a `transformation` defines curvilinear coordinates; the
+Lamé coefficients are the scale factors of the coordinate lines.
+
+```{r}
+Sph <- create_new(N, "S", transformation = "spherical")
+lame_coefficients(Sph)
+```
+
+
+`orient_new()` takes a list of orienters, which describe the rotation:
+`AxisOrienter()` (about an axis), `BodyOrienter()` (three successive
+rotations about the body axes), `SpaceOrienter()` (about the space axes),
+and `QuaternionOrienter()`. The `orient_new_*()` functions are shortcuts.
+
+```{r}
+q1 <- Symbol("q1"); q2 <- Symbol("q2"); q3 <- Symbol("q3"); q0 <- Symbol("q0")
+orienter_rotation_matrix(AxisOrienter(a, N$k), N)
+B <- orient_new_body(N, "B", q1, 0, 0, "123")
+rotation_matrix(B, N)
+Sp <- orient_new_space(N, "Sp", q1, 0, 0, "123")
+rotation_matrix(Sp, N)
+D <- orient_new(N, "D", list(AxisOrienter(q1, N$j)))
+rotation_matrix(D, N)
+vector_equals(express(D$k, N), express(orient_new_axis(N, "D2", q1, N$j)$k, N))
+Q <- orient_new_quaternion(N, "Q", 1, 0, 0, 0)
+rotation_matrix(Q, N)
+O1 <- orient_new(N, "O1", list(BodyOrienter(q1, q2, q3, "123")))
+O2 <- orient_new_body(N, "O2", q1, q2, q3, "123")
+simplify(rotation_matrix(O1, N) - rotation_matrix(O2, N))
+O3 <- orient_new(N, "O3", list(SpaceOrienter(q1, 0, 0, "123")))
+rotation_matrix(O3, N)
+O4 <- orient_new(N, "O4", list(QuaternionOrienter(1, 0, 0, 0)))
+rotation_matrix(O4, N)
+```
+
+`locate_new()` translates the origin. `position_wrt()` gives the position
+of one origin relative to another, `express_coordinates()` the coordinates
+of a point, and `scalar_map()` how the coordinate variables of two systems
+are related.
+
+```{r}
+C <- locate_new(N, "C", a * N$i + b * N$j + c * N$k)
+position_wrt(C, N)
+express_coordinates(N$origin, C)
+scalar_map(N, C)
+```
+
+A coordinate system defined by a transformation keeps the map from its
+parent, and `change_of_basis_matrix_from()` relates the base vectors.
+
+```{r}
+Cyl <- create_new(N, "Cyl", transformation = "cylindrical")
+transformation_to_parent(Cyl)
+vapply(transformation_from_parent(create_new(N, "Sp2", transformation = "spherical")), sstr, "")
+transformation_from_parent_function(CoordSys3D("Ca", "cartesian"))(x, y, t)
+Sw <- create_new(N, "Sw", transformation = function(x, y, z) list(y, x, z))
+change_of_basis_matrix_from(Sw, N)
+lame_coefficients(Cyl)
+```
+
+## Dyadics
+
+The outer product of two vectors is a dyadic; `&` is the dot product with a
+vector.
+
+```{r}
+outer_sym(N$i, N$j)
+(N$i | N$j) & N$j
+```
+
+
+`BaseDyadic()`, `DyadicAdd()`, `DyadicMul()`, and `DyadicZero()` are the
+dyadic counterparts of the vector classes, and `matrix_to_dyadic()` builds
+a dyadic from its matrix of components.
+
+```{r}
+BaseDyadic(N$i, N$j)
+DyadicAdd(BaseDyadic(N$i, N$j), BaseDyadic(N$j, N$i))
+DyadicMul(2, BaseDyadic(N$k, N$k))
+DyadicZero()
+to_matrix(matrix_to_dyadic(Matrix(list(list(1, 2, 0), list(0, 1, 0), list(0, 0, 3))), N), N)
+```
+
+## Integrals over regions
+
+`ParametricRegion()` describes a curve, surface, or volume by a
+parametrization, and `vector_integrate()` integrates scalar or vector fields
+over it. Geometry objects such as segments are accepted as well.
+
+```{r}
+quarter <- ParametricRegion(list(cos(t), sin(t)), list(t, 0, sym_pi / 2))
+vector_integrate(N$x * N$y, quarter)
+disk <- ParametricRegion(list(t * cos(theta), t * sin(theta)),
+                         list(t, 0, 2), list(theta, 0, 2 * sym_pi))
+vector_integrate(1, disk)
+vector_integrate(N$x^2, Segment(Point(0, 0), Point(1, 1)))
+ParametricIntegral(N$x * N$i + N$y * N$j, ParametricRegion(list(t, t), list(t, 0, 1)))
+```
+
+
+`ImplicitRegion()` describes a region by an equation. `regular_point()`
+finds a point on it, `singular_points()` its singular points,
+`implicit_degree()` the degree of the equation, and
+`rational_parametrization()` a rational parametrization of a conic.
+`conic_coeff()` returns the coefficients of a conic equation and
+`parametric_region_list()` converts geometry objects to parametric regions.
+
+```{r}
+circ <- ImplicitRegion(list(x, y), x^2 + y^2 - 4)
+regular_point(circ)
+singular_points(ImplicitRegion(list(x, y), y^2 - x^3))
+implicit_degree(circ)
+rational_parametrization(circ)
+conic_coeff(list(x, y), x^2 - 4 * x * y - 3 * y^2 + 4 * x + 8 * y - 5)
+parametric_region_list(Point(-5, 12))
+parametric_region_list(Segment(Point(0, 0), Point(1, 3)))
+```
