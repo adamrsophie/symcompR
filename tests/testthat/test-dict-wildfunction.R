@@ -1,0 +1,27 @@
+# Reference values from SymPy's WildFunction and Dict.
+test_that("WildFunction matches function applications as in SymPy", {
+  x <- Symbol("x"); y <- Symbol("y"); f <- Function("f")
+  F <- WildFunction("F"); G <- WildFunction("G", nargs = 2)
+  expect_equal(sstr(F), "F_")
+  expect_equal(srepr(F), "WildFunction('F')")
+  expect_equal(latex(F), "\\operatorname{WildFunction}{\\left(F \\right)}")
+  expect_equal(sstr(sym_match(f(x), F)$F), "f(x)")
+  expect_equal(sstr(sym_match(cos(x), F)$F), "cos(x)")
+  expect_null(sym_match(x, F))
+  expect_equal(sstr(sym_match(x + cos(x), x + F)$F), "cos(x)")
+  expect_null(sym_match(f(x), G))
+  expect_equal(sstr(sym_match(f(x, y), G)$G), "f(x, y)")
+})
+
+test_that("Dict stores sorted pairs and prints as SymPy", {
+  x <- Symbol("x"); y <- Symbol("y")
+  d <- Dict(list(y, x), list(2, 1))
+  expect_equal(sstr(d), "{x: 1, y: 2}")
+  expect_equal(srepr(Dict(list(x), list(1))), "Dict(Tuple(Symbol('x'), Integer(1)))")
+  expect_equal(latex(d), "\\left\\{ x : 1, \\  y : 2\\right\\}")
+  expect_equal(sstr(dict_get(d, x)), "1")
+  expect_null(dict_get(d, Symbol("z")))
+  expect_equal(vapply(dict_keys(d), sstr, ""), c("x", "y"))
+  expect_equal(sstr(subs(Dict(list(x), list(y^2)), y, 3)), "{x: 9}")
+  expect_equal(sstr(Dict(list(list(x, 1), list(x, 5)))), "{x: 5}")
+})

@@ -1,0 +1,45 @@
+{
+  "title": "symcompR: Symbolic Computation in R",
+  "description": "A native R computer algebra system ported from the Python library SymPy. Provides exact integer and rational arithmetic, automatically simplified symbolic expressions, assumptions, symbolic differentiation, series, limits, integration and integral transforms, polynomial algebra, equation, differential equation, recurrence and Diophantine solvers, matrices and matrix expressions, number theory, combinatorics, logic, sets, geometry, and printers for LaTeX, MathML, two dimensional text, and source code, all implemented in R without a Python dependency. The design, algorithms, and expected outputs follow SymPy; SymPy's BSD license notice is retained in the package.",
+  "upload_type": "software",
+  "license": "GPL-3.0-only",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Sophie, Adam R"
+    }
+  ],
+  "keywords": [
+    "computer algebra",
+    "symbolic computation",
+    "symbolic mathematics",
+    "SymPy",
+    "calculus",
+    "polynomials",
+    "equation solving",
+    "number theory",
+    "R"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/adamrsophie/symcompR",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://adamrsophie.github.io/symcompR/",
+      "relation": "isDocumentedBy",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://github.com/sympy/sympy",
+      "relation": "isDerivedFrom",
+      "scheme": "url"
+    },
+    {
+      "identifier": "10.7717/peerj-cs.103",
+      "relation": "references",
+      "scheme": "doi"
+    }
+  ]
+}

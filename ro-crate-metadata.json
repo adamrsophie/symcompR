@@ -1,0 +1,106 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.1/context",
+  "@graph": [
+    {
+      "@type": "CreativeWork",
+      "@id": "ro-crate-metadata.json",
+      "conformsTo": { "@id": "https://w3id.org/ro/crate/1.1" },
+      "about": { "@id": "./" },
+      "description": "Machine-readable provenance and packaging metadata for the symcompR R package, following the RO-Crate 1.1 specification."
+    },
+    {
+      "@type": "Dataset",
+      "@id": "./",
+      "name": "symcompR: Symbolic Computation in R",
+      "description": "A native R computer algebra system ported from the Python library SymPy, with exact arithmetic, calculus, integration, polynomial algebra, solvers, matrices, number theory, sets, logic, geometry, and printers, implemented in R without a Python dependency.",
+      "datePublished": "2026-11-10",
+      "license": { "@id": "https://spdx.org/licenses/GPL-3.0-only.html" },
+      "author": [
+        { "@id": "https://github.com/adamrsophie" }
+      ],
+      "mainEntity": { "@id": "#symcompR" },
+      "hasPart": [
+        { "@id": "#symcompR" },
+        { "@id": "https://github.com/adamrsophie/symcompR" },
+        { "@id": "inst/COPYRIGHTS" },
+        { "@id": "inst/SYMPY-LICENSE" }
+      ]
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "#symcompR",
+      "name": "symcompR",
+      "programmingLanguage": { "@id": "https://www.r-project.org" },
+      "codeRepository": "https://github.com/adamrsophie/symcompR",
+      "url": "https://adamrsophie.github.io/symcompR/",
+      "version": "0.1.0",
+      "license": { "@id": "https://spdx.org/licenses/GPL-3.0-only.html" },
+      "author": [
+        { "@id": "https://github.com/adamrsophie" }
+      ],
+      "isBasedOn": { "@id": "https://github.com/sympy/sympy" },
+      "referencePublication": { "@id": "https://doi.org/10.7717/peerj-cs.103" }
+    },
+    {
+      "@type": "File",
+      "@id": "inst/COPYRIGHTS",
+      "name": "Copyright and provenance notice",
+      "description": "States which portions of symcompR derive from SymPy, the pinned SymPy commit, and the licenses that apply.",
+      "encodingFormat": "text/plain"
+    },
+    {
+      "@type": "File",
+      "@id": "inst/SYMPY-LICENSE",
+      "name": "SymPy license",
+      "description": "SymPy's BSD 3-Clause License text, retained as it requires.",
+      "encodingFormat": "text/plain",
+      "license": { "@id": "https://spdx.org/licenses/BSD-3-Clause.html" }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://github.com/sympy/sympy",
+      "name": "SymPy",
+      "version": "86150a81fd7a7e1d34a8ffba3465c5418b5ea04a",
+      "license": { "@id": "https://spdx.org/licenses/BSD-3-Clause.html" },
+      "author": { "@id": "#sympy-team" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "#sympy-team",
+      "name": "SymPy Development Team",
+      "url": "https://www.sympy.org"
+    },
+    {
+      "@type": "Person",
+      "@id": "https://github.com/adamrsophie",
+      "name": "Adam R Sophie",
+      "roleName": [
+        "Conceptualization",
+        "Software",
+        "Validation",
+        "Writing - original draft",
+        "Project administration"
+      ]
+    },
+    {
+      "@type": "ScholarlyArticle",
+      "@id": "https://doi.org/10.7717/peerj-cs.103",
+      "name": "SymPy: symbolic computing in Python"
+    },
+    {
+      "@type": "CreativeWork",
+      "@id": "https://spdx.org/licenses/GPL-3.0-only.html",
+      "name": "GNU General Public License v3.0 only"
+    },
+    {
+      "@type": "CreativeWork",
+      "@id": "https://spdx.org/licenses/BSD-3-Clause.html",
+      "name": "BSD 3-Clause License"
+    },
+    {
+      "@type": "CreativeWork",
+      "@id": "https://w3id.org/ro/crate/1.1",
+      "name": "RO-Crate 1.1"
+    }
+  ]
+}

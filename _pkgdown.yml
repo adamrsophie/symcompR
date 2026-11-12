@@ -1,0 +1,15 @@
+url: https://adamrsophie.github.io/symcompR/
+
+template:
+  bootstrap: 5
+  light-switch: true
+  math-rendering: katex
+
+navbar:
+  structure:
+    left: [intro, reference, news]
+    right: [search, lightswitch, github]
+
+home:
+  sidebar:
+    structure: [links, license, citation, authors, dev]

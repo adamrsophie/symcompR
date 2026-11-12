@@ -1,0 +1,13 @@
+symcompR is an R port of algorithms and behavior from SymPy
+(https://github.com/sympy/sympy), pinned to commit
+86150a81fd7a7e1d34a8ffba3465c5418b5ea04a.
+
+SymPy is Copyright (c) 2006-2023 SymPy Development Team and is distributed
+under the BSD 3-Clause License. The full SymPy license text is reproduced in
+inst/SYMPY-LICENSE and applies to the portions of this package derived from
+SymPy. The BSD 3-Clause License is compatible with the GNU General Public
+License, and its notice is retained as it requires.
+
+The R code in symcompR is Copyright (c) 2026 Adam R Sophie and is
+distributed under the GNU General Public License, version 3 (see
+LICENSE.md).

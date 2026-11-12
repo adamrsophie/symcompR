@@ -1,0 +1,30 @@
+# Reference values from SymPy.
+t <- Symbol("t", positive = TRUE); s <- Symbol("s", positive = TRUE)
+x <- Symbol("x", positive = TRUE); k <- Symbol("k", positive = TRUE)
+r <- Symbol("r", positive = TRUE); a <- Symbol("a", positive = TRUE)
+f <- Function("f"); F <- Function("F")
+
+test_that("transform objects evaluate with doit", {
+  L <- LaplaceTransform(t^2, t, s)
+  expect_equal(sstr(L), "LaplaceTransform(t^2, t, s)")
+  expect_equal(sstr(doit(L)), "2/s^3")
+  expect_equal(latex(L), "\\mathcal{L}_{t}\\left[t^{2}\\right]\\left(s\\right)")
+  expect_equal(sstr(doit(FourierTransform(exp(-x^2), x, k))), "sqrt(pi)*exp(-pi^2*k^2)")
+  expect_equal(sstr(doit(MellinTransform(exp(-x), x, s))), "(gamma(s), (0, oo), True)")
+  expect_equal(sstr(inverse_mellin_transform(gamma(s), s, x, list(0, Inf))), "exp(-x)")
+  expect_equal(sstr(hankel_transform(1/r, r, k, 0)), "1/k")
+  expect_equal(sstr(inverse_hankel_transform(1/k, k, r, 0)), "1/r")
+  expect_equal(sstr(doit(HankelTransform(1/r, r, k, 0))), "1/k")
+})
+
+test_that("Laplace rules and helpers", {
+  expect_equal(sstr(laplace_transform(diff(f(t), t), t, s, noconds = TRUE)), "s*LaplaceTransform(f(t), t, s) - f(0)")
+  lt <- laplace_transform(diff(f(t), t, 2), t, s, noconds = TRUE)
+  expect_equal(sstr(lt), "s^2*LaplaceTransform(f(t), t, s) - s*f(0) - Subs(Derivative(f(t), t), t, 0)")
+  expect_equal(sstr(laplace_initial_conds(lt, t, list(list(f, c(2, 4))))), "s^2*LaplaceTransform(f(t), t, s) - 2*s - 4")
+  expect_equal(sstr(laplace_correspondence(LaplaceTransform(f(t), t, s), list(list(f, F)))), "F(s)")
+  xx <- Symbol("x"); aa <- Symbol("a")
+  expect_equal(sstr(singularityintegrate(SingularityFunction(xx, aa, 3), xx)), "SingularityFunction(x, a, 4)/4")
+  expect_equal(sstr(singularityintegrate(xx*SingularityFunction(xx, 4, -1), xx)), "4*SingularityFunction(x, 4, 0)")
+  expect_null(singularityintegrate(xx^2, xx))
+})

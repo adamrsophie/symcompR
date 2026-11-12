@@ -1,0 +1,41 @@
+name: test-coverage
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  test-coverage:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          extra-packages: any::covr, any::xml2
+          needs: coverage
+
+      - name: Test coverage
+        run: |
+          cov <- covr::package_coverage(quiet = FALSE, clean = FALSE)
+          print(cov)
+          covr::to_cobertura(cov, filename = "cobertura.xml")
+        shell: Rscript {0}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        with:
+          files: ./cobertura.xml
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

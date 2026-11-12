@@ -1,0 +1,127 @@
+# -----------------------------------------------------------------------------
+# Citation File Format (https://citation-file-format.github.io/).
+# Machine-readable citation metadata for GitHub, Zenodo, and FAIR tooling.
+# The R-level citation lives in inst/CITATION; the canonical software metadata
+# crosswalk is in codemeta.json; Zenodo deposit metadata is in .zenodo.json.
+# -----------------------------------------------------------------------------
+cff-version: 1.2.0
+message: 'To cite the symcompR package in publications use:'
+type: software
+license: GPL-3.0-only
+title: 'symcompR: Symbolic Computation in R'
+version: 0.1.0
+date-released: '2026-11-10'
+abstract: >-
+  A native R computer algebra system ported from the Python library SymPy.
+  Provides exact integer and rational arithmetic, automatically simplified
+  symbolic expressions, assumptions, symbolic differentiation, series, limits,
+  integration and integral transforms, polynomial algebra, equation,
+  differential equation, recurrence and Diophantine solvers, matrices and
+  matrix expressions, number theory, combinatorics, logic, sets, geometry, and
+  printers for LaTeX, MathML, two dimensional text, and source code, all
+  implemented in R without a Python dependency.
+authors:
+  - family-names: Sophie
+    given-names: Adam R
+    email: adamrsophie@gmail.com
+repository-code: https://github.com/adamrsophie/symcompR
+url: https://adamrsophie.github.io/symcompR/
+keywords:
+  - computer-algebra
+  - symbolic-computation
+  - symbolic-mathematics
+  - sympy
+  - calculus
+  - polynomials
+  - equation-solving
+  - number-theory
+  - r
+references:
+  - type: software
+    title: 'SymPy'
+    authors:
+      - name: SymPy Development Team
+    license: BSD-3-Clause
+    url: https://www.sympy.org
+    repository-code: https://github.com/sympy/sympy
+    commit: 86150a81fd7a7e1d34a8ffba3465c5418b5ea04a
+    notes: >-
+      symcompR ports SymPy's algorithms and behavior from this commit; SymPy's
+      license notice is retained in inst/SYMPY-LICENSE.
+  - type: article
+    title: 'SymPy: symbolic computing in Python'
+    authors:
+      - family-names: Meurer
+        given-names: Aaron
+      - family-names: Smith
+        given-names: Christopher P.
+      - family-names: Paprocki
+        given-names: Mateusz
+      - family-names: Čertík
+        given-names: Ondřej
+      - family-names: Kirpichev
+        given-names: Sergey B.
+      - family-names: Rocklin
+        given-names: Matthew
+      - family-names: Kumar
+        given-names: AMiT
+      - family-names: Ivanov
+        given-names: Sergiu
+      - family-names: Moore
+        given-names: Jason K.
+      - family-names: Singh
+        given-names: Sartaj
+      - family-names: Rathnayake
+        given-names: Thilina
+      - family-names: Vig
+        given-names: Sean
+      - family-names: Granger
+        given-names: Brian E.
+      - family-names: Muller
+        given-names: Richard P.
+      - family-names: Bonazzi
+        given-names: Francesco
+      - family-names: Gupta
+        given-names: Harsh
+      - family-names: Vats
+        given-names: Shivam
+      - family-names: Johansson
+        given-names: Fredrik
+      - family-names: Pedregosa
+        given-names: Fabian
+      - family-names: Curry
+        given-names: Matthew J.
+      - family-names: Terrel
+        given-names: Andy R.
+      - family-names: Roučka
+        given-names: Štěpán
+      - family-names: Saboo
+        given-names: Ashutosh
+      - family-names: Fernando
+        given-names: Isuru
+      - family-names: Kulal
+        given-names: Sumith
+      - family-names: Cimrman
+        given-names: Robert
+      - family-names: Scopatz
+        given-names: Anthony
+    journal: PeerJ Computer Science
+    volume: 3
+    start: e103
+    year: 2017
+    doi: 10.7717/peerj-cs.103
+  - type: software
+    title: 'gmp: Multiple Precision Arithmetic'
+    authors:
+      - family-names: Lucas
+        given-names: Antoine
+      - family-names: Scholz
+        given-names: Immanuel
+      - family-names: Boehme
+        given-names: Rainer
+      - family-names: Jasson
+        given-names: Sylvain
+      - family-names: Maechler
+        given-names: Martin
+    url: https://CRAN.R-project.org/package=gmp
+    notes: R package used for exact big integer and rational arithmetic.

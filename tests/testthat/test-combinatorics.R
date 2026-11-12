@@ -1,0 +1,33 @@
+test_that("permutations follow SymPy conventions", {
+  p <- Permutation(c(1, 2, 0))
+  q <- Permutation(list(c(0, 1)), size = 3)
+  expect_equal(cyclic_form(p * q), list(c(1L, 2L)))
+  expect_equal(perm_order(p), 3)
+  expect_equal(perm_sign(q), -1L)
+  expect_equal(perm_rank(p), 3)
+  expect_equal(unrank_lex(3, 3)$array, c(1L, 2L, 0L))
+  expect_equal((p^3)$array, 0:2)
+  expect_equal((p * perm_inverse(p))$array, 0:2)
+})
+
+test_that("group orders by Schreier-Sims", {
+  expect_equal(group_order(DihedralGroup(4)), 8)
+  expect_equal(group_order(SymmetricGroup(6)), 720)
+  expect_equal(group_order(AlternatingGroup(5)), 60)
+  expect_equal(group_order(CyclicGroup(7)), 7)
+  expect_false(group_contains(AlternatingGroup(4), Permutation(list(c(0, 1)), size = 4)))
+  expect_true(group_contains(SymmetricGroup(4), Permutation(c(3, 2, 1, 0))))
+  expect_length(group_elements(DihedralGroup(5)), 10L)
+})
+
+test_that("generators and counts", {
+  expect_length(permutations(1:4), 24L)
+  expect_length(subsets(1:4), 16L)
+  expect_length(partitions(7), 15L)
+  expect_length(set_partitions(4), 15L)
+  expect_length(derangements(1:4), 9L)
+  expect_equal(sstr(stirling(5, 2)), "15")
+  expect_equal(sstr(stirling(5, 2, kind = 1)), "50")
+  expect_equal(sstr(nT(10, 3)), "8")
+  expect_equal(prufer_from_tree(list(c(0, 1), c(1, 2), c(1, 3)), 4), c(1L, 1L))
+})

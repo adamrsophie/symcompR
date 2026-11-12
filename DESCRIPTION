@@ -1,0 +1,31 @@
+Package: symcompR
+Title: Symbolic Computation in R
+Version: 0.1.0
+Authors@R:
+    person("Adam R", "Sophie", email = "adamrsophie@gmail.com",
+           role = c("aut", "cre", "cph"))
+Description: A native R computer algebra system ported from the Python
+    library 'SymPy'. Provides exact integer and rational arithmetic,
+    automatically simplified symbolic expressions, assumptions, symbolic
+    differentiation, series, limits, integration, polynomial algebra,
+    equation solving, matrices, number theory, combinatorics, logic, sets,
+    and code printing, all implemented in R without a Python dependency.
+    The design and algorithms follow 'SymPy'
+    <https://www.sympy.org>; the 'SymPy' Development Team is gratefully
+    acknowledged, and its BSD license notice is retained in the package.
+License: GPL-3
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
+Depends: R (>= 4.3.0)
+Imports:
+    gmp,
+    graphics,
+    stats,
+    utils
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+URL: https://github.com/adamrsophie/symcompR, https://adamrsophie.github.io/symcompR/
+BugReports: https://github.com/adamrsophie/symcompR/issues
+Config/roxygen2/version: 8.1.1

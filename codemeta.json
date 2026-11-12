@@ -1,0 +1,104 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "@id": "https://github.com/adamrsophie/symcompR",
+  "name": "symcompR",
+  "description": "A native R computer algebra system ported from the Python library SymPy. Provides exact integer and rational arithmetic, automatically simplified symbolic expressions, assumptions, symbolic differentiation, series, limits, integration and integral transforms, polynomial algebra, equation, differential equation, recurrence and Diophantine solvers, matrices and matrix expressions, number theory, combinatorics, logic, sets, geometry, and printers for LaTeX, MathML, two dimensional text, and source code, all implemented in R without a Python dependency.",
+  "codeRepository": "https://github.com/adamrsophie/symcompR",
+  "url": "https://adamrsophie.github.io/symcompR/",
+  "issueTracker": "https://github.com/adamrsophie/symcompR/issues",
+  "license": "https://spdx.org/licenses/GPL-3.0-only.html",
+  "version": "0.1.0",
+  "softwareVersion": "0.1.0",
+  "dateCreated": "2026-11-09",
+  "dateModified": "2026-11-10",
+  "programmingLanguage": {
+    "@type": "ComputerLanguage",
+    "name": "R",
+    "url": "https://www.r-project.org"
+  },
+  "runtimePlatform": "R >= 4.3.0",
+  "operatingSystem": "OS Independent",
+  "applicationCategory": "Computer algebra / symbolic mathematics",
+  "developmentStatus": "active",
+  "keywords": [
+    "computer algebra",
+    "symbolic computation",
+    "symbolic mathematics",
+    "SymPy",
+    "calculus",
+    "polynomials",
+    "equation solving",
+    "number theory",
+    "R"
+  ],
+  "softwareRequirements": [
+    "R >= 4.3.0",
+    "gmp",
+    "graphics",
+    "stats",
+    "utils"
+  ],
+  "softwareSuggestions": [
+    "testthat >= 3.0.0"
+  ],
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Adam R",
+      "familyName": "Sophie",
+      "email": "adamrsophie@gmail.com",
+      "@id": "https://github.com/adamrsophie"
+    }
+  ],
+  "maintainer": [
+    {
+      "@type": "Person",
+      "givenName": "Adam R",
+      "familyName": "Sophie",
+      "email": "adamrsophie@gmail.com",
+      "@id": "https://github.com/adamrsophie"
+    }
+  ],
+  "copyrightHolder": [
+    {
+      "@type": "Person",
+      "@id": "https://github.com/adamrsophie",
+      "name": "Adam R Sophie"
+    }
+  ],
+  "contributor": [
+    {
+      "@type": "Role",
+      "roleName": [
+        "Conceptualization",
+        "Software",
+        "Validation",
+        "Writing - original draft",
+        "Project administration"
+      ],
+      "url": "https://credit.niso.org/",
+      "schema:author": {
+        "@id": "https://github.com/adamrsophie",
+        "name": "Adam R Sophie"
+      }
+    }
+  ],
+  "isBasedOn": {
+    "@type": "SoftwareSourceCode",
+    "name": "SymPy",
+    "url": "https://www.sympy.org",
+    "codeRepository": "https://github.com/sympy/sympy",
+    "version": "86150a81fd7a7e1d34a8ffba3465c5418b5ea04a",
+    "license": "https://spdx.org/licenses/BSD-3-Clause.html",
+    "author": {
+      "@type": "Organization",
+      "name": "SymPy Development Team"
+    }
+  },
+  "referencePublication": "https://doi.org/10.7717/peerj-cs.103",
+  "relatedLink": [
+    "https://adamrsophie.github.io/symcompR/",
+    "https://www.sympy.org"
+  ]
+}

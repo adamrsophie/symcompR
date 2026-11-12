@@ -1,0 +1,14 @@
+documentation/
+.Rhistory
+.RData
+.Rproj.user
+*.Rcheck/
+symcompR_*.tar.gz
+.DS_Store
+docs/
+tests/testthat/_problems/
+tests/testthat/testthat-problems.rds
+Rplots.pdf
+*.orig
+*.rej
+.Renviron

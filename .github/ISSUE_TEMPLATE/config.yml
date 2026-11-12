@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: mailto:adamrsophie@gmail.com
+    about: Please report suspected security vulnerabilities privately.
+  - name: symcompR documentation site
+    url: https://adamrsophie.github.io/symcompR/
+    about: Read the package documentation.
