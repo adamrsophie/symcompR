@@ -1,0 +1,2567 @@
+# symcompR: Symbolic Computation in R
+
+***symcompR*** is a computer algebra system written in R. It is a native
+port of the Python library [SymPy](https://www.sympy.org): expressions
+are R objects, exact integers and rationals come from
+[gmp](https://CRAN.R-project.org/package=gmp), and every algorithm runs
+in R. There is no Python, no `reticulate`, and no compiled code.
+
+Results follow SymPy closely, down to the order in which terms print, so
+code and answers move between the two systems with little translation.
+Outputs are checked against SymPy itself (see
+[Validation](#validation)).
+
+symcompR covers exact arithmetic and automatic simplification,
+assumptions, differentiation, series and limits, integration and
+integral transforms, polynomial algebra and factorization, algebraic
+number theory, equation, inequality, ODE, PDE, recurrence and
+Diophantine solvers, matrices and matrix expressions, number theory,
+combinatorics and group theory, logic, sets, geometry, vectors, tensors,
+physical units, parsers for SymPy, LaTeX and Mathematica input, and
+printers for LaTeX, MathML, two dimensional text, and code in thirteen
+languages.
+
+## Installation
+
+``` r
+
+# Development version
+# install.packages("remotes")
+remotes::install_github("adamrsophie/symcompR")
+```
+
+symcompR needs R 4.3.0 or later and the `gmp` package. It contains no
+compiled code, so no C or C++ toolchain is required.
+
+## Quick start
+
+``` r
+
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y")
+n <- Symbol("n", integer = TRUE)
+f <- Function("f")
+
+expand((x + y)^3)
+#> x^3 + 3*x^2*y + 3*x*y^2 + y^3
+
+sym_factor(x^4 - 1)
+#> (x - 1)*(x + 1)*(x^2 + 1)
+
+diff(sin(x) * exp(x), x)
+#> exp(x)*sin(x) + exp(x)*cos(x)
+
+sym_integrate(exp(-x^2), list(x, -Inf, Inf))
+#> sqrt(pi)
+
+limit(sin(x) / x, x, 0)
+#> 1
+
+series(tan(x), x, 0, 8)
+#> x + x^3/3 + 2*x^5/15 + 17*x^7/315 + O(x^8)
+
+solveset(sin(x) - Rational(1, 2), x, Reals)
+#> Union(ImageSet(Lambda(_n, 2*_n*pi + pi/6), Integers), ImageSet(Lambda(_n, 2*_n*pi + 5*pi/6), Integers))
+
+dsolve(Eq(diff(f(x), x, 2) + f(x), 0), f(x))
+#> Eq(f(x), C1*sin(x) + C2*cos(x))
+
+summation(1/n^2, list(n, 1, Inf))
+#> pi^2/6
+
+M <- Matrix(list(list(1, 2), list(3, 4)))
+inverse(M)
+#> Matrix(2, 2)
+#> [-2 , 1   ]
+#> [3/2, -1/2]
+
+latex(Integral(exp(-x^2), list(x, -Inf, Inf)))
+#> \int\limits_{- \infty}^{\infty} e^{- x^{2}}\, dx
+
+ccode(sqrt(x) + Rational(1, 3))
+#> sqrt(x) + 1.0/3.0
+
+pprint((x + 1)/(y - 2) + sqrt(x^2 + 1), use_unicode = FALSE)
+#>            ________
+#> x + 1     /  2
+#> ----- + \/  x  + 1
+#> y - 2
+```
+
+## What is covered
+
+| Area | Highlights |
+|----|----|
+| Core | Exact `Integer` and `Rational` arithmetic, canonical `Add`/`Mul`/`Pow`, assumptions, `subs`, `xreplace`, `expand` and its hints, `factor_terms`, arbitrary precision evaluation with [`N()`](https://adamrsophie.github.io/symcompR/reference/N.md) |
+| Functions | Elementary, gamma family, error and exponential integrals, zeta, Bessel, Airy, elliptic, orthogonal polynomials, `Piecewise`, B-splines |
+| Calculus | `diff`, `limit`, `series`, `summation`, `product`, finite differences, singularities, extrema, monotonicity, periodicity, `AccumBounds` interval arithmetic, `not_empty_in` |
+| Integration | Heuristic and rational function integration, definite integrals, Laplace, Fourier, Mellin, sine, cosine and Hankel transforms |
+| Polynomials | Sparse polynomials over QQ and GF(p), factorization (Zassenhaus, Hensel, Wang’s multivariate EEZ, algebraic and Gaussian domains), GCDs, Groebner bases, resultants, roots to degree four, `CRootOf`, `galois_group` to degree six |
+| Algebraic number theory | Number fields, `round_two` integral bases, `prime_decomp`, `prime_valuation`, `PrimeIdeal` |
+| Solvers | `solve`, `solveset` with periodic families, linear and polynomial systems, inequalities, `dsolve`, `pdsolve`, `rsolve`, `diophantine`, `nsolve` |
+| Simplification | `simplify`, `trigsimp`, the Fu et al. trigonometric rules (`fu`, `TR0` to `TR22`), `powsimp`, `radsimp`, `signsimp`, `collect`, `nsimplify`, `gammasimp`, `hypersimp` |
+| Matrices | Dense symbolic matrices, determinants, inverses, eigenvalues, Jordan form, LU, QR, Cholesky, Hermite and Smith normal forms; matrix expressions (`MatrixSymbol`, `BlockMatrix`, `MatrixSlice`, `blockcut`, `block_collapse`) |
+| Number theory | Primality, `factorint` (Pollard rho and p - 1, ECM, quadratic sieve), residues, discrete logarithms, CRT, continued fractions |
+| Sets and logic | Intervals, finite sets, `ImageSet`, `ConditionSet`, `Range`, ordinals; normal forms, Quine-McCluskey, DPLL satisfiability; assumptions with `ask`, `refine`, and `assuming` |
+| Series objects | Sequences, linear recurrences, Pade approximants, Fourier series |
+| Combinatorics and groups | Permutations, permutation groups (Schreier-Sims, Sylow subgroups, cosets), free and finitely presented groups (Todd-Coxeter, Reidemeister-Schreier, rewriting systems, homomorphisms), polycyclic groups, polyhedra |
+| Vectors and tensors | `sympy.vector` (`CoordSys3D`, del operators, dyadics, parametric regions and integrals), tensor canonicalization (`canon_bp`), `TensorHead` algebra, `PartialDerivative`, arrays |
+| Physics | `sympy.physics.units`: unit systems (SI, MKS, MKSA, natural, CGS Gauss), `convert_to`, dimensional analysis, physical constants |
+| Parsing | `parse_expr` with SymPy’s transformations, `parse_latex`, `parse_mathematica` |
+| Other modules | Geometry in 2D and 3D, statistics, discrete transforms, quaternions, plotting |
+| Printing | `str`, `srepr`, LaTeX, MathML, 2D pretty printing, `TableForm`, and code for C, C++, Fortran, JavaScript, Julia, Mathematica, Maple, Octave, R, Python, Rust, GLSL, and SMT-LIB |
+
+Coverage is a work in progress: 867 of the 901 names in SymPy’s top
+level API (96 percent) are available, counted by name. A ported function
+can still handle fewer input classes than its SymPy counterpart. Python
+classes and exceptions with no R meaning (`Basic`, `Expr`,
+`PolynomialError`, domain objects such as `ZZ`) are not planned.
+
+## Differences from SymPy
+
+- Powers print and parse as `^`, not `**`.
+- `==` is structural equality, as in SymPy; build equations with
+  [`Eq()`](https://adamrsophie.github.io/symcompR/reference/Eq.md).
+- Write `Rational(1, 3)`, not `1/3`: R evaluates `1/3` to a double
+  first.
+- Floats have arbitrary precision, as in SymPy: `N(sym_pi, 50)` gives 50
+  significant digits, and the default is 15.
+- Constants whose names clash with R are `sym_pi`, `sym_E`, and `sym_I`.
+- Attaching symcompR masks no base R function, and a test enforces this.
+  SymPy names that clash with base R carry a `sym_` prefix:
+  [`sym_factor()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md),
+  [`sym_integrate()`](https://adamrsophie.github.io/symcompR/reference/sym_integrate.md),
+  [`sym_symbols()`](https://adamrsophie.github.io/symcompR/reference/Symbol.md),
+  [`sym_var()`](https://adamrsophie.github.io/symcompR/reference/Symbol.md),
+  [`sym_det()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md),
+  [`sym_factorial()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md),
+  [`sym_beta()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md),
+  [`sym_binomial()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md),
+  [`sym_atan2()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md),
+  [`sym_Mod()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  (or `x %% y`),
+  [`sym_ordered()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md),
+  [`sym_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md),
+  [`sym_rf()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md),
+  [`sym_lcm()`](https://adamrsophie.github.io/symcompR/reference/gcd.md),
+  [`sym_fft()`](https://adamrsophie.github.io/symcompR/reference/convolution.md),
+  [`sym_decompose()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md),
+  [`sym_trunc()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md),
+  [`sym_prod()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md),
+  [`sym_reshape()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md),
+  [`sym_diag()`](https://adamrsophie.github.io/symcompR/reference/matrix-builders.md),
+  and
+  [`sym_trace()`](https://adamrsophie.github.io/symcompR/reference/matrix-builders.md).
+  Where base R has a generic (`diff`, `sin`, `exp`, `pretty`, `scale`,
+  `t`, …), symcompR adds an S3 method instead.
+
+## Validation
+
+- Expected values in the test suite come from SymPy, pinned to commit
+  `86150a81`, run as an oracle on the same inputs.
+- Larger modules have dedicated differential test harnesses against
+  SymPy: the Diophantine solver matches SymPy on 52 of 53 equations (the
+  last differs only in its error message), and the number theory module
+  is compared function by function.
+- `R CMD check --as-cran` passes with no errors, warnings, or notes.
+
+## Citing symcompR
+
+``` r
+
+citation("symcompR")
+```
+
+The repository ships machine readable citation and software metadata for
+FAIR harvesters:
+
+- [`CITATION.cff`](https://adamrsophie.github.io/symcompR/CITATION.cff):
+  Citation File Format (GitHub “Cite this repository”, Zenodo).
+- [`codemeta.json`](https://adamrsophie.github.io/symcompR/codemeta.json):
+  CodeMeta 2.0 software metadata crosswalk.
+- [`.zenodo.json`](https://adamrsophie.github.io/symcompR/.zenodo.json):
+  Zenodo deposit metadata (author, license, related identifiers).
+- [`ro-crate-metadata.json`](https://adamrsophie.github.io/symcompR/ro-crate-metadata.json):
+  RO-Crate 1.1 packaging and provenance.
+- `inst/CITATION`: the R level citation (`citation("symcompR")`).
+- `inst/COPYRIGHTS` and `inst/SYMPY-LICENSE`: provenance and the license
+  of the ported SymPy code.
+
+All carry the GPL-3.0 SPDX identifier, the author, and the SymPy
+provenance. Once the first GitHub release is archived on Zenodo, its
+concept DOI will resolve to the latest release.
+
+## Contributing
+
+Bug reports, feature requests, and pull requests are welcome; see
+[`CONTRIBUTING.md`](https://adamrsophie.github.io/symcompR/CONTRIBUTING.md).
+A wrong answer is the most useful bug report: include the input and, if
+you can, what SymPy returns for it. Please follow the [Code of
+Conduct](https://adamrsophie.github.io/symcompR/CODE_OF_CONDUCT.md), and
+report security issues privately as described in
+[`SECURITY.md`](https://adamrsophie.github.io/symcompR/SECURITY.md).
+
+## Author
+
+- Adam R Sophie (author, maintainer, copyright holder),
+  <adamrsophie@gmail.com>
+
+## Acknowledgments
+
+symcompR is a port of [SymPy](https://github.com/sympy/sympy), and its
+design, algorithms, and expected outputs follow SymPy. The SymPy
+Development Team is gratefully acknowledged; SymPy is distributed under
+the BSD 3-Clause License, whose notice is retained in
+`inst/SYMPY-LICENSE` as it requires. symcompR is not affiliated with or
+endorsed by the SymPy project.
+
+## License
+
+GPL-3. See
+[`LICENSE.md`](https://adamrsophie.github.io/symcompR/LICENSE.md) or
+<https://www.gnu.org/licenses/gpl-3.0> for the full license text. The
+portions derived from SymPy remain under SymPy’s BSD 3-Clause License;
+see `inst/COPYRIGHTS`.
+
+# Package index
+
+## All functions
+
+- [`AccumBounds()`](https://adamrsophie.github.io/symcompR/reference/AccumBounds.md)
+  [`AccumulationBounds()`](https://adamrsophie.github.io/symcompR/reference/AccumBounds.md)
+  [`ab_union()`](https://adamrsophie.github.io/symcompR/reference/AccumBounds.md)
+  : Accumulation bounds
+- [`AlgebraicNumber()`](https://adamrsophie.github.io/symcompR/reference/AlgebraicNumber.md)
+  [`field_element()`](https://adamrsophie.github.io/symcompR/reference/AlgebraicNumber.md)
+  [`is_primitive_element()`](https://adamrsophie.github.io/symcompR/reference/AlgebraicNumber.md)
+  [`minpoly_of_element()`](https://adamrsophie.github.io/symcompR/reference/AlgebraicNumber.md)
+  [`to_root()`](https://adamrsophie.github.io/symcompR/reference/AlgebraicNumber.md)
+  [`to_primitive_element()`](https://adamrsophie.github.io/symcompR/reference/AlgebraicNumber.md)
+  [`isolate()`](https://adamrsophie.github.io/symcompR/reference/AlgebraicNumber.md)
+  : Algebraic numbers
+- [`And()`](https://adamrsophie.github.io/symcompR/reference/And.md)
+  [`Or()`](https://adamrsophie.github.io/symcompR/reference/And.md)
+  [`Not()`](https://adamrsophie.github.io/symcompR/reference/And.md)
+  [`Xor()`](https://adamrsophie.github.io/symcompR/reference/And.md)
+  [`Nand()`](https://adamrsophie.github.io/symcompR/reference/And.md)
+  [`Nor()`](https://adamrsophie.github.io/symcompR/reference/And.md)
+  [`Implies()`](https://adamrsophie.github.io/symcompR/reference/And.md)
+  [`Equivalent()`](https://adamrsophie.github.io/symcompR/reference/And.md)
+  [`ITE()`](https://adamrsophie.github.io/symcompR/reference/And.md) :
+  Boolean operators
+- [`Array()`](https://adamrsophie.github.io/symcompR/reference/Array.md)
+  [`arr_get()`](https://adamrsophie.github.io/symcompR/reference/Array.md)
+  [`tensorproduct()`](https://adamrsophie.github.io/symcompR/reference/Array.md)
+  [`tensorcontraction()`](https://adamrsophie.github.io/symcompR/reference/Array.md)
+  [`permutedims()`](https://adamrsophie.github.io/symcompR/reference/Array.md)
+  [`derive_by_array()`](https://adamrsophie.github.io/symcompR/reference/Array.md)
+  [`tensordiagonal()`](https://adamrsophie.github.io/symcompR/reference/Array.md)
+  : N-dimensional symbolic arrays
+- [`AxisOrienter()`](https://adamrsophie.github.io/symcompR/reference/AxisOrienter.md)
+  [`BodyOrienter()`](https://adamrsophie.github.io/symcompR/reference/AxisOrienter.md)
+  [`SpaceOrienter()`](https://adamrsophie.github.io/symcompR/reference/AxisOrienter.md)
+  [`QuaternionOrienter()`](https://adamrsophie.github.io/symcompR/reference/AxisOrienter.md)
+  [`orienter_rotation_matrix()`](https://adamrsophie.github.io/symcompR/reference/AxisOrienter.md)
+  : Orienters
+- [`CRootOf()`](https://adamrsophie.github.io/symcompR/reference/CRootOf.md)
+  : Indexed complex roots of polynomials
+- [`ComplexRegion()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
+  [`psets()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
+  [`a_interval()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
+  [`b_interval()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
+  [`complex_region_from_real()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
+  [`normalize_theta_set()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
+  : Regions of the complex plane
+- [`CoordSys3D()`](https://adamrsophie.github.io/symcompR/reference/CoordSys3D.md)
+  [`BaseScalar()`](https://adamrsophie.github.io/symcompR/reference/CoordSys3D.md)
+  [`locate_new()`](https://adamrsophie.github.io/symcompR/reference/CoordSys3D.md)
+  [`orient_new()`](https://adamrsophie.github.io/symcompR/reference/CoordSys3D.md)
+  [`orient_new_axis()`](https://adamrsophie.github.io/symcompR/reference/CoordSys3D.md)
+  [`orient_new_body()`](https://adamrsophie.github.io/symcompR/reference/CoordSys3D.md)
+  [`orient_new_space()`](https://adamrsophie.github.io/symcompR/reference/CoordSys3D.md)
+  [`orient_new_quaternion()`](https://adamrsophie.github.io/symcompR/reference/CoordSys3D.md)
+  [`create_new()`](https://adamrsophie.github.io/symcompR/reference/CoordSys3D.md)
+  : Three dimensional coordinate systems
+- [`Coset()`](https://adamrsophie.github.io/symcompR/reference/Coset.md)
+  [`is_left_coset()`](https://adamrsophie.github.io/symcompR/reference/Coset.md)
+  [`is_right_coset()`](https://adamrsophie.github.io/symcompR/reference/Coset.md)
+  [`coset_as_list()`](https://adamrsophie.github.io/symcompR/reference/Coset.md)
+  [`SymmetricPermutationGroup()`](https://adamrsophie.github.io/symcompR/reference/Coset.md)
+  : Cosets and the symmetric group of a degree
+- [`CosetTable()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_omega()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_n()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_A()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_copy()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_is_complete()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_define()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_define_c()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_scan_c()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_coincidence_c()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_scan()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_scan_check()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_merge()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_rep()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_coincidence()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_scan_and_fill()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_scan_and_fill_c()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_look_ahead()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_process_deductions()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_process_deductions_check()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_switch()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_standardize()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_compress()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_conjugates()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_coset_representative()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_modified_define()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_modified_scan()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_modified_scan_and_fill()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_modified_merge()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_modified_rep()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`ct_modified_coincidence()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`coset_enumeration_r()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`modified_coset_enumeration_r()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  [`coset_enumeration_c()`](https://adamrsophie.github.io/symcompR/reference/CosetTable.md)
+  : Coset tables and coset enumeration
+- [`Cross()`](https://adamrsophie.github.io/symcompR/reference/Cross.md)
+  [`Dot()`](https://adamrsophie.github.io/symcompR/reference/Cross.md) :
+  Unevaluated dot and cross products
+- [`Cycle()`](https://adamrsophie.github.io/symcompR/reference/Cycle.md)
+  [`cycle_mul()`](https://adamrsophie.github.io/symcompR/reference/Cycle.md)
+  [`cycle_size()`](https://adamrsophie.github.io/symcompR/reference/Cycle.md)
+  [`cycle_as_list()`](https://adamrsophie.github.io/symcompR/reference/Cycle.md)
+  : Cycles
+- [`Del()`](https://adamrsophie.github.io/symcompR/reference/Del.md)
+  [`del_gradient()`](https://adamrsophie.github.io/symcompR/reference/Del.md)
+  [`del_dot()`](https://adamrsophie.github.io/symcompR/reference/Del.md)
+  [`del_cross()`](https://adamrsophie.github.io/symcompR/reference/Del.md)
+  : The del operator
+- [`Derivative()`](https://adamrsophie.github.io/symcompR/reference/Derivative.md)
+  : Unevaluated derivative
+- [`Dict()`](https://adamrsophie.github.io/symcompR/reference/Dict.md)
+  [`dict_get()`](https://adamrsophie.github.io/symcompR/reference/Dict.md)
+  [`dict_keys()`](https://adamrsophie.github.io/symcompR/reference/Dict.md)
+  [`dict_values()`](https://adamrsophie.github.io/symcompR/reference/Dict.md)
+  [`dict_items()`](https://adamrsophie.github.io/symcompR/reference/Dict.md)
+  : Symbolic dictionaries
+- [`Dimension()`](https://adamrsophie.github.io/symcompR/reference/Dimension.md)
+  [`dimension_name()`](https://adamrsophie.github.io/symcompR/reference/Dimension.md)
+  [`dimension_symbol()`](https://adamrsophie.github.io/symcompR/reference/Dimension.md)
+  [`has_integer_powers()`](https://adamrsophie.github.io/symcompR/reference/Dimension.md)
+  : Physical dimensions
+- [`DimensionSystem()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`base_dims()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`derived_dims()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`dimensional_dependencies()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`get_dimensional_dependencies()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`equivalent_dims()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`extend()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`is_dimensionless()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`list_can_dims()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`dim_can_vector()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`inv_can_transf_matrix()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`can_transf_matrix()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`dim_vector()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`print_dim_base()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`system_dim()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  [`is_consistent()`](https://adamrsophie.github.io/symcompR/reference/DimensionSystem.md)
+  : Dimension systems
+- [`Dummy()`](https://adamrsophie.github.io/symcompR/reference/Dummy.md)
+  [`Wild()`](https://adamrsophie.github.io/symcompR/reference/Dummy.md)
+  : Dummy and wild symbols
+- [`EllipticCurve()`](https://adamrsophie.github.io/symcompR/reference/EllipticCurve.md)
+  [`EllipticCurvePoint()`](https://adamrsophie.github.io/symcompR/reference/EllipticCurve.md)
+  [`point_order()`](https://adamrsophie.github.io/symcompR/reference/EllipticCurve.md)
+  : Elliptic curves
+- [`Eq()`](https://adamrsophie.github.io/symcompR/reference/Eq.md)
+  [`Ne()`](https://adamrsophie.github.io/symcompR/reference/Eq.md)
+  [`Lt()`](https://adamrsophie.github.io/symcompR/reference/Eq.md)
+  [`Le()`](https://adamrsophie.github.io/symcompR/reference/Eq.md)
+  [`Gt()`](https://adamrsophie.github.io/symcompR/reference/Eq.md)
+  [`Ge()`](https://adamrsophie.github.io/symcompR/reference/Eq.md)
+  [`lhs()`](https://adamrsophie.github.io/symcompR/reference/Eq.md)
+  [`rhs()`](https://adamrsophie.github.io/symcompR/reference/Eq.md) :
+  Symbolic equations and inequalities
+- [`FactorCache()`](https://adamrsophie.github.io/symcompR/reference/FactorCache.md)
+  [`factor_cache`](https://adamrsophie.github.io/symcompR/reference/FactorCache.md)
+  : Cache of prime factors
+- [`FpGroup()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_group()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`xfp_group()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_make_confluent()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_reduce()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_equals()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_subgroup()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_quotient()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_coset_enumeration()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_coset_table()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_order()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_most_frequent_generator()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_random()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`fp_index()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  : Finitely presented groups
+- [`FpSubgroup()`](https://adamrsophie.github.io/symcompR/reference/FpSubgroup.md)
+  [`fps_contains()`](https://adamrsophie.github.io/symcompR/reference/FpSubgroup.md)
+  [`fps_order()`](https://adamrsophie.github.io/symcompR/reference/FpSubgroup.md)
+  [`fps_to_FpGroup()`](https://adamrsophie.github.io/symcompR/reference/FpSubgroup.md)
+  : Subgroups of finitely presented and free groups
+- [`FreeGroup()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
+  [`free_group()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
+  [`xfree_group()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
+  [`fg_slice()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
+  [`fg_index()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
+  [`fp_contains()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
+  : Free groups
+- [`Function()`](https://adamrsophie.github.io/symcompR/reference/Function.md)
+  : Undefined functions
+- [`Gradient()`](https://adamrsophie.github.io/symcompR/reference/Gradient.md)
+  [`Divergence()`](https://adamrsophie.github.io/symcompR/reference/Gradient.md)
+  [`Curl()`](https://adamrsophie.github.io/symcompR/reference/Gradient.md)
+  [`Laplacian()`](https://adamrsophie.github.io/symcompR/reference/Gradient.md)
+  : Unevaluated differential operators
+- [`GroupHomomorphism()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`hom_images()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`hom_is_injective()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`hom_is_surjective()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`hom_is_isomorphism()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`hom_is_trivial()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`hom_factor()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`hom_compose()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`hom_restrict_to()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`hom_invert_subgroup()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`homomorphism()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`group_isomorphism()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  [`is_isomorphic()`](https://adamrsophie.github.io/symcompR/reference/GroupHomomorphism.md)
+  : Group homomorphisms
+- [`ImplicitRegion()`](https://adamrsophie.github.io/symcompR/reference/ImplicitRegion.md)
+  [`implicit_degree()`](https://adamrsophie.github.io/symcompR/reference/ImplicitRegion.md)
+  [`conic_coeff()`](https://adamrsophie.github.io/symcompR/reference/ImplicitRegion.md)
+  [`regular_point()`](https://adamrsophie.github.io/symcompR/reference/ImplicitRegion.md)
+  [`singular_points()`](https://adamrsophie.github.io/symcompR/reference/ImplicitRegion.md)
+  [`rational_parametrization()`](https://adamrsophie.github.io/symcompR/reference/ImplicitRegion.md)
+  : Implicit regions
+- [`Idx()`](https://adamrsophie.github.io/symcompR/reference/Indexed.md)
+  [`IndexedBase()`](https://adamrsophie.github.io/symcompR/reference/Indexed.md)
+  [`Indexed()`](https://adamrsophie.github.io/symcompR/reference/Indexed.md)
+  [`get_indices()`](https://adamrsophie.github.io/symcompR/reference/Indexed.md)
+  [`get_contraction_structure()`](https://adamrsophie.github.io/symcompR/reference/Indexed.md)
+  [`format_contraction_structure()`](https://adamrsophie.github.io/symcompR/reference/Indexed.md)
+  : Indexed objects
+- [`Integer()`](https://adamrsophie.github.io/symcompR/reference/Integer.md)
+  [`Rational()`](https://adamrsophie.github.io/symcompR/reference/Integer.md)
+  [`Float()`](https://adamrsophie.github.io/symcompR/reference/Integer.md)
+  : Exact integers, rationals and floating point numbers
+- [`LUdecomposition()`](https://adamrsophie.github.io/symcompR/reference/LUdecomposition.md)
+  [`GramSchmidt()`](https://adamrsophie.github.io/symcompR/reference/LUdecomposition.md)
+  [`QRdecomposition()`](https://adamrsophie.github.io/symcompR/reference/LUdecomposition.md)
+  [`cholesky()`](https://adamrsophie.github.io/symcompR/reference/LUdecomposition.md)
+  [`LDLdecomposition()`](https://adamrsophie.github.io/symcompR/reference/LUdecomposition.md)
+  : Matrix decompositions
+- [`Lambda()`](https://adamrsophie.github.io/symcompR/reference/Lambda.md)
+  [`apply_lambda()`](https://adamrsophie.github.io/symcompR/reference/Lambda.md)
+  : Lambda functions
+- [`Matrix()`](https://adamrsophie.github.io/symcompR/reference/Matrix.md)
+  [`zeros()`](https://adamrsophie.github.io/symcompR/reference/Matrix.md)
+  [`ones()`](https://adamrsophie.github.io/symcompR/reference/Matrix.md)
+  [`eye()`](https://adamrsophie.github.io/symcompR/reference/Matrix.md)
+  [`diag_matrix()`](https://adamrsophie.github.io/symcompR/reference/Matrix.md)
+  [`` `%^%` ``](https://adamrsophie.github.io/symcompR/reference/Matrix.md)
+  : Symbolic matrices
+- [`Monomial()`](https://adamrsophie.github.io/symcompR/reference/Monomial.md)
+  [`format(`*`<sym_monomial>`*`)`](https://adamrsophie.github.io/symcompR/reference/Monomial.md)
+  [`print(`*`<sym_monomial>`*`)`](https://adamrsophie.github.io/symcompR/reference/Monomial.md)
+  [`Ops(`*`<sym_monomial>`*`)`](https://adamrsophie.github.io/symcompR/reference/Monomial.md)
+  : Monomials
+- [`N()`](https://adamrsophie.github.io/symcompR/reference/N.md)
+  [`evalf()`](https://adamrsophie.github.io/symcompR/reference/N.md) :
+  Numerical evaluation
+- [`Normal()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Uniform()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Exponential()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`GammaRV()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`BetaRV()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`ChiSquared()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`StudentT()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Cauchy()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Laplace()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`LogNormal()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Weibull()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Pareto()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Bernoulli()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Coin()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Die()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Binomial()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Poisson()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`Geometric()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`E()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`expectation()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`moment()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`cmoment()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`variance()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`std()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`covariance()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`correlation()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`skewness()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`kurtosis()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`rv_density()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`rv_cdf()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`P()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  [`rv_sample()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+  : Random variables
+- [`O()`](https://adamrsophie.github.io/symcompR/reference/O.md)
+  [`Order()`](https://adamrsophie.github.io/symcompR/reference/O.md)
+  [`removeO()`](https://adamrsophie.github.io/symcompR/reference/O.md)
+  [`getO()`](https://adamrsophie.github.io/symcompR/reference/O.md) :
+  Order terms
+- [`Options()`](https://adamrsophie.github.io/symcompR/reference/Options.md)
+  : Polynomial options
+- [`ParametricIntegral()`](https://adamrsophie.github.io/symcompR/reference/ParametricIntegral.md)
+  [`vector_integrate()`](https://adamrsophie.github.io/symcompR/reference/ParametricIntegral.md)
+  : Integrals of fields over regions
+- [`ParametricRegion()`](https://adamrsophie.github.io/symcompR/reference/ParametricRegion.md)
+  [`parametric_region_list()`](https://adamrsophie.github.io/symcompR/reference/ParametricRegion.md)
+  : Parametric regions
+- [`PartialDerivative()`](https://adamrsophie.github.io/symcompR/reference/PartialDerivative.md)
+  [`pd_expand()`](https://adamrsophie.github.io/symcompR/reference/PartialDerivative.md)
+  [`pd_perform_derivative()`](https://adamrsophie.github.io/symcompR/reference/PartialDerivative.md)
+  : Partial derivative of tensor expressions
+- [`Permutation()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`array_form()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_size()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_inverse()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`apply_perm()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`cyclic_form()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`full_cyclic_form()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_list()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_support()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_rmul()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_prod()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_mul_inv()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_commutes_with()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_call()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_transpositions()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_from_sequence()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_atoms()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_next_lex()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_unrank_nonlex()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_rank_nonlex()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_next_nonlex()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_rank()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_cardinality()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_parity()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_is_even()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_is_odd()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_is_singleton()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_is_empty()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_is_identity()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_ascents()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_descents()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_max()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_min()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_inversions()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_commutator()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_signature()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_sign()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_order()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_length()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_cycle_structure()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_cycles()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_index()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_runs()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_inversion_vector()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_rank_trotterjohnson()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_unrank_trotterjohnson()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_next_trotterjohnson()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_precedence_matrix()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_precedence_distance()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_adjacency_matrix()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_adjacency_distance()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_positional_distance()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_josephus()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_from_inversion_vector()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_random()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`unrank_lex()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  [`perm_resize()`](https://adamrsophie.github.io/symcompR/reference/Permutation.md)
+  : Permutations
+- [`PermutationGroup()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_generators()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_degree()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_identity()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`random_pr()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_base()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`baseswap()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`basic_orbits()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`basic_stabilizers()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`basic_transversals()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`composition_series()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`coset_transversal()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`coset_table()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_center()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`centralizer()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_commutator()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`coset_factor()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`generator_product()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`coset_rank()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`coset_unrank()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_elements()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`derived_series()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`derived_subgroup()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_generate()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`generate_dimino()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`generate_schreier_sims()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_contains()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_perfect_group()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_abelian()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`abelian_invariants()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_elementary()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_alt_sym()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_nilpotent()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_normal()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_primitive()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`minimal_blocks()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_solvable()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_subgroup()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_polycyclic()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_transitive()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_trivial()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`lower_central_series()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`max_div()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`minimal_block()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`conjugacy_class()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`conjugacy_classes()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`molien()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`normal_closure()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`orbit()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`orbit_rep()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`orbit_transversal()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`orbits()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_order()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_index()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_symmetric_group()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_alternating_group()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_cyclic()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`is_dihedral()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`pointwise_stabilizer()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`make_perm()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_random()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`random_stab()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`schreier_sims()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`schreier_sims_incremental()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`schreier_sims_random()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`schreier_vector()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`stabilizer()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`strong_gens()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`subgroup()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`subgroup_search()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`transitivity_degree()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`sylow_subgroup()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`quotient_group()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  [`group_equals()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
+  : Permutation groups
+- [`Piecewise()`](https://adamrsophie.github.io/symcompR/reference/Piecewise.md)
+  [`piecewise_fold()`](https://adamrsophie.github.io/symcompR/reference/Piecewise.md)
+  : Piecewise defined functions
+- [`Point()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`distance()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`midpoint()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`Line()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`Segment()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`slope()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`line_equation()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`is_parallel()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`is_perpendicular()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`is_collinear()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`Circle()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`circle_equation()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`Polygon()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`Triangle()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`area()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`perimeter()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`centroid()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`intersection()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  : Plane geometry
+- [`Poly()`](https://adamrsophie.github.io/symcompR/reference/Poly.md)
+  [`as_expr()`](https://adamrsophie.github.io/symcompR/reference/Poly.md)
+  : Polynomial objects
+- [`PolycyclicGroup()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`perm_polycyclic_group()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`pc_is_prime_order()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`pc_length()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`Collector()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`pc_presentation()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`minimal_uncollected_subword()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`pc_relations()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`collected_word()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`exponent_vector()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`pc_depth()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`leading_exponent()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`induced_pcgs()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  [`constructive_membership_test()`](https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.md)
+  : Polycyclic groups and collectors
+- [`Polyhedron()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_corners()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_faces()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_pgroup()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_size()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_array_form()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_cyclic_form()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_edges()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_rotate()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_reset()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`poly_copy()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`tetrahedron()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`cube()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`octahedron()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`dodecahedron()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`icosahedron()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  [`polyhedron_faces()`](https://adamrsophie.github.io/symcompR/reference/Polyhedron.md)
+  : Polyhedra
+- [`Prefix()`](https://adamrsophie.github.io/symcompR/reference/Prefix.md)
+  [`scale_factor()`](https://adamrsophie.github.io/symcompR/reference/Prefix.md)
+  [`prefix_unit()`](https://adamrsophie.github.io/symcompR/reference/Prefix.md)
+  : Unit prefixes
+- [`Q`](https://adamrsophie.github.io/symcompR/reference/Q.md)
+  [`ask()`](https://adamrsophie.github.io/symcompR/reference/Q.md)
+  [`refine()`](https://adamrsophie.github.io/symcompR/reference/Q.md) :
+  Assumption predicates
+- [`Quantity()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  [`PhysicalConstant()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  [`Unit()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  [`set_global_dimension()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  [`set_global_relative_scale_factor()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  [`quantity_name()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  [`quantity_abbrev()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  [`quantity_dimension()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  [`is_prefixed()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  [`is_physical_constant()`](https://adamrsophie.github.io/symcompR/reference/Quantity.md)
+  : Physical quantities
+- [`Quaternion()`](https://adamrsophie.github.io/symcompR/reference/Quaternion.md)
+  [`quat_conjugate()`](https://adamrsophie.github.io/symcompR/reference/Quaternion.md)
+  [`quat_norm()`](https://adamrsophie.github.io/symcompR/reference/Quaternion.md)
+  [`quat_inverse()`](https://adamrsophie.github.io/symcompR/reference/Quaternion.md)
+  [`quat_to_rotation_matrix()`](https://adamrsophie.github.io/symcompR/reference/Quaternion.md)
+  : Quaternions
+- [`Range()`](https://adamrsophie.github.io/symcompR/reference/Range.md)
+  [`DisjointUnion()`](https://adamrsophie.github.io/symcompR/reference/Range.md)
+  : Ranges of integers and disjoint unions
+- [`RewritingSystem()`](https://adamrsophie.github.io/symcompR/reference/RewritingSystem.md)
+  [`fp_rewriting_system()`](https://adamrsophie.github.io/symcompR/reference/RewritingSystem.md)
+  [`rws_rules()`](https://adamrsophie.github.io/symcompR/reference/RewritingSystem.md)
+  [`rws_set_max()`](https://adamrsophie.github.io/symcompR/reference/RewritingSystem.md)
+  [`rws_is_confluent()`](https://adamrsophie.github.io/symcompR/reference/RewritingSystem.md)
+  [`rws_add_rule()`](https://adamrsophie.github.io/symcompR/reference/RewritingSystem.md)
+  [`rws_make_confluent()`](https://adamrsophie.github.io/symcompR/reference/RewritingSystem.md)
+  [`rws_reduce()`](https://adamrsophie.github.io/symcompR/reference/RewritingSystem.md)
+  [`rws_reduce_using_automaton()`](https://adamrsophie.github.io/symcompR/reference/RewritingSystem.md)
+  : Rewriting systems for finitely presented groups
+- [`RootSum()`](https://adamrsophie.github.io/symcompR/reference/RootSum.md)
+  : Sums over the roots of a polynomial
+- [`SOPform()`](https://adamrsophie.github.io/symcompR/reference/SOPform.md)
+  [`POSform()`](https://adamrsophie.github.io/symcompR/reference/SOPform.md)
+  : Sum of products and product of sums forms
+- [`SetExpr()`](https://adamrsophie.github.io/symcompR/reference/SetExpr.md)
+  : Set expressions
+- [`Sieve()`](https://adamrsophie.github.io/symcompR/reference/Sieve.md)
+  [`sieve`](https://adamrsophie.github.io/symcompR/reference/Sieve.md) :
+  Sieve of Eratosthenes
+- [`Symbol()`](https://adamrsophie.github.io/symcompR/reference/Symbol.md)
+  [`sym_var()`](https://adamrsophie.github.io/symcompR/reference/Symbol.md)
+  [`sym_symbols()`](https://adamrsophie.github.io/symcompR/reference/Symbol.md)
+  : Create symbols
+- [`SymmetricGroup()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
+  [`AlternatingGroup()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
+  [`CyclicGroup()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
+  [`DihedralGroup()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
+  [`AbelianGroup()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
+  [`DirectProduct()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
+  [`RubikGroup()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
+  [`rubik_cube_generators()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
+  [`rubik()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
+  : Named permutation groups
+- [`TableForm()`](https://adamrsophie.github.io/symcompR/reference/TableForm.md)
+  [`format(`*`<TableForm>`*`)`](https://adamrsophie.github.io/symcompR/reference/TableForm.md)
+  [`print(`*`<TableForm>`*`)`](https://adamrsophie.github.io/symcompR/reference/TableForm.md)
+  [`as.matrix(`*`<TableForm>`*`)`](https://adamrsophie.github.io/symcompR/reference/TableForm.md)
+  : Tables of expressions
+- [`TensorHead()`](https://adamrsophie.github.io/symcompR/reference/TensorHead.md)
+  [`tensor_heads()`](https://adamrsophie.github.io/symcompR/reference/TensorHead.md)
+  : Tensor heads
+- [`TensorManager`](https://adamrsophie.github.io/symcompR/reference/TensorManager.md)
+  : Commutation groups of tensors
+- [`S1TransitiveSubgroups`](https://adamrsophie.github.io/symcompR/reference/TransitiveSubgroups.md)
+  [`S2TransitiveSubgroups`](https://adamrsophie.github.io/symcompR/reference/TransitiveSubgroups.md)
+  [`S3TransitiveSubgroups`](https://adamrsophie.github.io/symcompR/reference/TransitiveSubgroups.md)
+  [`S4TransitiveSubgroups`](https://adamrsophie.github.io/symcompR/reference/TransitiveSubgroups.md)
+  [`S5TransitiveSubgroups`](https://adamrsophie.github.io/symcompR/reference/TransitiveSubgroups.md)
+  [`S6TransitiveSubgroups`](https://adamrsophie.github.io/symcompR/reference/TransitiveSubgroups.md)
+  : Names of the transitive subgroups of S1 to S6
+- [`Tuple()`](https://adamrsophie.github.io/symcompR/reference/Tuple.md)
+  : Tuples
+- [`UnevaluatedExpr()`](https://adamrsophie.github.io/symcompR/reference/UnevaluatedExpr.md)
+  : Expression that does not evaluate
+- [`UnitSystem()`](https://adamrsophie.github.io/symcompR/reference/UnitSystem.md)
+  [`extend(`*`<UnitSystem>`*`)`](https://adamrsophie.github.io/symcompR/reference/UnitSystem.md)
+  [`get_dimension_system()`](https://adamrsophie.github.io/symcompR/reference/UnitSystem.md)
+  [`get_unit_system()`](https://adamrsophie.github.io/symcompR/reference/UnitSystem.md)
+  [`get_default_unit_system()`](https://adamrsophie.github.io/symcompR/reference/UnitSystem.md)
+  [`derived_units()`](https://adamrsophie.github.io/symcompR/reference/UnitSystem.md)
+  [`get_dimensional_expr()`](https://adamrsophie.github.io/symcompR/reference/UnitSystem.md)
+  [`collect_factor_and_dimension()`](https://adamrsophie.github.io/symcompR/reference/UnitSystem.md)
+  [`get_units_non_prefixed()`](https://adamrsophie.github.io/symcompR/reference/UnitSystem.md)
+  : Unit systems
+- [`VectorAdd()`](https://adamrsophie.github.io/symcompR/reference/VectorAdd.md)
+  [`VectorMul()`](https://adamrsophie.github.io/symcompR/reference/VectorAdd.md)
+  [`VectorZero()`](https://adamrsophie.github.io/symcompR/reference/VectorAdd.md)
+  [`DyadicAdd()`](https://adamrsophie.github.io/symcompR/reference/VectorAdd.md)
+  [`DyadicMul()`](https://adamrsophie.github.io/symcompR/reference/VectorAdd.md)
+  [`DyadicZero()`](https://adamrsophie.github.io/symcompR/reference/VectorAdd.md)
+  [`BaseVector()`](https://adamrsophie.github.io/symcompR/reference/VectorAdd.md)
+  [`BaseDyadic()`](https://adamrsophie.github.io/symcompR/reference/VectorAdd.md)
+  [`measure_number()`](https://adamrsophie.github.io/symcompR/reference/VectorAdd.md)
+  : Vectors and dyadics of a coordinate system
+- [`WildFunction()`](https://adamrsophie.github.io/symcompR/reference/WildFunction.md)
+  : Wild functions
+- [`solve_rational_inequalities()`](https://adamrsophie.github.io/symcompR/reference/abs-inequalities.md)
+  [`reduce_abs_inequality()`](https://adamrsophie.github.io/symcompR/reference/abs-inequalities.md)
+  [`reduce_abs_inequalities()`](https://adamrsophie.github.io/symcompR/reference/abs-inequalities.md)
+  : Rational and absolute value inequalities
+- [`apart()`](https://adamrsophie.github.io/symcompR/reference/apart.md)
+  [`apart_list()`](https://adamrsophie.github.io/symcompR/reference/apart.md)
+  [`assemble_partfrac_list()`](https://adamrsophie.github.io/symcompR/reference/apart.md)
+  : Partial fraction decomposition
+- [`approximants()`](https://adamrsophie.github.io/symcompR/reference/approximants.md)
+  : Pade approximants of a series
+- [`NDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md)
+  [`MutableDenseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md)
+  [`ImmutableDenseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md)
+  [`DenseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md)
+  [`SparseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md)
+  [`MutableSparseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md)
+  [`ImmutableSparseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md)
+  [`shape()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md)
+  : Array aliases and indexed objects
+- [`as.numeric(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/as.numeric.sym.md)
+  [`as.double(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/as.numeric.sym.md)
+  [`as.complex(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/as.numeric.sym.md)
+  : Convert a numeric expression to an R value
+- [`as_bigq()`](https://adamrsophie.github.io/symcompR/reference/as_bigq.md)
+  [`as_bigz()`](https://adamrsophie.github.io/symcompR/reference/as_bigq.md)
+  : Exact value of a symbolic integer or rational as gmp big number
+- [`as_content_primitive()`](https://adamrsophie.github.io/symcompR/reference/as_content_primitive.md)
+  : Content and primitive part
+- [`as_relational()`](https://adamrsophie.github.io/symcompR/reference/as_relational.md)
+  : Convert a set to a relational condition
+- [`as_sym()`](https://adamrsophie.github.io/symcompR/reference/as_sym.md)
+  [`S()`](https://adamrsophie.github.io/symcompR/reference/as_sym.md) :
+  Convert R values to symbolic expressions
+- [`ask_fact()`](https://adamrsophie.github.io/symcompR/reference/ask_fact.md)
+  : Query assumptions about an expression
+- [`is_positive()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_negative()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_zero()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_nonzero()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_nonnegative()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_nonpositive()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_real()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_complex()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_integer()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_rational()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_irrational()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_even()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_odd()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_prime_expr()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_finite()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_infinite()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_imaginary()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_commutative()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_algebraic()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  [`is_transcendental()`](https://adamrsophie.github.io/symcompR/reference/assumption-queries.md)
+  : Assumption shortcuts
+- [`AssumptionsContext()`](https://adamrsophie.github.io/symcompR/reference/assumptions-context.md)
+  [`global_assumptions`](https://adamrsophie.github.io/symcompR/reference/assumptions-context.md)
+  [`assuming()`](https://adamrsophie.github.io/symcompR/reference/assumptions-context.md)
+  : Assumption contexts
+- [`assumptions()`](https://adamrsophie.github.io/symcompR/reference/assumptions.md)
+  : Assumptions attached to a symbol
+- [`atoms()`](https://adamrsophie.github.io/symcompR/reference/atoms.md)
+  : Atoms of an expression
+- [`besselsimp()`](https://adamrsophie.github.io/symcompR/reference/besselsimp.md)
+  : Simplify Bessel functions
+- [`binomial_coefficients()`](https://adamrsophie.github.io/symcompR/reference/binomial_coefficients.md)
+  [`binomial_coefficients_list()`](https://adamrsophie.github.io/symcompR/reference/binomial_coefficients.md)
+  [`multinomial_coefficients()`](https://adamrsophie.github.io/symcompR/reference/binomial_coefficients.md)
+  [`multinomial_coefficients_iterator()`](https://adamrsophie.github.io/symcompR/reference/binomial_coefficients.md)
+  : Binomial and multinomial coefficients
+- [`bool_map()`](https://adamrsophie.github.io/symcompR/reference/bool_map.md)
+  : Map variables between equivalent boolean expressions
+- [`bspline_basis()`](https://adamrsophie.github.io/symcompR/reference/bsplines.md)
+  [`bspline_basis_set()`](https://adamrsophie.github.io/symcompR/reference/bsplines.md)
+  [`interpolating_spline()`](https://adamrsophie.github.io/symcompR/reference/bsplines.md)
+  : B-splines
+- [`singularities()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`stationary_points()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`minimum()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`maximum()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`is_increasing()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`is_strictly_increasing()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`is_decreasing()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`is_strictly_decreasing()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`is_monotonic()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`is_convex()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`periodicity()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`euler_equations()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`finite_diff_weights()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  [`apply_finite_diff()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
+  : Calculus utilities
+- [`cancel()`](https://adamrsophie.github.io/symcompR/reference/cancel.md)
+  : Cancel common factors of a rational function
+- [`canonical_free()`](https://adamrsophie.github.io/symcompR/reference/canonical_free.md)
+  : Canonicalize a tensor with respect to its free indices
+- [`canonicalize()`](https://adamrsophie.github.io/symcompR/reference/canonicalize.md)
+  : Canonicalize a tensor formed by component tensors
+- [`Object()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`IdentityMorphism()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`NamedMorphism()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`morphism_domain()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`codomain()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`morphism_name()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`components()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`CompositeMorphism()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`flatten_morphism()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`Category()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`category_objects()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`commutative_diagrams()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`Diagram()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`premises()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`conclusions()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`diagram_objects()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`hom()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`is_subdiagram()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`subdiagram_from_objects()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  : Categories
+- [`charpoly()`](https://adamrsophie.github.io/symcompR/reference/charpoly.md)
+  [`eigenvals()`](https://adamrsophie.github.io/symcompR/reference/charpoly.md)
+  [`eigenvects()`](https://adamrsophie.github.io/symcompR/reference/charpoly.md)
+  [`is_diagonalizable()`](https://adamrsophie.github.io/symcompR/reference/charpoly.md)
+  [`diagonalize()`](https://adamrsophie.github.io/symcompR/reference/charpoly.md)
+  : Characteristic polynomial, eigenvalues and eigenvectors
+- [`ccode()`](https://adamrsophie.github.io/symcompR/reference/code-printers.md)
+  [`fcode()`](https://adamrsophie.github.io/symcompR/reference/code-printers.md)
+  [`jscode()`](https://adamrsophie.github.io/symcompR/reference/code-printers.md)
+  [`octave_code()`](https://adamrsophie.github.io/symcompR/reference/code-printers.md)
+  [`rcode()`](https://adamrsophie.github.io/symcompR/reference/code-printers.md)
+  [`pycode()`](https://adamrsophie.github.io/symcompR/reference/code-printers.md)
+  : Code generation
+- [`collect()`](https://adamrsophie.github.io/symcompR/reference/collect.md)
+  [`rcollect()`](https://adamrsophie.github.io/symcompR/reference/collect.md)
+  : Collect terms
+- [`collect_const()`](https://adamrsophie.github.io/symcompR/reference/collect_const.md)
+  : Collect common numeric factors
+- [`compose()`](https://adamrsophie.github.io/symcompR/reference/compose.md)
+  [`horner()`](https://adamrsophie.github.io/symcompR/reference/compose.md)
+  [`interpolate()`](https://adamrsophie.github.io/symcompR/reference/compose.md)
+  : Polynomial composition, Horner form and interpolation
+- [`sym_pi`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`sym_E`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`sym_I`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`oo`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`zoo`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`nan`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`EulerGamma`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`Catalan`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`GoldenRatio`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`TribonacciConstant`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_Pi`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_E`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_I`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_Infinity`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_NegativeInfinity`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_ComplexInfinity`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_NaN`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_Zero`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_One`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_Half`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_NegativeOne`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_true`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_false`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  [`S_EmptySet`](https://adamrsophie.github.io/symcompR/reference/constants.md)
+  : Mathematical constants and special values
+- [`construct_domain()`](https://adamrsophie.github.io/symcompR/reference/construct_domain.md)
+  : Constructing the minimal domain
+- [`continued_fraction()`](https://adamrsophie.github.io/symcompR/reference/continued_fraction.md)
+  [`continued_fraction_periodic()`](https://adamrsophie.github.io/symcompR/reference/continued_fraction.md)
+  [`continued_fraction_reduce()`](https://adamrsophie.github.io/symcompR/reference/continued_fraction.md)
+  [`continued_fraction_iterator()`](https://adamrsophie.github.io/symcompR/reference/continued_fraction.md)
+  [`continued_fraction_convergents()`](https://adamrsophie.github.io/symcompR/reference/continued_fraction.md)
+  : Continued fractions
+- [`convert_to()`](https://adamrsophie.github.io/symcompR/reference/convert_to.md)
+  [`quantity_simplify()`](https://adamrsophie.github.io/symcompR/reference/convert_to.md)
+  [`check_dimensions()`](https://adamrsophie.github.io/symcompR/reference/convert_to.md)
+  [`find_unit()`](https://adamrsophie.github.io/symcompR/reference/convert_to.md)
+  : Convert and simplify expressions with units
+- [`convolution()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+  [`sym_fft()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+  [`sym_ifft()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+  [`mobius_transform()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+  [`inverse_mobius_transform()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+  [`walsh_hadamard_transform()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+  : Discrete transforms and convolutions
+- [`Add()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`Mul()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`Pow()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`Equality()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`Unequality()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`StrictLessThan()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`LessThan()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`StrictGreaterThan()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`GreaterThan()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`Rel()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`Subs()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`nfloat()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`bottom_up()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`default_sort_key()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`comp()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`check_assumptions()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`failing_assumptions()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`sstrrepr()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`true`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`false`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`sym_ordered()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  : Core constructors and helpers
+- [`core()`](https://adamrsophie.github.io/symcompR/reference/core.md)
+  [`dra()`](https://adamrsophie.github.io/symcompR/reference/core.md)
+  [`drm()`](https://adamrsophie.github.io/symcompR/reference/core.md) :
+  Square free and other cores, and digital roots
+- [`coset_table_options()`](https://adamrsophie.github.io/symcompR/reference/coset_table_options.md)
+  : Coset table options
+- [`could_extract_minus_sign()`](https://adamrsophie.github.io/symcompR/reference/could_extract_minus_sign.md)
+  : Whether a leading minus sign can be pulled out of an expression
+- [`count_ops()`](https://adamrsophie.github.io/symcompR/reference/count_ops.md)
+  : Count operations in an expression
+- [`crt()`](https://adamrsophie.github.io/symcompR/reference/crt.md)
+  [`crt1()`](https://adamrsophie.github.io/symcompR/reference/crt.md)
+  [`crt2()`](https://adamrsophie.github.io/symcompR/reference/crt.md)
+  [`symmetric_residue()`](https://adamrsophie.github.io/symcompR/reference/crt.md)
+  [`solve_congruence()`](https://adamrsophie.github.io/symcompR/reference/crt.md)
+  : Chinese remainder theorem
+- [`AZ()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`bifid5`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`bifid6`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`bifid10`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`padded_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`check_and_join()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`cycle_list()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_shift()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_shift()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_rot13()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_rot13()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_affine()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_affine()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_atbash()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_atbash()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_substitution()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_vigenere()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_vigenere()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`inv_mod()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_hill()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_hill()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_bifid()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_bifid()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`bifid_square()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_bifid5()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_bifid5()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_bifid6()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_bifid6()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`bifid5_square()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`bifid6_square()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`rsa_public_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`rsa_private_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_rsa()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_rsa()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`kid_rsa_public_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`kid_rsa_private_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_kid_rsa()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_kid_rsa()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encode_morse()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decode_morse()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`lfsr_sequence()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`lfsr_autocorrelation()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`lfsr_connection_polynomial()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`elgamal_private_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`elgamal_public_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_elgamal()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_elgamal()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`dh_private_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`dh_public_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`dh_shared_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`gm_private_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`gm_public_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_gm()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_gm()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_railfence()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_railfence()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`bg_private_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`bg_public_key()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`encipher_bg()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  [`decipher_bg()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
+  : Cryptography
+- [`cse()`](https://adamrsophie.github.io/symcompR/reference/cse.md) :
+  Common subexpression elimination
+- [`degree()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`total_degree()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`degree_list()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`LC()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`LM()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`LT()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`coeffs()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`monoms()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`poly_terms()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`all_coeffs()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  [`coeff()`](https://adamrsophie.github.io/symcompR/reference/degree.md)
+  : Degrees and coefficients of polynomials
+- [`denoms()`](https://adamrsophie.github.io/symcompR/reference/denoms.md)
+  : Denominators of an expression
+- [`DiagramGrid()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
+  [`grid_get()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
+  [`ArrowStringDescription()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
+  [`XypicDiagramDrawer()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
+  [`xypic_draw_diagram()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
+  : Drawing diagrams
+- [`diff(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/diff.sym.md)
+  : Differentiate an expression
+- [`differentiate_finite()`](https://adamrsophie.github.io/symcompR/reference/differentiate_finite.md)
+  : Finite difference approximation of a derivative
+- [`Manifold()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`Patch()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`CoordSystem()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`coord_symbols()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`transformation()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`cs_transform()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`jacobian_dg()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`jacobian_determinant()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`point()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`point_to_coords()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`base_scalar()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`base_scalars()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`base_vector()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`base_vectors()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`base_oneform()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`base_oneforms()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`Differential()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`TensorProduct()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`WedgeProduct()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`Commutator()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`LieDerivative()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`BaseCovarDerivativeOp()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`CovarDerivativeOp()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`rcall()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`contravariant_order()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`covariant_order()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`vectors_in_basis()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`twoform_to_matrix()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`metric_to_Christoffel_1st()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`metric_to_Christoffel_2nd()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`metric_to_Riemann_components()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`metric_to_Ricci_components()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`intcurve_series()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`intcurve_diffequ()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  [`diffgeom_rn()`](https://adamrsophie.github.io/symcompR/reference/diffgeom.md)
+  : Differential geometry
+- [`digits()`](https://adamrsophie.github.io/symcompR/reference/digits.md)
+  [`count_digits()`](https://adamrsophie.github.io/symcompR/reference/digits.md)
+  [`is_palindromic()`](https://adamrsophie.github.io/symcompR/reference/digits.md)
+  : Digits of an integer
+- [`diophantine()`](https://adamrsophie.github.io/symcompR/reference/diophantine.md)
+  [`classify_diop()`](https://adamrsophie.github.io/symcompR/reference/diophantine.md)
+  [`diop_solve()`](https://adamrsophie.github.io/symcompR/reference/diophantine.md)
+  : Diophantine equations
+- [`ifft()`](https://adamrsophie.github.io/symcompR/reference/discrete-aliases.md)
+  [`fwht()`](https://adamrsophie.github.io/symcompR/reference/discrete-aliases.md)
+  [`ifwht()`](https://adamrsophie.github.io/symcompR/reference/discrete-aliases.md)
+  [`covering_product()`](https://adamrsophie.github.io/symcompR/reference/discrete-aliases.md)
+  [`intersecting_product()`](https://adamrsophie.github.io/symcompR/reference/discrete-aliases.md)
+  : Discrete transform aliases
+- [`discrete_log()`](https://adamrsophie.github.io/symcompR/reference/discrete_log.md)
+  : Discrete logarithm
+- [`div()`](https://adamrsophie.github.io/symcompR/reference/div.md)
+  [`quo()`](https://adamrsophie.github.io/symcompR/reference/div.md)
+  [`rem()`](https://adamrsophie.github.io/symcompR/reference/div.md)
+  [`exquo()`](https://adamrsophie.github.io/symcompR/reference/div.md)
+  [`pdiv()`](https://adamrsophie.github.io/symcompR/reference/div.md)
+  [`prem()`](https://adamrsophie.github.io/symcompR/reference/div.md)
+  [`pquo()`](https://adamrsophie.github.io/symcompR/reference/div.md)
+  [`reduced()`](https://adamrsophie.github.io/symcompR/reference/div.md)
+  : Polynomial division
+- [`divisors()`](https://adamrsophie.github.io/symcompR/reference/divisors.md)
+  [`proper_divisors()`](https://adamrsophie.github.io/symcompR/reference/divisors.md)
+  [`divisor_count()`](https://adamrsophie.github.io/symcompR/reference/divisors.md)
+  [`proper_divisor_count()`](https://adamrsophie.github.io/symcompR/reference/divisors.md)
+  [`udivisors()`](https://adamrsophie.github.io/symcompR/reference/divisors.md)
+  [`udivisor_count()`](https://adamrsophie.github.io/symcompR/reference/divisors.md)
+  [`antidivisors()`](https://adamrsophie.github.io/symcompR/reference/divisors.md)
+  [`antidivisor_count()`](https://adamrsophie.github.io/symcompR/reference/divisors.md)
+  : Divisors
+- [`doit()`](https://adamrsophie.github.io/symcompR/reference/doit.md) :
+  Evaluate unevaluated objects
+- [`ZZ()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`QQ()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`RR()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`CC()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`EX()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`EXRAW()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`ZZ_I()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`QQ_I()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`GF()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`FF()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`poly_ring()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`frac_field()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`algebraic_field()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`CyclotomicField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`Domain()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`IntegerRing()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`RationalField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`RealField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`ComplexField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`ExpressionDomain()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`FiniteField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`PolynomialRing()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`FractionField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`AlgebraicField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`PythonIntegerRing()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`GMPYIntegerRing()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`ZZ_python()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`ZZ_gmpy()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`GMPYRationalField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`QQ_python()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`QQ_gmpy()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`PythonFiniteField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`GMPYFiniteField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`FF_python()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`FF_gmpy()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`PythonRational()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`to_sympy()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`from_sympy()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  : Polynomial domains
+- [`dot()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`cross()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`norm_matrix()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`applyfunc()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`is_square()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`is_symmetric()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`is_zero_matrix()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`hadamard_product()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`kronecker_product()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`vec()`](https://adamrsophie.github.io/symcompR/reference/dot.md)
+  [`pinv()`](https://adamrsophie.github.io/symcompR/reference/dot.md) :
+  Matrix utilities
+- [`double_coset_can_rep()`](https://adamrsophie.github.io/symcompR/reference/double_coset_can_rep.md)
+  : Butler-Portugal canonical representative of a double coset
+- [`dsolve()`](https://adamrsophie.github.io/symcompR/reference/dsolve.md)
+  [`ode_order()`](https://adamrsophie.github.io/symcompR/reference/dsolve.md)
+  [`classify_ode()`](https://adamrsophie.github.io/symcompR/reference/dsolve.md)
+  : Solve ordinary differential equations
+- [`dummy_sgs()`](https://adamrsophie.github.io/symcompR/reference/dummy_sgs.md)
+  : Strong generators of the dummy index symmetry
+- [`ecm()`](https://adamrsophie.github.io/symcompR/reference/ecm.md) :
+  Lenstra's elliptic curve factoring
+- [`egyptian_fraction()`](https://adamrsophie.github.io/symcompR/reference/egyptian_fraction.md)
+  : Egyptian fractions
+- [`cot()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`sec()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`csc()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`acot()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`asec()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`acsc()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`coth()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`sech()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`csch()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`acoth()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`asech()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`acsch()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`sinc()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`Abs()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`re()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`im()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`conjugate()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`arg()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`frac()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`Heaviside()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`DiracDelta()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`KroneckerDelta()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`LambertW()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`Max()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`Min()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`root()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`cbrt()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`real_root()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`sym_atan2()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  [`sym_Mod()`](https://adamrsophie.github.io/symcompR/reference/elementary-functions.md)
+  : Elementary and complex functions
+- [`eliminate_implications()`](https://adamrsophie.github.io/symcompR/reference/eliminate_implications.md)
+  [`to_nnf()`](https://adamrsophie.github.io/symcompR/reference/eliminate_implications.md)
+  [`to_cnf()`](https://adamrsophie.github.io/symcompR/reference/eliminate_implications.md)
+  [`to_dnf()`](https://adamrsophie.github.io/symcompR/reference/eliminate_implications.md)
+  [`is_nnf()`](https://adamrsophie.github.io/symcompR/reference/eliminate_implications.md)
+  [`is_cnf()`](https://adamrsophie.github.io/symcompR/reference/eliminate_implications.md)
+  [`is_dnf()`](https://adamrsophie.github.io/symcompR/reference/eliminate_implications.md)
+  : Eliminate implications and convert to normal forms
+- [`expand()`](https://adamrsophie.github.io/symcompR/reference/expand.md)
+  [`expand_mul()`](https://adamrsophie.github.io/symcompR/reference/expand.md)
+  [`expand_multinomial()`](https://adamrsophie.github.io/symcompR/reference/expand.md)
+  [`expand_log()`](https://adamrsophie.github.io/symcompR/reference/expand.md)
+  [`expand_power_exp()`](https://adamrsophie.github.io/symcompR/reference/expand.md)
+  [`expand_power_base()`](https://adamrsophie.github.io/symcompR/reference/expand.md)
+  [`expand_trig()`](https://adamrsophie.github.io/symcompR/reference/expand.md)
+  [`expand_complex()`](https://adamrsophie.github.io/symcompR/reference/expand.md)
+  [`expand_func()`](https://adamrsophie.github.io/symcompR/reference/expand.md)
+  : Expand an expression
+- [`express()`](https://adamrsophie.github.io/symcompR/reference/express.md)
+  [`matrix_to_vector()`](https://adamrsophie.github.io/symcompR/reference/express.md)
+  [`matrix_to_dyadic()`](https://adamrsophie.github.io/symcompR/reference/express.md)
+  [`orthogonalize()`](https://adamrsophie.github.io/symcompR/reference/express.md)
+  [`directional_derivative()`](https://adamrsophie.github.io/symcompR/reference/express.md)
+  [`scalar_potential_difference()`](https://adamrsophie.github.io/symcompR/reference/express.md)
+  : Express vectors, dyadics and scalars in a coordinate system
+- [`add_primitive()`](https://adamrsophie.github.io/symcompR/reference/extract-methods.md)
+  [`extract_multiplicatively()`](https://adamrsophie.github.io/symcompR/reference/extract-methods.md)
+  [`extract_additively()`](https://adamrsophie.github.io/symcompR/reference/extract-methods.md)
+  [`as_coefficient()`](https://adamrsophie.github.io/symcompR/reference/extract-methods.md)
+  [`extract_branch_factor()`](https://adamrsophie.github.io/symcompR/reference/extract-methods.md)
+  : Extracting factors and terms
+- [`extract_fundamental_discriminant()`](https://adamrsophie.github.io/symcompR/reference/extract_fundamental_discriminant.md)
+  : Fundamental discriminant
+- [`factor_nc()`](https://adamrsophie.github.io/symcompR/reference/factor_nc.md)
+  : Factoring with noncommutative symbols
+- [`gcd_terms()`](https://adamrsophie.github.io/symcompR/reference/factor_terms.md)
+  [`factor_terms()`](https://adamrsophie.github.io/symcompR/reference/factor_terms.md)
+  : Common factors of terms
+- [`factorint()`](https://adamrsophie.github.io/symcompR/reference/factorint.md)
+  [`factorrat()`](https://adamrsophie.github.io/symcompR/reference/factorint.md)
+  [`primefactors()`](https://adamrsophie.github.io/symcompR/reference/factorint.md)
+  : Integer factorization
+- [`fourier_series()`](https://adamrsophie.github.io/symcompR/reference/fourier_series.md)
+  [`truncate(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/fourier_series.md)
+  [`sigma_approximation()`](https://adamrsophie.github.io/symcompR/reference/fourier_series.md)
+  [`shift()`](https://adamrsophie.github.io/symcompR/reference/fourier_series.md)
+  [`shiftx()`](https://adamrsophie.github.io/symcompR/reference/fourier_series.md)
+  [`scale(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/fourier_series.md)
+  [`scalex()`](https://adamrsophie.github.io/symcompR/reference/fourier_series.md)
+  : Fourier series
+- [`fourier_transform()`](https://adamrsophie.github.io/symcompR/reference/fourier_transform.md)
+  [`inverse_fourier_transform()`](https://adamrsophie.github.io/symcompR/reference/fourier_transform.md)
+  [`sine_transform()`](https://adamrsophie.github.io/symcompR/reference/fourier_transform.md)
+  [`inverse_sine_transform()`](https://adamrsophie.github.io/symcompR/reference/fourier_transform.md)
+  [`cosine_transform()`](https://adamrsophie.github.io/symcompR/reference/fourier_transform.md)
+  [`inverse_cosine_transform()`](https://adamrsophie.github.io/symcompR/reference/fourier_transform.md)
+  [`hankel_transform()`](https://adamrsophie.github.io/symcompR/reference/fourier_transform.md)
+  [`inverse_hankel_transform()`](https://adamrsophie.github.io/symcompR/reference/fourier_transform.md)
+  : Fourier, sine, cosine and Hankel transforms
+- [`fp_str()`](https://adamrsophie.github.io/symcompR/reference/fp_str.md)
+  : Python style string of a group theory object
+- [`fp_to_perm_group()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_derived_series()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_lower_central_series()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_center()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_derived_subgroup()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_centralizer()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_normal_closure()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_is_abelian()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_is_nilpotent()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_is_solvable()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_elements()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_is_cyclic()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_abelian_invariants()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  [`fp_composition_series()`](https://adamrsophie.github.io/symcompR/reference/fp_to_perm_group.md)
+  : Permutation group methods of finitely presented groups
+- [`fps_integrate()`](https://adamrsophie.github.io/symcompR/reference/fps.md)
+  [`fps_product()`](https://adamrsophie.github.io/symcompR/reference/fps.md)
+  [`fps_compose()`](https://adamrsophie.github.io/symcompR/reference/fps.md)
+  [`fps_inverse()`](https://adamrsophie.github.io/symcompR/reference/fps.md)
+  [`fps()`](https://adamrsophie.github.io/symcompR/reference/fps.md)
+  [`compute_fps()`](https://adamrsophie.github.io/symcompR/reference/fps.md)
+  [`fps_term()`](https://adamrsophie.github.io/symcompR/reference/fps.md)
+  [`fps_polynomial()`](https://adamrsophie.github.io/symcompR/reference/fps.md)
+  [`fps_truncate()`](https://adamrsophie.github.io/symcompR/reference/fps.md)
+  : Formal power series
+- [`fraction()`](https://adamrsophie.github.io/symcompR/reference/fraction.md)
+  [`numer()`](https://adamrsophie.github.io/symcompR/reference/fraction.md)
+  [`denom()`](https://adamrsophie.github.io/symcompR/reference/fraction.md)
+  : Numerator and denominator
+- [`free_symbols()`](https://adamrsophie.github.io/symcompR/reference/free_symbols.md)
+  : Free symbols of an expression
+- [`TR0()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR1()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR2()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR2i()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR3()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR4()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR5()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR6()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR7()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR8()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR9()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR10()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR10i()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR11()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR12()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR13()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TRmorrie()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR12i()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR14()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR15()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR16()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR111()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TR22()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`TRpower()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`fu()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  [`hyper_as_trig()`](https://adamrsophie.github.io/symcompR/reference/fu.md)
+  : Fu trigonometric simplification
+- [`ff()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`ln()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`E1()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`Li()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`erf2()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`Id()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`LeviCivita()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`Eijk()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`chebyshevt_root()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`chebyshevu_root()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`transpose()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`adjoint()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  [`sym_rf()`](https://adamrsophie.github.io/symcompR/reference/function-aliases.md)
+  : Function aliases and small special functions
+- [`galois_group()`](https://adamrsophie.github.io/symcompR/reference/galois_group.md)
+  : Galois group of a polynomial
+- [`gammasimp()`](https://adamrsophie.github.io/symcompR/reference/gammasimp.md)
+  [`combsimp()`](https://adamrsophie.github.io/symcompR/reference/gammasimp.md)
+  : Simplify gamma functions and combinatorial expressions
+- [`gcd()`](https://adamrsophie.github.io/symcompR/reference/gcd.md)
+  [`gcd_list()`](https://adamrsophie.github.io/symcompR/reference/gcd.md)
+  [`lcm_list()`](https://adamrsophie.github.io/symcompR/reference/gcd.md)
+  [`gcdex()`](https://adamrsophie.github.io/symcompR/reference/gcd.md)
+  [`invert()`](https://adamrsophie.github.io/symcompR/reference/gcd.md)
+  [`sym_lcm()`](https://adamrsophie.github.io/symcompR/reference/gcd.md)
+  : Greatest common divisor and least common multiple
+- [`Point3D()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`Line3D()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`Segment3D()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`Ray()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`Ray2D()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`Ray3D()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`direction_ratio()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`direction_cosine()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`arbitrary_point()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`Plane()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`normal_vector()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`equation()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`projection()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`angle_between()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`Ellipse()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`major()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`focus_distance()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`eccentricity()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`foci()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`circumference()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`encloses_point()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`Parabola()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`focal_length()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`p_parameter()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`vertex()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`axis_of_symmetry()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`Curve()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`translate()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`geo_length()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  [`are_similar()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+  : Geometry in three dimensions, rays, planes and conics
+- [`Point2D()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md)
+  [`Line2D()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md)
+  [`Segment2D()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md)
+  [`rad()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md)
+  [`deg()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md)
+  [`RegularPolygon()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md)
+  [`convex_hull()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md)
+  [`closest_points()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md)
+  [`farthest_points()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md)
+  : Geometry aliases and helpers
+- [`get_perm_group()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`four_group()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`M20()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`S3_in_S6()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`A4_in_S6()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`S4m()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`S4p()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`A4xC2()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`S4xC2()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`G18()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`G36m()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`G36p()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`G72()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`PSL2F5()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  [`PGL2F5()`](https://adamrsophie.github.io/symcompR/reference/get_perm_group.md)
+  : Permutation group of a named transitive subgroup
+- [`grad()`](https://adamrsophie.github.io/symcompR/reference/grad.md)
+  [`divergence()`](https://adamrsophie.github.io/symcompR/reference/grad.md)
+  [`curl()`](https://adamrsophie.github.io/symcompR/reference/grad.md)
+  [`laplacian()`](https://adamrsophie.github.io/symcompR/reference/grad.md)
+  [`is_conservative()`](https://adamrsophie.github.io/symcompR/reference/grad.md)
+  [`is_solenoidal()`](https://adamrsophie.github.io/symcompR/reference/grad.md)
+  [`scalar_potential()`](https://adamrsophie.github.io/symcompR/reference/grad.md)
+  : Vector calculus in Cartesian coordinates
+- [`groebner()`](https://adamrsophie.github.io/symcompR/reference/groebner.md)
+  [`is_zero_dimensional()`](https://adamrsophie.github.io/symcompR/reference/groebner.md)
+  : Groebner bases
+- [`gruntz()`](https://adamrsophie.github.io/symcompR/reference/gruntz.md)
+  : Limits by the Gruntz algorithm
+- [`has()`](https://adamrsophie.github.io/symcompR/reference/has.md) :
+  Test whether an expression contains a subexpression
+- [`hermite_normal_form()`](https://adamrsophie.github.io/symcompR/reference/hermite_normal_form.md)
+  [`invariant_factors()`](https://adamrsophie.github.io/symcompR/reference/hermite_normal_form.md)
+  [`smith_normal_form()`](https://adamrsophie.github.io/symcompR/reference/hermite_normal_form.md)
+  : Hermite and Smith normal forms
+- [`heurisch()`](https://adamrsophie.github.io/symcompR/reference/heurisch.md)
+  [`heurisch_wrapper()`](https://adamrsophie.github.io/symcompR/reference/heurisch.md)
+  : The heuristic Risch algorithm
+- [`holonomic_ring()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`DifferentialOperators()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`HolonomicFunction()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`integrate_holonomic()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`diff_holonomic()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`composition()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`holonomic_degree()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`RecurrenceOperators()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`HolonomicSequence()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`to_sequence()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`shift_x()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`change_x()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`series_holonomic()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`holonomic_indicial()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`to_hyper()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`to_expr_holonomic()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`change_ics()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`to_meijerg()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`evalf_holonomic()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`from_hyper()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`from_meijerg()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`expr_to_holonomic()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  : Holonomic functions
+- [`hyperexpand()`](https://adamrsophie.github.io/symcompR/reference/hyperexpand.md)
+  : Expand hypergeometric functions
+- [`idiff()`](https://adamrsophie.github.io/symcompR/reference/idiff.md)
+  : Implicit differentiation
+- [`imageset()`](https://adamrsophie.github.io/symcompR/reference/imageset.md)
+  [`Contains()`](https://adamrsophie.github.io/symcompR/reference/imageset.md)
+  [`PowerSet()`](https://adamrsophie.github.io/symcompR/reference/imageset.md)
+  : Set aliases
+- [`igcd()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
+  [`ilcm()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
+  [`mod_inverse()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
+  [`integer_nthroot()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
+  [`integer_log()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
+  [`trailing()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
+  [`num_digits()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
+  [`arity()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
+  : Integer helpers
+- [`LaplaceTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`InverseLaplaceTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`FourierTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`InverseFourierTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`MellinTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`InverseMellinTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`SineTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`InverseSineTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`CosineTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`InverseCosineTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`HankelTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  [`InverseHankelTransform()`](https://adamrsophie.github.io/symcompR/reference/integral-transforms.md)
+  : Unevaluated integral transforms
+- [`integral_steps()`](https://adamrsophie.github.io/symcompR/reference/integral_steps.md)
+  [`manualintegrate()`](https://adamrsophie.github.io/symcompR/reference/integral_steps.md)
+  : Integration by the manual (step-by-step) method
+- [`init_printing()`](https://adamrsophie.github.io/symcompR/reference/interactive-session.md)
+  [`init_session()`](https://adamrsophie.github.io/symcompR/reference/interactive-session.md)
+  [`interactive_traversal()`](https://adamrsophie.github.io/symcompR/reference/interactive-session.md)
+  : Interactive sessions
+- [`is_nthpow_residue()`](https://adamrsophie.github.io/symcompR/reference/is_nthpow_residue.md)
+  [`nthroot_mod()`](https://adamrsophie.github.io/symcompR/reference/is_nthpow_residue.md)
+  : Power residues and n-th roots modulo m
+- [`is_polynomial()`](https://adamrsophie.github.io/symcompR/reference/is_polynomial.md)
+  : Is an expression a polynomial?
+- [`is_sym()`](https://adamrsophie.github.io/symcompR/reference/is_sym.md)
+  : Test whether an object is a symbolic expression
+- [`isprime()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`is_gaussian_prime()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`is_fermat_pseudoprime()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`is_euler_pseudoprime()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`is_euler_jacobi_pseudoprime()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`mr()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`is_lucas_prp()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`is_strong_lucas_prp()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`is_extra_strong_lucas_prp()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`proth_test()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  [`is_mersenne_prime()`](https://adamrsophie.github.io/symcompR/reference/isprime.md)
+  : Primality tests
+- [`reshape_seq()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`multiset()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`ibin()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`common_prefix()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`common_suffix()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`strongly_connected_components()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`connected_components()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`rotate_left()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`rotate_right()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`least_rotation()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`minlex()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`multiset_combinations()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`multiset_permutations()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`ordered_partitions()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`binary_partitions()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`uniq()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`generate_bell()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`generate_involutions()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`multiset_derangements()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`generate_derangements()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`random_derangement()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`necklaces()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`bracelets()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`generate_oriented_forest()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`runs()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`sequence_partitions()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`sequence_partitions_empty()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`kbins()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`permute_signs()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`signed_permutations()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`roundrobin()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`partitions()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`multiset_partitions()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`flatten()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`unflatten()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`group()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`take()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`variations()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`sift()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`has_dups()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`has_variety()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`rotations()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`prefixes()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`postfixes()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`numbered_symbols()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`dict_merge()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  [`topological_sort()`](https://adamrsophie.github.io/symcompR/reference/iterables.md)
+  : Iterables
+- [`jacobian()`](https://adamrsophie.github.io/symcompR/reference/jacobian.md)
+  [`hessian()`](https://adamrsophie.github.io/symcompR/reference/jacobian.md)
+  [`gradient()`](https://adamrsophie.github.io/symcompR/reference/jacobian.md)
+  [`wronskian()`](https://adamrsophie.github.io/symcompR/reference/jacobian.md)
+  : Jacobian, Hessian, gradient and Wronskian
+- [`jordan_form()`](https://adamrsophie.github.io/symcompR/reference/jordan_form.md)
+  : Jordan normal form
+- [`kroneckersimp()`](https://adamrsophie.github.io/symcompR/reference/kroneckersimp.md)
+  : Simplify products of Kronecker deltas
+- [`lambdify()`](https://adamrsophie.github.io/symcompR/reference/lambdify.md)
+  : Turn an expression into an R function
+- [`lame_coefficients()`](https://adamrsophie.github.io/symcompR/reference/lame_coefficients.md)
+  [`transformation_to_parent()`](https://adamrsophie.github.io/symcompR/reference/lame_coefficients.md)
+  [`transformation_from_parent()`](https://adamrsophie.github.io/symcompR/reference/lame_coefficients.md)
+  [`transformation_from_parent_function()`](https://adamrsophie.github.io/symcompR/reference/lame_coefficients.md)
+  [`rotation_matrix()`](https://adamrsophie.github.io/symcompR/reference/lame_coefficients.md)
+  [`change_of_basis_matrix_from()`](https://adamrsophie.github.io/symcompR/reference/lame_coefficients.md)
+  [`position_wrt()`](https://adamrsophie.github.io/symcompR/reference/lame_coefficients.md)
+  [`express_coordinates()`](https://adamrsophie.github.io/symcompR/reference/lame_coefficients.md)
+  [`scalar_map()`](https://adamrsophie.github.io/symcompR/reference/lame_coefficients.md)
+  : Properties of coordinate systems
+- [`expand_dirac_delta()`](https://adamrsophie.github.io/symcompR/reference/laplace_transform.md)
+  [`laplace_transform()`](https://adamrsophie.github.io/symcompR/reference/laplace_transform.md)
+  [`inverse_laplace_transform()`](https://adamrsophie.github.io/symcompR/reference/laplace_transform.md)
+  : Laplace transforms
+- [`latex()`](https://adamrsophie.github.io/symcompR/reference/latex.md)
+  : LaTeX output
+- [`CartanType()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`cartan_rank()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`dimension()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`basic_root()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`simple_root()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`positive_roots()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`highest_root()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`cartan_matrix()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`basis()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`lie_algebra()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`dynkin_diagram()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`CartanMatrix()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`DynkinDiagram()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`RootSystem()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`simple_roots()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`root_space()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`add_simple_roots()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`add_as_roots()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`WeylGroup()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`generators()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`group_name()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`delete_doubles()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`matrix_form()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`element_order()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  [`coxeter_diagram()`](https://adamrsophie.github.io/symcompR/reference/liealgebras.md)
+  : Lie algebras
+- [`limit()`](https://adamrsophie.github.io/symcompR/reference/limit.md)
+  [`Limit()`](https://adamrsophie.github.io/symcompR/reference/limit.md)
+  : Limits
+- [`dominant()`](https://adamrsophie.github.io/symcompR/reference/limit_seq.md)
+  [`limit_seq()`](https://adamrsophie.github.io/symcompR/reference/limit_seq.md)
+  : Limits of sequences
+- [`line_integrate()`](https://adamrsophie.github.io/symcompR/reference/line_integrate.md)
+  : Line integrals
+- [`linsolve()`](https://adamrsophie.github.io/symcompR/reference/linsolve.md)
+  : Solve linear systems
+- [`low_index_subgroups()`](https://adamrsophie.github.io/symcompR/reference/low_index_subgroups.md)
+  [`first_in_class()`](https://adamrsophie.github.io/symcompR/reference/low_index_subgroups.md)
+  : Low index subgroups
+- [`magnitude()`](https://adamrsophie.github.io/symcompR/reference/magnitude.md)
+  [`normalize()`](https://adamrsophie.github.io/symcompR/reference/magnitude.md)
+  [`outer_sym()`](https://adamrsophie.github.io/symcompR/reference/magnitude.md)
+  [`vector_equals()`](https://adamrsophie.github.io/symcompR/reference/magnitude.md)
+  [`to_matrix()`](https://adamrsophie.github.io/symcompR/reference/magnitude.md)
+  [`separate()`](https://adamrsophie.github.io/symcompR/reference/magnitude.md)
+  : Vector operations
+- [`mathml()`](https://adamrsophie.github.io/symcompR/reference/mathml.md)
+  [`print_mathml()`](https://adamrsophie.github.io/symcompR/reference/mathml.md)
+  [`dotprint()`](https://adamrsophie.github.io/symcompR/reference/mathml.md)
+  : MathML and Graphviz output
+- [`sym_diag()`](https://adamrsophie.github.io/symcompR/reference/matrix-builders.md)
+  [`sym_trace()`](https://adamrsophie.github.io/symcompR/reference/matrix-builders.md)
+  [`banded()`](https://adamrsophie.github.io/symcompR/reference/matrix-builders.md)
+  [`rot_givens()`](https://adamrsophie.github.io/symcompR/reference/matrix-builders.md)
+  [`SparseMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-builders.md)
+  [`MutableSparseMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-builders.md)
+  [`ImmutableSparseMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-builders.md)
+  : Matrix constructors
+- [`rot_axis1()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`rot_axis2()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`rot_axis3()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`rot_ccw_axis1()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`rot_ccw_axis2()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`rot_ccw_axis3()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`jordan_cell()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`casoratian()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`randMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`symarray()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`permanent()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`per()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`matrix_multiply_elementwise()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`ImmutableMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`MutableMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`MutableDenseMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  [`ImmutableDenseMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
+  : Matrix constructions
+- [`MatrixSymbol()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`Identity()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`ZeroMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`OneMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`mat_shape()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`MatMul()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`MatAdd()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`MatPow()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`Transpose()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`Inverse()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`Adjoint()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`Trace()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`Determinant()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`Permanent()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`HadamardProduct()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`HadamardPower()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`KroneckerProduct()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`MatrixElement()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`FunctionMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`DiagMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`diagonalize_vector()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`DiagonalOf()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`DiagonalMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`PermutationMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`MatrixPermute()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`DotProduct()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`MatrixSlice()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`blockcut()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`BlockMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`BlockDiagMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`block_collapse()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`matrix_symbols()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  [`as_explicit()`](https://adamrsophie.github.io/symcompR/reference/matrix-expressions.md)
+  : Matrix expressions
+- [`matrix_exp()`](https://adamrsophie.github.io/symcompR/reference/matrix_exp.md)
+  : Matrix exponential
+- [`meijerint_indefinite()`](https://adamrsophie.github.io/symcompR/reference/meijerint_indefinite.md)
+  [`meijerint_definite()`](https://adamrsophie.github.io/symcompR/reference/meijerint_indefinite.md)
+  [`meijerint_inversion()`](https://adamrsophie.github.io/symcompR/reference/meijerint_indefinite.md)
+  : Integration by Meijer G functions
+- [`mellin_transform()`](https://adamrsophie.github.io/symcompR/reference/mellin_transform.md)
+  [`inverse_mellin_transform()`](https://adamrsophie.github.io/symcompR/reference/mellin_transform.md)
+  : Mellin transforms
+- [`mersenne_prime_exponent()`](https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.md)
+  [`is_perfect()`](https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.md)
+  [`abundance()`](https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.md)
+  [`is_abundant()`](https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.md)
+  [`is_deficient()`](https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.md)
+  [`is_amicable()`](https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.md)
+  [`is_carmichael()`](https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.md)
+  [`find_carmichael_numbers_in_range()`](https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.md)
+  [`find_first_n_carmichaels()`](https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.md)
+  : Perfect, abundant, deficient, amicable and Carmichael numbers
+- [`polarify()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  [`sym_prod()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  [`sym_reshape()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  [`parallel_poly_from_expr()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  [`sqf_norm()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  [`gff()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  [`ilex()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  [`igrlex()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  [`igrevlex()`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  [`carmichael`](https://adamrsophie.github.io/symcompR/reference/misc-helpers.md)
+  : Small helpers
+- [`rust_code()`](https://adamrsophie.github.io/symcompR/reference/more-code-printers.md)
+  [`glsl_code()`](https://adamrsophie.github.io/symcompR/reference/more-code-printers.md)
+  [`print_glsl()`](https://adamrsophie.github.io/symcompR/reference/more-code-printers.md)
+  [`print_maple_code()`](https://adamrsophie.github.io/symcompR/reference/more-code-printers.md)
+  [`python()`](https://adamrsophie.github.io/symcompR/reference/more-code-printers.md)
+  [`print_python()`](https://adamrsophie.github.io/symcompR/reference/more-code-printers.md)
+  [`smtlib_code()`](https://adamrsophie.github.io/symcompR/reference/more-code-printers.md)
+  [`multiline_latex()`](https://adamrsophie.github.io/symcompR/reference/more-code-printers.md)
+  : More code printers
+- [`decompogen()`](https://adamrsophie.github.io/symcompR/reference/more-solvers.md)
+  [`homogeneous_order()`](https://adamrsophie.github.io/symcompR/reference/more-solvers.md)
+  [`solve_linear_system_LU()`](https://adamrsophie.github.io/symcompR/reference/more-solvers.md)
+  [`solve_triangulated()`](https://adamrsophie.github.io/symcompR/reference/more-solvers.md)
+  [`factor_system()`](https://adamrsophie.github.io/symcompR/reference/more-solvers.md)
+  : More equation solvers
+- [`multiplicity()`](https://adamrsophie.github.io/symcompR/reference/multiplicity.md)
+  [`multiplicity_in_factorial()`](https://adamrsophie.github.io/symcompR/reference/multiplicity.md)
+  : Multiplicities of factors
+- [`enum_all()`](https://adamrsophie.github.io/symcompR/reference/multiset_enumeration.md)
+  [`enum_small()`](https://adamrsophie.github.io/symcompR/reference/multiset_enumeration.md)
+  [`enum_large()`](https://adamrsophie.github.io/symcompR/reference/multiset_enumeration.md)
+  [`enum_range()`](https://adamrsophie.github.io/symcompR/reference/multiset_enumeration.md)
+  [`multiset_partitions_taocp()`](https://adamrsophie.github.io/symcompR/reference/multiset_enumeration.md)
+  [`count_partitions()`](https://adamrsophie.github.io/symcompR/reference/multiset_enumeration.md)
+  : Multiset partition enumeration
+- [`n_order()`](https://adamrsophie.github.io/symcompR/reference/n_order.md)
+  [`is_primitive_root()`](https://adamrsophie.github.io/symcompR/reference/n_order.md)
+  [`primitive_root()`](https://adamrsophie.github.io/symcompR/reference/n_order.md)
+  : Orders and primitive roots
+- [`nc_simplify()`](https://adamrsophie.github.io/symcompR/reference/nc_simplify.md)
+  : Simplify a noncommutative expression
+- [`not_empty_in()`](https://adamrsophie.github.io/symcompR/reference/not_empty_in.md)
+  : Where an intersection with a finite set is not empty
+- [`npartitions()`](https://adamrsophie.github.io/symcompR/reference/npartitions.md)
+  : Number of partitions
+- [`nroots()`](https://adamrsophie.github.io/symcompR/reference/nroots.md)
+  [`real_roots()`](https://adamrsophie.github.io/symcompR/reference/nroots.md)
+  [`sturm()`](https://adamrsophie.github.io/symcompR/reference/nroots.md)
+  [`count_roots()`](https://adamrsophie.github.io/symcompR/reference/nroots.md)
+  : Numerical and real roots
+- [`nsimplify()`](https://adamrsophie.github.io/symcompR/reference/nsimplify.md)
+  : Find simple exact forms of numbers
+- [`nsolve()`](https://adamrsophie.github.io/symcompR/reference/nsolve.md)
+  : Numerical solution of equations
+- [`ntt()`](https://adamrsophie.github.io/symcompR/reference/ntt.md)
+  [`intt()`](https://adamrsophie.github.io/symcompR/reference/ntt.md) :
+  Number theoretic transform
+- [`orbit_homomorphism()`](https://adamrsophie.github.io/symcompR/reference/orbit_homomorphism.md)
+  [`block_homomorphism()`](https://adamrsophie.github.io/symcompR/reference/orbit_homomorphism.md)
+  [`hom_image()`](https://adamrsophie.github.io/symcompR/reference/orbit_homomorphism.md)
+  [`hom_kernel()`](https://adamrsophie.github.io/symcompR/reference/orbit_homomorphism.md)
+  [`hom_apply()`](https://adamrsophie.github.io/symcompR/reference/orbit_homomorphism.md)
+  [`hom_invert()`](https://adamrsophie.github.io/symcompR/reference/orbit_homomorphism.md)
+  : Homomorphisms of permutation groups
+- [`OmegaPower()`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`Ordinal()`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`ord0`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`ord_omega`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`is_successor_ordinal()`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`is_limit_ordinal()`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`ordinal_degree()`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`Ops(`*`<sym_ordinal>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`chooseOpsMethod(`*`<sym_ordinal>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`Ops(`*`<sym_omega_power>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`format(`*`<sym_ordinal>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`print(`*`<sym_ordinal>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`format(`*`<sym_omega_power>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`print(`*`<sym_omega_power>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  : Ordinals
+- [`pade()`](https://adamrsophie.github.io/symcompR/reference/pade.md) :
+  Pade approximant
+- [`parse_expr()`](https://adamrsophie.github.io/symcompR/reference/parse_expr.md)
+  : Parse a string into an expression with SymPy's parser
+- [`function_exponentiation()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`split_symbols_custom()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`split_symbols()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`implicit_multiplication()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`implicit_application()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`implicit_multiplication_application()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`auto_symbol()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`lambda_notation()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`factorial_notation()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`convert_xor()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`repeated_decimals()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`auto_number()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`t_rationalize()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`convert_equals_signs()`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  [`standard_transformations`](https://adamrsophie.github.io/symcompR/reference/parse_expr_transformations.md)
+  : Token transformations of parse_expr
+- [`parse_latex()`](https://adamrsophie.github.io/symcompR/reference/parse_latex.md)
+  : Parse a LaTeX string into an expression
+- [`parse_latex_lark()`](https://adamrsophie.github.io/symcompR/reference/parse_latex_lark.md)
+  : Parse LaTeX with the lark grammar
+- [`parse_latex_lark_all()`](https://adamrsophie.github.io/symcompR/reference/parse_latex_lark_all.md)
+  : All the readings of an ambiguous LaTeX string
+- [`parse_mathematica()`](https://adamrsophie.github.io/symcompR/reference/parse_mathematica.md)
+  [`parse_mathematica_to_fullformlist()`](https://adamrsophie.github.io/symcompR/reference/parse_mathematica.md)
+  : Parse a Mathematica expression
+- [`parser_T()`](https://adamrsophie.github.io/symcompR/reference/parser_T.md)
+  : Select parse_expr transformations by number
+- [`classify_pde()`](https://adamrsophie.github.io/symcompR/reference/pdsolve.md)
+  [`pdsolve()`](https://adamrsophie.github.io/symcompR/reference/pdsolve.md)
+  [`checkpdesol()`](https://adamrsophie.github.io/symcompR/reference/pdsolve.md)
+  [`pde_separate()`](https://adamrsophie.github.io/symcompR/reference/pdsolve.md)
+  [`pde_separate_add()`](https://adamrsophie.github.io/symcompR/reference/pdsolve.md)
+  [`pde_separate_mul()`](https://adamrsophie.github.io/symcompR/reference/pdsolve.md)
+  : First order partial differential equations
+- [`perfect_power()`](https://adamrsophie.github.io/symcompR/reference/perfect_power.md)
+  : Perfect powers
+- [`perm_af_direct_product()`](https://adamrsophie.github.io/symcompR/reference/perm_af_direct_product.md)
+  : Direct products of permutation generators
+- [`perm_group_presentation()`](https://adamrsophie.github.io/symcompR/reference/perm_group_presentation.md)
+  : Presentation of a permutation group
+- [`permutations()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  [`combinations()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  [`combinations_with_replacement()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  [`subsets()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  [`set_partitions()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  [`derangements()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  [`cartes()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  [`gray_code()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  [`nT()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  [`stirling()`](https://adamrsophie.github.io/symcompR/reference/permutations.md)
+  : Combinatorial generators
+- [`physics_units()`](https://adamrsophie.github.io/symcompR/reference/physics_units.md)
+  : Predefined physical units
+- [`pi_hex_digits()`](https://adamrsophie.github.io/symcompR/reference/pi_hex_digits.md)
+  : Hexadecimal digits of pi
+- [`distribute_or_over_and()`](https://adamrsophie.github.io/symcompR/reference/piecewise_simplify.md)
+  [`piecewise_simplify()`](https://adamrsophie.github.io/symcompR/reference/piecewise_simplify.md)
+  [`simplify_univariate()`](https://adamrsophie.github.io/symcompR/reference/piecewise_simplify.md)
+  : Simplify a Piecewise expression
+- [`plot(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+  [`plot_parametric()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+  [`plot3d()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+  [`plot_implicit()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+  : Plot symbolic expressions with base graphics
+- [`pollard_rho()`](https://adamrsophie.github.io/symcompR/reference/pollard_rho.md)
+  [`pollard_pm1()`](https://adamrsophie.github.io/symcompR/reference/pollard_rho.md)
+  : Pollard's rho and p - 1 factoring
+- [`PurePoly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`GroebnerBasis()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`rootof()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`RootOf()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`ComplexRootOf()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`lex`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`grlex`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`grevlex`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`monic()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`cofactors()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`half_gcdex()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`pexquo()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`all_roots()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`cyclotomic_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`symmetric_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`interpolating_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`random_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`itermonomials()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`viete()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`legendre_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`chebyshevt_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`chebyshevu_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`hermite_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`hermite_prob_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`laguerre_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`jacobi_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  [`sym_poly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+  : Polynomial aliases and constructions
+- [`sym_decompose()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`gff_list()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`subresultants()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`sym_trunc()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`symmetrize()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`rational_interpolate()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`minimal_polynomial()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`minpoly()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`swinnerton_dyer_poly()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`nth_power_roots_poly()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`ground_roots()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`intervals()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`refine_root()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`hurwitz_conditions()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`schur_conditions()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  [`poly_from_expr()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+  : More polynomial functions
+- [`powsimp()`](https://adamrsophie.github.io/symcompR/reference/powsimp.md)
+  [`powdenest()`](https://adamrsophie.github.io/symcompR/reference/powsimp.md)
+  [`logcombine()`](https://adamrsophie.github.io/symcompR/reference/powsimp.md)
+  : Combine powers
+- [`preorder_traversal()`](https://adamrsophie.github.io/symcompR/reference/preorder_traversal.md)
+  [`postorder_traversal()`](https://adamrsophie.github.io/symcompR/reference/preorder_traversal.md)
+  : Preorder and postorder traversal
+- [`pretty(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/pretty.md)
+  [`pprint()`](https://adamrsophie.github.io/symcompR/reference/pretty.md)
+  [`pretty_print()`](https://adamrsophie.github.io/symcompR/reference/pretty.md)
+  [`pprint_use_unicode()`](https://adamrsophie.github.io/symcompR/reference/pretty.md)
+  [`pprint_try_use_unicode()`](https://adamrsophie.github.io/symcompR/reference/pretty.md)
+  [`pager_print()`](https://adamrsophie.github.io/symcompR/reference/pretty.md)
+  : Pretty printing
+- [`prime()`](https://adamrsophie.github.io/symcompR/reference/prime.md)
+  [`nextprime()`](https://adamrsophie.github.io/symcompR/reference/prime.md)
+  [`prevprime()`](https://adamrsophie.github.io/symcompR/reference/prime.md)
+  [`primerange()`](https://adamrsophie.github.io/symcompR/reference/prime.md)
+  [`randprime()`](https://adamrsophie.github.io/symcompR/reference/prime.md)
+  [`primorial()`](https://adamrsophie.github.io/symcompR/reference/prime.md)
+  [`cycle_length()`](https://adamrsophie.github.io/symcompR/reference/prime.md)
+  [`composite()`](https://adamrsophie.github.io/symcompR/reference/prime.md)
+  [`compositepi()`](https://adamrsophie.github.io/symcompR/reference/prime.md)
+  : Generating primes
+- [`primitive()`](https://adamrsophie.github.io/symcompR/reference/primitive.md)
+  [`content()`](https://adamrsophie.github.io/symcompR/reference/primitive.md)
+  [`terms_gcd()`](https://adamrsophie.github.io/symcompR/reference/primitive.md)
+  : Content and primitive part
+- [`field_isomorphism()`](https://adamrsophie.github.io/symcompR/reference/primitive_element.md)
+  [`to_number_field()`](https://adamrsophie.github.io/symcompR/reference/primitive_element.md)
+  [`primitive_element()`](https://adamrsophie.github.io/symcompR/reference/primitive_element.md)
+  : Primitive elements and number fields
+- [`julia_code()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  [`cxxcode()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  [`maple_code()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  [`mathematica_code()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  [`print_latex()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  [`print_ccode()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  [`print_fcode()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  [`print_rcode()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  [`print_jscode()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  [`print_tree()`](https://adamrsophie.github.io/symcompR/reference/printing-helpers.md)
+  : Printing helpers
+- [`prufer_from_tree()`](https://adamrsophie.github.io/symcompR/reference/prufer_from_tree.md)
+  [`tree_from_prufer()`](https://adamrsophie.github.io/symcompR/reference/prufer_from_tree.md)
+  : Prufer sequences
+- [`qs_factor()`](https://adamrsophie.github.io/symcompR/reference/qs_factor.md)
+  [`qs()`](https://adamrsophie.github.io/symcompR/reference/qs_factor.md)
+  : Quadratic sieve
+- [`quadratic_congruence()`](https://adamrsophie.github.io/symcompR/reference/quadratic_congruence.md)
+  [`polynomial_congruence()`](https://adamrsophie.github.io/symcompR/reference/quadratic_congruence.md)
+  [`binomial_mod()`](https://adamrsophie.github.io/symcompR/reference/quadratic_congruence.md)
+  : Polynomial congruences
+- [`radsimp()`](https://adamrsophie.github.io/symcompR/reference/radsimp.md)
+  [`rationalize()`](https://adamrsophie.github.io/symcompR/reference/radsimp.md)
+  [`rad_rationalize()`](https://adamrsophie.github.io/symcompR/reference/radsimp.md)
+  [`split_surds()`](https://adamrsophie.github.io/symcompR/reference/radsimp.md)
+  [`collect_sqrt()`](https://adamrsophie.github.io/symcompR/reference/radsimp.md)
+  [`sqrtdenest()`](https://adamrsophie.github.io/symcompR/reference/radsimp.md)
+  : Rationalize denominators and denest square roots
+- [`ratint()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
+  [`ratint_ratpart()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
+  [`ratint_logpart()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
+  [`log_to_atan()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
+  [`log_to_real()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
+  : Integration of rational functions
+- [`ratsimpmodprime()`](https://adamrsophie.github.io/symcompR/reference/ratsimpmodprime.md)
+  : Rational simplification modulo a prime ideal
+- [`reduce_rational_inequalities()`](https://adamrsophie.github.io/symcompR/reference/reduce_rational_inequalities.md)
+  : Reduce a system of rational inequalities
+- [`reidemeister_presentation()`](https://adamrsophie.github.io/symcompR/reference/reidemeister_presentation.md)
+  : Reidemeister Schreier presentations
+- [`replace_with_arrays()`](https://adamrsophie.github.io/symcompR/reference/replace_with_arrays.md)
+  : Replace tensors by arrays
+- [`resultant()`](https://adamrsophie.github.io/symcompR/reference/resultant.md)
+  [`discriminant()`](https://adamrsophie.github.io/symcompR/reference/resultant.md)
+  : Resultant and discriminant
+- [`rewrite()`](https://adamrsophie.github.io/symcompR/reference/rewrite.md)
+  : Rewrite an expression in terms of other functions
+- [`format(`*`<sym_ring>`*`)`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`print(`*`<sym_ring>`*`)`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`format(`*`<sym_ring_element>`*`)`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`print(`*`<sym_ring_element>`*`)`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`Ops(`*`<sym_ring_element>`*`)`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`chooseOpsMethod(`*`<sym_ring_element>`*`)`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`ring()`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`xring()`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`vring()`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`sring()`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`field()`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`xfield()`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`vfield()`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  [`sfield()`](https://adamrsophie.github.io/symcompR/reference/rings.md)
+  : Sparse polynomial rings and rational function fields
+- [`risch_integrate()`](https://adamrsophie.github.io/symcompR/reference/risch_integrate.md)
+  : The Risch algorithm
+- [`roots()`](https://adamrsophie.github.io/symcompR/reference/roots.md)
+  : Roots of a polynomial
+- [`round_two()`](https://adamrsophie.github.io/symcompR/reference/round_two.md)
+  [`prime_decomp()`](https://adamrsophie.github.io/symcompR/reference/round_two.md)
+  [`prime_valuation()`](https://adamrsophie.github.io/symcompR/reference/round_two.md)
+  : Integral bases, prime decomposition and valuations in number fields
+- [`rsolve_poly()`](https://adamrsophie.github.io/symcompR/reference/rsolve-parts.md)
+  [`rsolve_ratio()`](https://adamrsophie.github.io/symcompR/reference/rsolve-parts.md)
+  [`rsolve_hyper()`](https://adamrsophie.github.io/symcompR/reference/rsolve-parts.md)
+  : Building blocks of the recurrence solver
+- [`rsolve()`](https://adamrsophie.github.io/symcompR/reference/rsolve.md)
+  : Solve linear recurrences
+- [`satisfiable()`](https://adamrsophie.github.io/symcompR/reference/satisfiable.md)
+  [`valid()`](https://adamrsophie.github.io/symcompR/reference/satisfiable.md)
+  : Satisfiability
+- [`separatevars()`](https://adamrsophie.github.io/symcompR/reference/separatevars.md)
+  : Separate variables
+- [`SeqFormula()`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
+  [`SeqPer()`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
+  [`sym_sequence()`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
+  [`EmptySequence`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
+  [`sequence_terms()`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
+  [`SeqAdd()`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
+  [`SeqMul()`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
+  [`find_linear_recurrence()`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
+  : Sequences
+- [`pade_approximant()`](https://adamrsophie.github.io/symcompR/reference/series-helpers.md)
+  [`difference_delta()`](https://adamrsophie.github.io/symcompR/reference/series-helpers.md)
+  [`residue()`](https://adamrsophie.github.io/symcompR/reference/series-helpers.md)
+  [`hypersimp()`](https://adamrsophie.github.io/symcompR/reference/series-helpers.md)
+  [`hypersimilar()`](https://adamrsophie.github.io/symcompR/reference/series-helpers.md)
+  : Series and summation helpers
+- [`series()`](https://adamrsophie.github.io/symcompR/reference/series.md)
+  [`nseries()`](https://adamrsophie.github.io/symcompR/reference/series.md)
+  [`leadterm()`](https://adamrsophie.github.io/symcompR/reference/series.md)
+  [`aseries()`](https://adamrsophie.github.io/symcompR/reference/series.md)
+  [`as_leading_term()`](https://adamrsophie.github.io/symcompR/reference/series.md)
+  : Series expansion
+- [`set_quantity_dimension()`](https://adamrsophie.github.io/symcompR/reference/set_quantity_dimension.md)
+  [`set_quantity_scale_factor()`](https://adamrsophie.github.io/symcompR/reference/set_quantity_dimension.md)
+  [`get_quantity_dimension()`](https://adamrsophie.github.io/symcompR/reference/set_quantity_dimension.md)
+  [`get_quantity_scale_factor()`](https://adamrsophie.github.io/symcompR/reference/set_quantity_dimension.md)
+  : Dimensions and scale factors of quantities in a system
+- [`Interval()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`contains()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`is_subset()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Union()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Intersection()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Complement()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`SymmetricDifference()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`measure()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`boundary()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`set_inf()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`set_sup()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`ImageSet()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Reals`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Integers`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Naturals`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Naturals0`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Rationals`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Complexes`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`UniversalSet`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Interval_open()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Interval_Lopen()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`Interval_Ropen()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`FiniteSet()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`EmptySet`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`ProductSet()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  [`ConditionSet()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+  : Sets
+- [`signsimp()`](https://adamrsophie.github.io/symcompR/reference/signsimp.md)
+  [`posify()`](https://adamrsophie.github.io/symcompR/reference/signsimp.md)
+  : Simplify signs
+- [`collect_abs()`](https://adamrsophie.github.io/symcompR/reference/simplify-helpers.md)
+  [`inversecombine()`](https://adamrsophie.github.io/symcompR/reference/simplify-helpers.md)
+  [`ratsimp()`](https://adamrsophie.github.io/symcompR/reference/simplify-helpers.md)
+  [`sum_simplify()`](https://adamrsophie.github.io/symcompR/reference/simplify-helpers.md)
+  [`product_simplify()`](https://adamrsophie.github.io/symcompR/reference/simplify-helpers.md)
+  : Simplification helpers
+- [`simplify()`](https://adamrsophie.github.io/symcompR/reference/simplify.md)
+  : Simplify an expression
+- [`simplify_logic()`](https://adamrsophie.github.io/symcompR/reference/simplify_logic.md)
+  : Simplify boolean expressions
+- [`simplify_presentation()`](https://adamrsophie.github.io/symcompR/reference/simplify_presentation.md)
+  [`elimination_technique_1()`](https://adamrsophie.github.io/symcompR/reference/simplify_presentation.md)
+  [`elimination_technique_2()`](https://adamrsophie.github.io/symcompR/reference/simplify_presentation.md)
+  : Simplifying presentations
+- [`smoothness()`](https://adamrsophie.github.io/symcompR/reference/smoothness.md)
+  [`smoothness_p()`](https://adamrsophie.github.io/symcompR/reference/smoothness.md)
+  : Smoothness of an integer
+- [`solve(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/solve.sym.md)
+  [`solve(`*`<character>`*`)`](https://adamrsophie.github.io/symcompR/reference/solve.sym.md)
+  [`solve(`*`<list>`*`)`](https://adamrsophie.github.io/symcompR/reference/solve.sym.md)
+  : Solve equations
+- [`solve_univariate_inequality()`](https://adamrsophie.github.io/symcompR/reference/solve_univariate_inequality.md)
+  : Solve univariate inequalities
+- [`linear_eq_to_matrix()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`solve_linear_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`solve_linear()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`checksol()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`checkodesol()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`solve_undetermined_coeffs()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`reduce_inequalities()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`solve_poly_inequality()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`nonlinsolve()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`solve_poly_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`det_quick()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  [`inv_quick()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  : Solver helpers
+- [`solveset()`](https://adamrsophie.github.io/symcompR/reference/solveset.md)
+  : Solve equations as sets
+- [`Rem()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`andre()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`multigamma()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`stieltjes()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`riemann_xi()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`owens_t()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`erf2inv()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`marcumq()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`appellf1()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`hn1()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`hn2()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`jn_zeros()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`SingularityFunction()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`betainc()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`betainc_regularized()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`jtheta()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`jacobi_normalized()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`Ynm_c()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`Znm()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`mathieus()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`mathieuc()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`mathieusprime()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`mathieucprime()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`exp_polar()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`polar_lift()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`unpolarify()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`unbranched_argument()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`periodic_argument()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`principal_branch()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`piecewise_exclusive()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`hyper()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  [`meijerg()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)
+  : More special functions
+- [`loggamma()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`polygamma()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`digamma_sym()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`lowergamma()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`uppergamma()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`factorial2()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`subfactorial()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`RisingFactorial()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`FallingFactorial()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`bernoulli()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`fibonacci()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`lucas()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`tribonacci()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`catalan()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`bell()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`harmonic()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`euler()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`genocchi()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`partition()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`motzkin()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`erf()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`erfc()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`erfi()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`erfinv()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`erfcinv()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`Ei()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`li()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`Si()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`Ci()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`Shi()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`Chi()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`expint()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`fresnels()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`fresnelc()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`zeta()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`dirichlet_eta()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`polylog()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`lerchphi()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`besselj()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`bessely()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`besseli()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`besselk()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`hankel1()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`hankel2()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`jn()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`yn()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`airyai()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`airybi()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`airyaiprime()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`airybiprime()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`elliptic_k()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`elliptic_e()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`elliptic_f()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`elliptic_pi()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`legendre()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`assoc_legendre()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`chebyshevt()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`chebyshevu()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`hermite()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`hermite_prob()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`laguerre()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`assoc_laguerre()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`gegenbauer()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`jacobi()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`Ynm()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`sym_beta()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`sym_factorial()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  [`sym_binomial()`](https://adamrsophie.github.io/symcompR/reference/special-functions.md)
+  : Special functions
+- [`sqrt_mod()`](https://adamrsophie.github.io/symcompR/reference/sqrt_mod.md)
+  [`sqrt_mod_iter()`](https://adamrsophie.github.io/symcompR/reference/sqrt_mod.md)
+  [`quadratic_residues()`](https://adamrsophie.github.io/symcompR/reference/sqrt_mod.md)
+  [`is_quad_residue()`](https://adamrsophie.github.io/symcompR/reference/sqrt_mod.md)
+  : Square roots modulo n
+- [`sstr()`](https://adamrsophie.github.io/symcompR/reference/sstr.md)
+  [`srepr()`](https://adamrsophie.github.io/symcompR/reference/sstr.md)
+  : Convert an expression to a string
+- [`strat_identity()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`strat_seq()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`exhaust()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`memoize()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`condition()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`chain()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`strat_debug()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`null_safe()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`tryit()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`do_one()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`strat_switch()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`minimize()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`basic_fns`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`expr_fns`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`rl`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`rm_id()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`unpack()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`glom()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`distribute()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`rebuild()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`strat_new()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`traverse`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`canon()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`typed()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`branch`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`treeapply()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`greedy()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`allresults()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  [`brute()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
+  : Strategies
+- [`subs()`](https://adamrsophie.github.io/symcompR/reference/subs.md)
+  [`xreplace()`](https://adamrsophie.github.io/symcompR/reference/subs.md)
+  : Substitute values or expressions
+- [`substitution()`](https://adamrsophie.github.io/symcompR/reference/substitution.md)
+  : Solve a system by substitution
+- [`sum_index()`](https://adamrsophie.github.io/symcompR/reference/sum-limits.md)
+  [`reorder_limit()`](https://adamrsophie.github.io/symcompR/reference/sum-limits.md)
+  [`sym_reorder()`](https://adamrsophie.github.io/symcompR/reference/sum-limits.md)
+  [`change_index()`](https://adamrsophie.github.io/symcompR/reference/sum-limits.md)
+  [`reverse_order()`](https://adamrsophie.github.io/symcompR/reference/sum-limits.md)
+  [`euler_maclaurin()`](https://adamrsophie.github.io/symcompR/reference/sum-limits.md)
+  [`is_convergent()`](https://adamrsophie.github.io/symcompR/reference/sum-limits.md)
+  [`is_absolutely_convergent()`](https://adamrsophie.github.io/symcompR/reference/sum-limits.md)
+  [`continuous_domain()`](https://adamrsophie.github.io/symcompR/reference/sum-limits.md)
+  : Limits of sums and products
+- [`deltaproduct()`](https://adamrsophie.github.io/symcompR/reference/summation.md)
+  [`deltasummation()`](https://adamrsophie.github.io/symcompR/reference/summation.md)
+  [`summation()`](https://adamrsophie.github.io/symcompR/reference/summation.md)
+  [`Sum()`](https://adamrsophie.github.io/symcompR/reference/summation.md)
+  [`product()`](https://adamrsophie.github.io/symcompR/reference/summation.md)
+  [`Product()`](https://adamrsophie.github.io/symcompR/reference/summation.md)
+  [`gosper_sum()`](https://adamrsophie.github.io/symcompR/reference/summation.md)
+  : Symbolic sums and products
+- [`Ops(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/sym-operators.md)
+  [`Math(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/sym-operators.md)
+  [`Summary(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/sym-operators.md)
+  [`Complex(`*`<sym>`*`)`](https://adamrsophie.github.io/symcompR/reference/sym-operators.md)
+  : Arithmetic, comparison and logic operators for symbolic expressions
+- [`sym_args()`](https://adamrsophie.github.io/symcompR/reference/sym_args.md)
+  : Arguments of a symbolic expression
+- [`inverse()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`solve(`*`<symmatrix>`*`)`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`rref()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`rank_matrix()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`nullspace()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`columnspace()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`rowspace()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`minor()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`cofactor()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`cofactor_matrix()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`adjugate()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`trace_matrix()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  [`sym_det()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
+  : Determinant, inverse, trace and friends
+- [`factor_sym()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md)
+  [`factor_list()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md)
+  [`sqf_list()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md)
+  [`sqf()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md)
+  [`sqf_part()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md)
+  [`sym_factor()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md)
+  : Factor polynomials
+- [`Integral()`](https://adamrsophie.github.io/symcompR/reference/sym_integrate.md)
+  [`sym_integrate()`](https://adamrsophie.github.io/symcompR/reference/sym_integrate.md)
+  : Integrate an expression
+- [`sym_match()`](https://adamrsophie.github.io/symcompR/reference/sym_match.md)
+  [`sym_replace()`](https://adamrsophie.github.io/symcompR/reference/sym_match.md)
+  : Pattern matching
+- [`sym_name()`](https://adamrsophie.github.io/symcompR/reference/sym_name.md)
+  : Name of a symbol or function head
+- [`sym_type()`](https://adamrsophie.github.io/symcompR/reference/sym_type.md)
+  : Type of a symbolic expression
+- [`sympify()`](https://adamrsophie.github.io/symcompR/reference/sympify.md)
+  [`sym_from_call()`](https://adamrsophie.github.io/symcompR/reference/sympify.md)
+  : Parse a string into a symbolic expression
+- [`SympifyError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`PoleError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`PrecisionExhausted()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`ArgumentIndexError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`GeometryError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`MatrixError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`ShapeError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`NonSquareMatrixError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`NonInvertibleMatrixError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`NonPositiveDefiniteMatrixError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`BasePolynomialError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`ExactQuotientFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`PolynomialDivisionFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`OperationNotSupported()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`HeuristicGCDFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`ModularGCDFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`HomomorphismFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`IsomorphismFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`ExtraneousFactors()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`EvaluationFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`RefinementFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`CoercionFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`NotInvertible()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`NotReversible()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`NotAlgebraic()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DomainError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`PolynomialError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`UnificationFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`UnsolvableFactorError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`GeneratorsError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`GeneratorsNeeded()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`ComputationFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`UnivariatePolynomialError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`MultivariatePolynomialError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`PolificationFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`OptionError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`FlagError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  : SymPy exceptions
+- [`sympy_seed()`](https://adamrsophie.github.io/symcompR/reference/sympy_seed.md)
+  : Seed SymPy's random generator
+- [`taylor_term()`](https://adamrsophie.github.io/symcompR/reference/taylor_term.md)
+  : Taylor term
+- [`bsgs_direct_product()`](https://adamrsophie.github.io/symcompR/reference/tensor-bsgs.md)
+  [`get_symmetric_group_sgs()`](https://adamrsophie.github.io/symcompR/reference/tensor-bsgs.md)
+  [`riemann_bsgs`](https://adamrsophie.github.io/symcompR/reference/tensor-bsgs.md)
+  [`get_transversals()`](https://adamrsophie.github.io/symcompR/reference/tensor-bsgs.md)
+  [`get_minimal_bsgs()`](https://adamrsophie.github.io/symcompR/reference/tensor-bsgs.md)
+  [`tensor_gens()`](https://adamrsophie.github.io/symcompR/reference/tensor-bsgs.md)
+  [`gens_products()`](https://adamrsophie.github.io/symcompR/reference/tensor-bsgs.md)
+  : BSGS of tensor symmetries
+- [`canon_bp()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`contract_metric()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`contract_delta()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`substitute_indices()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`get_free_indices()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`get_dummy_indices()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`TensMul()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`TensAdd()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`tensor_mul()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`riemann_cyclic_replace()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  [`riemann_cyclic()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
+  : Tensor expressions
+- [`TensorIndexType()`](https://adamrsophie.github.io/symcompR/reference/tensor-indices.md)
+  [`TensorIndex()`](https://adamrsophie.github.io/symcompR/reference/tensor-indices.md)
+  [`tensor_indices()`](https://adamrsophie.github.io/symcompR/reference/tensor-indices.md)
+  [`TensorSymmetry()`](https://adamrsophie.github.io/symcompR/reference/tensor-indices.md)
+  [`TensorSymmetry.fully_symmetric()`](https://adamrsophie.github.io/symcompR/reference/tensor-indices.md)
+  [`TensorSymmetry.direct_product()`](https://adamrsophie.github.io/symcompR/reference/tensor-indices.md)
+  [`TensorSymmetry.riemann()`](https://adamrsophie.github.io/symcompR/reference/tensor-indices.md)
+  [`TensorSymmetry.no_symmetry()`](https://adamrsophie.github.io/symcompR/reference/tensor-indices.md)
+  : Tensor index types, indices and symmetries
+- [`textplot()`](https://adamrsophie.github.io/symcompR/reference/textplot.md)
+  : Text plot
+- [`together()`](https://adamrsophie.github.io/symcompR/reference/together.md)
+  : Combine a sum of fractions
+- [`totient()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`reduced_totient()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`divisor_sigma()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`udivisor_sigma()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`primenu()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`primeomega()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`mobius()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`legendre_symbol()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`jacobi_symbol()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`kronecker_symbol()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  [`primepi()`](https://adamrsophie.github.io/symcompR/reference/totient.md)
+  : Number theoretic functions
+- [`laplace_correspondence()`](https://adamrsophie.github.io/symcompR/reference/transform-helpers.md)
+  [`laplace_initial_conds()`](https://adamrsophie.github.io/symcompR/reference/transform-helpers.md)
+  [`singularityintegrate()`](https://adamrsophie.github.io/symcompR/reference/transform-helpers.md)
+  : Laplace helpers and singularity function integration
+- [`transversal2coset()`](https://adamrsophie.github.io/symcompR/reference/transversal2coset.md)
+  : Coset representatives from transversals
+- [`trigsimp_groebner()`](https://adamrsophie.github.io/symcompR/reference/trigsimp.md)
+  [`futrig()`](https://adamrsophie.github.io/symcompR/reference/trigsimp.md)
+  [`trigsimp()`](https://adamrsophie.github.io/symcompR/reference/trigsimp.md)
+  [`trigsimp_old()`](https://adamrsophie.github.io/symcompR/reference/trigsimp.md)
+  [`exptrigsimp()`](https://adamrsophie.github.io/symcompR/reference/trigsimp.md)
+  : Trigonometric simplification
+- [`truth_table()`](https://adamrsophie.github.io/symcompR/reference/truth_table.md)
+  : Truth table of a boolean expression
+- [`tschirnhausen_transformation()`](https://adamrsophie.github.io/symcompR/reference/tschirnhausen_transformation.md)
+  : Tschirnhausen transformation of a polynomial
+- [`unify_compound()`](https://adamrsophie.github.io/symcompR/reference/unify.md)
+  [`unify_variable()`](https://adamrsophie.github.io/symcompR/reference/unify.md)
+  [`unify_condvariable()`](https://adamrsophie.github.io/symcompR/reference/unify.md)
+  [`unify_core()`](https://adamrsophie.github.io/symcompR/reference/unify.md)
+  [`unify()`](https://adamrsophie.github.io/symcompR/reference/unify.md)
+  [`rewriterule()`](https://adamrsophie.github.io/symcompR/reference/unify.md)
+  : Unification
+- [`filldedent()`](https://adamrsophie.github.io/symcompR/reference/utility-helpers.md)
+  [`capture()`](https://adamrsophie.github.io/symcompR/reference/utility-helpers.md)
+  [`threaded()`](https://adamrsophie.github.io/symcompR/reference/utility-helpers.md)
+  [`xthreaded()`](https://adamrsophie.github.io/symcompR/reference/utility-helpers.md)
+  [`public()`](https://adamrsophie.github.io/symcompR/reference/utility-helpers.md)
+  [`memoize_property()`](https://adamrsophie.github.io/symcompR/reference/utility-helpers.md)
+  [`timed()`](https://adamrsophie.github.io/symcompR/reference/utility-helpers.md)
+  : Utility helpers
+- [`word_array_form()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_letter_form()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_letter_form_elm()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_ext_rep()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_len()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`is_identity_word()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_inverse()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_order()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_commutator()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_prod()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_dict()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`eliminate_words()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`eliminate_word()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`subword_index()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`is_dependent()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`is_independent()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`subword()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`contains_generators()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`cyclic_subword()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`cyclic_conjugates()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`is_cyclic_conjugate()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`number_syllables()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`exponent_syllable()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`generator_syllable()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`sub_syllables()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`substituted_word()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`is_cyclically_reduced()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`identity_cyclic_reduction()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`cyclic_reduction()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`power_of()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`exponent_sum()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`generator_count()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_index()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  [`word_contains()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
+  : Words in free groups
+
