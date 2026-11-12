@@ -4,10 +4,11 @@
 # installed package.
 
 test_that("no top-level name is defined in two source files", {
-  rdir <- test_path("..", "..", "R")
-  skip_if_not(dir.exists(rdir), "package sources not available")
+  # An installed package (covr, R CMD check) has an R/ folder without .R files.
+  files <- list.files(test_path("..", "..", "R"), pattern = "[.]R$", full.names = TRUE)
+  skip_if(length(files) == 0L, "package sources not available")
   owner <- list()
-  for (f in list.files(rdir, pattern = "[.]R$", full.names = TRUE)) {
+  for (f in files) {
     for (e in as.list(parse(f, keep.source = FALSE))) {
       if (is.call(e) && as.character(e[[1L]]) %in% c("<-", "=") && is.symbol(e[[2L]])) {
         nm <- as.character(e[[2L]])
