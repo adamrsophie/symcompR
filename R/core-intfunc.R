@@ -223,7 +223,13 @@ bool_map <- function(b1, b2) {
 #' x * UnevaluatedExpr(1 / x)
 #' doit(x * UnevaluatedExpr(1 / x))
 #' @export
-UnevaluatedExpr <- function(e) new_sym("UnevaluatedExpr", list(as_sym(e)))
+UnevaluatedExpr <- function(e) {
+  # SymPy leaves is_commutative unset (None), so Mul keeps it among the
+  # noncommutative factors
+  .nc_state$any <- TRUE
+  new_sym("UnevaluatedExpr", list(as_sym(e)))
+}
+.facts_hooks$UnevaluatedExpr <- function(e) c(commutative = FALSE)
 
 register_str_printer("UnevaluatedExpr", function(e) .str(e$args[[1L]]))
 register_latex_printer("UnevaluatedExpr", function(e) .latex(e$args[[1L]]))

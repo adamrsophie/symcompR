@@ -675,7 +675,7 @@ normalize <- function(v) {
 
 #' @rdname magnitude
 #' @export
-outer_sym <- function(v, other) .vec_outer(v, other)
+outer_sym <- function(v, other) if (.pv_dispatch(v, other)) .pv_outer_dispatch(v, other) else .vec_outer(v, other)
 
 #' @rdname magnitude
 #' @export

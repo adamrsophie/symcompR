@@ -118,7 +118,7 @@
 }
 # Mul._eval_subs.breakup for commutative factors: base key -> (base, exponent)
 .subs_breakup <- function(eq) {
-  out <- list()
+  out <- list(); nc <- list()
   for (a in .margs(eq)) {
     a <- powdenest(a)
     be <- .subs_base_exp(a)
@@ -127,9 +127,12 @@
       co <- .subs_coeff_mul(ex)[[1L]]
       b <- .pow(b, .div(ex, co)); ex <- co
     }
+    # factors not known to be commutative come back in order, as attr "nc"
+    if (!isTRUE(ask_fact(a, "commutative"))) { nc[[length(nc) + 1L]] <- list(b, ex); next }
     k <- b$key
     out[[k]] <- if (is.null(out[[k]])) list(b, ex) else list(b, .add(list(out[[k]][[2L]], ex)))
   }
+  attr(out, "nc") <- nc
   out
 }
 .subs_rejoin <- function(b, co) { be <- .subs_base_exp(b); .pow(be[[1L]], .mul(list(be[[2L]], co))) }
@@ -153,9 +156,10 @@
       return(NULL)
     }
   }
-  # ponytail: the noncommutative branch of Mul._eval_subs is not ported;
-  # products with noncommutative factors fall back to argument-wise subs
-  if (!.is_comm(e) || !.is_comm(old)) return(NULL)
+  # ponytail: the noncommutative branch of Mul._eval_subs is not ported for
+  # an old product with noncommutative factors; it falls back to argument-wise
+  # subs. Noncommutative factors of self are kept as they are.
+  if (!.is_comm(old)) return(NULL)
   rv <- NULL
   fr <- fraction(e)
   self2 <- e
@@ -171,6 +175,8 @@
     if (!identical(co_old$key, co_self$key)) co_xmul <- extract_multiplicatively(co_self, co_old)
   } else if (.subs_is_rat(co_old)) return(rv)
   c_ <- .subs_breakup(self2); old_c <- .subs_breakup(old)
+  if (length(attr(old_c, "nc"))) return(rv)
+  nc <- attr(c_, "nc"); attr(c_, "nc") <- NULL; attr(old_c, "nc") <- NULL
   co_residual <- S_One
   if (!is.null(co_xmul) && .subs_is_rat(co_xmul) && !is_one_num(abs(co_old))) {
     mult <- as_sym(multiplicity(abs(co_old), co_self))
@@ -196,7 +202,8 @@
                                    else .subs_rejoin(.subs1(b, old, new), ce)
   }
   margs <- c(list(.pow(new, .int(cdid))), margs)
-  .mul(list(co_residual, .mul(margs)))
+  ncs <- lapply(nc, function(p) .subs_rejoin(p[[1L]], p[[2L]]))
+  .mul(list(.mul(list(co_residual, .mul(margs))), .mul(ncs)))
 }
 
 # ---------------------------------------------------------------------------

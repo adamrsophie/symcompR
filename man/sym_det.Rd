@@ -63,7 +63,9 @@ An expression, matrix or list.
 \code{"berkowitz"} or \code{"laplace"}). \code{inverse()} (also \code{solve(M)}) inverts by Gauss-Jordan
 elimination; \code{adjugate()}, \code{cofactor()}, \code{minor()}, \code{trace_matrix()},
 \code{rank_matrix()}, \code{rref()}, \code{nullspace()}, \code{columnspace()} and
-\code{rowspace()} follow SymPy.
+\code{rowspace()} follow SymPy. Given a characteristic curve such as
+\code{\link[=TendonForceLengthDeGroote2016]{TendonForceLengthDeGroote2016()}}, \code{inverse()} returns the constructor of
+its inverse curve, as SymPy's \code{Function.inverse()}.
 }
 \examples{
 a <- Symbol("a")

@@ -769,6 +769,8 @@ ask_fact <- function(e, fact) {
 }
 
 .function_facts <- function(e) {
+  # an undefined function given assumptions by dynamicsymbols()
+  if (!is.null(e$extra$facts)) return(e$extra$facts)
   d <- .FUNS[[e$name]]
   if (!is.null(d) && !is.null(d$facts)) {
     r <- d$facts(e$args, lapply(e$args, .facts))

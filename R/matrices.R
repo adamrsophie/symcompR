@@ -385,6 +385,8 @@ det <- function(x, ...) {
 #' @rdname sym_det
 #' @export
 inverse <- function(M, method = "GE") {
+  # Function.inverse() of the characteristic curves
+  if (is_sym(M) && M$type == "Function" && !is.null(.FUNS[[M$name]]$inverse)) return(.FUNS[[M$name]]$inverse())
   M <- Matrix(M)
   n <- M$nrow
   if (n != M$ncol) stop(NonSquareMatrixError("inverse needs a square matrix"))
@@ -803,6 +805,7 @@ LDLdecomposition <- function(M) {
 #' @return An expression or matrix.
 #' @export
 dot <- function(a, b, doit = FALSE) {
+  if (.pv_dispatch(a, b)) return(.pv_dot_dispatch(a, b))
   if (inherits(a, "Del")) return(.vec_divergence(b, doit = doit))
   if (.is_bd(a) || .is_bd(b)) return(.bd_dot_method(a, b))
   a <- Matrix(a)
@@ -813,6 +816,7 @@ dot <- function(a, b, doit = FALSE) {
 #' @rdname dot
 #' @export
 cross <- function(a, b, doit = FALSE) {
+  if (.pv_dispatch(a, b)) return(.pv_cross_dispatch(a, b))
   if (inherits(a, "Del")) return(.vec_curl(b, doit = doit))
   if (.is_bd(a) || .is_bd(b)) return(.vec_cross_method(as_sym(a), b))
   a <- Matrix(a)$data

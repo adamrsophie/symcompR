@@ -249,7 +249,7 @@ register_bound_vars("Derivative", function(e) character())
 }
 
 .is_undefined_application <- function(e) {
-  e$type == "Function" && is.null(.FUNS[[e$name]])
+  e$type == "Function" && (is.null(.FUNS[[e$name]]) || isTRUE(e$extra$undefined))
 }
 
 # The Dummy SymPy's Function.fdiff uses for argument i equal to A: the same
@@ -287,7 +287,7 @@ register_bound_vars("Derivative", function(e) character())
 .diff_function <- function(e, x) {
   d <- .FUNS[[e$name]]
   args <- e$args
-  if (is.null(d)) return(.diff_undefined(e, x))
+  if (is.null(d) || isTRUE(e$extra$undefined)) return(.diff_undefined(e, x))
   # functions with Tuple arguments differentiate themselves
   if (!is.null(d$diffx)) return(d$diffx(e, x))
   terms <- list()
@@ -319,9 +319,11 @@ register_bound_vars("Derivative", function(e) character())
 #'
 #' @param e A `sym` expression.
 #' @param deep Evaluate nested objects too.
+#' @param ... Hints passed on to the objects, such as `evaluate = FALSE`
+#'   for the characteristic curves of [TendonForceLengthDeGroote2016()].
 #' @return A `sym` expression.
 #' @export
-doit <- function(e, deep = TRUE) {
+doit <- function(e, deep = TRUE, ...) {
   if (inherits(e, "TensExpr")) return(.tn_doit(e, deep))
   if (inherits(e, "symmatrix")) return(.mat_map(e, doit))
   e <- as_sym(e)
@@ -336,12 +338,16 @@ doit <- function(e, deep = TRUE) {
   }
   if (deep) {
     # an explicit matrix result stays an argument as an ImmutableMatrix node
-    args <- lapply(e$args, function(a) { r <- doit(a); if (inherits(r, "symmatrix")) .as_block(r) else r })
+    args <- lapply(e$args, function(a) { r <- doit(a, ...); if (inherits(r, "symmatrix")) .as_block(r) else r })
     if (!identical(vapply(args, .k, ""), vapply(e$args, .k, ""))) e <- sym_rebuild(e, args)
   }
   t <- e$type
   if (t == "Derivative")
     return(.diff_spec_eval(e$args[[1L]], lapply(e$args[-1L], function(tp) list(tp$args[[1L]], .dcount(tp$args[[2L]])))))
+  if (t == "Function") {
+    d <- .FUNS[[e$name]]
+    if (!is.null(d$doit)) return(d$doit(e, deep = deep, ...))
+  }
   h <- .doit_hooks[[t]]
   if (!is.null(h)) return(if ("deep" %in% names(formals(h))) h(e, deep = deep) else h(e))
   e
@@ -390,6 +396,7 @@ hessian <- function(f, vars) {
 #' @rdname jacobian
 #' @export
 gradient <- function(f, vars, doit = TRUE) {
+  if (!missing(vars) && .pv_dispatch(vars)) return(.pv_gradient(f, vars))
   if (missing(vars)) return(.vec_gradient(f, doit = doit))
   f <- as_sym(f)
   vars <- lapply(if (is.list(vars) && !inherits(vars, "sym")) vars else list(vars), as_sym)

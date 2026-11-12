@@ -10,7 +10,8 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
   t <- e$type
   switch(t,
          Add = PREC$Add,
-         Mul = if (could_extract_minus_sign(e)) PREC$Add else PREC$Mul,
+         Mul = if (any(vapply(e$args, function(a) a$type == "UnevaluatedExpr", TRUE))) PREC$Mul
+               else if (could_extract_minus_sign(e)) PREC$Add else PREC$Mul,
          Pow = PREC$Pow,
          Rational = if (e$value < 0) PREC$Add else PREC$Mul,
          Integer = if (e$value < 0) PREC$Add else PREC$Atom,
@@ -22,6 +23,7 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
          Equality = , Unequality = PREC$Mul,
          # PRECEDENCE_VALUES gives Mod the precedence of Mul
          Function = if (identical(e$name, "Mod")) PREC$Mul else PREC$Atom,
+         UnevaluatedExpr = .prec(e$args[[1L]]) - 0.5,
          PREC$Atom)
 }
 
@@ -344,6 +346,7 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
 .str_mode <- new.env()
 
 .str <- function(e) {
+  if (!is.null(.str_mode$hook) && !is.null(r <- .str_mode$hook(e))) return(r)
   t <- e$type
   switch(t,
          Integer = as.character(gmp::numerator(e$value)),
@@ -389,6 +392,7 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
 #' srepr(x^2 + 1)
 #' @export
 sstr <- function(e) {
+  if (inherits(e, "physics_obj")) return(format(e))
   if (inherits(e, "TensExpr")) return(.tn_str(e))
   # free group words, fp groups, coset tables and polyhedra print as their str()
   if (inherits(e, c("FreeGroupElement", "FreeGroup", "FpGroup", "FpSubgroup", "CosetTable", "Polyhedron")))

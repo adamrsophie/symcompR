@@ -426,6 +426,7 @@ grad <- function(f, vars = .xyz(), doit = TRUE) {
 #' @rdname grad
 #' @export
 divergence <- function(v, vars = .xyz(), doit = TRUE) {
+  if (.pv_dispatch(v, vars)) return(.pv_divergence(v, vars))
   if (missing(vars) && .is_vector_field(v)) return(.vec_divergence(v, doit = doit))
   v <- .vcomp(v)
   .add(Map(function(c, s) .diff1(c, as_sym(s)), v, vars))
@@ -434,6 +435,7 @@ divergence <- function(v, vars = .xyz(), doit = TRUE) {
 #' @rdname grad
 #' @export
 curl <- function(v, vars = .xyz(), doit = TRUE) {
+  if (.pv_dispatch(v, vars)) return(.pv_curl(v, vars))
   if (missing(vars) && .is_vector_field(v)) return(.vec_curl(v, doit = doit))
   v <- .vcomp(v)
   x <- as_sym(vars[[1L]]); y <- as_sym(vars[[2L]]); z <- as_sym(vars[[3L]])
@@ -453,6 +455,7 @@ laplacian <- function(f, vars = .xyz()) {
 #' @rdname grad
 #' @export
 is_conservative <- function(v, vars = .xyz()) {
+  if (.pv_dispatch(v) || .pv_is0(v)) return(.pv_is_conservative(v))
   if (is_sym(v)) return(.vec_is_conservative(v))
   is_zero_matrix(curl(v, vars))
 }
@@ -460,6 +463,7 @@ is_conservative <- function(v, vars = .xyz()) {
 #' @rdname grad
 #' @export
 is_solenoidal <- function(v, vars = .xyz()) {
+  if (.pv_dispatch(v) || .pv_is0(v)) return(.pv_is_solenoidal(v))
   if (is_sym(v)) return(.vec_is_solenoidal(v))
   is_zero_num(simplify(divergence(v, vars)))
 }
@@ -467,6 +471,7 @@ is_solenoidal <- function(v, vars = .xyz()) {
 #' @rdname grad
 #' @export
 scalar_potential <- function(v, vars = .xyz()) {
+  if (.pv_dispatch(v, vars)) return(.pv_scalar_potential(v, vars))
   if (is_sym(v)) return(.vec_scalar_potential(v, vars))
   if (!is_conservative(v, vars)) stop("field is not conservative")
   v <- .vcomp(v)

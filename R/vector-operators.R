@@ -288,6 +288,8 @@ del_cross <- function(delop, field, doit = FALSE) .vec_curl(field, doit = doit)
 #' @param direction_vector A vector.
 #' @param coord_sys A coordinate system.
 #' @param point1,point2 Points.
+#' @param origin For physics reference frames, the origin point used by
+#'   [scalar_potential_difference()]; ignored for `CoordSys3D` systems.
 #' @return A vector, dyadic, expression or list.
 #' @examples
 #' N <- CoordSys3D("N")
@@ -297,6 +299,7 @@ del_cross <- function(delop, field, doit = FALSE) .vec_curl(field, doit = doit)
 #' orthogonalize(N$i + 2 * N$j, 2 * N$i + 3 * N$j)
 #' @export
 express <- function(expr, system, system2 = NULL, variables = FALSE) {
+  if (.pv_dispatch(system)) return(.pv_express(expr, system, system2, variables))
   expr <- as_sym(expr)
   if (is_zero_num(expr) || expr$type == "VectorZero") return(expr)
   if (!.is_coordsys(system)) .vec_stop("TypeError", "system should be a CoordSys3D                         instance")
@@ -441,7 +444,8 @@ directional_derivative <- function(field, direction_vector) {
 
 #' @rdname express
 #' @export
-scalar_potential_difference <- function(field, coord_sys, point1, point2) {
+scalar_potential_difference <- function(field, coord_sys, point1, point2, origin = NULL) {
+  if (.pv_dispatch(coord_sys)) return(.pv_scalar_potential_difference(field, coord_sys, point1, point2, origin))
   if (!.is_coordsys(coord_sys)) .vec_stop("TypeError", "coord_sys must be a CoordSys3D")
   field <- as_sym(field)
   scalar_fn <- if (.is_vec(field)) .vec_scalar_potential(field, coord_sys) else field

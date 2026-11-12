@@ -19,7 +19,7 @@ orthogonalize(..., orthonormal = FALSE)
 
 directional_derivative(field, direction_vector)
 
-scalar_potential_difference(field, coord_sys, point1, point2)
+scalar_potential_difference(field, coord_sys, point1, point2, origin = NULL)
 }
 \arguments{
 \item{expr}{A vector, dyadic or scalar expression.}
@@ -41,6 +41,9 @@ scalar_potential_difference(field, coord_sys, point1, point2)
 \item{coord_sys}{A coordinate system.}
 
 \item{point1, point2}{Points.}
+
+\item{origin}{For physics reference frames, the origin point used by
+\code{\link[=scalar_potential_difference]{scalar_potential_difference()}}; ignored for \code{CoordSys3D} systems.}
 }
 \value{
 A vector, dyadic, expression or list.

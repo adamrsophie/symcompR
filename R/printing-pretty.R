@@ -68,6 +68,7 @@
 }
 
 .pp <- function(e, u) {
+  if (!is.null(.pp_env$hook) && !is.null(r <- .pp_env$hook(e, u))) return(r)
   txt <- function(s) .bx(s)
   par_if <- function(z, lvl) { b <- .pp(z, u); if (.prec(z) < lvl) .bx_paren(b, u) else b }
   switch(e$type,

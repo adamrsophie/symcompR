@@ -4,12 +4,15 @@
 \alias{doit}
 \title{Evaluate unevaluated objects}
 \usage{
-doit(e, deep = TRUE)
+doit(e, deep = TRUE, ...)
 }
 \arguments{
 \item{e}{A \code{sym} expression.}
 
 \item{deep}{Evaluate nested objects too.}
+
+\item{...}{Hints passed on to the objects, such as \code{evaluate = FALSE}
+for the characteristic curves of \code{\link[=TendonForceLengthDeGroote2016]{TendonForceLengthDeGroote2016()}}.}
 }
 \value{
 A \code{sym} expression.

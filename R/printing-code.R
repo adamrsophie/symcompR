@@ -6,12 +6,45 @@
             "phi", "chi", "psi", "omega", "Gamma", "Delta", "Theta", "Lambda", "Xi", "Pi",
             "Sigma", "Upsilon", "Phi", "Psi", "Omega")
 
+# split_super_sub() of sympy/printing/conventions.py: the name, then parts
+# opened by "^" or "__" (superscripts) or "_" (subscripts); trailing digits
+# of the name are a first subscript
+.split_super_sub <- function(text) {
+  if (!nzchar(text)) return(list(name = text, supers = character(), subs = character()))
+  pos <- 1L
+  n <- nchar(text)
+  name <- NULL
+  supers <- subs <- character()
+  while (pos <= n) {
+    start <- pos + 1L
+    if (substr(text, pos, pos + 1L) == "__") start <- start + 1L
+    rest <- substr(text, start, n)
+    ph <- regexpr("^", rest, fixed = TRUE)
+    pu <- regexpr("_", rest, fixed = TRUE)
+    nxt <- min(if (ph > 0L) start + ph - 1L else n + 1L, if (pu > 0L) start + pu - 1L else n + 1L)
+    part <- substr(text, pos, nxt - 1L)
+    pos <- nxt
+    if (is.null(name)) name <- part
+    else if (startsWith(part, "^")) supers <- c(supers, substring(part, 2L))
+    else if (startsWith(part, "__")) supers <- c(supers, substring(part, 3L))
+    else subs <- c(subs, substring(part, 2L))
+  }
+  m <- regmatches(name, regexec("^([[:alpha:]]+)([0-9]+)$", name))[[1L]]
+  if (length(m)) {
+    name <- m[2L]
+    subs <- c(m[3L], subs)
+  }
+  list(name = name, supers = supers, subs = subs)
+}
+
 .latex_symbol <- function(nm) {
-  m <- regmatches(nm, regexec("^([A-Za-z]+)_?([0-9]+)$", nm))[[1L]]
-  base <- if (length(m)) m[2L] else nm
-  sub <- if (length(m)) m[3L] else NULL
-  b <- if (base %in% .GREEK) paste0("\\", base) else base
-  if (!is.null(sub)) paste0(b, "_{", sub, "}") else b
+  if (grepl("{", nm, fixed = TRUE)) return(nm)
+  tr <- function(s) if (s %in% .GREEK) paste0("\\", s) else s
+  p <- .split_super_sub(nm)
+  out <- tr(p$name)
+  if (length(p$supers)) out <- paste0(out, "^{", paste(vapply(p$supers, tr, ""), collapse = " "), "}")
+  if (length(p$subs)) out <- paste0(out, "_{", paste(vapply(p$subs, tr, ""), collapse = " "), "}")
+  out
 }
 
 .LATEX_FUNS <- c(sin = "\\sin", cos = "\\cos", tan = "\\tan", cot = "\\cot", sec = "\\sec", csc = "\\csc",
@@ -75,6 +108,7 @@
 }
 
 .latex <- function(e) {
+  if (!is.null(.latex_mode$hook) && !is.null(r <- .latex_mode$hook(e))) return(r)
   t <- e$type
   switch(t,
          Integer = as.character(gmp::numerator(e$value)),
@@ -174,20 +208,38 @@ latex <- function(e) {
            ln = "log", ceiling = "ceil", I = "I", inf = "HUGE_VAL"),
   fortran = list(pow = function(b, e) paste0(b, "**", e), sqrt = "sqrt", pi = "3.14159265358979d0", e = "2.71828182845905d0",
                  num = function(q) paste0(gmp::numerator(q), ".0d0/", gmp::denominator(q), ".0d0"), abs = "abs",
-                 ln = "log", ceiling = "ceiling", I = "cmplx(0,1)", inf = "huge(0d0)"),
+                 ln = "log", ceiling = "ceiling", I = "cmplx(0,1)", inf = "huge(0d0)", inv = "1d0/"),
   js = list(pow = function(b, e) paste0("Math.pow(", b, ", ", e, ")"), sqrt = "Math.sqrt", pi = "Math.PI", e = "Math.E",
             num = function(q) paste0(gmp::numerator(q), "/", gmp::denominator(q)), abs = "Math.abs",
-            ln = "Math.log", ceiling = "Math.ceil", I = "1i", inf = "Number.POSITIVE_INFINITY", prefix = "Math."),
+            ln = "Math.log", ceiling = "Math.ceil", I = "1i", inf = "Number.POSITIVE_INFINITY", prefix = "Math.", inv = "1/"),
   octave = list(plain_frac = TRUE, pow = function(b, e) paste0(b, "^", e), sqrt = "sqrt", pi = "pi", e = "e",
                 num = function(q) paste0(gmp::numerator(q), "/", gmp::denominator(q)), abs = "abs",
-                ln = "log", ceiling = "ceil", I = "1i", inf = "inf"),
+                ln = "log", ceiling = "ceil", I = "1i", inf = "inf", inv = "1./"),
   r = list(pow = function(b, e) paste0(b, "^", e), sqrt = "sqrt", pi = "pi", e = "exp(1)",
            num = function(q) paste0(gmp::numerator(q), ".0/", gmp::denominator(q), ".0"), abs = "abs",
            ln = "log", ceiling = "ceiling", I = "1i", inf = "Inf"),
   python = list(pow = function(b, e) paste0(b, "**", e), sqrt = "math.sqrt", pi = "math.pi", e = "math.e",
                 num = function(q) paste0(gmp::numerator(q), "/", gmp::denominator(q)), abs = "abs",
-                ln = "math.log", ceiling = "math.ceil", I = "1j", inf = "math.inf", prefix = "math.")
+                ln = "math.log", ceiling = "math.ceil", I = "1j", inf = "math.inf", prefix = "math.", inv = "1/")
 )
+
+# A Float prints as SymPy's printers do: str(evalf(17)) with the zeros
+# stripped in C and C++; str() in Python and Octave, with a d exponent in
+# Fortran (zeros are stripped below the top level); 17 digits elsewhere
+.code_float <- function(e, st) {
+  if (st$pi %in% c("math.pi", "3.14159265358979d0") || identical(st$e, "e")) {
+    s <- .fmt_float_sym(e, strip = !isTRUE(st$top))
+    if (identical(st$pi, "3.14159265358979d0")) s <- if (grepl("e", s, fixed = TRUE)) sub("e", "d", s, fixed = TRUE) else paste0(s, "d0")
+    return(s)
+  }
+  if (!identical(st$pi, "M_PI")) return(if (.float_prec(e) <= 53) sprintf("%.17g", e$value) else .fmt_float_sym(e, strip = TRUE))
+  s <- .mp_to_str(.float_mp(e), 17, strip_zeros = FALSE)
+  if (!grepl("[e.]", s)) s <- paste0(s, ".0")
+  p <- strsplit(s, "e", fixed = TRUE)[[1L]]
+  p[1L] <- sub("0+$", "", p[1L])
+  if (endsWith(p[1L], ".")) p[1L] <- paste0(p[1L], "0")
+  paste(p, collapse = "e")
+}
 
 .code <- function(e, st) {
   t <- e$type
@@ -202,7 +254,7 @@ latex <- function(e) {
   switch(t,
          Integer = as.character(gmp::numerator(e$value)),
          Rational = st$num(e$value),
-         Float = sprintf("%.17g", e$value),
+         Float = .code_float(e, st),
          Symbol = , Dummy = e$name,
          Constant = switch(EXPR = e$name, pi = st$pi, E = st$e, I = st$I, oo = st$inf, `-oo` = paste0("-", st$inf),
                            GoldenRatio = "((1 + sqrt(5))/2)", EulerGamma = "0.57721566490153286",
@@ -232,18 +284,21 @@ latex <- function(e) {
            }
            if (is_one_num(nd[[2L]])) return(fmt(nd[[1L]]))
            den <- nd[[2L]]
-           ds <- if (den$type == "Mul" || .prec(den) < PREC$Atom) paste0("(", .code(den, st), ")") else .code(den, st)
+           ds <- if (den$type == "Mul") paste0("(", .code(den, st), ")") else mulp(den)
            n <- nd[[1L]]
-           ns <- if (is_one_num(n)) "1.0" else fmt(n)
+           ns <- if (is_one_num(n)) "1" else fmt(n)
            paste0(ns, "/", ds)
          },
          Pow = {
            b <- e$args[[1L]]; x <- e$args[[2L]]
            if (identical(x$key, S_Half$key)) return(paste0(st$sqrt, "(", .code(b, st), ")"))
-           if (identical(x$key, S_NegativeOne$key)) return(paste0("1.0/", atomize(b)))
+           if (identical(x$key, S_NegativeOne$key)) return(paste0(st$inv %||% "1.0/", atomize(b)))
            st$pow(atomize(b), if (x$type == "Rational") paste0("(", st$num(x$value), ")") else atomize(x))
          },
+         UnevaluatedExpr = .code(e$args[[1L]], st),
          Function = {
+           d <- .FUNS[[e$name]]
+           if (!is.null(d$code)) return(paste0("(", .code(d$code(e), st), ")"))
            args <- paste(vapply(e$args, .code, "", st = st), collapse = ", ")
            nm <- switch(EXPR = e$name, Abs = st$abs, log = st$ln, ceiling = st$ceiling,
                         paste0(if (!is.null(st$prefix)) st$prefix, e$name))
@@ -271,7 +326,10 @@ NULL
 .mk_printer <- function(style, fmt) {
   force(style); force(fmt)
   function(e, assign_to = NULL) {
-    s <- .code(as_sym(e), .code_styles[[style]])
+    e <- as_sym(e)
+    st <- .code_styles[[style]]
+    st$top <- e$type == "Float"
+    s <- .code(e, st)
     if (!is.null(assign_to)) s <- sprintf(fmt, assign_to, s)
     s
   }
