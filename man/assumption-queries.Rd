@@ -54,7 +54,7 @@ is_prime_expr(e)
 
 is_finite(e)
 
-is_infinite(e)
+is_infinite(e, assumptions = NULL)
 
 is_imaginary(e)
 
@@ -66,6 +66,9 @@ is_transcendental(e)
 }
 \arguments{
 \item{e}{A \code{sym} expression.}
+
+\item{assumptions}{For \code{is_infinite()}, assumptions such as
+\code{Q$infinite(e)} to decide with \code{\link[=ask]{ask()}} instead.}
 }
 \value{
 \code{TRUE}, \code{FALSE} or \code{NA}.

@@ -32,7 +32,9 @@
   out <- out[!duplicated(vapply(out, .k, ""))]
   keys <- vapply(out, .k, "")
   for (a in out) {
-    if (a$type == "Not" && a$args[[1L]]$key %in% keys)
+    # SymPy keeps a predicate next to its negation, as in Q.real(x) & ~Q.real(x)
+    if (a$type == "Not" && a$args[[1L]]$key %in% keys &&
+        !(a$args[[1L]]$type %in% c("AppliedPredicate", "AppliedBinaryRelation", "Predicate", "UndefinedPredicate")))
       return(if (type == "And") S_false else S_true)
     if (is_relational(a)) {
       na <- .negate_rel(a)

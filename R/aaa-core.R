@@ -636,6 +636,7 @@ as_sym <- function(x) {
   }
   if (is.language(x) || is.symbol(x)) return(sym_from_call(x))
   if (inherits(x, "symmatrix")) return(x)
+  if (inherits(x, "sym_predicate_fn")) return(attr(x, "predicate"))
   stop("cannot convert object of class '", class(x)[1], "' to sym")
 }
 

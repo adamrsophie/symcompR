@@ -1,0 +1,57 @@
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
+
+test_that("predicates print as SymPy prints them", {
+  expect_equal(sstr(Q$positive(x)), "Q.positive(x)")
+  expect_equal(srepr(Q$positive(x)), "AppliedPredicate(Q.positive, Symbol('x'))")
+  expect_equal(latex(Q$positive(x)), "\\operatorname{Q}_{\\text{positive}}(x)")
+  expect_equal(sstr(Q$eq(x, y)), "Q.eq(x, y)")
+  expect_equal(sstr(Q$even | Q$odd), "Q.even | Q.odd")
+  expect_error(Q$eq(x), class = "TypeError")
+})
+
+test_that("ask() follows the handlers and the known facts", {
+  expect_true(ask(Q$integer(x), Q$even(x)))
+  expect_false(ask(Q$odd(x), Q$even(x)))
+  expect_true(is.na(ask(Q$positive(x))))
+  expect_true(ask(Q$even(x * y), Q$even(x) & Q$integer(y)))
+  expect_true(ask(Q$positive(x^2 + 1), Q$real(x)))
+  expect_false(ask(Q$rational(sym_pi)))
+  expect_true(ask(x > 0, Q$positive(x)))
+  expect_error(ask(Q$positive(x), Q$positive(x) & !Q$positive(x)), class = "ValueError")
+  expect_error(ask(Q$positive), class = "TypeError")
+})
+
+test_that("satask() and lra_satask() decide what the handlers cannot", {
+  expect_true(satask(Q$zero(Abs(x)), Q$zero(x)))
+  expect_true(satask(Q$zero(x * y), Q$zero(x)))
+  expect_true(satask(Q$real(x), Q$positive(x)))
+  expect_error(satask(Q$real(x), Q$real(x) & !Q$real(x)), "Inconsistent assumptions", class = "ValueError")
+  a <- Symbol("a", real = TRUE); b <- Symbol("b", real = TRUE)
+  expect_true(lra_satask(Q$gt(a, 0), Q$gt(a, 1)))
+  expect_true(is.na(lra_satask(Q$gt(a, 0))))
+  expect_true(ask(a < b + 1, a < b))
+  expect_error(lra_satask(Q$gt(x, 0)), "x must be real", class = "UnhandledInput")
+})
+
+test_that("refine() rewrites under assumptions", {
+  expect_equal(sstr(refine(Abs(x), Q$positive(x))), "x")
+  expect_equal(sstr(refine(Abs(x), Q$negative(x))), "-x")
+  expect_equal(sstr(refine(sqrt(x^2), Q$real(x))), "Abs(x)")
+  expect_equal(sstr(refine(Integer(-1)^(x + 1), Q$odd(x))), "1")
+  expect_equal(sstr(refine(Q$real(x), Q$positive(x))), "True")
+})
+
+test_that("contexts, custom predicates and the wrapper", {
+  expect_true(assuming(Q$positive(x), ask(Q$real(x))))
+  expect_true(is.na(ask(Q$real(x))))
+  ctx <- AssumptionsContext(Q$positive(x))
+  expect_error(ctx$remove(Q$negative(x)), class = "KeyError")
+  P <- Predicate("P")
+  expect_true(ask(P(x), P(x) & Q$positive(x)))
+  K <- Predicate("my_key", dispatch = TRUE)
+  register_predicate(K, "Symbol", function(expr, assumptions) TRUE)
+  expect_true(ask(K(x)))
+  expect_true(is.na(AssumptionsWrapper(y)$is_positive))
+  expect_true(AssumptionsWrapper(y, Q$positive(y))$is_positive)
+  expect_true(is_extended_real(z, Q$extended_real(z)))
+})

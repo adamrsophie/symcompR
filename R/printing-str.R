@@ -438,6 +438,7 @@ srepr <- function(e) {
          Wild = paste0(if (isTRUE(e$extra$wildfunction)) "WildFunction('" else "Wild('", e$name, "')"),
          Constant = e$name,
          BooleanAtom = .str(e),
+         Predicate = , UndefinedPredicate = .str(e),
          Function = paste0(e$name, "(", paste(vapply(e$args, srepr, ""), collapse = ", "), ")"),
          paste0(t, "(", paste(vapply(e$args, srepr, ""), collapse = ", "), ")"))
 }

@@ -14,24 +14,29 @@ global_assumptions
 assuming(...)
 }
 \arguments{
-\item{...}{Predicates such as \code{Q$positive(x)}; for \code{assuming()}, the last
-argument is the code to evaluate.}
+\item{...}{Assumptions such as \code{Q$positive(x)} or \code{x > 0}; for
+\code{assuming()}, the last argument is the code to evaluate.}
 }
 \value{
 \code{AssumptionsContext()} returns a context; \code{assuming()} returns the
 value of the code.
 }
 \description{
-\code{AssumptionsContext(...)} is a mutable set of predicates with \verb{$add(...)},
-\verb{$remove(...)} and \verb{$clear()}. \code{global_assumptions} is the context that
-\code{\link[=ask]{ask()}} and \code{\link[=refine]{refine()}} always consult, as in SymPy.
-\code{assuming(..., code)} evaluates its last argument with the other arguments
-added to \code{global_assumptions}, and restores the previous state afterwards,
-like SymPy's \verb{with assuming(...):} block.
+\code{AssumptionsContext(...)} is a mutable set of assumptions with
+\verb{$add(...)}, \verb{$remove(...)} and \verb{$clear()}; its \verb{$preds} field lists
+them. \code{global_assumptions} is the context that \code{\link[=ask]{ask()}} and \code{\link[=refine]{refine()}}
+consult by default, as in SymPy. \code{assuming(..., code)} evaluates its
+last argument with the other arguments added to \code{global_assumptions},
+and restores the previous state afterwards, like SymPy's
+\verb{with assuming(...):} block. Removing an assumption that is not in the
+context raises a \code{KeyError}, as for a Python set.
 }
 \examples{
 x <- Symbol("x")
 assuming(Q$positive(x), ask(Q$real(x)))
 assuming(Q$positive(x), refine(sqrt(x^2)))
 ask(Q$real(x))
+ctx <- AssumptionsContext(Q$integer(x))
+ctx
+ask(Q$rational(x), context = ctx)
 }

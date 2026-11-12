@@ -427,14 +427,14 @@ test_that("assuming() and global_assumptions follow SymPy", {
   global_assumptions$add(Q$negative(x))
   expect_true(ask(Q$negative(x)))
   expect_equal(sstr(refine(Abs(x))), "-x")
-  expect_equal(capture.output(print(global_assumptions)), "AssumptionsContext(Q.negative(x))")
+  expect_equal(capture.output(print(global_assumptions)), "AssumptionsContext({Q.negative(x)})")
   global_assumptions$clear()
   expect_equal(capture.output(print(global_assumptions)), "AssumptionsContext()")
   # the previous state comes back even when the code fails
   expect_error(assuming(Q$positive(x), stop("boom")), "boom")
   expect_length(global_assumptions$preds, 0L)
   ctx <- AssumptionsContext(Q$positive(x))
-  expect_error(ctx$remove(Q$negative(x)), "not in the context")
+  expect_error(ctx$remove(Q$negative(x)), class = "KeyError")
 })
 
 test_that("not_empty_in follows SymPy", {

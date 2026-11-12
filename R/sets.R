@@ -167,7 +167,7 @@ EmptySet <- S_EmptySet
   }
   # Applications that are separate node types here
   if (t %in% .NARGS0_TYPES) return(list(4, 0, t))
-  list(5, 0, t)
+  list(5, 0, if (!is.null(e$extra$sympy_class)) e$extra$sympy_class else t)
 }
 
 .ONE_SORT_KEY <- list(list(1, 0, "Number"), list(0, list()), list(), 1)

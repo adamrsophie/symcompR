@@ -1,17 +1,19 @@
 # Assumption contexts, after sympy/assumptions/assume.py: a set of
-# predicates that ask() and refine() add to the ones they are given.
+# assumptions that ask() and refine() add to the ones they are given.
 
 #' Assumption contexts
 #'
-#' `AssumptionsContext(...)` is a mutable set of predicates with `$add(...)`,
-#' `$remove(...)` and `$clear()`. `global_assumptions` is the context that
-#' [ask()] and [refine()] always consult, as in SymPy.
-#' `assuming(..., code)` evaluates its last argument with the other arguments
-#' added to `global_assumptions`, and restores the previous state afterwards,
-#' like SymPy's `with assuming(...):` block.
+#' `AssumptionsContext(...)` is a mutable set of assumptions with
+#' `$add(...)`, `$remove(...)` and `$clear()`; its `$preds` field lists
+#' them. `global_assumptions` is the context that [ask()] and [refine()]
+#' consult by default, as in SymPy. `assuming(..., code)` evaluates its
+#' last argument with the other arguments added to `global_assumptions`,
+#' and restores the previous state afterwards, like SymPy's
+#' `with assuming(...):` block. Removing an assumption that is not in the
+#' context raises a `KeyError`, as for a Python set.
 #'
-#' @param ... Predicates such as `Q$positive(x)`; for `assuming()`, the last
-#'   argument is the code to evaluate.
+#' @param ... Assumptions such as `Q$positive(x)` or `x > 0`; for
+#'   `assuming()`, the last argument is the code to evaluate.
 #' @return `AssumptionsContext()` returns a context; `assuming()` returns the
 #'   value of the code.
 #' @examples
@@ -19,10 +21,11 @@
 #' assuming(Q$positive(x), ask(Q$real(x)))
 #' assuming(Q$positive(x), refine(sqrt(x^2)))
 #' ask(Q$real(x))
+#' ctx <- AssumptionsContext(Q$integer(x))
+#' ctx
+#' ask(Q$rational(x), context = ctx)
 #' @name assumptions-context
 NULL
-
-.pred_key <- function(p) paste0(if (isFALSE(p$value)) "~", p$fact, ":", p$expr$key)
 
 #' @rdname assumptions-context
 #' @export
@@ -31,32 +34,47 @@ AssumptionsContext <- function(...) {
   ctx$preds <- list()
   ctx$add <- function(...) {
     for (p in list(...)) {
-      if (!inherits(p, "sym_predicate")) stop("assumptions must be predicates such as Q$positive(x)", call. = FALSE)
-      ctx$preds[[.pred_key(p)]] <- p
+      p <- .ask_sympify(p)
+      ctx$preds[[p$key]] <- p
     }
-    invisible(ctx)
+    invisible(NULL)
   }
   ctx$remove <- function(...) {
     for (p in list(...)) {
-      k <- .pred_key(p)
-      if (is.null(ctx$preds[[k]])) stop("predicate not in the context: ", .pred_str(p), call. = FALSE)
-      ctx$preds[[k]] <- NULL
+      p <- .ask_sympify(p)
+      if (is.null(ctx$preds[[p$key]])) stop(.sympy_condition("KeyError", .str(p)))
+      ctx$preds[[p$key]] <- NULL
     }
-    invisible(ctx)
+    invisible(NULL)
   }
-  ctx$clear <- function() { ctx$preds <- list(); invisible(ctx) }
+  ctx$clear <- function() {
+    ctx$preds <- list()
+    invisible(NULL)
+  }
   ctx$add(...)
   class(ctx) <- "AssumptionsContext"
   ctx
 }
 
-.pred_str <- function(p) paste0(if (isFALSE(p$value)) "~", "Q.", p$fact, "(", .str(p$expr), ")")
+.ctx_preds <- function(ctx) unname(ctx$preds)
+.ctx_contains <- function(ctx, p) !is.null(ctx$preds[[.ask_sympify(p)$key]])
+
+#' @export
+format.AssumptionsContext <- function(x, ...) {
+  p <- .ctx_preds(x)
+  if (!length(p)) return("AssumptionsContext()")
+  p <- .key_sort(lapply(p, .sort_key), p)
+  paste0("AssumptionsContext({", paste(vapply(p, .str, ""), collapse = ", "), "})")
+}
 
 #' @export
 print.AssumptionsContext <- function(x, ...) {
-  cat("AssumptionsContext(", paste(vapply(unname(x$preds), .pred_str, ""), collapse = ", "), ")\n", sep = "")
+  cat(format(x), "\n", sep = "")
   invisible(x)
 }
+
+#' @export
+length.AssumptionsContext <- function(x) length(x$preds)
 
 #' @rdname assumptions-context
 #' @export

@@ -310,8 +310,11 @@ ask_fact <- function(e, fact) {
   if (is.nan(v)) return(c(commutative = TRUE))
   if (is.infinite(v)) return(c(commutative = TRUE, finite = FALSE,
                                infinite = TRUE, extended_real = TRUE))
-  c(commutative = TRUE, real = TRUE, finite = TRUE, positive = v > 0,
-    negative = v < 0, zero = v == 0, imaginary = FALSE, infinite = FALSE)
+  f <- c(commutative = TRUE, real = TRUE, finite = TRUE, positive = v > 0,
+         negative = v < 0, zero = v == 0, imaginary = FALSE, infinite = FALSE)
+  # Float._eval_is_integer: a value that is not int valued is not an integer
+  if (v != round(v)) f["integer"] <- FALSE
+  f
 }
 
 .constant_facts <- function(nm) {
@@ -844,8 +847,11 @@ is_prime_expr <- function(e) ask_fact(e, "prime")
 #' @export
 is_finite <- function(e) ask_fact(e, "finite")
 #' @rdname assumption-queries
+#' @param assumptions For `is_infinite()`, assumptions such as
+#'   `Q$infinite(e)` to decide with [ask()] instead.
 #' @export
-is_infinite <- function(e) ask_fact(e, "infinite")
+is_infinite <- function(e, assumptions = NULL)
+  if (is.null(assumptions)) ask_fact(e, "infinite") else ask(Q$infinite(e), assumptions)
 #' @rdname assumption-queries
 #' @export
 is_imaginary <- function(e) ask_fact(e, "imaginary")
