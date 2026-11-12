@@ -1,6 +1,8 @@
 # Expected values are SymPy's outputs for the same calls: rows whose earlier
 # expressions dropped the assumptions of SymPy's own tests, restored here.
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 .bt <- new.env(parent = asNamespace("symcompR"))

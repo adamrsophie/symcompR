@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (factor and factor_list).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 for (.v in c("x","y","z","t","w","a","b","c")) assign(.v, Symbol(.v))

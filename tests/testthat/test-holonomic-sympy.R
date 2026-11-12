@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (holonomic), with ** written ^.
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 x <- Symbol("x")

@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (diffgeom).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 rn <- diffgeom_rn(); R2_r <- rn$R2_r; R2_p <- rn$R2_p; R2_origin <- rn$R2_origin; R3_r <- rn$R3_r; R3_c <- rn$R3_c; R3_s <- rn$R3_s

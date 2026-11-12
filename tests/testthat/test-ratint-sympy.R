@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (ratint).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 x <- Symbol("x"); a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c"); t <- Symbol("t")

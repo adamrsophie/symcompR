@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (meijerint_indefinite, meijerint_definite and meijerint_inversion).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 x <- Symbol("x"); y <- Symbol("y"); a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c"); s <- Symbol("s"); t <- Symbol("t"); z <- Symbol("z")

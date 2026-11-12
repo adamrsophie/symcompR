@@ -1,6 +1,8 @@
 # Expected values are SymPy outputs for the cases of sympy/sets/tests/test_fancysets.py
 # (ComplexRegion, normalize_theta_set).
 
+skip_unless_full_tests()
+
 test_that("ComplexRegion matches SymPy", {
   x <- Symbol("x"); r <- Symbol("r", real = TRUE); I <- sym_I; pi <- sym_pi
   Iv <- function(a, b, lo = FALSE, ro = FALSE) Interval(a, b, lo, ro)

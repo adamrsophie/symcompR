@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (Limits).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 for (.v in c("x","y","z","a","b","c","k","m","p","q","r","s","t")) assign(.v, Symbol(.v))

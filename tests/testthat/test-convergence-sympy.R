@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (Sum and Product limits and convergence).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 for (v in c("a", "b", "c", "d", "k", "m", "x", "y", "z")) assign(v, Symbol(v))

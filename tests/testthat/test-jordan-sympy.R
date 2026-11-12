@@ -1,6 +1,8 @@
 # Generated from SymPy outputs (reference commit 86150a81): Matrix.jordan_form()
 # for each matrix, as P | J in Python list notation.
 
+skip_unless_full_tests()
+
 test_that("jordan_form matches SymPy", {
   tl <- function(M) paste0("[", paste(vapply(seq_len(M$nrow), function(i) paste0("[", paste(vapply(seq_len(M$ncol), function(j) gsub("^", "**", sstr(M$data[[(i - 1L) * M$ncol + j]]), fixed = TRUE), ""), collapse = ", "), "]"), ""), collapse = ", "), "]")
   chk <- function(s, want) {

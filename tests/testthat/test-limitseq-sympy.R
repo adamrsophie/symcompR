@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (limit_seq and difference_delta).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 n <- Symbol("n", integer = TRUE); m <- Symbol("m", integer = TRUE); k <- Symbol("k", integer = TRUE)

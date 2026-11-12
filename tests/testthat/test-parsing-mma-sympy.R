@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (Parsing (mma)).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 .bt <- new.env(parent = asNamespace("symcompR"))

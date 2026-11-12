@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (categories diagram drawing).
 
+skip_unless_full_tests()
+
 for (s in c("A","B","C","D","E","F","G","H")) assign(s, Object(s))
 f <- NamedMorphism(A, B, "f"); g <- NamedMorphism(B, C, "g"); h <- NamedMorphism(C, D, "h"); i <- NamedMorphism(D, E, "i")
 k <- NamedMorphism(D, B, "k"); l <- NamedMorphism(A, C, "l"); m <- NamedMorphism(C, A, "m"); n <- NamedMorphism(B, D, "n")

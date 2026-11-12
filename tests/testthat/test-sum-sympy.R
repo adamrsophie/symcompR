@@ -2,6 +2,8 @@
 # made by SymPy's test_sums_products.py and test_gosper.py, each evaluated
 # afresh. Only inputs on which the port agrees with SymPy are listed.
 
+skip_unless_full_tests()
+
 test_that("Sum.doit matches SymPy on the calls of its test files", {
   skip_on_cran()
   chk <- function(s, deep, loc, want) {

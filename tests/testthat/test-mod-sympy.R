@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (Mod).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); phi <- Symbol("phi"); t <- Symbol("t", real = TRUE); p <- Symbol("p", positive = TRUE)

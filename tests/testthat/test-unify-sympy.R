@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (unify).
 
+skip_unless_full_tests()
+
 for (v in c("a", "b", "c", "d", "n", "p", "q", "x", "y", "z")) assign(v, Symbol(v))
 bi <- Symbol("b", integer = TRUE)
 fmtd <- function(d) { ks <- sort(names(d), method = "radix"); paste0("{", paste(paste0(ks, ": ", vapply(ks, function(k) sstr(d[[k]]), "")), collapse = ", "), "}") }

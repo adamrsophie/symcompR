@@ -1,6 +1,8 @@
 # Expected values are SymPy's outputs for the same calls (Lie algebras). SymPy returns
 # Python floats for some Weyl group orders and bases (6.0); those compare as numbers.
 
+skip_unless_full_tests()
+
 fmt <- function(r) {
   if (inherits(r, "symmatrix")) {
     rows <- lapply(seq_len(r$nrow), function(i) paste0("[", paste(vapply(seq_len(r$ncol), function(j) sstr(.mget(r, i, j)), ""), collapse = ", "), "]"))

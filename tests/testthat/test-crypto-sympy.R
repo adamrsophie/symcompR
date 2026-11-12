@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (crypto).
 
+skip_unless_full_tests()
+
 fmt <- function(r) {
   if (is.logical(r)) return(if (isTRUE(r)) "True" else "False")
   if (inherits(r, "symmatrix")) {

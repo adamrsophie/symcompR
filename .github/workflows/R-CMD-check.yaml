@@ -9,15 +9,22 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same branch or pull request cancels the older run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# This check runs the fast test tier. The full SymPy comparison suite runs
+# in full-check.yaml (weekly and on demand), which also covers macOS.
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         config:
-          - { os: macos-latest, r: release }
           - { os: windows-latest, r: release }
           - { os: ubuntu-latest, r: release }
           - { os: ubuntu-latest, r: devel, http-user-agent: release }
@@ -25,7 +32,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: r-lib/actions/setup-pandoc@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
 

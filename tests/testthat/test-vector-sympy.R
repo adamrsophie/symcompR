@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (Vectors (sympy.vector)).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")

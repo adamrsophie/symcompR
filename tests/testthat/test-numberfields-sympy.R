@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (Integral bases, prime decomposition and valuations).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 x <- Symbol("x")

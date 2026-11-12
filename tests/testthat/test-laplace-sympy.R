@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (Laplace transforms).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 a <- Symbol("a", positive = TRUE); b <- Symbol("b", positive = TRUE); c <- Symbol("c", positive = TRUE); np <- Symbol("np", integer = TRUE, positive = TRUE)

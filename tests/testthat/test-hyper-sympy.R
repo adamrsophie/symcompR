@@ -2,6 +2,8 @@
 # string is what SymPy prints for the same input. Only inputs on which the
 # port agrees with SymPy are listed; the tracker records the others.
 
+skip_unless_full_tests()
+
 test_that("hyperexpand matches SymPy on hypergeometric functions", {
   chk <- function(s, f, want) expect_equal(sstr(f(sympify(s))), want, label = s)
   chk("hyper([], [], z)", hyperexpand, "exp(z)")

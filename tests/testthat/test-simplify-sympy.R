@@ -1,6 +1,8 @@
 # Generated from SymPy outputs (reference commit 86150a81); each expected
 # string is what SymPy prints for the same input.
 
+skip_unless_full_tests()
+
 test_that("trigsimp matches SymPy (futrig, fu, exptrigsimp)", {
   x <- Symbol("x"); y <- Symbol("y"); a <- Symbol("a"); b <- Symbol("b")
   chk <- function(s, f, want, loc = list()) expect_equal(sstr(f(sympify(s, locals = loc))), want, label = s)

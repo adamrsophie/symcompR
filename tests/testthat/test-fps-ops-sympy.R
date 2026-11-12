@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (Formal power series arithmetic, bell and normal forms).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); n <- Symbol("n", integer = TRUE)

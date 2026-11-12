@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (iterables).
 
+skip_unless_full_tests()
+
 fmt1 <- function(v) if (is.character(v)) paste0("'", v, "'") else if (is.logical(v)) (if (v) "True" else "False") else format(v, scientific = FALSE)
 fmt <- function(r) {
   if (is.null(r)) return("[]")

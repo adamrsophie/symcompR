@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (categories).
 
+skip_unless_full_tests()
+
 A <- Object("A"); B <- Object("B"); C <- Object("C"); D <- Object("D")
 f <- NamedMorphism(A, B, "f"); g <- NamedMorphism(B, C, "g"); h <- NamedMorphism(C, D, "h")
 fmt <- function(r) {

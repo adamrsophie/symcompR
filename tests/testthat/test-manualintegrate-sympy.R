@@ -1,5 +1,7 @@
 # Expected values are SymPy's outputs for the same calls (manualintegrate).
 
+skip_unless_full_tests()
+
 skip_on_cran()
 
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); u <- Symbol("u"); n <- Symbol("n"); a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c"); d <- Symbol("d"); e <- Symbol("e")
