@@ -8,11 +8,11 @@ printers. `print_tree()` shows the expression tree.
 ## Usage
 
 ``` r
-julia_code(e, assign_to = NULL)
+julia_code(e, assign_to = NULL, ...)
 
-cxxcode(e, assign_to = NULL)
+cxxcode(e, assign_to = NULL, ...)
 
-maple_code(e, assign_to = NULL)
+maple_code(e, assign_to = NULL, ...)
 
 mathematica_code(e)
 
@@ -38,6 +38,10 @@ print_tree(e)
 - assign_to:
 
   Optional variable name.
+
+- ...:
+
+  Printer settings, as in SymPy (for example `standard`).
 
 ## Value
 

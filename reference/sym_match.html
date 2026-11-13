@@ -4,12 +4,16 @@ Wild() symbols and returns a named list of bindings, or NULL. Sums and
 products match up to commutativity, and a wild may take the identity.
 sym_replace(e, pattern, value) rewrites every subexpression that matches,
 bottom up; value is an expression in the same wild symbols or a function
-of the named bindings."><meta property="og:description" content="sym_match(e, pattern) matches an expression against a pattern containing
+of the named bindings. When pattern is an R predicate, sym_replace()
+replaces every node it accepts by value (an expression, or an R function
+of the node), as SymPy's replace() with a callable query."><meta property="og:description" content="sym_match(e, pattern) matches an expression against a pattern containing
 Wild() symbols and returns a named list of bindings, or NULL. Sums and
 products match up to commutativity, and a wild may take the identity.
 sym_replace(e, pattern, value) rewrites every subexpression that matches,
 bottom up; value is an expression in the same wild symbols or a function
-of the named bindings."><meta property="og:image" content="https://adamrsophie.github.io/symcompR/logo.svg"></head><body>
+of the named bindings. When pattern is an R predicate, sym_replace()
+replaces every node it accepts by value (an expression, or an R function
+of the node), as SymPy's replace() with a callable query."><meta property="og:image" content="https://adamrsophie.github.io/symcompR/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -100,7 +104,9 @@ of the named bindings."><meta property="og:image" content="https://adamrsophie.g
 products match up to commutativity, and a wild may take the identity.
 <code>sym_replace(e, pattern, value)</code> rewrites every subexpression that matches,
 bottom up; <code>value</code> is an expression in the same wild symbols or a function
-of the named bindings.</p>
+of the named bindings. When <code>pattern</code> is an R predicate, <code>sym_replace()</code>
+replaces every node it accepts by <code>value</code> (an expression, or an R function
+of the node), as SymPy's <code><a href="https://rdrr.io/r/base/replace.html" class="external-link">replace()</a></code> with a callable query.</p>
     </div>
 
     <div class="section level2">
@@ -119,7 +125,9 @@ of the named bindings.</p>
 
 
 <dt id="arg-pattern">pattern<a class="anchor" aria-label="anchor" href="#arg-pattern"></a></dt>
-<dd><p>A pattern containing wild symbols.</p></dd>
+<dd><p>A pattern containing wild symbols, a function class made
+by <code><a href="Function.html">Function()</a></code>, which matches every application of that function, or
+for <code>sym_replace()</code> an R predicate of a node.</p></dd>
 
 
 <dt id="arg-old">old<a class="anchor" aria-label="anchor" href="#arg-old"></a></dt>
@@ -127,7 +135,8 @@ of the named bindings.</p>
 
 
 <dt id="arg-value">value<a class="anchor" aria-label="anchor" href="#arg-value"></a></dt>
-<dd><p>The replacement.</p></dd>
+<dd><p>The replacement; for a function class pattern, another
+function class or an R function called with the application's arguments.</p></dd>
 
 
 <dt id="arg-exact">exact<a class="anchor" aria-label="anchor" href="#arg-exact"></a></dt>

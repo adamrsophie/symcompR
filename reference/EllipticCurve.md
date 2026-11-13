@@ -97,7 +97,7 @@ EllipticCurve(0, 1)$torsion_points()
 #> 
 f <- EllipticCurve(1, 0, modulus = 19)
 f$order()
-#> [1] 20
+#> [1] 19
 point_order(f$point(3, 7))
 #> [1] 20
 ```

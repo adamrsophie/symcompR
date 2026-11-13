@@ -8,7 +8,7 @@ arithmetic inside the pieces.
 ## Usage
 
 ``` r
-Piecewise(...)
+Piecewise(..., evaluate = TRUE)
 
 piecewise_fold(e, evaluate = TRUE)
 ```
@@ -19,13 +19,14 @@ piecewise_fold(e, evaluate = TRUE)
 
   Pairs `list(expr, condition)`.
 
+- evaluate:
+
+  Evaluate the `Piecewise`; with `FALSE`, `Piecewise()` keeps its pairs
+  as given. For `piecewise_fold()`, evaluate the folded `Piecewise`.
+
 - e:
 
   An expression.
-
-- evaluate:
-
-  Evaluate the folded `Piecewise`.
 
 ## Value
 

@@ -22,7 +22,6 @@ them so that code translated from Python works unchanged.
 | [`ImmutableDenseMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md), [`MutableMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md), [`MutableDenseMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md) | [`ImmutableMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md), which calls [`Matrix()`](https://adamrsophie.github.io/symcompR/reference/Matrix.md) |
 | [`DenseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md), [`ImmutableDenseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md), [`ImmutableSparseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md), [`MutableDenseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md), [`MutableSparseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md), [`SparseNDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md) | [`NDimArray()`](https://adamrsophie.github.io/symcompR/reference/array-aliases.md) |
 | [`GroebnerBasis()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md) | [`groebner()`](https://adamrsophie.github.io/symcompR/reference/groebner.md) |
-| [`rationalize()`](https://adamrsophie.github.io/symcompR/reference/radsimp.md) | [`radsimp()`](https://adamrsophie.github.io/symcompR/reference/radsimp.md) |
 | `true`, `false` | `S_true`, `S_false` |
 | `lex`, `grlex`, `grevlex` | the strings `"lex"`, `"grlex"`, and `"grevlex"`, monomial order names |
 | [`deg()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md), [`rad()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md) | conversion between radians and degrees |
@@ -49,10 +48,6 @@ vapply(list(DenseNDimArray, ImmutableDenseNDimArray, ImmutableSparseNDimArray,
 vapply(GroebnerBasis(list(x * y - 2 * y, 2 * y^2 - x^2), x, y, order = "lex"),
        sstr, "")
 #> [1] "x^2 - 2*y^2" "x*y - 2*y"   "y^3 - 2*y"
-identical(rationalize, radsimp)
-#> [1] TRUE
-rationalize(1 / (1 + sqrt(S(2))))
-#> -1 + sqrt(2)
 true
 #> True
 false

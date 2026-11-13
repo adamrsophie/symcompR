@@ -31,7 +31,7 @@ format_contraction_structure(cs)
 
 - name:
 
-  The name.
+  The name, or a symbol to take it from (an integer symbol for `Idx()`).
 
 - range:
 

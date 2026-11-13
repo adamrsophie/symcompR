@@ -1,7 +1,5 @@
 # Series and summation helpers
 
-`pade_approximant()` is
-[`pade()`](https://adamrsophie.github.io/symcompR/reference/pade.md),
 `limit_seq(e, n)` the limit as `n` tends to infinity,
 `difference_delta(e, n, step)` the forward difference, and
 `residue(e, x, x0)` the residue at a pole (the coefficient of
@@ -12,8 +10,6 @@ rational term ratio `f(k + 1)/f(k)` of a hypergeometric term (or
 ## Usage
 
 ``` r
-pade_approximant(f, x, m, n)
-
 difference_delta(e, n = NULL, step = 1)
 
 residue(e, x, x0 = 0)
@@ -25,14 +21,6 @@ hypersimilar(f, g, k)
 
 ## Arguments
 
-- x, n, k:
-
-  Variables.
-
-- m:
-
-  Pade numerator degree.
-
 - e, f, g:
 
   Expressions.
@@ -40,6 +28,10 @@ hypersimilar(f, g, k)
 - step:
 
   Step size.
+
+- x, n, k:
+
+  Variables.
 
 - x0:
 

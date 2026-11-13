@@ -8,11 +8,13 @@ friends, and `Rel(a, b, op)` builds a relation from its operator string.
 `Subs()` is an unevaluated substitution (evaluate with
 [`doit()`](https://adamrsophie.github.io/symcompR/reference/doit.md)).
 `nfloat()` evaluates the numbers in an expression and keeps symbols.
-`bottom_up()` applies a function to every node, leaves first.
-`default_sort_key()` returns the canonical ordering key and
-`sym_ordered()` sorts expressions by it. `comp()` compares two numbers
-within a tolerance. `check_assumptions()` and `failing_assumptions()`
-test facts. `sstrrepr()` is
+`bottom_up()` applies a function to every node, leaves first; atoms are
+passed to the function only with `atoms = TRUE`. `default_sort_key()`
+returns SymPy's `default_sort_key` encoded as a string, so that
+[`order()`](https://rdrr.io/r/base/order.html) of these strings is
+SymPy's sorted order, and `sym_ordered()` sorts expressions. `comp()`
+compares two numbers within a tolerance. `check_assumptions()` and
+`failing_assumptions()` test facts. `sstrrepr()` is
 [`sstr()`](https://adamrsophie.github.io/symcompR/reference/sstr.md),
 `true` and `false` are the boolean atoms.
 
@@ -25,7 +27,7 @@ Mul(...)
 
 Pow(a, b)
 
-Equality(a, b)
+Equality(a, b, evaluate = TRUE)
 
 Unequality(a, b)
 
@@ -43,7 +45,7 @@ Subs(e, old, new)
 
 nfloat(e, n = 15, exponent = FALSE, dkeys = FALSE)
 
-bottom_up(e, f)
+bottom_up(e, f, atoms = FALSE)
 
 default_sort_key(e)
 
@@ -72,6 +74,10 @@ sym_ordered(x, ...)
 
   Expressions.
 
+- evaluate:
+
+  If `FALSE`, `Equality()` keeps the relation unevaluated.
+
 - op:
 
   One of `"=="`, `"!="`, `"<"`, `"<="`, `">"`, `">="`.
@@ -95,6 +101,10 @@ sym_ordered(x, ...)
 - f:
 
   A function.
+
+- atoms:
+
+  If `TRUE`, `bottom_up()` also applies `f` to atoms.
 
 - tol:
 

@@ -63,7 +63,7 @@ Heaviside(x, h0 = NULL)
 
 DiracDelta(x, k = 0)
 
-KroneckerDelta(x, y)
+KroneckerDelta(x, y, delta_range = NULL)
 
 LambertW(x, k = 0)
 
@@ -95,6 +95,11 @@ sym_Mod(x, y, ...)
 - k:
 
   Branch index or derivative order.
+
+- delta_range:
+
+  For `KroneckerDelta()`, an optional range `(lower, upper)` of the
+  indices; an index outside it gives zero.
 
 - ...:
 

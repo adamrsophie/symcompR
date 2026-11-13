@@ -1,7 +1,7 @@
 # Matrix exponential
 
-`matrix_exp(M)` computes `exp(M)` for diagonalizable or nilpotent
-matrices.
+`matrix_exp(M)` computes `exp(M)` from the Jordan normal form, as
+SymPy's `Matrix.exp()`.
 
 ## Usage
 

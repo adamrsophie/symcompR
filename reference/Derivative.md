@@ -7,7 +7,7 @@ to evaluate.
 ## Usage
 
 ``` r
-Derivative(f, ...)
+Derivative(f, ..., evaluate = FALSE)
 ```
 
 ## Arguments
@@ -20,6 +20,11 @@ Derivative(f, ...)
 
   Variables and counts, as for
   [`diff()`](https://rdrr.io/r/base/diff.html).
+
+- evaluate:
+
+  If `TRUE`, compute the derivative, as
+  [`diff()`](https://rdrr.io/r/base/diff.html) does.
 
 ## Value
 

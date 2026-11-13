@@ -7,14 +7,12 @@
 numerator and denominator. `collect_sqrt()` collects terms with common
 square roots. `split_surds()` splits a sum of surds by their gcd.
 `sqrtdenest()` rewrites `sqrt(a + b*sqrt(c))` as a sum of square roots
-when possible. `rationalize()` is an alias of `radsimp()`.
+when possible.
 
 ## Usage
 
 ``` r
 radsimp(e, symbolic = TRUE, max_terms = 4L)
-
-rationalize(e, symbolic = TRUE, max_terms = 4L)
 
 rad_rationalize(num, den)
 

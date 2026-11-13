@@ -2,10 +2,12 @@
 
 `dot()` and `cross()` for vectors, `norm_matrix()` (Frobenius or vector
 2-norm), `applyfunc()` elementwise, `is_symmetric()`, `is_square()`,
-`is_zero_matrix()`, `hadamard_product()`, `kronecker_product()`, `vec()`
-and `pinv()` (Moore-Penrose pseudo inverse for full rank matrices).
-Given an integer rather than a matrix, `is_square()` tests for a perfect
-square, as `sympy.ntheory.primetest.is_square` does.
+`is_zero_matrix()`,
+[`hadamard_product()`](https://adamrsophie.github.io/symcompR/reference/hadamard_product.md),
+[`kronecker_product()`](https://adamrsophie.github.io/symcompR/reference/kronecker_product.md),
+`vec()` and `pinv()` (Moore-Penrose pseudo inverse for full rank
+matrices). Given an integer rather than a matrix, `is_square()` tests
+for a perfect square, as `sympy.ntheory.primetest.is_square` does.
 
 ## Usage
 
@@ -23,10 +25,6 @@ is_square(M)
 is_symmetric(M)
 
 is_zero_matrix(M)
-
-hadamard_product(a, b)
-
-kronecker_product(a, b)
 
 vec(M)
 

@@ -97,11 +97,10 @@ solution is a named list.
 ``` r
 
 solve(list(x + y - 3, x - y - 1), list(x, y))
-#> [[1]]
-#> [[1]]$x
+#> $x
 #> 2
 #> 
-#> [[1]]$y
+#> $y
 #> 1
 ```
 
@@ -220,27 +219,9 @@ and
 ``` r
 
 nonlinsolve(list(x * y - 1, x - 2), list(x, y))
-#> [[1]]
-#> [[1]]$x
-#> 2
-#> 
-#> [[1]]$y
-#> 1/2
+#> {(2, 1/2)}
 nonlinsolve(list(x^2 + y^2 - 4, x - y), list(x, y))
-#> [[1]]
-#> [[1]]$x
-#> -sqrt(2)
-#> 
-#> [[1]]$y
-#> -sqrt(2)
-#> 
-#> 
-#> [[2]]
-#> [[2]]$x
-#> sqrt(2)
-#> 
-#> [[2]]$y
-#> sqrt(2)
+#> {(-sqrt(2), -sqrt(2)), (sqrt(2), sqrt(2))}
 ```
 
 Several lower level solvers are available on their own.
@@ -313,7 +294,7 @@ homogeneous_order(x^2 + 1, x)
 Besides
 [`solveset()`](https://adamrsophie.github.io/symcompR/reference/solveset.md),
 several functions reduce inequalities to their simplest form.
-[`reduce_inequalities()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+[`reduce_inequalities()`](https://adamrsophie.github.io/symcompR/reference/inequality-solvers.md)
 handles systems and returns a logical combination of relations;
 [`solve_univariate_inequality()`](https://adamrsophie.github.io/symcompR/reference/solve_univariate_inequality.md)
 can return either relations or a set.
@@ -329,6 +310,7 @@ solve_univariate_inequality(Ge(x^2 - 1, 0), x)
 solve_univariate_inequality(Ge(x^2 - 1, 0), x, relational = FALSE)
 #> Union(Interval(-oo, -1), Interval(1, oo))
 solve_poly_inequality(x^2 - 3 * x + 2, "<")
+#> [[1]]
 #> Interval.open(1, 2)
 reduce_rational_inequalities(list(list(Gt((x - 1) / (x + 2), 0))), x)
 #> ((-oo < x) & (x < -2)) | ((1 < x) & (x < oo))
@@ -526,7 +508,7 @@ verifies a solution by substitution.
 ode_order(diff(f(x), x, 3) + f(x), f(x))
 #> [1] 3
 checkodesol(diff(f(x), x) - f(x), Eq(f(x), exp(x)), f(x))
-#> [1] TRUE
+#> (True, 0)
 ```
 
 ## Partial differential equations

@@ -102,9 +102,9 @@ form; with <code>simplify = TRUE</code> the result is minimized with
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">eliminate_implications</span><span class="op">(</span><span class="va">e</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">eliminate_implications</span><span class="op">(</span><span class="va">e</span>, form <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">to_nnf</span><span class="op">(</span><span class="va">e</span><span class="op">)</span></span>
+<span><span class="fu">to_nnf</span><span class="op">(</span><span class="va">e</span>, simplify <span class="op">=</span> <span class="cn">TRUE</span>, form <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">to_cnf</span><span class="op">(</span><span class="va">e</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
@@ -125,8 +125,14 @@ form; with <code>simplify = TRUE</code> the result is minimized with
 <dd><p>A boolean expression.</p></dd>
 
 
+<dt id="arg-form">form<a class="anchor" aria-label="anchor" href="#arg-form"></a></dt>
+<dd><p>For <code>eliminate_implications()</code> and <code>to_nnf()</code>: <code>"dnf"</code> writes
+a <code>Xor</code> as a disjunction, otherwise as a conjunction.</p></dd>
+
+
 <dt id="arg-simplify">simplify<a class="anchor" aria-label="anchor" href="#arg-simplify"></a></dt>
-<dd><p>Minimize the result.</p></dd>
+<dd><p>For <code>to_cnf()</code> and <code>to_dnf()</code>, minimize the result; for
+<code>to_nnf()</code>, drop complementary arguments (the default).</p></dd>
 
 </dl></div>
     <div class="section level2">

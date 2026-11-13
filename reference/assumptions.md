@@ -16,4 +16,6 @@ assumptions(x)
 
 ## Value
 
-A named logical vector of every known fact.
+A named logical vector of every known fact among those SymPy's
+`assumptions()` reports (the facts of its assumption rules and `polar`;
+not `hermitian` or `antihermitian`).

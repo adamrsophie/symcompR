@@ -12,7 +12,7 @@ strings.
 ## Usage
 
 ``` r
-rust_code(e, assign_to = NULL)
+rust_code(e, assign_to = NULL, ...)
 
 glsl_code(e, assign_to = NULL)
 
@@ -38,6 +38,11 @@ multiline_latex(lhs, rhs, terms_per_line = 1, environment = "align*")
 - assign_to:
 
   Optional variable name.
+
+- ...:
+
+  Printer settings of `rust_code()`, as in SymPy (for example
+  `user_functions` or `contract`).
 
 - auto_declare:
 

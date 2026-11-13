@@ -14,11 +14,11 @@ sinusoidal forcing) and Cauchy-Euler equations. Arbitrary constants are
 ## Usage
 
 ``` r
-dsolve(eq, fx, ics = NULL)
+dsolve(eq, fx = NULL, ics = NULL, hint = "default", ...)
 
 ode_order(eq, fx)
 
-classify_ode(eq, fx)
+classify_ode(eq, fx = NULL, dict = FALSE, ics = NULL, ...)
 ```
 
 ## Arguments
@@ -29,11 +29,29 @@ classify_ode(eq, fx)
 
 - fx:
 
-  The unknown, for example `f(x)`.
+  The unknown, for example `f(x)`; found from the derivatives in `eq`
+  when omitted.
 
 - ics:
 
-  Optional initial conditions.
+  Optional initial conditions: for `dsolve()` a list of
+  `list(point, order, value)`; for `classify_ode()` a list of
+  `list(key, value)` pairs, where a key is `f(point)` or a derivative of
+  `f` at a point, checked as SymPy checks them.
+
+- hint:
+
+  A SymPy hint name; any recognized hint is accepted, and the solution
+  comes from the classes above.
+
+- ...:
+
+  Further SymPy options, ignored.
+
+- dict:
+
+  For `classify_ode()`, return the order, the default hint and the
+  ordered hints as a list.
 
 ## Value
 

@@ -2,8 +2,10 @@
 
 `sym_poly()` is
 [`Poly()`](https://adamrsophie.github.io/symcompR/reference/Poly.md),
-`PurePoly()` is
-[`Poly()`](https://adamrsophie.github.io/symcompR/reference/Poly.md),
+`PurePoly()` is a
+[`Poly()`](https://adamrsophie.github.io/symcompR/reference/Poly.md)
+whose generators are the placeholders `_0`, `_1`, ... so that
+polynomials differing only in their generators compare equal,
 `GroebnerBasis()` is
 [`groebner()`](https://adamrsophie.github.io/symcompR/reference/groebner.md),
 and `rootof()`, `RootOf()` and `ComplexRootOf()` are
@@ -11,13 +13,14 @@ and `rootof()`, `RootOf()` and `ComplexRootOf()` are
 `monic()` divides by the leading coefficient, `cofactors()` returns the
 gcd and both cofactors, `half_gcdex()` the Bezout coefficient and gcd,
 `pexquo()` exact pseudo division, `all_roots()` all roots with
-multiplicity including `CRootOf` ones. `cyclotomic_poly()`,
-`symmetric_poly()`, `interpolating_poly()`, `random_poly()`,
-`itermonomials()` and `viete()` build polynomials and formulas;
-`legendre_poly()`, `chebyshevt_poly()`, `chebyshevu_poly()`,
-`hermite_poly()`, `hermite_prob_poly()`, `laguerre_poly()` and
-`jacobi_poly()` return the explicit orthogonal polynomials. `lex`,
-`grlex` and `grevlex` name the monomial orders.
+multiplicity, solving linear and quadratic factors and binomials by
+radicals and giving `CRootOf` for the other factors.
+`cyclotomic_poly()`, `symmetric_poly()`, `interpolating_poly()` (in
+Lagrange form), `random_poly()`, `itermonomials()` and `viete()` build
+polynomials and formulas; `legendre_poly()`, `chebyshevt_poly()`,
+`chebyshevu_poly()`, `hermite_poly()`, `hermite_prob_poly()`,
+`laguerre_poly()` and `jacobi_poly()` return the explicit orthogonal
+polynomials. `lex`, `grlex` and `grevlex` name the monomial orders.
 
 ## Usage
 

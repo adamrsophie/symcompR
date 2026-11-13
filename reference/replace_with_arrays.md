@@ -39,6 +39,5 @@ L <- TensorIndexType("L", dim = 2)
 i <- TensorIndex("i", L); j <- TensorIndex("j", L)
 A <- TensorHead("A", list(L))
 replace_with_arrays(A(i) * A(j), list(list(A(i), Array(list(1, 2)))), list(i, j))
-#> Array of shape (2, 2):
-#> 1, 2, 2, 4
+#> [[1, 2], [2, 4]]
 ```

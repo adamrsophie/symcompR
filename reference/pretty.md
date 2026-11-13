@@ -13,6 +13,9 @@ encoding is UTF-8. `pager_print()` shows the result in the pager.
 # S3 method for class 'sym'
 pretty(x, use_unicode = NULL, ...)
 
+# S3 method for class 'symmatrix'
+pretty(x, use_unicode = NULL, ...)
+
 pprint(e, use_unicode = NULL)
 
 pretty_print(e, use_unicode = NULL)

@@ -64,15 +64,15 @@ instead of returning it.
 ``` r
 
 fcode(x^3 + Rational(1, 2))
-#> [1] "x**3 + 1.0d0/2.0d0"
+#> [1] "      x**3 + 1.0d0/2.0d0"
 fcode(sin(x) + 2 * y, assign_to = "r")
-#> [1] "r = 2*y + sin(x)"
+#> [1] "      r = 2*y + sin(x)"
 octave_code(sin(x) + 2 * y)
 #> [1] "2*y + sin(x)"
 print_ccode(sin(x) + 2 * y)
 #> 2*y + sin(x)
 print_fcode(x^3 + Rational(1, 2))
-#> x**3 + 1.0d0/2.0d0
+#>       x**3 + 1.0d0/2.0d0
 print_jscode(sin(x) + 2 * y)
 #> 2*y + Math.sin(x)
 print_rcode(sin(x) + 2 * y)
@@ -82,5 +82,5 @@ print_glsl(sin(x) + 2 * y)
 print_maple_code(sin(x) + 2 * y)
 #> 2*y + sin(x)
 julia_code(sin(x) + 2 * y)
-#> [1] "2*y + sin(x)"
+#> [1] "2 * y + sin(x)"
 ```

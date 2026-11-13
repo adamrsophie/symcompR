@@ -374,11 +374,11 @@ multiplicity and a basis of the eigenspace.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/charpoly.html">eigenvects</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span></span>
 <span><span class="va">ev</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">value</span></span>
-<span><span class="co">#&gt; 3</span></span>
+<span><span class="co">#&gt; 1</span></span>
 <span><span class="va">ev</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">vectors</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="co">#&gt; Matrix(2, 1)</span></span>
-<span><span class="co">#&gt; [1]</span></span>
-<span><span class="co">#&gt; [1]</span></span>
+<span><span class="co">#&gt; [-1]</span></span>
+<span><span class="co">#&gt; [1 ]</span></span>
 <span><span class="fu"><a href="../reference/charpoly.html">is_diagonalizable</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <p><code><a href="../reference/charpoly.html">diagonalize()</a></code> returns <code>list(P, D)</code> with <span class="math inline">A = P D P^{-1}</span> and <span class="math inline">D</span> diagonal. The order of the eigenvalues on
@@ -535,7 +535,7 @@ factors, classifies finitely generated abelian groups.</p>
 <span><span class="co">#&gt; [1]</span></span>
 <span><span class="fu"><a href="../reference/dot.html">norm_matrix</a></span><span class="op">(</span><span class="fu"><a href="../reference/Matrix.html">Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 5</span></span>
-<span><span class="fu"><a href="../reference/dot.html">kronecker_product</a></span><span class="op">(</span><span class="va">M</span>, <span class="fu"><a href="../reference/Matrix.html">eye</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/kronecker_product.html">kronecker_product</a></span><span class="op">(</span><span class="va">M</span>, <span class="fu"><a href="../reference/Matrix.html">eye</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Matrix(4, 4)</span></span>
 <span><span class="co">#&gt; [1, 0, 2, 0]</span></span>
 <span><span class="co">#&gt; [0, 1, 0, 2]</span></span>
@@ -759,7 +759,7 @@ permutation matrices, and permuted rows
 <span><span class="co">#&gt; [3]</span></span>
 <span><span class="co">#&gt; [2]</span></span>
 <span><span class="co">#&gt; [4]</span></span>
-<span><span class="fu"><a href="../reference/dot.html">hadamard_product</a></span><span class="op">(</span><span class="va">M</span>, <span class="va">M</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/hadamard_product.html">hadamard_product</a></span><span class="op">(</span><span class="va">M</span>, <span class="va">M</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Matrix(2, 2)</span></span>
 <span><span class="co">#&gt; [1, 4 ]</span></span>
 <span><span class="co">#&gt; [9, 16]</span></span>

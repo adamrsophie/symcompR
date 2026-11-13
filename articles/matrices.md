@@ -309,11 +309,11 @@ the eigenspace.
 
 ev <- eigenvects(A)
 ev[[1]]$value
-#> 3
+#> 1
 ev[[1]]$vectors[[1]]
 #> Matrix(2, 1)
-#> [1]
-#> [1]
+#> [-1]
+#> [1 ]
 is_diagonalizable(A)
 #> [1] TRUE
 ```

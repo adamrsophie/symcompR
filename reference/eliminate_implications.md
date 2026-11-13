@@ -10,9 +10,9 @@ form; with `simplify = TRUE` the result is minimized with
 ## Usage
 
 ``` r
-eliminate_implications(e)
+eliminate_implications(e, form = NULL)
 
-to_nnf(e)
+to_nnf(e, simplify = TRUE, form = NULL)
 
 to_cnf(e, simplify = FALSE)
 
@@ -31,9 +31,15 @@ is_dnf(e)
 
   A boolean expression.
 
+- form:
+
+  For `eliminate_implications()` and `to_nnf()`: `"dnf"` writes a `Xor`
+  as a disjunction, otherwise as a conjunction.
+
 - simplify:
 
-  Minimize the result.
+  For `to_cnf()` and `to_dnf()`, minimize the result; for `to_nnf()`,
+  drop complementary arguments (the default).
 
 ## Value
 

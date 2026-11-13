@@ -37,5 +37,5 @@ A `Quaternion`, expression or matrix.
 
 ``` r
 Quaternion(1, 2, 3, 4) * Quaternion(5, 6, 7, 8)
-#> -60 + 12*i + 30*j + 24*k 
+#> (-60) + 12*i + 30*j + 24*k 
 ```

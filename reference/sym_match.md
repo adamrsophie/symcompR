@@ -7,7 +7,11 @@ symbols and returns a named list of bindings, or `NULL`. Sums and
 products match up to commutativity, and a wild may take the identity.
 `sym_replace(e, pattern, value)` rewrites every subexpression that
 matches, bottom up; `value` is an expression in the same wild symbols or
-a function of the named bindings.
+a function of the named bindings. When `pattern` is an R predicate,
+`sym_replace()` replaces every node it accepts by `value` (an
+expression, or an R function of the node), as SymPy's
+[`replace()`](https://rdrr.io/r/base/replace.html) with a callable
+query.
 
 ## Usage
 
@@ -25,7 +29,10 @@ sym_replace(e, pattern, value, exact = NULL)
 
 - pattern:
 
-  A pattern containing wild symbols.
+  A pattern containing wild symbols, a function class made by
+  [`Function()`](https://adamrsophie.github.io/symcompR/reference/Function.md),
+  which matches every application of that function, or for
+  `sym_replace()` an R predicate of a node.
 
 - old:
 
@@ -33,7 +40,8 @@ sym_replace(e, pattern, value, exact = NULL)
 
 - value:
 
-  The replacement.
+  The replacement; for a function class pattern, another function class
+  or an R function called with the application's arguments.
 
 - exact:
 

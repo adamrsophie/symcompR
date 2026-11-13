@@ -105,7 +105,7 @@ numbered_symbols(prefix = "x", n = 10, start = 0)
 
 dict_merge(...)
 
-topological_sort(vertices, edges)
+topological_sort(vertices, edges, key = NULL)
 ```
 
 ## Arguments
@@ -140,7 +140,8 @@ topological_sort(vertices, edges)
 
 - key:
 
-  A key function for comparisons.
+  For `topological_sort()`, a function giving the sort key of a vertex
+  (the vertex itself by default).
 
 - directed:
 
@@ -293,5 +294,5 @@ group(c(1, 1, 2, 3, 3, 3))
 #> [1] 3 3 3
 #> 
 topological_sort(1:4, list(c(1, 2), c(2, 3), c(1, 4)))
-#> [1] 1 2 4 3
+#> [1] 1 2 3 4
 ```

@@ -345,17 +345,16 @@ vapply(approximants(lapply(1:9, fibonacci), x), sstr, "")
 #> [4] "-1/(x^2 + x - 1)"
 ```
 
-[`pade()`](https://adamrsophie.github.io/symcompR/reference/pade.md) and
-its alias
-[`pade_approximant()`](https://adamrsophie.github.io/symcompR/reference/series-helpers.md)
-compute the \[m/n\] Padé approximant of a function at zero from its
-Taylor series:
+[`pade()`](https://adamrsophie.github.io/symcompR/reference/pade.md)
+computes the \[m/n\] Padé approximant of a function at zero from its
+Taylor series. `pade_approximant(f, x, x0, m, n)` is SymPy’s version
+from `sympy.series.approximants`; it expands at `x0`:
 
 ``` r
 
 pade(cos(x), x, 2, 2)
 #> (1 - 5*x^2/12)/(x^2/12 + 1)
-pade_approximant(cos(x), x, 2, 2)
+pade_approximant(cos(x), x, 0, 2, 2)
 #> (1 - 5*x^2/12)/(x^2/12 + 1)
 ```
 

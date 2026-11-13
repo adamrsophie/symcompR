@@ -173,10 +173,6 @@ keeps them so that code translated from Python works unchanged.</p>
 <td><code><a href="../reference/groebner.html">groebner()</a></code></td>
 </tr>
 <tr class="even">
-<td><code><a href="../reference/radsimp.html">rationalize()</a></code></td>
-<td><code><a href="../reference/radsimp.html">radsimp()</a></code></td>
-</tr>
-<tr class="odd">
 <td>
 <code>true</code>, <code>false</code>
 </td>
@@ -184,14 +180,14 @@ keeps them so that code translated from Python works unchanged.</p>
 <code>S_true</code>, <code>S_false</code>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>
 <code>lex</code>, <code>grlex</code>, <code>grevlex</code>
 </td>
 <td>the strings <code>"lex"</code>, <code>"grlex"</code>, and
 <code>"grevlex"</code>, monomial order names</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>
 <code><a href="../reference/geometry-aliases.html">deg()</a></code>, <code><a href="../reference/geometry-aliases.html">rad()</a></code>
 </td>
@@ -220,10 +216,6 @@ keeps them so that code translated from Python works unchanged.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="../reference/poly-aliases.html">GroebnerBasis</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span> <span class="op">*</span> <span class="va">y</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">y</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">y</span>, order <span class="op">=</span> <span class="st">"lex"</span><span class="op">)</span>,</span>
 <span>       <span class="va">sstr</span>, <span class="st">""</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "x^2 - 2*y^2" "x*y - 2*y"   "y^3 - 2*y"</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">rationalize</span>, <span class="va">radsimp</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] TRUE</span></span>
-<span><span class="fu"><a href="../reference/radsimp.html">rationalize</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="../reference/as_sym.html">S</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; -1 + sqrt(2)</span></span>
 <span><span class="va">true</span></span>
 <span><span class="co">#&gt; True</span></span>
 <span><span class="va">false</span></span>

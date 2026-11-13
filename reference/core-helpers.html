@@ -5,9 +5,11 @@ StrictGreaterThan() and GreaterThan() are the long names of Eq() and
 friends, and Rel(a, b, op) builds a relation from its operator string.
 Subs() is an unevaluated substitution (evaluate with doit()).
 nfloat() evaluates the numbers in an expression and keeps symbols.
-bottom_up() applies a function to every node, leaves first.
-default_sort_key() returns the canonical ordering key and sym_ordered()
-sorts expressions by it.
+bottom_up() applies a function to every node, leaves first; atoms are
+passed to the function only with atoms = TRUE.
+default_sort_key() returns SymPy's default_sort_key encoded as a
+string, so that order() of these strings is SymPy's sorted order, and
+sym_ordered() sorts expressions.
 comp() compares two numbers within a tolerance. check_assumptions()
 and failing_assumptions() test facts. sstrrepr() is sstr(),
 true and false are the boolean atoms."><meta property="og:description" content="Add(), Mul() and Pow() build canonical sums, products and powers.
@@ -16,9 +18,11 @@ StrictGreaterThan() and GreaterThan() are the long names of Eq() and
 friends, and Rel(a, b, op) builds a relation from its operator string.
 Subs() is an unevaluated substitution (evaluate with doit()).
 nfloat() evaluates the numbers in an expression and keeps symbols.
-bottom_up() applies a function to every node, leaves first.
-default_sort_key() returns the canonical ordering key and sym_ordered()
-sorts expressions by it.
+bottom_up() applies a function to every node, leaves first; atoms are
+passed to the function only with atoms = TRUE.
+default_sort_key() returns SymPy's default_sort_key encoded as a
+string, so that order() of these strings is SymPy's sorted order, and
+sym_ordered() sorts expressions.
 comp() compares two numbers within a tolerance. check_assumptions()
 and failing_assumptions() test facts. sstrrepr() is sstr(),
 true and false are the boolean atoms."><meta property="og:image" content="https://adamrsophie.github.io/symcompR/logo.svg"></head><body>
@@ -113,9 +117,11 @@ true and false are the boolean atoms."><meta property="og:image" content="https:
 friends, and <code>Rel(a, b, op)</code> builds a relation from its operator string.
 <code>Subs()</code> is an unevaluated substitution (evaluate with <code><a href="doit.html">doit()</a></code>).
 <code>nfloat()</code> evaluates the numbers in an expression and keeps symbols.
-<code>bottom_up()</code> applies a function to every node, leaves first.
-<code>default_sort_key()</code> returns the canonical ordering key and <code>sym_ordered()</code>
-sorts expressions by it.
+<code>bottom_up()</code> applies a function to every node, leaves first; atoms are
+passed to the function only with <code>atoms = TRUE</code>.
+<code>default_sort_key()</code> returns SymPy's <code>default_sort_key</code> encoded as a
+string, so that <code><a href="https://rdrr.io/r/base/order.html" class="external-link">order()</a></code> of these strings is SymPy's sorted order, and
+<code>sym_ordered()</code> sorts expressions.
 <code>comp()</code> compares two numbers within a tolerance. <code>check_assumptions()</code>
 and <code>failing_assumptions()</code> test facts. <code>sstrrepr()</code> is <code><a href="sstr.html">sstr()</a></code>,
 <code>true</code> and <code>false</code> are the boolean atoms.</p>
@@ -129,7 +135,7 @@ and <code>failing_assumptions()</code> test facts. <code>sstrrepr()</code> is <c
 <span></span>
 <span><span class="fu">Pow</span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">Equality</span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span><span class="op">)</span></span>
+<span><span class="fu">Equality</span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span>, evaluate <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">Unequality</span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span><span class="op">)</span></span>
 <span></span>
@@ -147,7 +153,7 @@ and <code>failing_assumptions()</code> test facts. <code>sstrrepr()</code> is <c
 <span></span>
 <span><span class="fu">nfloat</span><span class="op">(</span><span class="va">e</span>, n <span class="op">=</span> <span class="fl">15</span>, exponent <span class="op">=</span> <span class="cn">FALSE</span>, dkeys <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">bottom_up</span><span class="op">(</span><span class="va">e</span>, <span class="va">f</span><span class="op">)</span></span>
+<span><span class="fu">bottom_up</span><span class="op">(</span><span class="va">e</span>, <span class="va">f</span>, atoms <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">default_sort_key</span><span class="op">(</span><span class="va">e</span><span class="op">)</span></span>
 <span></span>
@@ -178,6 +184,10 @@ and <code>failing_assumptions()</code> test facts. <code>sstrrepr()</code> is <c
 <dd><p>Expressions.</p></dd>
 
 
+<dt id="arg-evaluate">evaluate<a class="anchor" aria-label="anchor" href="#arg-evaluate"></a></dt>
+<dd><p>If <code>FALSE</code>, <code>Equality()</code> keeps the relation unevaluated.</p></dd>
+
+
 <dt id="arg-op">op<a class="anchor" aria-label="anchor" href="#arg-op"></a></dt>
 <dd><p>One of <code>"=="</code>, <code>"!="</code>, <code>"&lt;"</code>, <code>"&lt;="</code>, <code>"&gt;"</code>, <code>"&gt;="</code>.</p></dd>
 
@@ -200,6 +210,10 @@ and <code>failing_assumptions()</code> test facts. <code>sstrrepr()</code> is <c
 
 <dt id="arg-f">f<a class="anchor" aria-label="anchor" href="#arg-f"></a></dt>
 <dd><p>A function.</p></dd>
+
+
+<dt id="arg-atoms">atoms<a class="anchor" aria-label="anchor" href="#arg-atoms"></a></dt>
+<dd><p>If <code>TRUE</code>, <code>bottom_up()</code> also applies <code>f</code> to atoms.</p></dd>
 
 
 <dt id="arg-tol">tol<a class="anchor" aria-label="anchor" href="#arg-tol"></a></dt>

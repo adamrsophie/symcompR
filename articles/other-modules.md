@@ -88,9 +88,9 @@ E(Poisson("K", lam))
 ```
 
 More distributions, with their parameters given as symbols or numbers.
-[`GammaRV()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+[`GammaRV()`](https://adamrsophie.github.io/symcompR/reference/continuous_rv.md)
 and
-[`BetaRV()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+[`BetaRV()`](https://adamrsophie.github.io/symcompR/reference/continuous_rv.md)
 are the gamma and beta distributions, named so that they do not mask the
 gamma and beta functions.
 
@@ -126,18 +126,18 @@ E(Geometric("Ge", Rational(1, 4)))
 #> 4
 ```
 
-[`moment()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+[`moment()`](https://adamrsophie.github.io/symcompR/reference/rv_moments.md)
 and
-[`cmoment()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+[`cmoment()`](https://adamrsophie.github.io/symcompR/reference/rv_moments.md)
 are raw and central moments,
-[`covariance()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+[`covariance()`](https://adamrsophie.github.io/symcompR/reference/rv_moments.md)
 and
-[`correlation()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+[`correlation()`](https://adamrsophie.github.io/symcompR/reference/rv_moments.md)
 relate two variables, and
-[`expectation()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+[`expectation()`](https://adamrsophie.github.io/symcompR/reference/E.md)
 is a synonym of
-[`E()`](https://adamrsophie.github.io/symcompR/reference/Normal.md).
-[`rv_sample()`](https://adamrsophie.github.io/symcompR/reference/Normal.md)
+[`E()`](https://adamrsophie.github.io/symcompR/reference/E.md).
+[`rv_sample()`](https://adamrsophie.github.io/symcompR/reference/rv_sample.md)
 draws random values with R’s random number generator.
 
 ``` r

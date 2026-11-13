@@ -13,7 +13,7 @@ Or(...)
 
 Not(a)
 
-Xor(...)
+Xor(..., remove_true = TRUE)
 
 Nand(...)
 
@@ -36,6 +36,11 @@ ITE(a, b, c)
 
   Boolean expressions.
 
+- remove_true:
+
+  For `Xor()`: with `FALSE` a true argument is kept as an argument
+  instead of negating the result, as SymPy's `remove_true`.
+
 ## Value
 
 A boolean `sym` expression.
@@ -47,5 +52,5 @@ x <- Symbol("x"); y <- Symbol("y")
 And(x, Or(y, Not(x)))
 #> x & (y | ~x)
 x & !x
-#> False
+#> x & ~x
 ```

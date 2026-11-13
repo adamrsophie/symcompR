@@ -11,7 +11,9 @@ stored factor or `NULL` (primes within the sieve return themselves),
 `set(n, factor)` stores a prime factor, `add(n, factors)` stores every
 prime factor of `n` given in `factors`, `remove(n)` drops an entry,
 `cache_clear()` empties the cache, `set_maxsize(m)` changes the bound
-and `size()` counts entries.
+and
+[`size()`](https://adamrsophie.github.io/symcompR/reference/codegen-fnodes.md)
+counts entries.
 
 ## Usage
 

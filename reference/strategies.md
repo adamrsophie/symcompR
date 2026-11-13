@@ -99,7 +99,8 @@ brute(tree, objective = strat_identity, leaf = branch$yieldify)
 
 - file:
 
-  Ignored; debugging output goes to the console.
+  `NULL` to print to the console, or a file name or connection to append
+  the log to.
 
 - exception:
 

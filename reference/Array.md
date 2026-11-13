@@ -58,8 +58,7 @@ A `SymArray`, or an expression.
 ``` r
 x <- Symbol("x"); y <- Symbol("y")
 derive_by_array(x^2 * y, list(x, y))
-#> Array of shape (2):
-#> 2*x*y, x^2
+#> [2*x*y, x^2]
 tensorcontraction(Array(list(1, 2, 3, 4), c(2, 2)), c(1, 2))
 #> 5
 ```

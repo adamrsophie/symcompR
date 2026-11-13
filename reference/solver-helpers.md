@@ -1,14 +1,21 @@
 # Solver helpers
 
 `linear_eq_to_matrix(eqs, syms)` returns `list(A, b)` with `A x = b`.
-`solve_linear_system(M, syms)` solves an augmented matrix.
-`solve_linear(lhs, rhs, x)` solves one linear equation for `x`.
-`checksol(f, sol)` tests a solution by substitution, `checkodesol()` an
-ODE solution. `solve_undetermined_coeffs(eq, coeffs, x)` makes `eq`
-vanish identically in `x`. `reduce_inequalities()` and
-`solve_poly_inequality()` solve inequalities in one variable.
-`nonlinsolve()` and `solve_poly_system()` solve systems; `det_quick()`
-and `inv_quick()` are
+`solve_linear_system(M, syms, ...)` solves an augmented matrix; further
+symbols may follow `syms`. It returns `NULL` when there is no solution.
+`solve_linear(lhs, rhs, symbols, exclude)` solves one equation for one
+of `symbols` when it is linear in it, and returns the pair
+`(symbol, value)`, `(0, 1)` when nothing is free, or
+`(numerator, denominator)` otherwise. `checksol(f, symbol, sol)` tests a
+solution by substitution and returns `TRUE`, `FALSE` or `NA` when
+undecided; `checkodesol(eq, sol, fx)` checks an ODE solution and returns
+the pair `(TRUE, 0)` or `(FALSE, residual)`.
+`solve_undetermined_coeffs(eq, coeffs, ...)` makes `eq` vanish
+identically in the symbols `...`, as SymPy: a named list for one
+solution, a list of them for several, and `NULL` when no solution
+exists. `nonlinsolve()` solves a system; `solve_poly_system(eqs, ...)`
+solves a zero dimensional polynomial system in the generators `...` and
+returns a list of solution tuples; `det_quick()` and `inv_quick()` are
 [`sym_det()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md)
 and
 [`inverse()`](https://adamrsophie.github.io/symcompR/reference/sym_det.md).
@@ -18,23 +25,19 @@ and
 ``` r
 linear_eq_to_matrix(eqs, syms)
 
-solve_linear_system(M, syms)
+solve_linear_system(M, syms, ...)
 
-solve_linear(lhs, rhs = 0, x = NULL)
+solve_linear(lhs, rhs = 0, symbols = list(), exclude = list(), x = NULL)
 
-checksol(f, sol)
+checksol(f, symbol, sol = NULL, ...)
 
-checkodesol(eq, sol, fx)
+checkodesol(eq, sol, fx = NULL)
 
-solve_undetermined_coeffs(eq, coeffs, x)
+solve_undetermined_coeffs(eq, coeffs, ..., dict = FALSE, set = FALSE)
 
-reduce_inequalities(ineqs, x = NULL)
+nonlinsolve(eqs, syms, ...)
 
-solve_poly_inequality(poly, rel = ">")
-
-nonlinsolve(eqs, syms)
-
-solve_poly_system(eqs, syms)
+solve_poly_system(eqs, ..., strict = FALSE)
 
 det_quick(M)
 
@@ -55,39 +58,51 @@ inv_quick(M)
 
   An augmented matrix.
 
+- ...:
+
+  Further symbols for `solve_linear_system()`,
+  `solve_undetermined_coeffs()` or `nonlinsolve()`, or flags such as
+  `numerical = FALSE` for `checksol()`.
+
 - lhs, rhs:
 
   Sides of an equation.
 
+- symbols, exclude:
+
+  Symbols to solve for and symbols to skip.
+
 - x:
 
-  A variable.
+  A variable; for `solve_linear()` an alias of `symbols`.
 
 - f, eq:
 
   An equation or expression.
 
+- symbol:
+
+  A symbol, or a named list (or list of `list(symbol, value)` pairs)
+  giving the whole solution.
+
 - sol:
 
-  A named list of values, or an
+  The value of `symbol`, or an
   [`Eq()`](https://adamrsophie.github.io/symcompR/reference/Eq.md) for
   `checkodesol()`.
 
 - fx:
 
-  Unknown function application.
+  Unknown function application; found from `eq` when omitted.
 
-- ineqs:
+- dict, set:
 
-  An inequality or list of inequalities.
+  Output forms of `solve_undetermined_coeffs()`, as for
+  [`solve()`](https://rdrr.io/r/base/solve.html).
 
-- poly:
+- strict:
 
-  A polynomial.
-
-- rel:
-
-  Relational operator such as `">"`.
+  Kept for SymPy compatibility; roots that cannot be found are left out.
 
 ## Value
 

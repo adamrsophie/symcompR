@@ -99,11 +99,11 @@ printers. <code>print_tree()</code> shows the expression tree.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">julia_code</span><span class="op">(</span><span class="va">e</span>, assign_to <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">julia_code</span><span class="op">(</span><span class="va">e</span>, assign_to <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">cxxcode</span><span class="op">(</span><span class="va">e</span>, assign_to <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="fu">cxxcode</span><span class="op">(</span><span class="va">e</span>, assign_to <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">maple_code</span><span class="op">(</span><span class="va">e</span>, assign_to <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="fu">maple_code</span><span class="op">(</span><span class="va">e</span>, assign_to <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">mathematica_code</span><span class="op">(</span><span class="va">e</span><span class="op">)</span></span>
 <span></span>
@@ -130,6 +130,10 @@ printers. <code>print_tree()</code> shows the expression tree.</p>
 
 <dt id="arg-assign-to">assign_to<a class="anchor" aria-label="anchor" href="#arg-assign-to"></a></dt>
 <dd><p>Optional variable name.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Printer settings, as in SymPy (for example <code>standard</code>).</p></dd>
 
 </dl></div>
     <div class="section level2">

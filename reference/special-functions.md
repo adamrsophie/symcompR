@@ -148,7 +148,7 @@ jacobi(...)
 
 Ynm(...)
 
-sym_beta(a, b)
+sym_beta(a, b = a)
 
 sym_factorial(x)
 

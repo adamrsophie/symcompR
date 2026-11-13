@@ -17,7 +17,8 @@ idiff(eq, y, x, n = 1)
 
 - y:
 
-  The dependent symbol.
+  The dependent symbol, or a list of symbols that depend on `x` (the
+  first is differentiated).
 
 - x:
 

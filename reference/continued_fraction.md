@@ -3,15 +3,18 @@
 `continued_fraction(a)` returns the terms of a rational or quadratic
 irrational number. A rational gives a vector of terms; a quadratic
 irrational gives a list whose last element is the repeating block, so
-`continued_fraction(sqrt(S(7)))` is `list(2, c(1, 1, 1, 4))`. Wherever
-terms are accepted, a list means that its last element repeats.
-`continued_fraction_periodic(p, q, d, s)` does the same for
-`(p + s * sqrt(d)) / q`. `continued_fraction_reduce(cf)` turns terms
-back into the number. `continued_fraction_iterator(x, n)` returns up to
-`n` terms of any real `x`, exactly for rationals and in double precision
-otherwise (reliable for roughly 10 terms).
-`continued_fraction_convergents(cf, n)` returns the convergents of the
-terms, the first `n` of them when the fraction repeats.
+`continued_fraction(sqrt(S(7)))` is `list(2, c(1, 1, 1, 4))` and
+`continued_fraction(sqrt(S(2)))` is `list(1, list(2))`. As in SymPy, the
+repeating block of a list of terms is its first element that is itself a
+list or a vector of several terms: `list(1, list(2))` is `sqrt(2)`,
+while `list(1, 2)` is `3/2`. `continued_fraction_periodic(p, q, d, s)`
+does the same for `(p + s * sqrt(d)) / q`.
+`continued_fraction_reduce(cf)` turns terms back into the number.
+`continued_fraction_iterator(x, n)` returns up to `n` terms of any real
+`x`, exactly for rationals and in double precision otherwise (reliable
+for roughly 10 terms). `continued_fraction_convergents(cf, n)` returns
+the convergents of the terms, the first `n` of them when the fraction
+repeats.
 
 ## Usage
 
@@ -76,8 +79,8 @@ continued_fraction_periodic(3, 2, 7)
 #> [1] 1 4 1 1
 #> 
 continued_fraction_reduce(list(1, 2))
-#> sqrt(2)
-continued_fraction_reduce(list(1, c(2)))
+#> 3/2
+continued_fraction_reduce(list(1, list(2)))
 #> sqrt(2)
 continued_fraction_iterator(sym_pi, 6)
 #> [1]   3   7  15   1 292   1

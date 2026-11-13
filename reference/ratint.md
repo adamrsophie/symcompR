@@ -48,7 +48,9 @@ log_to_real(h, q, x, t)
 
 - h, q:
 
-  Polynomials (dpolys) in `x` and `t`.
+  Polynomials in `x` and `t`:
+  [`Poly()`](https://adamrsophie.github.io/symcompR/reference/Poly.md)
+  objects or dense polynomials.
 
 ## Value
 

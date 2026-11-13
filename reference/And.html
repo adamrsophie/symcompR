@@ -102,7 +102,7 @@ boolean variables, and <code>&amp;</code>, <code>|</code> and <code>!</code> wor
 <span></span>
 <span><span class="fu">Not</span><span class="op">(</span><span class="va">a</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">Xor</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">Xor</span><span class="op">(</span><span class="va">...</span>, remove_true <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">Nand</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
 <span></span>
@@ -126,6 +126,11 @@ boolean variables, and <code>&amp;</code>, <code>|</code> and <code>!</code> wor
 <dt id="arg-a-b-c">a, b, c<a class="anchor" aria-label="anchor" href="#arg-a-b-c"></a></dt>
 <dd><p>Boolean expressions.</p></dd>
 
+
+<dt id="arg-remove-true">remove_true<a class="anchor" aria-label="anchor" href="#arg-remove-true"></a></dt>
+<dd><p>For <code>Xor()</code>: with <code>FALSE</code> a true argument is kept as
+an argument instead of negating the result, as SymPy's <code>remove_true</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -138,7 +143,7 @@ boolean variables, and <code>&amp;</code>, <code>|</code> and <code>!</code> wor
 <span class="r-in"><span><span class="fu">And</span><span class="op">(</span><span class="va">x</span>, <span class="fu">Or</span><span class="op">(</span><span class="va">y</span>, <span class="fu">Not</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> x &amp; (y | ~x)</span>
 <span class="r-in"><span><span class="va">x</span> <span class="op">&amp;</span> <span class="op">!</span><span class="va">x</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> False</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x &amp; ~x</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
