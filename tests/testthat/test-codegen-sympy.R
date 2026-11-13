@@ -2152,7 +2152,7 @@ test_that("printing_test_pycode: test_PythonCodePrinter", {
   expect_identical(.cgb(printer_doprint(prntr, sign(x))), "(0.0 if x == 0 else math.copysign(1, x))")
   expect_identical(.cgb(printer_doprint(prntr, py_getitem(p, 0L, 1L))), "p[0, 1]")
   expect_identical(.cgb(printer_doprint(prntr, KroneckerDelta(x, y))), "(1 if x == y else 0)")
-  expect_identical(.cgb(printer_doprint(prntr, list(2L, 3L))), "(2, 3)")
+  expect_identical(.cgb(printer_doprint(prntr, Tuple(2L, 3L))), "(2, 3)")
   expect_identical(.cgb(printer_doprint(prntr, Min(x, y))), "min(x, y)")
   expect_identical(.cgb(printer_doprint(prntr, Max(x, y))), "max(x, y)")
   expect_identical(.cgb(printer_doprint(prntr, conjugate(x))), "(x).conjugate()")

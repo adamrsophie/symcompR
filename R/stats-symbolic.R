@@ -70,7 +70,7 @@ Moment <- function(X, n, c = 0, condition = NULL, ...) new_sym("Moment", c(list(
 CentralMoment <- function(X, n, condition = NULL, ...) new_sym("CentralMoment", c(list(as_sym(X), as_sym(n)), .cond_args(condition)))
 
 .is_matrix_expr <- function(e) isTRUE(tryCatch(.mexpr_is_matrix(e), error = function(err) FALSE))
-.mexpr_is_matrix <- function(e) e$type %in% c("MatrixSymbol", "MatAdd", "MatMul", "MatPow", "Transpose", "Inverse", "ImmutableMatrix", "Identity", "ZeroMatrix") || !is.null(e$extra$rv_matrix)
+.mexpr_is_matrix <- function(e) e$type %in% c("MatrixSymbol", "MatAdd", "MatMul", "MatPow", "Transpose", "Inverse", "ImmutableMatrix", "Identity", "ZeroMatrix", "ExpectationMatrix", "VarianceMatrix", "CrossCovarianceMatrix") || !is.null(e$extra$rv_matrix)
 
 # The matrix forms of Expectation, Variance and Covariance
 # (sympy/stats/symbolic_multivariate_probability.py), kept unevaluated

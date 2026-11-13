@@ -257,7 +257,7 @@ print.cg_modimports <- function(x, ...) {
            `_print_BooleanFalse` = function(p, e) "False",
            `_print_ITE` = function(p, e) sprintf("((%s) if (%s) else (%s))", .cgpp(p, e$args[[2L]]), .cgpp(p, e$args[[1L]]), .cgpp(p, e$args[[3L]])),
            `_print_NumberSymbol` = function(p, e) sstr(e),
-           `_print_Pow` = function(p, e, ...) .cgp_super(p, "PythonCodePrinter", "_print_Pow", e)
+           `_print_Pow` = function(p, e, ...) .cgp_super(p, "PythonCodePrinter", "_print_Pow", e, ...)
          ))
 
 # NumPy and SciPy
@@ -328,7 +328,8 @@ print.cg_modimports <- function(x, ...) {
            `_print_conjugate` = function(p, e) sprintf("%s(%s)", .cgp_np(p, "conjugate"), .cgpp(p, e$args[[1L]])),
            `_print_sinc` = function(p, e) sprintf("%s(%s)", .cgp_np(p, "sinc"), .cgpp(p, .div(e$args[[1L]], S_Pi))),
            `_print_MatrixBase` = function(p, e) {
-             if (e$nrow == 0L || e$ncol == 0L) return(sprintf("%s(%s)", .cgp_np(p, "zeros"), .cgpp(p, list(e$nrow, e$ncol))))
+             if (e$nrow == 0L || e$ncol == 0L)
+               return(sprintf("%s(%s)", .cgp_np(p, .cgp_a(p, "_zeros")), .cgpp(p, structure(list(e$nrow, e$ncol), class = "pytuple"))))
              rows <- lapply(seq_len(e$nrow), function(i) lapply(seq_len(e$ncol), function(j) e[i, j]))
              sprintf("%s(%s)", .cgp_np(p, "array"), .cgpp(p, rows))
            },

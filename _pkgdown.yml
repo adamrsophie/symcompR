@@ -116,6 +116,7 @@ reference:
   - WildFunction
   - unify
   - strategies
+  - branch-strategies
   - EPath
   - extract-methods
   - could_extract_minus_sign
@@ -643,6 +644,9 @@ reference:
 - title: Code generation
   desc: The sympy.codegen AST, code printers, rewriting and optimization, and utilities.codegen routines.
   contents:
+  - array-code-printers
+  - tensorflow-torch-code
+  - lambda-printers
   - codegen-ast
   - ast-attributes
   - codegen-types
@@ -665,6 +669,11 @@ reference:
   - lambdastr
 - title: Statistics
   contents:
+  - markov_chains
+  - sample_stochastic_process
+  - sampling_density
+  - handmade_distributions
+  - matrix_expectation
   - Normal
   - discrete_rv
   - finite_rv

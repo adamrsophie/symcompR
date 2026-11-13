@@ -7,7 +7,8 @@
               "DiagonalMatrix", "PermutationMatrix", "MatrixPermute", "ImmutableMatrix", "MatrixSlice", "MatrixSolve",
               "ElementwiseApplyFunction", "MatrixUnit", "GenericIdentity", "GenericZeroMatrix", "CompanionMatrix",
               "DFT", "IDFT", "LofLU", "UofLU", "LofCholesky", "UofCholesky", "QofQR", "RofQR", "EigenVectors",
-              "EigenValues", "UofSVD", "SofSVD", "VofSVD")
+              "EigenValues", "UofSVD", "SofSVD", "VofSVD", "ExpectationMatrix", "VarianceMatrix",
+              "CrossCovarianceMatrix")
 .is_matexpr <- function(e) is_sym(e) && e$type %in% .MATEXPR
 
 .mshape <- function(e) {

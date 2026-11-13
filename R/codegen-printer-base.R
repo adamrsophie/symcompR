@@ -208,6 +208,7 @@ rm(.cg_n)
 .cgp_mro <- function(e, full = FALSE) {
   if (!is_sym(e)) {
     if (inherits(e, "symmatrix")) return(c("MutableDenseMatrix", "DenseMatrix", "MutableRepMatrix", "RepMatrix", "MatrixBase"))
+    if (inherits(e, "SymArray")) return(c("ImmutableDenseNDimArray", "DenseNDimArray", "ImmutableNDimArray", "NDimArray", "Basic"))
     if (inherits(e, "cg_dict")) return("dict")
     if (inherits(e, "pytuple")) return("tuple")
     if (is.null(e)) return("NoneType")
@@ -313,6 +314,7 @@ rm(.cg_n)
 
 .cgp_prec <- function(e) {
   if (!is_sym(e)) return(.CG_PRECEDENCE[["Atom"]])
+  if (!is.null(e$extra$prt_prec)) return(e$extra$prt_prec)
   if (e$type == "TypeCast") return(if (isTRUE(e$extra$explicit)) .CG_PRECEDENCE[["Func"]] + 10 else .cgp_prec(e$args[[1L]]))
   cl <- .cg_classes[[e$type]]
   if (!is.null(cl) && !is.null(cl$precedence)) return(cl$precedence)
@@ -622,7 +624,8 @@ rm(.cg_n)
     m <- .cg_pytype(x)
     if (!grepl(".", m, fixed = TRUE)) {
       cn <- .cgp_clsname(x)
-      if (x$type == "Function" && .cgp_is_undef(x$name)) return(sprintf("%s", cn))
+      # FunctionClass.__repr__ is the class name
+      if (x$type == "Function" && !("NOFUN" %in% .cgp_fun_bases[[x$name]])) return(cn)
       return(sprintf("<class '%s'>", cn))
     }
     return(sprintf("<class '%s'>", m))
@@ -632,14 +635,14 @@ rm(.cg_n)
 
 # Python lists in the expression become List nodes
 .cgp_convert_lists <- function(arg) {
-  if (is_sym(arg) || inherits(arg, "symmatrix") || is.function(arg)) return(arg)
+  if (is_sym(arg) || inherits(arg, c("symmatrix", "SymArray")) || is.function(arg)) return(arg)
   if (inherits(arg, "pytuple")) return(structure(lapply(unclass(arg), .cgp_convert_lists), class = "pytuple"))
   if (is.list(arg) && !inherits(arg, "cg_dict")) return(do.call(cg_List, lapply(arg, .cgp_convert_lists)))
   arg
 }
 
 .cgp_sympify <- function(x) {
-  if (is_sym(x) || inherits(x, "symmatrix")) return(x)
+  if (is_sym(x) || inherits(x, c("symmatrix", "SymArray"))) return(x)
   if (is.function(x) && !is.null(attr(x, "base"))) return(attr(x, "base"))
   if (inherits(x, "pytuple")) return(do.call(Tuple, lapply(unclass(x), .cgp_sympify)))
   if (is.character(x)) return(sympify(x))

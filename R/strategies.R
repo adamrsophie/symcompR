@@ -277,76 +277,23 @@ typed <- function(ruletypes) strat_switch(function(e) e$type, ruletypes)
 # ---------------------------------------------------------------------------
 # Branching rules (strategies/branch): functions returning lists
 
-.uniq_add <- function(seen, x) {
-  k <- if (is_sym(x)) x$key else paste(deparse(x), collapse = "")
-  if (k %in% seen$k) return(FALSE)
-  seen$k <- c(seen$k, k); TRUE
-}
-
-.b_identity <- function(x) list(x)
-.b_chain <- function(...) {
-  brules <- list(...)
-  function(expr) {
-    if (!length(brules)) return(list(expr))
-    out <- list()
-    for (ne in brules[[1L]](expr)) out <- c(out, do.call(.b_chain, brules[-1L])(ne))
-    out
-  }
-}
-.b_multiplex <- function(...) {
-  brules <- list(...)
-  function(expr) {
-    seen <- new.env(); seen$k <- character(); out <- list()
-    for (b in brules) for (ne in b(expr)) if (.uniq_add(seen, ne)) out[[length(out) + 1L]] <- ne
-    out
-  }
-}
-.b_do_one <- function(...) {
-  brules <- list(...)
-  function(expr) {
-    for (b in brules) { r <- b(expr); if (length(r)) return(r) }
-    list()
-  }
-}
-.b_exhaust <- function(brule) {
-  rec <- function(expr, seen) {
-    out <- list(); any_new <- FALSE
-    for (ne in brule(expr)) {
-      k <- if (is_sym(ne)) ne$key else paste(deparse(ne), collapse = "")
-      if (!(k %in% seen$k)) { seen$k <- c(seen$k, k); any_new <- TRUE; out <- c(out, rec(ne, seen)) }
-    }
-    if (!any_new) out <- c(out, list(expr))
-    out
-  }
-  function(expr) { seen <- new.env(); seen$k <- if (is_sym(expr)) expr$key else paste(deparse(expr), collapse = ""); rec(expr, seen) }
-}
-.b_sall <- function(brule, fns = basic_fns) function(expr) {
-  if (fns$leaf(expr)) return(list(expr))
-  opts <- lapply(fns$children(expr), brule)
-  combos <- expand.grid(lapply(opts, seq_along), KEEP.OUT.ATTRS = FALSE)
-  # itertools.product order: the last argument varies fastest
-  combos <- combos[do.call(order, as.list(combos)), , drop = FALSE]
-  lapply(seq_len(nrow(combos)), function(r) do.call(fns$new, c(list(fns$op(expr)), lapply(seq_along(opts), function(j) opts[[j]][[combos[r, j]]]))))
-}
-.b_top_down <- function(brule, fns = basic_fns) .b_chain(.b_do_one(brule, .b_identity), function(expr) .b_sall(.b_top_down(brule, fns), fns)(expr))
-
 #' @rdname strategies
 #' @export
 branch <- list(
-  identity = .b_identity,
-  exhaust = .b_exhaust,
-  onaction = function(brule, fn) function(expr) { rs <- brule(expr); for (r in rs) if (!.strat_eq(r, expr)) fn(brule, expr, r); rs },
-  debug = function(brule, file = NULL) function(expr) { rs <- brule(expr); for (r in rs) if (!.strat_eq(r, expr)) cat("In: ", format(expr), "\nOut: ", format(r), "\n\n", sep = ""); rs },
-  multiplex = .b_multiplex,
-  condition = function(cond, brule) function(expr) if (isTRUE(cond(expr))) brule(expr) else list(),
-  sfilter = function(pred, brule) function(expr) Filter(function(r) isTRUE(pred(r)), brule(expr)),
-  notempty = function(brule) function(expr) { rs <- brule(expr); if (length(rs)) rs else list(expr) },
-  do_one = .b_do_one,
-  chain = .b_chain,
-  yieldify = function(rule) function(expr) list(rule(expr)),
-  canon = function(...) .b_exhaust(do.call(.b_multiplex, lapply(list(...), .b_top_down))),
-  top_down = .b_top_down,
-  sall = .b_sall)
+  identity = branch_identity,
+  exhaust = branch_exhaust,
+  onaction = onaction,
+  debug = branch_debug,
+  multiplex = multiplex,
+  condition = branch_condition,
+  sfilter = sfilter,
+  notempty = notempty,
+  do_one = branch_do_one,
+  chain = branch_chain,
+  yieldify = yieldify,
+  canon = branch_canon,
+  top_down = branch_top_down,
+  sall = branch_sall)
 
 # ---------------------------------------------------------------------------
 # Trees of rules (strategies/tree.py)
@@ -367,7 +314,7 @@ greedy <- function(tree, objective = strat_identity, leaf = strat_identity)
 #' @rdname strategies
 #' @export
 allresults <- function(tree, leaf = branch$yieldify)
-  treeapply(tree, list(list = .b_multiplex, seq = .b_chain), leaf = leaf)
+  treeapply(tree, list(list = multiplex, seq = branch_chain), leaf = leaf)
 
 #' @rdname strategies
 #' @export

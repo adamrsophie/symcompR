@@ -524,8 +524,8 @@ amin <- function(...) .cg_new("amin", list(...))
 #' @export
 amax <- function(...) .cg_new("amax", list(...))
 
-def_function("maximum")
-def_function("minimum")
+def_function("maximum", nargs = NULL)
+def_function("minimum", nargs = NULL)
 .cg_add_rewrite("Max", "maximum", function(...) do.call(Max, list(...)))
 .cg_add_rewrite("Min", "minimum", function(...) do.call(Min, list(...)))
 #' @rdname codegen-numpy-nodes

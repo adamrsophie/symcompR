@@ -449,8 +449,8 @@ ConditionSet <- function(sym, condition, base = UniversalSet) {
   if (identical(condition$key, S_false$key)) return(S_EmptySet)
   if (base$type == "EmptySet") return(S_EmptySet)
   for (i in flat)
-    # _diff_wrt: symbols, applied undefined functions, Indexed, Derivative
-    if (!(is_symbol_like(i) || .is_undefined_application(i) || i$type %in% c("Indexed", "Derivative")))
+    # _diff_wrt: symbols, applied undefined functions, Indexed, Derivative, MatrixSymbol
+    if (!(is_symbol_like(i) || .is_undefined_application(i) || i$type %in% c("Indexed", "Derivative", "MatrixSymbol")))
       err("ValueError", paste0("`", .str(i), "` is not symbol-like"))
   inb <- tryCatch(.contains(base, sym), error = function(e) NULL)
   if (!is.null(inb) && identical(inb$key, S_false$key))

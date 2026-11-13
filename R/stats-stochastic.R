@@ -89,7 +89,7 @@ RandomIndexedSymbol <- function(idx_obj, pspace = NULL) .RandomIndexedSymbol(as_
     if (is.numeric(a) || (is_sym(a) && is_number_type(a))) {
       args[[i]] <- if (isTRUE(.is_subset_int(.callm(p, "index_set")))) .callm(p, "getitem", a) else .callm(p, "call", a)
     } else if (!(is_sym(a) && a$type == "RandomIndexedSymbol")) {
-      .serr("ValueError", paste0("Expected a RandomIndexedSymbol or key not  ", class(a)[1]))
+      .serr("ValueError", paste0("Expected a RandomIndexedSymbol or key not  ", if (is_sym(a)) .cgp_type_str(a) else paste0("<class '", .rv_pyclass(a), "'>")))
     }
   }
   if (identical(.rs_pspace(args[[1L]])$args[[3L]]$type, "Distribution")) return(new_sym("JointDistribution", args))
@@ -251,13 +251,81 @@ BernoulliProcess <- function(sym, p, success = 1, failure = 0) {
   list(intervals, swaps)
 }
 
+# distribution(key) of a counting process also takes a random indexed symbol
+.cp_key <- function(key) { key <- as_sym(key); if (key$type == "RandomIndexedSymbol") .ris_key(key) else key }
+.cp_args <- function(e, types) if (e$type %in% types) e$args else list(e)
+
+# CountingProcess._solve_argwith_tworvs
+.cp_solve_argwith_tworvs <- function(arg) {
+  a0 <- arg$args[[1L]]; a1 <- arg$args[[2L]]
+  if (arg$type == "Equality" || .stp_true(Ge(.ris_key(a0), .ris_key(a1)))) {
+    diff_key <- abs(.sub(.ris_key(a0), .ris_key(a1)))
+    rv <- a0
+  } else {
+    diff_key <- .sub(.ris_key(a1), .ris_key(a0))
+    rv <- a1
+  }
+  .rel_same(arg, .proc_call(.rs_pspace(rv)$args[[2L]], diff_key), S_Zero)
+}
+
+# CountingProcess._solve_numerical: the independent increments between the
+# sorted time stamps of the condition and the given condition
+.cp_solve_numerical <- function(condition, given_condition = NULL) {
+  args_list <- .cp_args(condition, "And")
+  if (!is.null(given_condition)) args_list <- c(args_list, .cp_args(given_condition, "And"))
+  args_list <- args_list[.stp_sort_by_key(lapply(args_list, function(a) .ris_key(a$args[[1L]])))]
+  result <- list()
+  cond_args <- .cp_args(condition, "And")
+  first <- args_list[[1L]]
+  two_rvs <- is_random(first$args[[1L]]) && is_random(first$args[[2L]])
+  if (.in_list(first, cond_args) && !two_rvs) result[[length(result) + 1L]] <- .subrv_probability(first)
+  if (two_rvs) result[[length(result) + 1L]] <- .subrv_probability(.cp_solve_argwith_tworvs(first))
+  for (i in seq_len(length(args_list) - 1L)) {
+    curr <- args_list[[i]]; nex <- args_list[[i + 1L]]
+    diff_key <- .sub(.ris_key(nex$args[[1L]]), .ris_key(curr$args[[1L]]))
+    proc <- .rs_pspace(curr$args[[1L]])$args[[2L]]
+    inc <- .proc_call(proc, diff_key)
+    working_set <- .callm(proc, "state_space")
+    if (.stp_true(Gt(curr$args[[2L]], nex$args[[2L]]))) {
+      result[[length(result) + 1L]] <- S_Zero
+      break
+    }
+    working_set <- Intersection(working_set, if (curr$type == "Equality") Interval(curr$args[[2L]], S_Infinity, left_open = TRUE) else .stp_as_set(curr))
+    working_set <- Intersection(working_set, if (nex$type == "Equality") Interval(S_NegativeInfinity, nex$args[[2L]]) else .stp_as_set(nex))
+    if (identical(working_set$key, S_EmptySet$key)) {
+      result[[length(result) + 1L]] <- .subrv_probability(Eq(inc, S_Zero))
+    } else if (isTRUE(.set_is_finite(working_set))) {
+      n <- .stp_len(working_set)
+      ce <- curr$type == "Equality"; ne <- nex$type == "Equality"
+      if (ce && ne) {
+        result[[length(result) + 1L]] <- .subrv_probability(Eq(inc, n))
+      } else if (xor(ce, ne)) {
+        result[[length(result) + 1L]] <- .stp_pysum(lapply(seq_len(n) - 1L, function(x) .subrv_probability(Eq(inc, x))))
+      } else {
+        result[[length(result) + 1L]] <- .stp_pysum(lapply(seq_len(n) - 1L, function(x) .mul(list(.int(n - x), .subrv_probability(Eq(inc, x))))))
+      }
+    } else {
+      result[[length(result) + 1L]] <- .subrv_probability(Le(inc, .sub(set_sup(working_set), set_inf(working_set))))
+    }
+  }
+  .mul(result)
+}
+
 .defm("CountingProcess", "probability", function(p, condition, given_condition = NULL, evaluate = TRUE, ...) {
-  cond_args <- if (condition$type %in% c("And", "Or")) condition$args else list(condition)
+  cond_args <- .cp_args(condition, c("And", "Or"))
   check_numeric <- all(vapply(cond_args, function(a) .rv_is_number(.ris_key(a$args[[1L]])), NA))
   if (!is.null(given_condition)) {
-    gargs <- if (given_condition$type %in% c("And", "Or")) given_condition$args else list(given_condition)
+    gargs <- .cp_args(given_condition, c("And", "Or"))
     check_given <- !.has_type(given_condition, "Contains")
-    if (check_numeric && check_given) .serr("NotImplementedError", "numeric given conditions")
+    if (check_numeric && check_given) {
+      res <- list()
+      if (condition$type == "Or")
+        res[[length(res) + 1L]] <- .stp_pysum(lapply(condition$args, function(a) .cp_solve_numerical(a, given_condition)))
+      if (given_condition$type == "Or")
+        res[[length(res) + 1L]] <- .stp_pysum(lapply(given_condition$args, function(a) .cp_solve_numerical(condition, a)))
+      if (length(res)) return(.add(res))
+      return(.cp_solve_numerical(condition, given_condition))
+    }
     if (!all(vapply(gargs, function(a) .has_type(a, "Contains"), NA)))
       .serr("ValueError", "If given condition is passed with `Contains`, then please pass the evaluated condition with its corresponding information in terms of intervals of each time stamp to be passed in given condition.")
     sw <- .timerv_swaps(condition, given_condition)
@@ -269,14 +337,39 @@ BernoulliProcess <- function(sym, p, success = 1, failure = 0) {
     if (condition$type == "Or") return(.add(lapply(condition$args, function(a) .callm(p, "probability", a, given_condition))))
     for (pr in sw[[2L]]) condition <- subs(condition, pr[[1L]], pr[[2L]])
   }
+  if (check_numeric) return(.cp_solve_numerical(condition))
   .subrv_probability(condition, evaluate = evaluate)
 })
 
 .defm("PoissonProcess", "lamda", function(p) p$args[[2L]])
 .defm("PoissonProcess", "state_space", function(p) Naturals0)
-.defm("PoissonProcess", "distribution", function(p, key) new_sym("PoissonDistribution", list(p$args[[2L]] * as_sym(key))))
+.defm("PoissonProcess", "distribution", function(p, key) new_sym("PoissonDistribution", list(p$args[[2L]] * .cp_key(key))))
 .defm("PoissonProcess", "density", function(p, x) { k <- .ris_key(x); (p$args[[2L]] * k)^x / sym_factorial(x) * exp(-(p$args[[2L]] * k)) })
 .defm("PoissonProcess", "simple_rv", function(p, rv) Poisson(.str(rv), p$args[[2L]] * .ris_key(rv)))
+
+.defm("PoissonProcess", "split", function(p, l1, l2) {
+  if (!identical(.add(list(as_sym(l1), as_sym(l2)))$key, p$args[[2L]]$key))
+    .serr("ValueError", paste0("Sum of l1 and l2 should be ", .str(p$args[[2L]])))
+  list(PoissonProcess(Dummy("l1"), l1), PoissonProcess(Dummy("l2"), l2))
+})
+
+# PoissonProcess.__add__ merges two Poisson processes
+#' @export
+Ops.rv_process <- function(e1, e2) {
+  n1 <- .pnode(e1)
+  if (.Generic == "+" && is_sym(n1) && n1$type == "PoissonProcess") {
+    n2 <- .pnode(e2)
+    if (!(is_sym(n2) && n2$type == "PoissonProcess")) .serr("ValueError", "Only instances of Poisson Process can be merged")
+    return(PoissonProcess(Dummy(paste0(n1$args[[1L]]$name, n2$args[[1L]]$name)), .add(list(n1$args[[2L]], n2$args[[2L]]))))
+  }
+  .serr("TypeError", paste0("unsupported operand type(s) for ", .Generic, ": '", .rv_pyclass(e1), "' and '", .rv_pyclass(e2), "'"))
+}
+.rv_pyclass <- function(x) {
+  x <- .pnode(x)
+  if (is_sym(x)) return(.sympy_class(x))
+  if (is.numeric(x)) return(if (x == round(x)) "int" else "float")
+  class(x)[1L]
+}
 
 #' @rdname stochastic_process
 #' @export
@@ -287,7 +380,7 @@ PoissonProcess <- function(sym, lamda) {
 }
 
 .defm("WienerProcess", "state_space", function(p) Reals)
-.defm("WienerProcess", "distribution", function(p, key) new_sym("NormalDistribution", list(S_Zero, sqrt(as_sym(key)))))
+.defm("WienerProcess", "distribution", function(p, key) new_sym("NormalDistribution", list(S_Zero, sqrt(.cp_key(key)))))
 .defm("WienerProcess", "density", function(p, x) { k <- .ris_key(x); exp(-x^2 / (2 * k)) / (sqrt(2 * S_Pi) * sqrt(k)) })
 .defm("WienerProcess", "simple_rv", function(p, rv) Normal(.str(rv), 0, sqrt(.ris_key(rv))))
 
@@ -298,7 +391,7 @@ WienerProcess <- function(sym) .mkproc(new_sym("WienerProcess", list(.symbol_con
 .defm("GammaProcess", "lamda", function(p) p$args[[2L]])
 .defm("GammaProcess", "gamma", function(p) p$args[[3L]])
 .defm("GammaProcess", "state_space", function(p) Interval(0, S_Infinity))
-.defm("GammaProcess", "distribution", function(p, key) new_sym("GammaDistribution", list(p$args[[3L]] * as_sym(key), 1 / p$args[[2L]])))
+.defm("GammaProcess", "distribution", function(p, key) new_sym("GammaDistribution", list(p$args[[3L]] * .cp_key(key), 1 / p$args[[2L]])))
 .defm("GammaProcess", "density", function(p, x) {
   k <- p$args[[3L]] * .ris_key(x); theta <- 1 / p$args[[2L]]
   x^(k - 1) * exp(-x / theta) / (gamma(k) * theta^k)

@@ -43,6 +43,7 @@ expand <- function(e, deep = TRUE, mul = TRUE, multinomial = TRUE,
   e <- as_sym(e)
   # Expectation, Variance and Covariance expand by linearity (sympy.stats)
   if (e$type %in% c("Expectation", "Variance", "Covariance")) return(.stats_expand(e))
+  if (e$type %in% c("ExpectationMatrix", "VarianceMatrix", "CrossCovarianceMatrix")) return(.stp_matrix_expand(e))
   if (.is_bd(e)) return(.bd_expand(e, deep = deep, mul = mul, multinomial = multinomial, power_exp = power_exp,
                                   power_base = power_base, log = log, trig = trig, complex = complex, func = func,
                                   force = force, basic = basic, factor = factor))
