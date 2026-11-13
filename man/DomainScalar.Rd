@@ -38,6 +38,8 @@ DomainScalar_from_sympy(expr)
 \item{...}{Unused.}
 
 \item{e1, e2}{Scalars or integers.}
+
+\item{y, mx, my, cl, reverse}{Arguments of \code{\link[base:chooseOpsMethod]{base::chooseOpsMethod()}}.}
 }
 \value{
 A \code{DomainScalar}, or the value of the method.

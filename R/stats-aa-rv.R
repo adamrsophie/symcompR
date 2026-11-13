@@ -633,7 +633,6 @@ where <- function(condition, given_condition = NULL, ...) {
 #' @param given_condition An optional condition for `P()`.
 #' @param numsamples Sampling is not supported; must be `NULL`.
 #' @param evaluate `FALSE` keeps integrals and sums unevaluated.
-#' @param b Logarithm base for the entropy.
 #' @param ... Ignored.
 #' @return An expression, a distribution, a `Lambda` or a mapping.
 #' @examples

@@ -84,7 +84,7 @@ DomainMatrix_from_dok(dok, shape, domain)
 
 \item{diagonal}{A list of diagonal elements.}
 
-\item{elements, data}{A flat list of elements and its layout.}
+\item{elements}{A flat list of elements.}
 
 \item{dod, dok}{A dict of dicts or a dict of keys.}
 
@@ -97,6 +97,8 @@ DomainMatrix_from_dok(dok, shape, domain)
 \item{drop}{Unused.}
 
 \item{e1, e2}{Matrices or scalars.}
+
+\item{y, mx, my, cl, reverse}{Arguments of \code{\link[base:chooseOpsMethod]{base::chooseOpsMethod()}}.}
 }
 \value{
 A \code{DomainMatrix}, or the value of the method called.

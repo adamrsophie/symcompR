@@ -128,7 +128,7 @@ product_(...)
 \arguments{
 \item{...}{Arguments or fields of the node.}
 
-\item{symbol, source, array, arg}{A symbol, an array or an expression.}
+\item{symbol, source, array}{A symbol, an array or an expression.}
 
 \item{dim, kind, shape, pad, order, intent, attrs, value, type, name}{Optional
 arguments of the Fortran functions and attributes.}

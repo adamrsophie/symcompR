@@ -177,7 +177,7 @@ register_diff_hook("MatrixSolve", function(e, x) {
 #' reductions.
 #'
 #' @param ... Arguments or fields of the node.
-#' @param symbol,source,array,arg A symbol, an array or an expression.
+#' @param symbol,source,array A symbol, an array or an expression.
 #' @param dim,kind,shape,pad,order,intent,attrs,value,type,name Optional
 #'   arguments of the Fortran functions and attributes.
 #' @param x,y,z Expressions.

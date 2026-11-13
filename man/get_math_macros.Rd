@@ -21,7 +21,7 @@ value for \code{key}, or \code{NULL}.
 \description{
 \code{get_math_macros()} returns the constants that the C printers print as
 the macros of \code{math.h}, as SymPy's \code{sympy.printing.c.get_math_macros}:
-a dictionary from expressions to macro names, which \code{\link[=py_getitem]{py_getitem()}}-style
+a dictionary from expressions to macro names, which \code{py_getitem()}-style
 lookups read with \code{cgdict_get()}.
 }
 \examples{

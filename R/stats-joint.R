@@ -161,11 +161,11 @@ marginal_distribution <- function(rv, ...) {
 #' listed components as a `Lambda`. Index a joint random symbol with
 #' [rv_getitem()].
 #'
-#' @param name,syms,symbol The name of the random symbol.
-#' @param mu,sigma,shape_mat Mean (location) vector and covariance (shape)
+#' @param name,syms,symbol,sym The name of the random symbol.
+#' @param mu,sigma Mean (location) vector and covariance (shape)
 #'   matrix, as lists or matrices.
-#' @param v,dof Degrees of freedom or shape parameters.
-#' @param lamda,alpha,beta,delta,omega,theta,n,k0,p,pdf,set Distribution
+#' @param v Degrees of freedom or shape parameters.
+#' @param lamda,alpha,beta,delta,omega,theta,n,k0,pdf,set Distribution
 #'   parameters, following SymPy.
 #' @param rv A joint random symbol.
 #' @param ... Components (indices or indexed symbols) for

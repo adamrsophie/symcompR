@@ -180,7 +180,7 @@ WignerSemicircle(name, R)
 
 \item{name}{The name of the random variable (a string or symbol).}
 
-\item{a, b, c, d, alpha, beta, sigma, lamda, left, right, x0, gamma, k, l, p, n, mu, mean, std, rate, d1, d2, s, m, theta, minimum, eta, omega, shape, xm, xi, nu, R, k_, c_, b_}{Distribution parameters, named as in SymPy.}
+\item{a, b, c, d, alpha, beta, sigma, lamda, left, right, x0, gamma, k, l, p, n, mu, mean, std, rate, d1, d2, s, m, theta, minimum, eta, omega, shape, xm, xi, nu, R}{Distribution parameters, named as in SymPy.}
 }
 \value{
 A random symbol.

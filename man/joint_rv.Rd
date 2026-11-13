@@ -49,14 +49,14 @@ NegativeMultinomial(syms, k0, ...)
 \item{...}{Components (indices or indexed symbols) for
 \code{marginal_distribution()}, or further parameters.}
 
-\item{name, syms, symbol}{The name of the random symbol.}
+\item{name, syms, symbol, sym}{The name of the random symbol.}
 
-\item{mu, sigma, shape_mat}{Mean (location) vector and covariance (shape)
+\item{mu, sigma}{Mean (location) vector and covariance (shape)
 matrix, as lists or matrices.}
 
-\item{v, dof}{Degrees of freedom or shape parameters.}
+\item{v}{Degrees of freedom or shape parameters.}
 
-\item{lamda, alpha, beta, delta, omega, theta, n, k0, p, pdf, set}{Distribution
+\item{lamda, alpha, beta, delta, omega, theta, n, k0, pdf, set}{Distribution
 parameters, following SymPy.}
 }
 \value{

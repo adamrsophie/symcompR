@@ -51,8 +51,6 @@ rv_quantile(expr, evaluate = TRUE, ...)
 \item{...}{Ignored.}
 
 \item{given_condition}{An optional condition for \code{P()}.}
-
-\item{b}{Logarithm base for the entropy.}
 }
 \value{
 An expression, a distribution, a \code{Lambda} or a mapping.

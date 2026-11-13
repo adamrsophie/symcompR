@@ -41,7 +41,7 @@
 #' @param density A density expression in `symbol`.
 #' @param set The support, an interval (the real line by default).
 #' @param check Whether to check the arguments.
-#' @param a,b,c,d,alpha,beta,sigma,lamda,left,right,x0,gamma,k,l,p,n,mu,mean,std,rate,d1,d2,s,m,theta,minimum,eta,omega,shape,xm,xi,nu,R,k_,c_,b_ Distribution parameters, named as in SymPy.
+#' @param a,b,c,d,alpha,beta,sigma,lamda,left,right,x0,gamma,k,l,p,n,mu,mean,std,rate,d1,d2,s,m,theta,minimum,eta,omega,shape,xm,xi,nu,R Distribution parameters, named as in SymPy.
 #' @return A random symbol.
 #' @examples
 #' X <- Normal("X", 0, 1)

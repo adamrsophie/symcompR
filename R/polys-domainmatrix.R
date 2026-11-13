@@ -156,11 +156,12 @@
 #' @param i,j Row and column indices (from 1).
 #' @param drop Unused.
 #' @param e1,e2 Matrices or scalars.
+#' @param y,mx,my,cl,reverse Arguments of [base::chooseOpsMethod()].
 #' @param rep A `DDM` or `SDM`.
 #' @param nrows,ncols The shape.
 #' @param M A [Matrix()].
 #' @param diagonal A list of diagonal elements.
-#' @param elements,data A flat list of elements and its layout.
+#' @param elements A flat list of elements.
 #' @param dod,dok A dict of dicts or a dict of keys.
 #' @param elemsdict A nested named list of entries.
 #' @param ... Options passed to [construct_domain()], or unused.
@@ -1028,6 +1029,7 @@ chooseOpsMethod.DomainMatrix <- function(x, y, mx, my, cl, reverse) TRUE
 #' @param x A `DomainScalar`.
 #' @param name A method name.
 #' @param e1,e2 Scalars or integers.
+#' @param y,mx,my,cl,reverse Arguments of [base::chooseOpsMethod()].
 #' @param ... Unused.
 #' @return A `DomainScalar`, or the value of the method.
 #' @examples
