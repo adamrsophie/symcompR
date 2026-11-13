@@ -30,6 +30,7 @@ an indexed expression with the given free indices.
 \examples{
 k <- Symbol("k"); i <- Symbol("i"); j <- Symbol("j"); d <- Symbol("d")
 M <- MatrixSymbol("M", k, k); N <- MatrixSymbol("N", k, k)
-convert_indexed_to_array(Sum(MatrixElement(M, i, d) * MatrixElement(N, d, j), list(d, 0, k - 1)), list(i, j))
+convert_indexed_to_array(Sum(MatrixElement(M, i, d) * MatrixElement(N, d, j),
+                             list(d, 0, k - 1)), list(i, j))
 convert_array_to_indexed(ArraySymbol("A", list(3, 3)), list(i, j))
 }
