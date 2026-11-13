@@ -7,10 +7,8 @@ of `symbols` when it is linear in it, and returns the pair
 `(symbol, value)`, `(0, 1)` when nothing is free, or
 `(numerator, denominator)` otherwise. `checksol(f, symbol, sol)` tests a
 solution by substitution and returns `TRUE`, `FALSE` or `NA` when
-undecided; `checkodesol(eq, sol, fx)` checks an ODE solution and returns
-the pair `(TRUE, 0)` or `(FALSE, residual)`.
-`solve_undetermined_coeffs(eq, coeffs, ...)` makes `eq` vanish
-identically in the symbols `...`, as SymPy: a named list for one
+undecided. `solve_undetermined_coeffs(eq, coeffs, ...)` makes `eq`
+vanish identically in the symbols `...`, as SymPy: a named list for one
 solution, a list of them for several, and `NULL` when no solution
 exists. `solve_poly_system(eqs, ...)` solves a zero dimensional
 polynomial system in the generators `...` and returns a list of solution
@@ -27,8 +25,6 @@ solve_linear_system(M, syms, ...)
 solve_linear(lhs, rhs = 0, symbols = list(), exclude = list(), x = NULL)
 
 checksol(f, symbol, sol = NULL, ...)
-
-checkodesol(eq, sol, fx = NULL)
 
 solve_undetermined_coeffs(eq, coeffs, ..., dict = FALSE, set = FALSE)
 
@@ -78,13 +74,7 @@ inv_quick(M)
 
 - sol:
 
-  The value of `symbol`, or an
-  [`Eq()`](https://adamrsophie.github.io/symcompR/reference/Eq.md) for
-  `checkodesol()`.
-
-- fx:
-
-  Unknown function application; found from `eq` when omitted.
+  The value of `symbol`.
 
 - dict, set:
 

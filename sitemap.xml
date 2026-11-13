@@ -198,6 +198,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/calculus-utils.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/cancel.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/canonical_free.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/canonical_odes.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/canonicalize.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/cash-.Poly.html</loc></url>
@@ -207,8 +208,13 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/character_table.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/characteristic-curves.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/charpoly.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/checkinfsol.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/checkodesol.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/checksysodesol.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/circuit-gates.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/circuitutils.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/classify_ode.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/classify_sysode.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/code-generators.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/code-printer-objects.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/code-printers.html</loc></url>
@@ -334,6 +340,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/index.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/inequality-solvers.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/inertia.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/infinitesimals.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integer-helpers.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integral-transforms.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integral_steps.html</loc></url>
@@ -365,6 +372,8 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/linear_coeffs.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/linear_eq_to_matrix.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/linear_momentum.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/linear_ode_to_matrix.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/linodesolve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/linrec.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/linsolve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/literal_symbol.html</loc></url>
@@ -379,6 +388,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix-expressions.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_distributions.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_exp.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_exp_jordan_form.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/meijerint_indefinite.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/mellin_transform.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.html</loc></url>
@@ -404,6 +414,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/nsimplify.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/nsolve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/ntt.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/ode_order.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/operator-ordering.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/operators_to_state.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/orbit_homomorphism.html</loc></url>

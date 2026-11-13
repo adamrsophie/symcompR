@@ -462,7 +462,7 @@ dsolve(diff(f(x), x, 2) + f(x) - x, f(x))
 #> Eq(f(x), C1*sin(x) + C2*cos(x) + x)
 ```
 
-[`classify_ode()`](https://adamrsophie.github.io/symcompR/reference/dsolve.md)
+[`classify_ode()`](https://adamrsophie.github.io/symcompR/reference/classify_ode.md)
 names the solution methods (SymPy’s hints) that apply to an equation. A
 homogeneous linear equation with constant coefficients has one:
 
@@ -472,28 +472,51 @@ classify_ode(diff(f(x), x, 3) - f(x), f(x))
 #> [1] "nth_linear_constant_coeff_homogeneous"
 ```
 
-### Initial conditions
-
-`ics` is a list of conditions `list(x0, k, value)`, meaning f^{(k)}(x_0)
-= \text{value}.
+[`dsolve()`](https://adamrsophie.github.io/symcompR/reference/dsolve.md)
+also solves systems of linear ODEs, which
+[`classify_sysode()`](https://adamrsophie.github.io/symcompR/reference/classify_sysode.md)
+classifies and
+[`checksysodesol()`](https://adamrsophie.github.io/symcompR/reference/checksysodesol.md)
+checks.
 
 ``` r
 
-dsolve(Eq(diff(f(x), x), f(x)), f(x), ics = list(list(0, 0, 1)))
+g <- Function("g")
+sys <- list(Eq(diff(f(x), x), g(x)), Eq(diff(g(x), x), -f(x)))
+dsolve(sys)
+#> [[1]]
+#> Eq(f(x), -C1*sin(x) + C2*cos(x))
+#> 
+#> [[2]]
+#> Eq(g(x), -C1*cos(x) - C2*sin(x))
+checksysodesol(sys, dsolve(sys))
+#> (True, [0, 0])
+```
+
+### Initial conditions
+
+`ics` takes the place of SymPy’s dictionary: a list of pairs
+`list(f(x0), value)`, with `Subs(Derivative(f(x), x, k), x, x0)` for a
+derivative. The shorter triple `list(x0, k, value)`, meaning
+f^{(k)}(x_0) = \text{value}, is accepted too.
+
+``` r
+
+dsolve(Eq(diff(f(x), x), f(x)), f(x), ics = list(list(f(0), 1)))
 #> Eq(f(x), exp(x))
-dsolve(diff(f(x), x) + f(x) - x, f(x), ics = list(list(0, 0, 2)))
+dsolve(diff(f(x), x) + f(x) - x, f(x), ics = list(list(f(0), 2)))
 #> Eq(f(x), x - 1 + 3*exp(-x))
 dsolve(diff(f(x), x, 2) + f(x), f(x),
-       ics = list(list(0, 0, 0), list(0, 1, 1)))
+       ics = list(list(f(0), 0), list(Subs(Derivative(f(x), x), x, 0), 1)))
 #> Eq(f(x), sin(x))
 dsolve(diff(f(x), x, 2) + 4 * f(x), f(x),
        ics = list(list(0, 0, 1), list(0, 1, 0)))
 #> Eq(f(x), cos(2*x))
 ```
 
-[`ode_order()`](https://adamrsophie.github.io/symcompR/reference/dsolve.md)
+[`ode_order()`](https://adamrsophie.github.io/symcompR/reference/ode_order.md)
 gives the order of an equation, and
-[`checkodesol()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+[`checkodesol()`](https://adamrsophie.github.io/symcompR/reference/checkodesol.md)
 verifies a solution by substitution.
 
 ``` r

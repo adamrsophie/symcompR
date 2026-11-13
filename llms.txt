@@ -1076,7 +1076,6 @@ system.
 - [`solve_linear_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`solve_linear()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`checksol()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
-  [`checkodesol()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`solve_undetermined_coeffs()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`solve_poly_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`det_quick()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
@@ -1108,9 +1107,29 @@ system.
   [`rsolve_hyper()`](https://adamrsophie.github.io/symcompR/reference/rsolve-parts.md)
   : Building blocks of the recurrence solver
 - [`dsolve()`](https://adamrsophie.github.io/symcompR/reference/dsolve.md)
-  [`ode_order()`](https://adamrsophie.github.io/symcompR/reference/dsolve.md)
-  [`classify_ode()`](https://adamrsophie.github.io/symcompR/reference/dsolve.md)
   : Solve ordinary differential equations
+- [`canonical_odes()`](https://adamrsophie.github.io/symcompR/reference/canonical_odes.md)
+  : Canonical form of a system of ODEs
+- [`checkinfsol()`](https://adamrsophie.github.io/symcompR/reference/checkinfsol.md)
+  : Check infinitesimals of an ODE
+- [`checkodesol()`](https://adamrsophie.github.io/symcompR/reference/checkodesol.md)
+  : Check solutions of ODEs
+- [`checksysodesol()`](https://adamrsophie.github.io/symcompR/reference/checksysodesol.md)
+  : Check solutions of systems of ODEs
+- [`classify_ode()`](https://adamrsophie.github.io/symcompR/reference/classify_ode.md)
+  : Classify an ordinary differential equation
+- [`classify_sysode()`](https://adamrsophie.github.io/symcompR/reference/classify_sysode.md)
+  : Classify a system of ODEs
+- [`infinitesimals()`](https://adamrsophie.github.io/symcompR/reference/infinitesimals.md)
+  : Infinitesimals of a first order ODE
+- [`linear_ode_to_matrix()`](https://adamrsophie.github.io/symcompR/reference/linear_ode_to_matrix.md)
+  : Matrix form of a system of linear ODEs
+- [`linodesolve()`](https://adamrsophie.github.io/symcompR/reference/linodesolve.md)
+  : Solve a system of first order linear ODEs
+- [`matrix_exp_jordan_form()`](https://adamrsophie.github.io/symcompR/reference/matrix_exp_jordan_form.md)
+  : Matrix exponential of a constant matrix times t
+- [`ode_order()`](https://adamrsophie.github.io/symcompR/reference/ode_order.md)
+  : Order of a differential equation
 - [`classify_pde()`](https://adamrsophie.github.io/symcompR/reference/pdsolve.md)
   [`pdsolve()`](https://adamrsophie.github.io/symcompR/reference/pdsolve.md)
   [`checkpdesol()`](https://adamrsophie.github.io/symcompR/reference/pdsolve.md)
