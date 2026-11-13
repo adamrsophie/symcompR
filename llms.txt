@@ -496,6 +496,21 @@ Structure, traversal, substitution, pattern matching, and rewriting.
   [`allresults()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
   [`brute()`](https://adamrsophie.github.io/symcompR/reference/strategies.md)
   : Strategies
+- [`branch_identity()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`branch_exhaust()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`onaction()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`branch_debug()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`multiplex()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`branch_condition()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`sfilter()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`notempty()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`branch_do_one()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`branch_chain()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`yieldify()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`branch_canon()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`branch_top_down()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  [`branch_sall()`](https://adamrsophie.github.io/symcompR/reference/branch-strategies.md)
+  : Branching strategies
 - [`EPath()`](https://adamrsophie.github.io/symcompR/reference/EPath.md)
   [`epath()`](https://adamrsophie.github.io/symcompR/reference/EPath.md)
   : Manipulate expressions using paths
@@ -3526,6 +3541,18 @@ sympy.physics.quantum, secondquant, paulialgebra and hep.gamma_matrices.
 The sympy.codegen AST, code printers, rewriting and optimization, and
 utilities.codegen routines.
 
+- [`CuPyPrinter()`](https://adamrsophie.github.io/symcompR/reference/array-code-printers.md)
+  [`JaxPrinter()`](https://adamrsophie.github.io/symcompR/reference/array-code-printers.md)
+  : Array code printers
+- [`TensorflowPrinter()`](https://adamrsophie.github.io/symcompR/reference/tensorflow-torch-code.md)
+  [`tensorflow_code()`](https://adamrsophie.github.io/symcompR/reference/tensorflow-torch-code.md)
+  [`TorchPrinter()`](https://adamrsophie.github.io/symcompR/reference/tensorflow-torch-code.md)
+  [`torch_code()`](https://adamrsophie.github.io/symcompR/reference/tensorflow-torch-code.md)
+  : TensorFlow and PyTorch code printing
+- [`lambdarepr()`](https://adamrsophie.github.io/symcompR/reference/lambda-printers.md)
+  [`NumExprPrinter()`](https://adamrsophie.github.io/symcompR/reference/lambda-printers.md)
+  [`IntervalPrinter()`](https://adamrsophie.github.io/symcompR/reference/lambda-printers.md)
+  : Lambda code printers
 - [`Token()`](https://adamrsophie.github.io/symcompR/reference/codegen-ast.md)
   [`BreakToken()`](https://adamrsophie.github.io/symcompR/reference/codegen-ast.md)
   [`ContinueToken()`](https://adamrsophie.github.io/symcompR/reference/codegen-ast.md)
@@ -3779,6 +3806,24 @@ utilities.codegen routines.
 
 ## Statistics
 
+- [`DiscreteMarkovChain()`](https://adamrsophie.github.io/symcompR/reference/markov_chains.md)
+  [`ContinuousMarkovChain()`](https://adamrsophie.github.io/symcompR/reference/markov_chains.md)
+  [`TransitionMatrixOf()`](https://adamrsophie.github.io/symcompR/reference/markov_chains.md)
+  [`GeneratorMatrixOf()`](https://adamrsophie.github.io/symcompR/reference/markov_chains.md)
+  [`StochasticStateSpaceOf()`](https://adamrsophie.github.io/symcompR/reference/markov_chains.md)
+  : Markov chains
+- [`sample_stochastic_process()`](https://adamrsophie.github.io/symcompR/reference/sample_stochastic_process.md)
+  : Sample a stochastic process
+- [`sampling_density()`](https://adamrsophie.github.io/symcompR/reference/sampling_density.md)
+  : Sampling density
+- [`ContinuousDistributionHandmade()`](https://adamrsophie.github.io/symcompR/reference/handmade_distributions.md)
+  [`DiscreteDistributionHandmade()`](https://adamrsophie.github.io/symcompR/reference/handmade_distributions.md)
+  [`FiniteDistributionHandmade()`](https://adamrsophie.github.io/symcompR/reference/handmade_distributions.md)
+  : Handmade distributions
+- [`ExpectationMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix_expectation.md)
+  [`VarianceMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix_expectation.md)
+  [`CrossCovarianceMatrix()`](https://adamrsophie.github.io/symcompR/reference/matrix_expectation.md)
+  : Matrix expectation, variance and cross covariance
 - [`ContinuousRV()`](https://adamrsophie.github.io/symcompR/reference/continuous_rv.md)
   [`Arcsin()`](https://adamrsophie.github.io/symcompR/reference/continuous_rv.md)
   [`Benini()`](https://adamrsophie.github.io/symcompR/reference/continuous_rv.md)

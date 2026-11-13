@@ -181,6 +181,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/apart.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/approximants.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/array-aliases.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/array-code-printers.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/array-expressions.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/array_derive.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/as.numeric.sym.html</loc></url>
@@ -200,6 +201,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/binomial_coefficients.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/bool_map.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/boson.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/branch-strategies.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/bsplines.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/calculus-utils.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/cancel.html</loc></url>
@@ -332,6 +334,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/grover.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/gruntz.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/hadamard_product.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/handmade_distributions.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/has.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/hermite_normal_form.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/heurisch.html</loc></url>
@@ -364,6 +367,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/kinematic_equations.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/kronecker_product.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/kroneckersimp.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/lambda-printers.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/lambdastr.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/lambdify.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/lame_coefficients.html</loc></url>
@@ -388,6 +392,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/lra_satask.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/m_values.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/magnitude.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/markov_chains.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/mathml.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix-builders.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix-constructions.html</loc></url>
@@ -395,6 +400,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_distributions.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_exp.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_exp_jordan_form.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_expectation.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/meijerint_indefinite.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/mellin_transform.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.html</loc></url>
@@ -502,6 +508,8 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/rv_attr.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/rv_moments.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/rv_sample.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/sample_stochastic_process.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/sampling_density.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/satask.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/satisfiable.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/secondquant-wicks.html</loc></url>
@@ -559,6 +567,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/tensor-bsgs.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/tensor-expressions.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/tensor-indices.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/tensorflow-torch-code.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/textplot.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/time_derivative.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/to_anf.html</loc></url>
