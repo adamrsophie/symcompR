@@ -13,6 +13,8 @@ test_that("the 84 equation key system solves to a unique solution", {
   eqs <- lapply(polys, sympify)
   xs <- lapply(0:41, function(i) Symbol(paste0("x", i)))
   sol <- solve(eqs, xs)
+  # SymPy returns a dict for a linear system and a list of solutions otherwise
+  if (!is.null(names(sol))) sol <- list(sol)
   expect_length(sol, 1L)
   vals <- lapply(sol[[1L]], as_sym)
   expect_true(all(vapply(vals, function(v) v$type == "Integer", TRUE)))

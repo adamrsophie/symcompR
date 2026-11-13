@@ -271,7 +271,7 @@ as_coeff_add_split <- function(e) {
     if (i) f <- diff(f, x)
     init[[length(init) + 1L]] <- list(.int(i), limit(f, x, S_Zero))
   }
-  sol <- tryCatch(rsolve(RE, fcall(gname, list(k)), k, init), error = function(err) NULL)
+  sol <- tryCatch(.rsolve_cc(RE, fcall(gname, list(k)), k, init), error = function(err) NULL)
   if (!is.null(sol) && !is_zero_num(sol)) return(list(.div(sol, .fps_fact(k)), S_Zero, S_Zero))
   NULL
 }
@@ -283,7 +283,7 @@ as_coeff_add_split <- function(e) {
     if (i) f <- diff(f, x)
     init[[length(init) + 1L]] <- list(.int(i), .div(limit(f, x, S_Zero), .fps_fact(.int(i))))
   }
-  sol <- tryCatch(rsolve(RE, fcall(gname, list(k)), k, init), error = function(err) NULL)
+  sol <- tryCatch(.rsolve_cc(RE, fcall(gname, list(k)), k, init), error = function(err) NULL)
   if (!is.null(sol) && !is_zero_num(sol)) return(list(sol, S_Zero, S_Zero))
   NULL
 }

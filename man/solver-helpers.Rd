@@ -8,8 +8,6 @@
 \alias{checksol}
 \alias{checkodesol}
 \alias{solve_undetermined_coeffs}
-\alias{reduce_inequalities}
-\alias{solve_poly_inequality}
 \alias{nonlinsolve}
 \alias{solve_poly_system}
 \alias{det_quick}
@@ -18,23 +16,19 @@
 \usage{
 linear_eq_to_matrix(eqs, syms)
 
-solve_linear_system(M, syms)
+solve_linear_system(M, syms, ...)
 
-solve_linear(lhs, rhs = 0, x = NULL)
+solve_linear(lhs, rhs = 0, symbols = list(), exclude = list(), x = NULL)
 
-checksol(f, sol)
+checksol(f, symbol, sol = NULL, ...)
 
-checkodesol(eq, sol, fx)
+checkodesol(eq, sol, fx = NULL)
 
-solve_undetermined_coeffs(eq, coeffs, x)
+solve_undetermined_coeffs(eq, coeffs, ..., dict = FALSE, set = FALSE)
 
-reduce_inequalities(ineqs, x = NULL)
+nonlinsolve(eqs, syms, ...)
 
-solve_poly_inequality(poly, rel = ">")
-
-nonlinsolve(eqs, syms)
-
-solve_poly_system(eqs, syms)
+solve_poly_system(eqs, ..., strict = FALSE)
 
 det_quick(M)
 
@@ -47,34 +41,49 @@ inv_quick(M)
 
 \item{M}{An augmented matrix.}
 
+\item{...}{Further symbols for \code{solve_linear_system()},
+\code{solve_undetermined_coeffs()} or \code{nonlinsolve()}, or flags such as \code{numerical = FALSE} for
+\code{checksol()}.}
+
 \item{lhs, rhs}{Sides of an equation.}
 
-\item{x}{A variable.}
+\item{symbols, exclude}{Symbols to solve for and symbols to skip.}
+
+\item{x}{A variable; for \code{solve_linear()} an alias of \code{symbols}.}
 
 \item{f, eq}{An equation or expression.}
 
-\item{sol}{A named list of values, or an \code{\link[=Eq]{Eq()}} for \code{checkodesol()}.}
+\item{symbol}{A symbol, or a named list (or list of \code{list(symbol, value)}
+pairs) giving the whole solution.}
 
-\item{fx}{Unknown function application.}
+\item{sol}{The value of \code{symbol}, or an \code{\link[=Eq]{Eq()}} for \code{checkodesol()}.}
 
-\item{ineqs}{An inequality or list of inequalities.}
+\item{fx}{Unknown function application; found from \code{eq} when omitted.}
 
-\item{poly}{A polynomial.}
+\item{dict, set}{Output forms of \code{solve_undetermined_coeffs()}, as for
+\code{\link[=solve]{solve()}}.}
 
-\item{rel}{Relational operator such as \code{">"}.}
+\item{strict}{Kept for SymPy compatibility; roots that cannot be found are
+left out.}
 }
 \value{
 A list, expression, logical or set.
 }
 \description{
 \code{linear_eq_to_matrix(eqs, syms)} returns \code{list(A, b)} with \verb{A x = b}.
-\code{solve_linear_system(M, syms)} solves an augmented matrix.
-\code{solve_linear(lhs, rhs, x)} solves one linear equation for \code{x}.
-\code{checksol(f, sol)} tests a solution by substitution, \code{checkodesol()} an ODE
-solution. \code{solve_undetermined_coeffs(eq, coeffs, x)} makes \code{eq} vanish
-identically in \code{x}. \code{reduce_inequalities()} and \code{solve_poly_inequality()}
-solve inequalities in one variable. \code{nonlinsolve()} and
-\code{solve_poly_system()} solve systems; \code{det_quick()} and \code{inv_quick()} are
+\code{solve_linear_system(M, syms, ...)} solves an augmented matrix; further
+symbols may follow \code{syms}. It returns \code{NULL} when there is no solution.
+\code{solve_linear(lhs, rhs, symbols, exclude)} solves one equation for one of
+\code{symbols} when it is linear in it, and returns the pair \verb{(symbol, value)},
+\verb{(0, 1)} when nothing is free, or \verb{(numerator, denominator)} otherwise.
+\code{checksol(f, symbol, sol)} tests a solution by substitution and returns
+\code{TRUE}, \code{FALSE} or \code{NA} when undecided; \code{checkodesol(eq, sol, fx)} checks an
+ODE solution and returns the pair \verb{(TRUE, 0)} or \verb{(FALSE, residual)}.
+\code{solve_undetermined_coeffs(eq, coeffs, ...)} makes \code{eq} vanish identically
+in the symbols \code{...}, as SymPy: a named list for one solution, a list of
+them for several, and \code{NULL} when no solution exists. \code{nonlinsolve()} solves a system;
+\code{solve_poly_system(eqs, ...)} solves a zero dimensional polynomial system
+in the generators \code{...} and returns a list of solution tuples; \code{det_quick()} and \code{inv_quick()} are
 \code{\link[=sym_det]{sym_det()}} and \code{\link[=inverse]{inverse()}}.
 }
 \examples{

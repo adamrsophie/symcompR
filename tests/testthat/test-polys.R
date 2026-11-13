@@ -66,8 +66,9 @@ test_that("roots and solve", {
   expect_equal(vapply(solve(x^2 - 4, x), sstr, ""), c("-2", "2"))
   expect_equal(vapply(solve(Eq(exp(x), 3), x), sstr, ""), "log(3)")
   sol <- solve(list(x + y - 3, x - y - 1), list(x, y))
-  expect_equal(s(sol[[1]]$x), "2")
-  expect_equal(s(sol[[1]]$y), "1")
+  # SymPy returns a dict for a linear system: {x: 2, y: 1}
+  expect_equal(s(sol$x), "2")
+  expect_equal(s(sol$y), "1")
   sol2 <- solve(list(x^2 + y^2 - 5, x - y + 1), list(x, y))
   expect_length(sol2, 2L)
   expect_equal(vapply(solve(sin(x), x), sstr, ""), c("0", "pi"))

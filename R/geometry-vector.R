@@ -386,7 +386,7 @@ intersection <- function(a, b) {
 .isect_circles <- function(a, b) {
   x <- Dummy("x"); y <- Dummy("y")
   ea <- circle_equation(a, x, y); eb <- circle_equation(b, x, y)
-  sols <- solve(list(ea, eb), list(x, y))
+  sols <- solve(list(ea, eb), list(x, y), dict = TRUE)
   .ordered_points(lapply(sols, function(s) Point(simplify(s[[x$name]]), simplify(s[[y$name]]))))
 }
 

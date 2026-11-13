@@ -3,39 +3,38 @@
 \name{solve.sym}
 \alias{solve.sym}
 \alias{solve.character}
+\alias{solve.Poly}
 \alias{solve.list}
 \title{Solve equations}
 \usage{
-\method{solve}{sym}(a, b, ..., dict = FALSE, check = TRUE)
+\method{solve}{sym}(a, b, ...)
 
 \method{solve}{character}(a, b, ...)
 
-\method{solve}{list}(a, b, ..., dict = TRUE, check = TRUE)
+\method{solve}{Poly}(a, b, ...)
+
+\method{solve}{list}(a, b, ...)
 }
 \arguments{
 \item{a}{An equation, expression, list of them, or a character string.}
 
 \item{b}{A symbol or list of symbols; by default all free symbols.}
 
-\item{...}{Ignored.}
-
-\item{dict}{For a single equation, return named lists as for systems.}
-
-\item{check}{Drop solutions that make a denominator vanish.}
+\item{...}{More symbols, then named flags as in SymPy.}
 }
 \value{
-A list of solutions.
+A list of solutions, a named list, or a list of tuples.
 }
 \description{
-\code{solve(f, x)} solves \code{f = 0} (or an \code{\link[=Eq]{Eq()}}) for \code{x}, returning a list of
-solutions. With a list of equations and a list of symbols it solves the
-system and returns a list of solutions, each a named list mapping symbol
-names to values. Polynomial equations are solved exactly (by
-factorization, radicals or \code{\link[=CRootOf]{CRootOf()}}), simple transcendental equations
-by inversion, linear systems by Gauss-Jordan elimination (free parameters
-stay symbolic) and polynomial systems by propagation and Groebner bases.
-Inequalities are passed to \code{\link[=solve_univariate_inequality]{solve_univariate_inequality()}}. This is a
-method for the base R generic \code{\link[base:solve]{base::solve()}}.
+\code{solve(f, x)} solves \code{f = 0} (or an \code{\link[=Eq]{Eq()}}) for \code{x} following SymPy's
+\code{solve()}: a single equation in one symbol gives a list of solutions, a
+linear system a named list (a dict), other systems a list of solution
+tuples or, with \code{dict = TRUE}, of named lists. Extra symbols may follow
+\code{b}, and SymPy's flags (\code{dict}, \code{set}, \code{check}, \code{simplify}, \code{rational},
+\code{exclude}, \code{implicit}, \code{manual}, \code{cubics}, \code{quartics}, \code{quintics}, ...)
+are passed by name. Solutions are simplified, checked and sorted as in
+SymPy. Inequalities go to \code{\link[=reduce_inequalities]{reduce_inequalities()}}. This is a method for
+the base R generic \code{\link[base:solve]{base::solve()}}.
 }
 \examples{
 x <- Symbol("x"); y <- Symbol("y")

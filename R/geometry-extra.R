@@ -138,7 +138,7 @@ arbitrary_point <- function(e, t = Symbol("t")) {
   t <- Dummy("t"); s <- Dummy("s")
   eqs <- Map(function(p, u, q, v) .sub(.add(list(p, .mul(list(t, u)))), .add(list(q, .mul(list(s, v))))),
              a$p1$coords, d1, b$p1$coords, d2)
-  sol <- tryCatch(solve(eqs, list(t, s)), error = function(e) list())
+  sol <- tryCatch(solve(eqs, list(t, s), dict = TRUE), error = function(e) list())
   if (!length(sol)) return(list())
   tv <- sol[[1L]][[t$name]]
   pt <- do.call(Point, Map(function(p, u) simplify(.add(list(p, .mul(list(tv, u))))), a$p1$coords, d1))

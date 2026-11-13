@@ -168,7 +168,8 @@ pdsolve <- function(eq, func = NULL, hint = "default", solvefun = NULL) {
     xs <- .div(.add(list(.mul(list(b, xi)), .mul(list(c, eta)))), bc)
     ys <- .div(.sub(.mul(list(c, xi)), .mul(list(b, eta))), bc)
     expterm <- fcall("exp", list(.mul(list(.neg(.div(d, bc)), xi))))
-    integrand <- xreplace(.div(ee, expterm), list(list(x, xs), list(y, ys)))
+    # SymPy's Mul folds exp(a)*exp(b) into exp(a + b); powsimp does that here
+    integrand <- powsimp(xreplace(.div(ee, expterm), list(list(x, xs), list(y, ys))))
     u <- .add(list(.mul(list(b, x)), .mul(list(c, y))))
     v <- .sub(.mul(list(c, x)), .mul(list(b, y)))
     if (hint == "1st_linear_constant_coeff_Integral") {
@@ -253,16 +254,16 @@ checkpdesol <- function(eq, sol, func = NULL, solve_for_func = TRUE) {
 #' @rdname pdsolve
 #' @export
 pde_separate <- function(eq, fun, sep, strategy = "mul") {
-  if (!strategy %in% c("add", "mul")) stop("Unknown strategy: ", strategy, call. = FALSE)
+  if (!strategy %in% c("add", "mul")) stop(.sympy_condition("ValueError", paste0("Unknown strategy: ", strategy)))
   e <- .eq_to_expr(eq)
   fun <- as_sym(fun)
   sep <- lapply(sep, as_sym)
   orig <- vapply(fun$args, .k, "")
   sargs <- unlist(lapply(sep, `[[`, "args"), recursive = FALSE)
   sk <- vapply(sargs, .k, "")
-  if (length(sk) != length(orig)) stop("Variable counts do not match", call. = FALSE)
-  if (anyDuplicated(sk)) stop("Duplicate substitution arguments detected", call. = FALSE)
-  if (!setequal(sk, orig)) stop("Arguments do not match", call. = FALSE)
+  if (length(sk) != length(orig)) stop(.sympy_condition("ValueError", "Variable counts do not match"))
+  if (anyDuplicated(sk)) stop(.sympy_condition("ValueError", "Duplicate substitution arguments detected"))
+  if (!setequal(sk, orig)) stop(.sympy_condition("ValueError", "Arguments do not match"))
   functions <- if (strategy == "add") .add(sep) else .mul(sep)
   result <- doit(subs(e, fun, functions))
   if (strategy == "mul") {

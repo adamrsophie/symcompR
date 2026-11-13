@@ -124,7 +124,7 @@ decompogen <- function(f, x) {
 #' @export
 homogeneous_order <- function(eq, ...) {
   syms <- lapply(list(...), as_sym)
-  if (!length(syms)) stop("homogeneous_order: no symbols were given.", call. = FALSE)
+  if (!length(syms)) stop(.sympy_condition("ValueError", "homogeneous_order: no symbols were given."))
   eq <- as_sym(eq)
   if (.has_type(eq, c("Order", "Derivative"))) return(NULL)
   if (!length(free_symbols(eq))) return(S_Zero)
@@ -172,18 +172,13 @@ solve_linear_system_LU <- function(M, syms) {
   L <- .mrows(lu$L)
   U <- .mrows(lu$U)
   pb <- b[lu$perm]
-  y <- vector("list", n)
-  for (i in seq_len(n)) {
-    s <- pb[[i]]
-    if (i > 1L) for (j in seq_len(i - 1L)) s <- .sub(s, .mul(list(L[[i]][[j]], y[[j]])))
-    y[[i]] <- s
-  }
-  xs <- vector("list", n)
+  # Matrix.LUsolve: forward and backward substitution without simplification
+  xs <- pb
+  for (i in seq_len(n)) if (i > 1L) for (j in seq_len(i - 1L)) xs[[i]] <- .sub(xs[[i]], .mul(list(L[[i]][[j]], xs[[j]])))
   for (i in rev(seq_len(n))) {
     if (is_zero_num(cancel(U[[i]][[i]]))) stop("Matrix is singular", call. = FALSE)
-    s <- y[[i]]
-    if (i < n) for (j in (i + 1L):n) s <- .sub(s, .mul(list(U[[i]][[j]], xs[[j]])))
-    xs[[i]] <- cancel(.div(s, U[[i]][[i]]))
+    if (i < n) for (j in (i + 1L):n) xs[[i]] <- .sub(xs[[i]], .mul(list(U[[i]][[j]], xs[[j]])))
+    xs[[i]] <- .mul(list(.pow(U[[i]][[i]], S_NegativeOne), xs[[i]]))
   }
   stats::setNames(xs, vapply(syms, function(s) s$name, ""))
 }
@@ -257,120 +252,6 @@ factor_system <- function(eqs, gens = NULL) {
   out <- lapply(.factor_sets(sets), function(ks) unname(pool[ks]))
   generic <- Filter(function(s) all(vapply(s, function(f) any(vapply(gens, function(g) .has1(f, g), TRUE)), TRUE)), out)
   .sort_systems(generic, gens)
-}
-
-# ---------------------------------------------------------------------------
-# Inequalities
-
-# Solution set of one inequality, as a subset of the reals.
-.ineq_set <- function(e, rel, x) {
-  e <- as_sym(e)
-  if (!.has1(e, x)) return(if (.is_true(Rel(e, 0, rel))) Reals else S_EmptySet)
-  solve_univariate_inequality(Rel(e, 0, rel), x, relational = FALSE)
-}
-
-.rat_part <- function(p) as_sym(if (inherits(p, "Poly")) as_expr(p) else p)
-
-#' Rational and absolute value inequalities
-#'
-#' `solve_rational_inequalities(eqs)` solves `eqs`, a list of lists whose
-#' inner entries `list(list(n, d), rel)` mean `n/d rel 0`; inner lists are
-#' joined by `And` and the outer list by `Or`. `reduce_abs_inequality(expr,
-#' rel, x)` reduces `expr rel 0` with nested absolute values, and
-#' `reduce_abs_inequalities(exprs, x)` a list of `list(expr, rel)` pairs.
-#'
-#' @param eqs Nested list of inequalities.
-#' @param expr An expression.
-#' @param rel A relation: `"<"`, `"<="`, `">"`, `">="`, `"=="` or `"!="`.
-#' @param x The real variable.
-#' @param exprs A list of `list(expr, rel)` pairs.
-#' @return A set, or a relational condition on `x`.
-#' @examples
-#' x <- Symbol("x")
-#' solve_rational_inequalities(list(list(list(list(x - 1, x + 1), "<"))))
-#' reduce_abs_inequality(Abs(x - 5) - 3, "<", x)
-#' @name abs-inequalities
-NULL
-
-#' @rdname abs-inequalities
-#' @export
-solve_rational_inequalities <- function(eqs) {
-  result <- S_EmptySet
-  for (grp in eqs) {
-    if (!length(grp)) next
-    sol <- Reals
-    for (q in grp) {
-      n <- .rat_part(q[[1L]][[1L]])
-      d <- .rat_part(q[[1L]][[2L]])
-      rel <- q[[2L]]
-      x <- c(free_symbols(n), free_symbols(d))
-      x <- if (length(x)) x[[1L]] else Symbol("x")
-      s <- .ineq_set(expand(.mul(list(n, d))), rel, x)
-      if (.has1(d, x)) s <- Complement(s, .ineq_set(d, "==", x))
-      sol <- Intersection(sol, s)
-      if (identical(sol$key, S_EmptySet$key)) break
-    }
-    result <- Union(result, sol)
-  }
-  result
-}
-
-# SymPy _bottom_up_scan: every sign case of the absolute values, as
-# (expression, conditions) pairs.
-.abs_cases <- function(e) {
-  if (e$type %in% c("Add", "Mul")) {
-    out <- NULL
-    for (a in e$args) {
-      cs <- .abs_cases(a)
-      if (is.null(out)) {
-        out <- cs
-        next
-      }
-      nxt <- list()
-      for (p in out) for (q in cs)
-        nxt[[length(nxt) + 1L]] <- list(e = if (e$type == "Add") .add(list(p$e, q$e)) else .mul(list(p$e, q$e)),
-                                       conds = c(p$conds, q$conds))
-      out <- nxt
-    }
-    return(out)
-  }
-  if (e$type == "Pow") {
-    n <- e$args[[2L]]
-    if (n$type != "Integer") stop("Only Integer Powers are allowed on Abs.", call. = FALSE)
-    return(lapply(.abs_cases(e$args[[1L]]), function(p) list(e = .pow(p$e, n), conds = p$conds)))
-  }
-  if (e$type == "Function" && e$name == "Abs") {
-    out <- list()
-    for (p in .abs_cases(e$args[[1L]])) {
-      out[[length(out) + 1L]] <- list(e = p$e, conds = c(p$conds, list(list(p$e, ">="))))
-      out[[length(out) + 1L]] <- list(e = .neg(p$e), conds = c(p$conds, list(list(p$e, "<"))))
-    }
-    return(out)
-  }
-  list(list(e = e, conds = list()))
-}
-
-#' @rdname abs-inequalities
-#' @export
-reduce_abs_inequality <- function(expr, rel, x) {
-  x <- as_sym(x)
-  if (identical(.facts(x)[["extended_real"]], FALSE))
-    stop("Cannot solve inequalities with absolute values containing non-real variables.", call. = FALSE)
-  flip <- c("<" = ">", "<=" = ">=")
-  sol <- S_EmptySet
-  for (cs in .abs_cases(as_sym(expr))) {
-    main <- if (rel %in% names(flip)) list(.neg(cs$e), flip[[rel]]) else list(cs$e, rel)
-    s <- Reals
-    for (q in c(list(main), cs$conds)) s <- Intersection(s, .ineq_set(q[[1L]], q[[2L]], x))
-    sol <- Union(sol, s)
-  }
-  as_relational(sol, x)
-}
-
-#' @rdname abs-inequalities
-#' @export
-reduce_abs_inequalities <- function(exprs, x) {
-  do.call(And, lapply(exprs, function(q) reduce_abs_inequality(q[[1L]], q[[2L]], x)))
 }
 
 #' Solve a system by substitution
@@ -491,7 +372,7 @@ substitution <- function(system, symbols, result = list(list()), known_symbols =
     C <- lapply(0:N, function(i) Symbol(paste0("C", i + shift)))
     y <- .add(Map(function(c, i) .mul(list(c, .pow(n, .int(i)))), C, 0:N))
     E <- .add(lapply(0:r, function(i) .mul(list(coeffs[[i + 1L]], subs(y, n, .add(list(n, .int(i))))))))
-    sol <- solve_undetermined_coeffs(.sub(E, f), C, n)
+    sol <- .solve_undetermined_linear(.sub(E, f), C, n)
     if (is.null(sol)) return(NULL)
     C0 <- C
     C <- Filter(function(c) is.null(sol[[c$name]]), C)

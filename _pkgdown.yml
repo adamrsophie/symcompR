@@ -232,7 +232,10 @@ reference:
   - substitution
   - solver-helpers
   - nsolve
-  - abs-inequalities
+  - inequality-solvers
+  - solveset_real
+  - unrad
+  - constantsimp
   - solve_univariate_inequality
   - reduce_rational_inequalities
   - not_empty_in

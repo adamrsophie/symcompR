@@ -874,20 +874,16 @@ def_function("Abs",
                NULL
              },
              numeric = function(x) abs(x),
-             # Abs: extended real and nonnegative; real only for a finite
-             # argument, positive when the argument is nonzero
              facts = function(args, afs) {
                f <- afs[[1L]]
-               out <- c(commutative = TRUE, extended_real = TRUE, extended_negative = FALSE,
-                        extended_nonnegative = TRUE)
-               if (isTRUE(f[["finite"]])) out["real"] <- TRUE
-               if (isTRUE(f[["imaginary"]])) out["zero"] <- FALSE
-               z <- f[["zero"]]
-               if (!is.na(z)) { out["zero"] <- z; out["extended_positive"] <- !z }
-               else if (isTRUE(f[["imaginary"]])) out["extended_positive"] <- TRUE
-               if (isTRUE(f[["extended_real"]]))
-                 for (nm in c("integer", "rational", "even", "odd")) if (!is.na(f[[nm]])) out[nm] <- f[[nm]]
-               if (!is.na(f[["algebraic"]])) out["algebraic"] <- f[["algebraic"]]
+               out <- c(commutative = TRUE, nonnegative = TRUE)
+               if (isTRUE(f[["finite"]])) out["finite"] <- TRUE
+               if (isTRUE(f[["zero"]])) out["zero"] <- TRUE
+               if (isTRUE(f[["nonzero"]]) || isTRUE(f[["imaginary"]])) out["positive"] <- TRUE
+               if (isTRUE(f[["integer"]])) out["integer"] <- TRUE
+               if (isTRUE(f[["rational"]])) out["rational"] <- TRUE
+               if (isTRUE(f[["even"]])) out["even"] <- TRUE
+               if (isTRUE(f[["odd"]])) out["odd"] <- TRUE
                out
              },
              latex = function(a) paste0("\\left|{", a[1], "}\\right|"))
@@ -1102,33 +1098,19 @@ def_function("sign",
   }
 }
 
-# re and im: extended real; finite (so complex) for a finite argument; re is
-# zero when the argument is zero or imaginary, im when it is extended real
-.re_im_facts <- function(f, which) {
-  out <- c(commutative = TRUE, extended_real = TRUE)
-  if (isTRUE(f[["finite"]])) { out["finite"] <- TRUE; out["complex"] <- TRUE }
-  z <- if (which == "re") {
-    if (isTRUE(f[["imaginary"]]) || isTRUE(f[["zero"]])) TRUE
-    else if (isFALSE(f[["imaginary"]]) && isFALSE(f[["zero"]])) FALSE else NA
-  } else f[["extended_real"]]
-  if (!is.na(z)) out["zero"] <- z
-  if (!is.na(f[["algebraic"]])) out["algebraic"] <- f[["algebraic"]]
-  out
-}
-
 def_function("re", eval = function(args) .re_eval_s(args), numeric = Re,
              diff = function(args, i) {
                if (isTRUE(ask_fact(args[[1L]], "real"))) return(S_One)
                NULL
              },
-             facts = function(args, afs) .re_im_facts(afs[[1L]], "re"),
+             facts = function(args, afs) c(commutative = TRUE, real = TRUE),
              latex = function(a) paste0("\\operatorname{re}{\\left(", a[1], " \\right)}"))
 def_function("im", eval = function(args) .im_eval_s(args), numeric = Im,
              diff = function(args, i) {
                if (isTRUE(ask_fact(args[[1L]], "real"))) return(S_Zero)
                NULL
              },
-             facts = function(args, afs) .re_im_facts(afs[[1L]], "im"),
+             facts = function(args, afs) c(commutative = TRUE, real = TRUE),
              latex = function(a) paste0("\\operatorname{im}{\\left(", a[1], " \\right)}"))
 
 def_function("conjugate",
@@ -1437,14 +1419,43 @@ def_function("LambertW", nargs = 1:2,
              })
 
 .lambertw_num <- function(x, k = 0) {
-  x <- Re(x)
   k <- Re(k)
-  if (x < -exp(-1)) return(NaN)
+  if (!is.finite(k) || k != round(k)) return(NaN)
+  xr <- Re(x)
+  xi <- if (is.complex(x)) Im(x) else 0
+  if (xi == 0) {
+    if (k == 0 && xr >= -exp(-1)) return(.lambertw_real(xr, 0))
+    if (k == -1 && xr < 0 && xr >= -exp(-1)) return(.lambertw_real(xr, -1))
+  }
+  # the complex branches, as mpmath.lambertw
+  z <- complex(real = xr, imaginary = xi)
+  if (z == 0) return(if (k == 0) 0 else -Inf)
+  if ((k == 0 || k == -1) && Mod(z + exp(-1)) < 0.3) {
+    p <- sqrt(2 * (exp(1) * z + 1))
+    if (k == -1) p <- -p
+    w <- -1 + p - p^2 / 3
+  } else if (k == 0 && Mod(z) < 3) {
+    w <- log(1 + z)
+    if (!is.finite(Re(w)) || !is.finite(Im(w))) w <- complex(real = -1, imaginary = 1)
+  } else {
+    L1 <- log(z) + 2i * pi * k
+    w <- L1 - log(L1)
+  }
+  for (i in 1:100) {
+    ew <- exp(w)
+    f <- w * ew - z
+    wn <- w - f / (ew * (w + 1) - (w + 2) * f / (2 * w + 2))
+    if (!is.finite(Re(wn)) || !is.finite(Im(wn))) return(NaN)
+    if (Mod(wn - w) < 1e-15 * (1 + Mod(wn))) return(wn)
+    w <- wn
+  }
+  w
+}
+
+# the real branches k = 0 (x >= -1/e) and k = -1 (-1/e <= x < 0)
+.lambertw_real <- function(x, k) {
   if (k == -1) {
-    if (x >= 0) return(NaN)
     w <- if (x < -0.25) -1 - sqrt(2 * (1 + exp(1) * x)) else log(-x) - log(-log(-x))
-  } else if (k != 0) {
-    return(NaN)
   } else {
     w <- if (x < 1) x else log(x)
   }
@@ -1452,6 +1463,7 @@ def_function("LambertW", nargs = 1:2,
     ew <- exp(w)
     f <- w * ew - x
     wn <- w - f / (ew * (w + 1) - (w + 2) * f / (2 * w + 2))
+    if (!is.finite(wn)) return(w)
     if (abs(wn - w) < 1e-15 * (1 + abs(wn))) return(wn)
     w <- wn
   }

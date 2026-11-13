@@ -9,22 +9,20 @@
 
 #' Solve equations
 #'
-#' `solve(f, x)` solves `f = 0` (or an [Eq()]) for `x`, returning a list of
-#' solutions. With a list of equations and a list of symbols it solves the
-#' system and returns a list of solutions, each a named list mapping symbol
-#' names to values. Polynomial equations are solved exactly (by
-#' factorization, radicals or [CRootOf()]), simple transcendental equations
-#' by inversion, linear systems by Gauss-Jordan elimination (free parameters
-#' stay symbolic) and polynomial systems by propagation and Groebner bases.
-#' Inequalities are passed to [solve_univariate_inequality()]. This is a
-#' method for the base R generic [base::solve()].
+#' `solve(f, x)` solves `f = 0` (or an [Eq()]) for `x` following SymPy's
+#' `solve()`: a single equation in one symbol gives a list of solutions, a
+#' linear system a named list (a dict), other systems a list of solution
+#' tuples or, with `dict = TRUE`, of named lists. Extra symbols may follow
+#' `b`, and SymPy's flags (`dict`, `set`, `check`, `simplify`, `rational`,
+#' `exclude`, `implicit`, `manual`, `cubics`, `quartics`, `quintics`, ...)
+#' are passed by name. Solutions are simplified, checked and sorted as in
+#' SymPy. Inequalities go to [reduce_inequalities()]. This is a method for
+#' the base R generic [base::solve()].
 #'
 #' @param a An equation, expression, list of them, or a character string.
 #' @param b A symbol or list of symbols; by default all free symbols.
-#' @param ... Ignored.
-#' @param dict For a single equation, return named lists as for systems.
-#' @param check Drop solutions that make a denominator vanish.
-#' @return A list of solutions.
+#' @param ... More symbols, then named flags as in SymPy.
+#' @return A list of solutions, a named list, or a list of tuples.
 #' @examples
 #' x <- Symbol("x"); y <- Symbol("y")
 #' solve(x^2 - 4, x)
@@ -32,20 +30,7 @@
 #' solve(list(x + y - 3, x - y - 1), list(x, y))
 #' solve(list(x^2 + y^2 - 5, x - y + 1), list(x, y))
 #' @export
-solve.sym <- function(a, b, ..., dict = FALSE, check = TRUE) {
-  syms <- if (missing(b)) free_symbols(a) else .as_gens(list(b))
-  if (is_relational(a) && a$type != "Equality" && a$type != "Unequality") {
-    if (length(syms) != 1L) stop("inequality solving needs one symbol")
-    return(solve_univariate_inequality(a, syms[[1L]]))
-  }
-  if (a$type %in% c("And", "Or")) return(solve.list(a$args, if (missing(b)) syms else b, dict = TRUE))
-  if (length(syms) > 1L) return(solve.list(list(a), syms, dict = TRUE, check = check))
-  if (!length(syms)) stop("no symbols to solve for")
-  x <- syms[[1L]]
-  sols <- .solve_univariate(.eq_to_expr(a), x, check = check)
-  if (dict) return(lapply(sols, function(s) stats::setNames(list(s), x$name)))
-  sols
-}
+solve.sym <- function(a, b, ...) .solve_front(a, if (missing(b)) list() else list(b), list(...))
 
 #' @rdname solve.sym
 #' @export
@@ -58,16 +43,19 @@ solve.character <- function(a, b, ...) {
 
 #' @rdname solve.sym
 #' @export
-solve.list <- function(a, b, ..., dict = TRUE, check = TRUE) {
-  eqs <- lapply(a, function(e) .eq_to_expr(if (is.character(e)) sympify(e) else as_sym(e)))
-  eqs <- Filter(function(e) !is_zero_num(e), eqs)
-  syms <- if (missing(b)) .sort_gens(unique_syms(lapply(eqs, free_symbols))) else .as_gens(list(b))
-  if (!length(eqs)) return(list(list()))
-  if (length(syms) == 1L && length(eqs) == 1L) {
-    return(solve.sym(eqs[[1L]], syms[[1L]], dict = dict, check = check))
-  }
-  sols <- .solve_system(eqs, syms, check = check)
-  lapply(sols, function(s) s[order(match(names(s), vapply(syms, function(z) z$name, "")))])
+solve.Poly <- function(a, b, ...) .solve_front(a, if (missing(b)) list() else list(b), list(...))
+
+#' @rdname solve.sym
+#' @export
+solve.list <- function(a, b, ...) {
+  a <- lapply(a, function(e) if (is.character(e)) sympify(e) else e)
+  .solve_front(a, if (missing(b)) list() else list(b), list(...))
+}
+
+.solve_front <- function(f, b, dots) {
+  nm <- names(dots)
+  if (is.null(nm)) nm <- rep("", length(dots))
+  .sp_solve(f, c(b, dots[!nzchar(nm)]), dots[nzchar(nm)])
 }
 
 unique_syms <- function(lsts) {

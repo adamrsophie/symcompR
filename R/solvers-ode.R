@@ -25,6 +25,84 @@
   list(eq = walk(eq), ys = ys, order = order)
 }
 
+# sympy.solvers.ode.ode.allhints
+.ODE_ALLHINTS <- c("factorable", "nth_algebraic", "separable", "1st_exact", "1st_linear",
+                   "Bernoulli", "1st_rational_riccati", "Riccati_special_minus2",
+                   "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
+                   "1st_homogeneous_coeff_subs_dep_div_indep", "almost_linear",
+                   "linear_coefficients", "separable_reduced", "1st_power_series", "lie_group",
+                   "nth_linear_constant_coeff_homogeneous", "nth_linear_euler_eq_homogeneous",
+                   "nth_linear_constant_coeff_undetermined_coefficients",
+                   "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients",
+                   "nth_linear_constant_coeff_variation_of_parameters",
+                   "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters", "Liouville",
+                   "2nd_linear_airy", "2nd_linear_bessel", "2nd_linear_bessel_transform",
+                   "2nd_hypergeometric", "2nd_hypergeometric_Integral", "nth_order_reducible",
+                   "2nd_power_series_ordinary", "2nd_power_series_regular",
+                   "nth_algebraic_Integral", "separable_Integral", "1st_exact_Integral",
+                   "1st_linear_Integral", "Bernoulli_Integral",
+                   "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
+                   "1st_homogeneous_coeff_subs_dep_div_indep_Integral", "almost_linear_Integral",
+                   "linear_coefficients_Integral", "separable_reduced_Integral",
+                   "nth_linear_constant_coeff_variation_of_parameters_Integral",
+                   "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral",
+                   "Liouville_Integral", "2nd_nonlinear_autonomous_conserved",
+                   "2nd_nonlinear_autonomous_conserved_Integral")
+
+# _preprocess: the one undefined function applied inside the derivatives
+.ode_detect_func <- function(e) {
+  fs <- list()
+  walk <- function(z) {
+    if (z$type == "Derivative") for (f in Filter(.is_undefined_application, atoms(z, "Function"))) fs[[f$key]] <<- f
+    for (a in z$args) walk(a)
+  }
+  walk(e)
+  if (length(fs) != 1L)
+    stop(.sympy_condition("ValueError", paste0("The function cannot be automatically detected for ", .sp_py_str(e), ".")))
+  fs[[1L]]
+}
+
+# the checks _desolve makes before solving
+.ode_check <- function(e, fx, hint) {
+  if (length(fx$args) != 1L)
+    stop(.sympy_condition("ValueError", paste0("dsolve() and classify_ode() only work with functions of one variable, not ", .sp_py_str(fx))))
+  if (!identical(hint, "default") && !(hint %in% c(.ODE_ALLHINTS, "all", "all_Integral", "best")))
+    stop(.sympy_condition("ValueError", paste0("Hint not recognized: ", hint)))
+  if (ode_order(e, fx) == 0L)
+    stop(.sympy_condition("ValueError", paste0(.sp_py_str(e), " is not a solvable differential equation in ", .sp_py_str(fx))))
+}
+
+# the checks classify_ode makes of ics, given as list(list(key, value), ...)
+.ode_check_ics <- function(ics, fx) {
+  x <- fx$args[[1L]]
+  is_f <- function(z) z$type == "Function" && identical(z$name, fx$name) && length(z$args) == 1L
+  for (p in ics) {
+    key <- as_sym(p[[1L]])
+    val <- as_sym(p[[2L]])
+    if (key$type %in% c("Subs", "Derivative")) {
+      if (key$type == "Subs") {
+        vp <- .subs_parts(key)
+        deriv <- key$args[[1L]]; old <- vp[[1L]][[1L]]; new <- vp[[2L]][[1L]]
+      } else {
+        deriv <- key; old <- x; new <- key$args[[2L]]$args[[1L]]
+      }
+      ok <- deriv$type == "Derivative" && is_f(deriv$args[[1L]]) && identical(old$key, x$key) && !.has1(new, x) &&
+        !.has1(val, x)
+      if (ok) {
+        dv <- vapply(deriv$args[-1L], function(t) if (t$type == "Tuple") t$args[[1L]]$key else t$key, "")
+        ok <- all(dv == dv[1L])
+      }
+      if (!ok) stop(.sympy_condition("ValueError", "Invalid boundary conditions for Derivatives"))
+    } else if (.is_undefined_application(key)) {
+      if (!(is_f(key) && !.has1(key$args[[1L]], x) && !.has1(val, x)))
+        stop(.sympy_condition("ValueError", "Invalid boundary conditions for Function"))
+    } else {
+      stop(.sympy_condition("ValueError", paste0("Enter boundary conditions of the form ics={f(point): value, ",
+                                                 "f(x).diff(x, order).subs(x, point): value}")))
+    }
+  }
+}
+
 #' Solve ordinary differential equations
 #'
 #' `dsolve(eq, fx)` solves an ordinary differential equation for the unknown
@@ -38,17 +116,29 @@
 #' `classify_ode()` the matching classes.
 #'
 #' @param eq The equation or expression equal to zero.
-#' @param fx The unknown, for example `f(x)`.
-#' @param ics Optional initial conditions.
+#' @param fx The unknown, for example `f(x)`; found from the derivatives in
+#'   `eq` when omitted.
+#' @param ics Optional initial conditions: for `dsolve()` a list of
+#'   `list(point, order, value)`; for `classify_ode()` a list of
+#'   `list(key, value)` pairs, where a key is `f(point)` or a derivative of
+#'   `f` at a point, checked as SymPy checks them.
+#' @param hint A SymPy hint name; any recognized hint is accepted, and the
+#'   solution comes from the classes above.
+#' @param dict For `classify_ode()`, return the order, the default hint and
+#'   the ordered hints as a list.
+#' @param ... Further SymPy options, ignored.
 #' @return An [Eq()], or a list of them for several solutions.
 #' @examples
 #' x <- Symbol("x"); f <- Function("f")
 #' dsolve(Derivative(f(x), x) - f(x), f(x))
 #' dsolve(Derivative(f(x), x, 2) + f(x), f(x))
 #' @export
-dsolve <- function(eq, fx, ics = NULL) {
+dsolve <- function(eq, fx = NULL, ics = NULL, hint = "default", ...) {
   e <- .eq_to_expr(eq)
-  fx <- as_sym(fx)
+  # dsolve(eq, f(x), "hint") as SymPy's positional form
+  if (is.character(ics)) { hint <- ics; ics <- NULL }
+  fx <- if (is.null(fx)) .ode_detect_func(e) else as_sym(fx)
+  .ode_check(e, fx, hint)
   x <- fx$args[[1L]]
   e <- doit(e)
   used <- Filter(function(s) grepl("^C[0-9]+$", s$name), free_symbols(e))
@@ -65,16 +155,20 @@ dsolve <- function(eq, fx, ics = NULL) {
 #' @rdname dsolve
 #' @export
 ode_order <- function(eq, fx) {
-  e <- .eq_to_expr(eq)
   fx <- as_sym(fx)
-  m <- 0L
-  walk <- function(z) {
-    if (z$type == "Derivative" && identical(z$args[[1L]]$key, fx$key))
-      m <<- max(m, as.integer(as.numeric(z$args[[2L]]$args[[2L]])))
-    for (a in z$args) walk(a)
+  # sympy.solvers.deutils.ode_order: a derivative of another expression adds
+  # its own order to the highest order among that expression's arguments
+  rec <- function(z) {
+    if (!.has1(z, fx)) return(0L)
+    if (z$type == "Derivative") {
+      nv <- sum(vapply(z$args[-1L], function(v) as.integer(as.numeric(v$args[[2L]])), 0L))
+      if (identical(z$args[[1L]]$key, fx$key)) return(nv)
+      a <- z$args[[1L]]$args
+      return(nv + if (length(a)) max(vapply(a, rec, 0L)) else 0L)
+    }
+    if (length(z$args)) max(vapply(z$args, rec, 0L)) else 0L
   }
-  walk(e)
-  m
+  rec(as_sym(eq))
 }
 
 .linear_ode_coeffs <- function(sv, x) {
@@ -89,9 +183,17 @@ ode_order <- function(eq, fx) {
 
 #' @rdname dsolve
 #' @export
-classify_ode <- function(eq, fx) {
+classify_ode <- function(eq, fx = NULL, dict = FALSE, ics = NULL, ...) {
+  if (!is.null(fx) && length(as_sym(fx)$args) != 1L)
+    stop(.sympy_condition("ValueError", paste0("dsolve() and classify_ode() only work with functions of one variable, not ",
+                                               .sp_py_str(as_sym(fx)))))
   e <- doit(.eq_to_expr(eq))
-  fx <- as_sym(fx)
+  fx <- if (is.null(fx)) .ode_detect_func(e) else as_sym(fx)
+  if (!is.null(ics)) .ode_check_ics(ics, fx)
+  if (dict) {
+    hs <- classify_ode(e, fx)
+    return(list(order = ode_order(e, fx), default = if (length(hs)) hs[[1L]], ordered_hints = hs))
+  }
   x <- fx$args[[1L]]
   sv <- .ode_symbols(e, fx, x)
   out <- character()
@@ -417,7 +519,7 @@ classify_ode <- function(eq, fx) {
   lin <- all(vapply(eqs, function(e) .is_linear_in(e, cs), TRUE))
   if (!lin) {
     # nonlinear in the constants: general solver, first verified branch
-    sols <- tryCatch(solve(eqs, cs), error = function(e) list())
+    sols <- tryCatch(solve(eqs, cs, dict = TRUE), error = function(e) list())
     for (sl in sols) {
       if (!is.list(sl) || is.null(names(sl))) next
       res <- vapply(eqs, function(e) is_zero_num(simplify(subs(e, sl))), TRUE)
@@ -468,24 +570,9 @@ classify_ode <- function(eq, fx) {
   Eq(subs(G, y, fx), S_Zero, evaluate = FALSE)
 }
 
-#' Solve linear recurrences
-#'
-#' `rsolve(eq, yn, n)` solves a linear recurrence with constant coefficients
-#' for the sequence term `yn`, such as `y(n)`, with polynomial or geometric
-#' inhomogeneous terms. Arbitrary constants are `C0`, `C1`, ... `init` is a
-#' list of `list(index, value)` pairs.
-#'
-#' @param eq The recurrence, as an expression equal to zero.
-#' @param yn The unknown term, for example `y(n)`.
-#' @param n The index symbol.
-#' @param init Optional initial values.
-#' @return An expression.
-#' @examples
-#' n <- Symbol("n", integer = TRUE); y <- Function("y")
-#' rsolve(y(n + 2) - y(n + 1) - y(n), y(n), n,
-#'        init = list(list(0, 0), list(1, 1)))
-#' @export
-rsolve <- function(eq, yn, n, init = NULL) {
+# The constant coefficient recurrence solver used by fps(); rsolve() is in
+# solvers-recurr.R.
+.rsolve_cc <- function(eq, yn, n, init = NULL) {
   e <- expand(.eq_to_expr(eq))
   yn <- as_sym(yn)
   n <- as_sym(n)

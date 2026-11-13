@@ -1,7 +1,7 @@
 # piecewise_simplify and Piecewise._intervals after
 # sympy/functions/elementary/piecewise.py, simplify_univariate of
-# sympy/logic/boolalg.py, and _solve_inequality and
-# reduce_rational_inequalities of sympy/solvers/inequalities.py.
+# sympy/logic/boolalg.py, and _solve_inequality of
+# sympy/solvers/inequalities.py.
 
 .rel_op <- function(r) switch(r$type, StrictLessThan = "<", LessThan = "<=", StrictGreaterThan = ">",
                               GreaterThan = ">=", Equality = "==", Unequality = "!=")
@@ -51,55 +51,6 @@ denoms <- function(e, ...) {
   out <- unname(out)
   if (!length(syms)) return(out)
   Filter(function(d) any(vapply(syms, function(s) .has1(d, s), TRUE)), out)
-}
-
-#' Reduce a system of rational inequalities
-#'
-#' `reduce_rational_inequalities(exprs, gen)` solves a system of rational
-#' inequalities in one variable, as SymPy's function of the same name.
-#' `exprs` is a list of lists (an Or of Ands) of relationals or
-#' `list(expr, op)` pairs.
-#'
-#' @param exprs A list of lists of relationals.
-#' @param gen The variable.
-#' @param relational Return a relational instead of a set.
-#' @return A relational or a set.
-#' @examples
-#' x <- Symbol("x")
-#' reduce_rational_inequalities(list(list(x^2 < 4)), x)
-#' @export
-reduce_rational_inequalities <- function(exprs, gen, relational = TRUE) {
-  exact <- TRUE
-  solution <- S_EmptySet
-  for (ex in exprs) {
-    if (!length(ex)) next
-    eqs <- list()
-    sol <- Reals
-    for (item in ex) {
-      if (is.list(item) && !is_sym(item)) { expr <- as_sym(item[[1L]]); rel <- item[[2L]] }
-      else if (is_relational(item)) { expr <- .sub(item$args[[1L]], item$args[[2L]]); rel <- .rel_op(item) }
-      else { expr <- as_sym(item); rel <- "==" }
-      if (.is_true(expr)) { numer <- S_Zero; den <- S_One; rel <- "==" }
-      else if (.is_false(expr)) { numer <- S_One; den <- S_One; rel <- "==" }
-      else { nd <- .as_numer_denom(together(expr)); numer <- nd[[1L]]; den <- nd[[2L]] }
-      if (!isTRUE(is_polynomial(numer, gen)) || !isTRUE(is_polynomial(den, gen)))
-        stop("only polynomials and rational functions are supported in this context")
-      cf <- c(lapply(.aargs(expand(numer)), function(t) .as_indep(t, list(gen), FALSE)[[1L]]),
-              lapply(.aargs(expand(den)), function(t) .as_indep(t, list(gen), FALSE)[[1L]]))
-      if (any(vapply(cf, function(c) c$type == "Float", TRUE))) {
-        numer <- nsimplify(numer, rational = TRUE); den <- nsimplify(den, rational = TRUE); exact <- FALSE
-        cf <- lapply(cf, function(c) if (c$type == "Float") nsimplify(c, rational = TRUE) else c)
-      }
-      if (!all(vapply(cf, .is_rat, TRUE))) {
-        sol <- Intersection(sol, solve_univariate_inequality(.rel_make(rel, .div(numer, den), S_Zero), gen, relational = FALSE))
-      } else eqs[[length(eqs) + 1L]] <- list(list(numer, den), rel)
-    }
-    if (length(eqs)) sol <- Intersection(sol, solve_rational_inequalities(list(eqs)))
-    solution <- Union(solution, sol)
-  }
-  if (!exact && !identical(solution$key, S_EmptySet$key)) solution <- N(solution)
-  if (relational) solution <- as_relational(solution, gen)
-  solution
 }
 
 # _solve_inequality: a relational in s solved for s

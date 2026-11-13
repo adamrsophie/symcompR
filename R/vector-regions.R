@@ -457,7 +457,7 @@ singular_points <- function(region) {
   eq <- region$args[[2L]]
   vars <- .ir_vars(region)
   eqs <- c(list(eq), lapply(vars, function(v) .diff1(eq, v)))
-  sols <- solve(eqs, vars)
+  sols <- solve(eqs, vars, dict = TRUE)
   if (!length(sols)) return(S_EmptySet)
   do.call(FiniteSet, lapply(sols, function(s) do.call(Tuple, lapply(vars, function(v) if (is.null(s[[v$name]])) v else s[[v$name]]))))
 }

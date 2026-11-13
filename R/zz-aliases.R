@@ -1012,26 +1012,39 @@ apply_finite_diff <- function(order, x_list, y_list, x0 = 0) {
 #' Solver helpers
 #'
 #' `linear_eq_to_matrix(eqs, syms)` returns `list(A, b)` with `A x = b`.
-#' `solve_linear_system(M, syms)` solves an augmented matrix.
-#' `solve_linear(lhs, rhs, x)` solves one linear equation for `x`.
-#' `checksol(f, sol)` tests a solution by substitution, `checkodesol()` an ODE
-#' solution. `solve_undetermined_coeffs(eq, coeffs, x)` makes `eq` vanish
-#' identically in `x`. `reduce_inequalities()` and `solve_poly_inequality()`
-#' solve inequalities in one variable. `nonlinsolve()` and
-#' `solve_poly_system()` solve systems; `det_quick()` and `inv_quick()` are
+#' `solve_linear_system(M, syms, ...)` solves an augmented matrix; further
+#' symbols may follow `syms`. It returns `NULL` when there is no solution.
+#' `solve_linear(lhs, rhs, symbols, exclude)` solves one equation for one of
+#' `symbols` when it is linear in it, and returns the pair `(symbol, value)`,
+#' `(0, 1)` when nothing is free, or `(numerator, denominator)` otherwise.
+#' `checksol(f, symbol, sol)` tests a solution by substitution and returns
+#' `TRUE`, `FALSE` or `NA` when undecided; `checkodesol(eq, sol, fx)` checks an
+#' ODE solution and returns the pair `(TRUE, 0)` or `(FALSE, residual)`.
+#' `solve_undetermined_coeffs(eq, coeffs, ...)` makes `eq` vanish identically
+#' in the symbols `...`, as SymPy: a named list for one solution, a list of
+#' them for several, and `NULL` when no solution exists. `nonlinsolve()` solves a system;
+#' `solve_poly_system(eqs, ...)` solves a zero dimensional polynomial system
+#' in the generators `...` and returns a list of solution tuples; `det_quick()` and `inv_quick()` are
 #' [sym_det()] and [inverse()].
 #'
 #' @param eqs A list of equations or expressions.
 #' @param syms,coeffs Lists of symbols.
+#' @param ... Further symbols for `solve_linear_system()`,
+#'   `solve_undetermined_coeffs()` or `nonlinsolve()`, or flags such as `numerical = FALSE` for
+#'   `checksol()`.
+#' @param dict,set Output forms of `solve_undetermined_coeffs()`, as for
+#'   [solve()].
 #' @param M An augmented matrix.
 #' @param lhs,rhs Sides of an equation.
-#' @param x A variable.
+#' @param x A variable; for `solve_linear()` an alias of `symbols`.
+#' @param symbols,exclude Symbols to solve for and symbols to skip.
+#' @param strict Kept for SymPy compatibility; roots that cannot be found are
+#'   left out.
+#' @param symbol A symbol, or a named list (or list of `list(symbol, value)`
+#'   pairs) giving the whole solution.
 #' @param f,eq An equation or expression.
-#' @param sol A named list of values, or an [Eq()] for `checkodesol()`.
-#' @param fx Unknown function application.
-#' @param ineqs An inequality or list of inequalities.
-#' @param poly A polynomial.
-#' @param rel Relational operator such as `">"`.
+#' @param sol The value of `symbol`, or an [Eq()] for `checkodesol()`.
+#' @param fx Unknown function application; found from `eq` when omitted.
 #' @return A list, expression, logical or set.
 #' @examples
 #' x <- Symbol("x"); y <- Symbol("y")
@@ -1058,63 +1071,86 @@ linear_eq_to_matrix <- function(eqs, syms) {
 
 #' @rdname solver-helpers
 #' @export
-solve_linear_system <- function(M, syms) {
+solve_linear_system <- function(M, syms, ...) {
   M <- Matrix(M)
-  syms <- .as_gens(list(syms))
+  syms <- .as_gens(c(list(syms), list(...)))
   n <- length(syms)
-  eqs <- lapply(.mrows(M), function(r) .sub(.add(Map(function(c, s) .mul(list(c, s)), r[seq_len(n)], syms)), r[[n + 1L]]))
-  .solve_linear_system(eqs, syms)
+  if (M$ncol != n + 1L) stop("the matrix needs one column per symbol plus one", call. = FALSE)
+  # solve_lin_sys on system * Matrix(symbols + (-1,)), as SymPy
+  eqs <- lapply(.mrows(M), function(r) .add(c(Map(function(c, s) .mul(list(c, s)), r[seq_len(n)], syms),
+                                              list(.neg(r[[n + 1L]])))))
+  sol <- .sp_solve_lin_sys(lapply(eqs, function(e) .sp_as_poly(e, syms)), syms)
+  if (is.null(sol)) return(NULL)
+  keep <- !vapply(seq_along(sol$k), function(i) identical(sol$k[[i]]$key, sol$v[[i]]$key), TRUE)
+  .sd_to_r(list(k = sol$k[keep], v = sol$v[keep]))
 }
 
 #' @rdname solver-helpers
 #' @export
-solve_linear <- function(lhs, rhs = 0, x = NULL) {
-  e <- expand(.sub(as_sym(lhs), as_sym(rhs)))
-  if (is.null(x)) {
-    fs <- free_symbols(e)
-    if (!length(fs)) return(list(S_Zero, S_One))
-    x <- fs[[1L]]
+solve_linear <- function(lhs, rhs = 0, symbols = list(), exclude = list(), x = NULL) {
+  if (!is.null(x)) symbols <- x
+  if (is_sym(symbols)) symbols <- list(symbols)
+  if (is_sym(exclude)) exclude <- list(exclude)
+  .pytuple(.sp_solve_linear(lhs, rhs, lapply(symbols, as_sym), lapply(exclude, as_sym)))
+}
+
+#' @rdname solver-helpers
+#' @export
+checksol <- function(f, symbol, sol = NULL, ...) {
+  flags <- list(...)
+  d <- .sd_new()
+  if (!is.null(sol)) {
+    d <- .sd_set(d, as_sym(symbol), as_sym(sol))
+  } else if (is.list(symbol) && !is_sym(symbol)) {
+    nm <- names(symbol)
+    if (length(symbol) && !is.null(nm) && all(nzchar(nm))) {
+      # a named list keyed by symbol names: the matching free symbols of f
+      fs <- unique_syms(lapply(if (is.list(f) && !is_sym(f)) f else list(f), function(z) free_symbols(as_sym(z))))
+      for (k in nm) {
+        hit <- Filter(function(z) identical(z$name, k), fs)
+        d <- .sd_set(d, if (length(hit)) hit[[1L]] else Symbol(k), as_sym(symbol[[k]]))
+      }
+    } else for (p in symbol) d <- .sd_set(d, as_sym(p[[1L]]), as_sym(p[[2L]]))
+  } else {
+    stop(.sympy_condition("ValueError", paste0("Expecting (sym, val) or ({sym: val}, None) but got (",
+                                               .str(as_sym(symbol)), ", None)")))
   }
-  x <- as_sym(x)
-  nd <- fraction(together(e))
-  if (.has1(nd[[2L]], x)) {
-    # rational equation: solve the numerator, keep the denominator nonzero
-    r <- solve_linear(nd[[1L]], 0, x)
-    if (is_zero_num(r[[1L]]) || is_zero_num(simplify(subs(nd[[2L]], x, r[[2L]])))) return(list(S_Zero, S_One))
-    return(r)
-  }
-  if (!.is_linear_in(e, list(x))) stop("equation is not linear in ", .str(x))
-  a <- .linear_coeff(e, x)
-  # SymPy returns (0, 1) when the equation does not involve x
-  if (is_zero_num(simplify(a))) return(list(S_Zero, S_One))
-  list(x, cancel(.div(.neg(expand(.sub(e, .mul(list(a, x))))), a)))
+  .sp_checksol(f, d, flags)
 }
 
 #' @rdname solver-helpers
 #' @export
-checksol <- function(f, sol) {
-  e <- .eq_to_expr(f)
-  v <- subs(e, sol)
-  if (is_zero_num(v)) return(TRUE)
-  z <- simplify(v)
-  if (is_zero_num(z)) return(TRUE)
-  if (is_exact_number(z)) return(FALSE)
-  if (!length(free_symbols(z)) && is_number_type(N(z))) return(abs(as.numeric(N(z))) < 1e-12)
-  NA
-}
-
-#' @rdname solver-helpers
-#' @export
-checkodesol <- function(eq, sol, fx) {
+checkodesol <- function(eq, sol, fx = NULL) {
   e <- .eq_to_expr(eq)
-  rhs <- as_sym(sol)$args[[2L]]
-  r <- simplify(doit(subs(e, as_sym(fx), rhs)))
-  is_zero_num(r)
+  sol <- as_sym(sol)
+  if (is.null(fx)) {
+    fs <- Filter(.is_undefined_application, atoms(e, "Function"))
+    fs <- fs[!duplicated(vapply(fs, .k, ""))]
+    if (length(fs) != 1L)
+      stop(.sympy_condition("ValueError", "must pass func arg to checkodesol for this case."))
+    fx <- fs[[1L]]
+  }
+  fx <- as_sym(fx)
+  # a bare expression is the value of the function, as Eq(func, sol)
+  rhs <- if (sol$type == "Equality") sol$args[[2L]] else sol
+  r <- simplify(doit(subs(e, fx, rhs)))
+  if (is_zero_num(r)) .pytuple(list(TRUE, S_Zero)) else .pytuple(list(FALSE, r))
 }
 
 #' @rdname solver-helpers
 #' @export
-solve_undetermined_coeffs <- function(eq, coeffs, x) {
+solve_undetermined_coeffs <- function(eq, coeffs, ..., dict = FALSE, set = FALSE) {
+  flags <- list()
+  if (isTRUE(dict)) flags$dict <- TRUE
+  if (isTRUE(set)) flags$set <- TRUE
+  coeffs <- if (is_sym(coeffs)) list(coeffs) else lapply(coeffs, as_sym)
+  syms <- lapply(list(...), function(s) if (is_sym(s)) s else lapply(s, as_sym))
+  .sp_solve_undetermined_coeffs(as_sym(eq), coeffs, syms, flags)
+}
+
+# The coefficients of eq in x set to zero and solved linearly for coeffs: a
+# named list, or NULL when inconsistent (used by the recurrence solvers).
+.solve_undetermined_linear <- function(eq, coeffs, x) {
   e <- expand(.eq_to_expr(eq))
   x <- as_sym(x)
   coeffs <- .as_gens(list(coeffs))
@@ -1123,31 +1159,36 @@ solve_undetermined_coeffs <- function(eq, coeffs, x) {
 
 #' @rdname solver-helpers
 #' @export
-reduce_inequalities <- function(ineqs, x = NULL) {
-  if (!is.list(ineqs) || inherits(ineqs, "sym")) ineqs <- list(ineqs)
-  ineqs <- lapply(ineqs, as_sym)
-  if (all(vapply(ineqs, function(q) q$type == "BooleanAtom", TRUE)))
-    return(if (all(vapply(ineqs, .is_true, TRUE))) S_true else S_false)
-  if (is.null(x)) x <- unique_syms(lapply(ineqs, free_symbols))[[1L]]
-  x <- as_sym(x)
-  sets <- lapply(ineqs, function(q) solve_univariate_inequality(q, x, relational = FALSE))
-  as_relational(do.call(Intersection, sets), x)
+nonlinsolve <- function(eqs, syms, ...) {
+  # ponytail: solve(dict = TRUE) as a FiniteSet of tuples; SymPy's own
+  # nonlinsolve (substitution over complexes, ImageSet solutions) is not ported
+  syms <- .as_gens(c(list(syms), list(...)))
+  sols <- solve(eqs, syms, dict = TRUE)
+  if (!length(sols)) return(S_EmptySet)
+  do.call(FiniteSet, lapply(sols, function(s) do.call(Tuple, lapply(syms, function(v) {
+    k <- .str(v)
+    if (is.null(s[[k]])) v else s[[k]]
+  }))))
 }
-
 #' @rdname solver-helpers
 #' @export
-solve_poly_inequality <- function(poly, rel = ">") {
-  p <- as_sym(poly)
-  x <- free_symbols(p)[[1L]]
-  solve_univariate_inequality(Rel(p, 0, rel), x, relational = FALSE)
+solve_poly_system <- function(eqs, ..., strict = FALSE) {
+  if (!is.list(eqs) || is_sym(eqs) || inherits(eqs, "Poly")) eqs <- list(eqs)
+  gens <- list(...)
+  gens <- if (length(gens)) .as_gens(gens) else list()
+  exprs <- lapply(eqs, function(e) if (inherits(e, "Poly")) as_expr(e) else as_sym(e))
+  if (!length(gens)) {
+    gens <- if (all(vapply(eqs, inherits, TRUE, "Poly")))
+      unlist(lapply(eqs, function(e) e$gens[seq_len(.poly_ngens(e))]), recursive = FALSE)
+    else unique_syms(lapply(exprs, free_symbols))
+    gens <- .sp_sorted(.sp_uniq(gens))
+  }
+  polys <- lapply(exprs, function(e) .sp_as_poly(e, gens))
+  if (any(vapply(polys, is.null, TRUE)))
+    stop(.sympy_condition("ComputationFailed", paste0("solve_poly_system(", length(eqs), ") failed without generators")))
+  res <- .sp_solve_poly_system(polys, gens)
+  if (is.null(res)) NULL else lapply(res, .pytuple)
 }
-
-#' @rdname solver-helpers
-#' @export
-nonlinsolve <- function(eqs, syms) solve(eqs, syms)
-#' @rdname solver-helpers
-#' @export
-solve_poly_system <- function(eqs, syms) solve(eqs, syms)
 #' @rdname solver-helpers
 #' @export
 det_quick <- function(M) det(Matrix(M))

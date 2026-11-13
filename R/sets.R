@@ -457,7 +457,12 @@ solve_univariate_inequality <- function(expr, x, relational = TRUE, domain = Rea
   for (part in list(list(num, "z"), list(den, "p"))) {
     if (!.has1(part[[1L]], x)) next
     rs <- tryCatch(.solve_univariate(part[[1L]], x, check = FALSE), error = function(e) NULL)
-    if (is.null(rs)) stop("could not solve the inequality")
+    if (is.null(rs)) {
+      # SymPy's message, with the powers written as Python's str() writes them
+      msg <- .filldedent(paste0("The inequality, ", gsub("^", "**", .str(subs(expr, x, Symbol("x"))), fixed = TRUE),
+                                ", cannot be solved using solve_univariate_inequality."))
+      stop(.sympy_condition("NotImplementedError", msg))
+    }
     rs <- Filter(function(r) isTRUE(ask_fact(r, "real")), rs)
     rs <- Filter(function(r) .residual_ok(part[[1L]], x, r), rs)
     if (part[[2L]] == "z") zeros <- c(zeros, rs) else poles <- c(poles, rs)
@@ -743,6 +748,26 @@ solveset <- function(f, x = NULL, domain = Complexes) {
   if (domain$type == "SpecialSet" && domain$name == "Complexes") return(if (length(sols)) FiniteSet(sols) else S_EmptySet)
   Intersection(FiniteSet(sols), domain)
 }
+
+#' Solve equations as sets over the reals or the complexes
+#'
+#' `solveset_real(f, symbol)` is `solveset(f, symbol, Reals)` and
+#' `solveset_complex(f, symbol)` is `solveset(f, symbol, Complexes)`, as
+#' SymPy's functions of the same names.
+#'
+#' @param f An equation, expression or inequality.
+#' @param symbol The variable.
+#' @return A set.
+#' @examples
+#' x <- Symbol("x")
+#' solveset_real(x^2 + 1, x)
+#' solveset_complex(x^2 + 1, x)
+#' @export
+solveset_real <- function(f, symbol) solveset(f, symbol, Reals)
+
+#' @rdname solveset_real
+#' @export
+solveset_complex <- function(f, symbol) solveset(f, symbol, Complexes)
 
 # A constant whose numerical value is clearly not real
 .num_nonreal <- function(s) {

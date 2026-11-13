@@ -6,18 +6,30 @@
 \alias{classify_ode}
 \title{Solve ordinary differential equations}
 \usage{
-dsolve(eq, fx, ics = NULL)
+dsolve(eq, fx = NULL, ics = NULL, hint = "default", ...)
 
 ode_order(eq, fx)
 
-classify_ode(eq, fx)
+classify_ode(eq, fx = NULL, dict = FALSE, ics = NULL, ...)
 }
 \arguments{
 \item{eq}{The equation or expression equal to zero.}
 
-\item{fx}{The unknown, for example \code{f(x)}.}
+\item{fx}{The unknown, for example \code{f(x)}; found from the derivatives in
+\code{eq} when omitted.}
 
-\item{ics}{Optional initial conditions.}
+\item{ics}{Optional initial conditions: for \code{dsolve()} a list of
+\code{list(point, order, value)}; for \code{classify_ode()} a list of
+\code{list(key, value)} pairs, where a key is \code{f(point)} or a derivative of
+\code{f} at a point, checked as SymPy checks them.}
+
+\item{hint}{A SymPy hint name; any recognized hint is accepted, and the
+solution comes from the classes above.}
+
+\item{...}{Further SymPy options, ignored.}
+
+\item{dict}{For \code{classify_ode()}, return the order, the default hint and
+the ordered hints as a list.}
 }
 \value{
 An \code{\link[=Eq]{Eq()}}, or a list of them for several solutions.
