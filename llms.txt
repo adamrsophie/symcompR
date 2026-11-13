@@ -4062,6 +4062,8 @@ utilities.codegen routines.
   sums](https://adamrsophie.github.io/symcompR/articles/calculus.md):
 - [Integration and integral
   transforms](https://adamrsophie.github.io/symcompR/articles/integration.md):
+- [Quadrature and integration over
+  polytopes](https://adamrsophie.github.io/symcompR/articles/quadrature-and-polytopes.md):
 - [Sequences, Fourier series, and formal power
   series](https://adamrsophie.github.io/symcompR/articles/series-and-sequences.md):
 - [Holonomic
@@ -4070,6 +4072,8 @@ utilities.codegen routines.
   functions](https://adamrsophie.github.io/symcompR/articles/special-functions.md):
 - [Solving
   equations](https://adamrsophie.github.io/symcompR/articles/solvers.md):
+- [Statistics and random
+  variables](https://adamrsophie.github.io/symcompR/articles/statistics.md):
 
 ### Discrete mathematics and algebra
 
@@ -4098,12 +4102,20 @@ utilities.codegen routines.
   geometry](https://adamrsophie.github.io/symcompR/articles/differential-geometry.md):
 - [Physical
   units](https://adamrsophie.github.io/symcompR/articles/physics-units.md):
+- [Classical
+  mechanics](https://adamrsophie.github.io/symcompR/articles/mechanics.md):
+- [Quantum
+  mechanics](https://adamrsophie.github.io/symcompR/articles/quantum-mechanics.md):
+- [Optics, control and continuum
+  mechanics](https://adamrsophie.github.io/symcompR/articles/physics-engineering.md):
 
 ### Input, output, and utilities
 
 - [Printing](https://adamrsophie.github.io/symcompR/articles/printing.md):
 - [Code
   printers](https://adamrsophie.github.io/symcompR/articles/code-printers.md):
+- [Code
+  generation](https://adamrsophie.github.io/symcompR/articles/code-generation.md):
 - [Parsing](https://adamrsophie.github.io/symcompR/articles/parsing.md):
 - [Statistics, discrete transforms, and
   utilities](https://adamrsophie.github.io/symcompR/articles/other-modules.md):

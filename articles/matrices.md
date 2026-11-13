@@ -905,3 +905,185 @@ symarray("a", c(2, 2))
 #> [a_0_0, a_0_1]
 #> [a_1_0, a_1_1]
 ```
+
+## Structured matrix expressions
+
+[`CompanionMatrix()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+is the companion matrix of a monic polynomial, and
+[`DFT()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+and
+[`IDFT()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+are the unitary discrete Fourier transform matrix and its inverse.
+`MatrixUnit(rows, cols, i, j)` has a single one in position `(i, j)`,
+with zero based indices as in SymPy.
+
+``` r
+
+as_explicit(CompanionMatrix(Poly(x^3 + 2 * x + 5, x)))
+#> Matrix(3, 3)
+#> [0, 0, -5]
+#> [1, 0, -2]
+#> [0, 1, 0 ]
+as_explicit(DFT(2))
+#> Matrix(2, 2)
+#> [sqrt(2)/2, sqrt(2)/2 ]
+#> [sqrt(2)/2, -sqrt(2)/2]
+as_explicit(IDFT(2))
+#> Matrix(2, 2)
+#> [sqrt(2)/2, sqrt(2)/2 ]
+#> [sqrt(2)/2, -sqrt(2)/2]
+as_explicit(MatrixUnit(2, 2, 0, 1))
+#> Matrix(2, 2)
+#> [0, 1]
+#> [0, 0]
+```
+
+The factors of a matrix factorization are matrix expressions of their
+own:
+[`LofLU()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+and
+[`UofLU()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md),
+[`LofCholesky()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+and
+[`UofCholesky()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md),
+[`QofQR()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+and
+[`RofQR()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md),
+[`EigenValues()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+and
+[`EigenVectors()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md),
+and
+[`UofSVD()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md),
+[`SofSVD()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+and
+[`VofSVD()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md).
+The functions
+[`mat_lu()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md),
+[`mat_qr()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md),
+[`mat_eig()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+and
+[`mat_svd()`](https://adamrsophie.github.io/symcompR/reference/structured-matrices.md)
+return all the factors at once.
+
+``` r
+
+k <- Symbol("k")
+Xk <- MatrixSymbol("X", k, k)
+LofLU(Xk)
+#> LofLU(X)
+mat_shape(UofLU(Xk))
+#> [[1]]
+#> k
+#> 
+#> [[2]]
+#> k
+LofCholesky(Xk)
+#> LofCholesky(X)
+UofCholesky(Xk)
+#> UofCholesky(X)
+QofQR(Xk)
+#> QofQR(X)
+RofQR(Xk)
+#> RofQR(X)
+EigenValues(Xk)
+#> EigenValues(X)
+EigenVectors(Xk)
+#> EigenVectors(X)
+UofSVD(Xk)
+#> UofSVD(X)
+SofSVD(Xk)
+#> SofSVD(X)
+VofSVD(Xk)
+#> VofSVD(X)
+do.call(Tuple, mat_lu(Xk))
+#> (LofLU(X), UofLU(X))
+do.call(Tuple, mat_qr(Xk))
+#> (QofQR(X), RofQR(X))
+do.call(Tuple, mat_eig(Xk))
+#> (EigenValues(X), EigenVectors(X))
+do.call(Tuple, mat_svd(Xk))
+#> (UofSVD(X), SofSVD(X), VofSVD(X))
+```
+
+[`GenericIdentity()`](https://adamrsophie.github.io/symcompR/reference/GenericIdentity.md)
+and
+[`GenericZeroMatrix()`](https://adamrsophie.github.io/symcompR/reference/GenericIdentity.md)
+are an identity and a zero matrix of unspecified size.
+[`hadamard_power()`](https://adamrsophie.github.io/symcompR/reference/hadamard_product.md)
+is the elementwise power,
+[`combine_kronecker()`](https://adamrsophie.github.io/symcompR/reference/kronecker_product.md)
+combines sums and products of Kronecker products, and
+[`ElementwiseApplyFunction()`](https://adamrsophie.github.io/symcompR/reference/ElementwiseApplyFunction.md)
+applies a scalar function to every entry.
+
+``` r
+
+Pk <- MatrixSymbol("P", k, k); Qk <- MatrixSymbol("Q", k, k)
+GenericIdentity()
+#> I
+GenericZeroMatrix()
+#> 0
+Pk * GenericIdentity()
+#> P
+hadamard_power(Pk, 2)
+#> HadamardPower(P, 2)
+combine_kronecker(kronecker_product(Pk, Qk) + kronecker_product(Qk, Qk))
+#> KroneckerProduct(P + Q, Q)
+combine_kronecker(kronecker_product(Pk, Qk) * kronecker_product(Qk, Xk))
+#> KroneckerProduct(P*Q, Q*X)
+ElementwiseApplyFunction(sin, Xk)
+#> Lambda(_d, sin(_d)).(X)
+as_explicit(ElementwiseApplyFunction(exp, MatrixSymbol("Y", 2, 2)))
+#> Matrix(2, 2)
+#> [exp(Y[0, 0]), exp(Y[0, 1])]
+#> [exp(Y[1, 0]), exp(Y[1, 1])]
+```
+
+`MatrixSet(n, m, set)` is the set of `n` by `m` matrices with entries in
+`set`;
+[`matrix_set_contains()`](https://adamrsophie.github.io/symcompR/reference/MatrixSet.md)
+tests membership.
+
+``` r
+
+M22 <- MatrixSet(2, 2, Reals)
+M22
+#> MatrixSet(2, 2, Reals)
+matrix_set_contains(M22, Matrix(list(list(1, 2), list(3, 4))))
+#> [1] TRUE
+matrix_set_contains(M22, Matrix(list(list(1, 2), list(3, sym_I))))
+#> [1] FALSE
+```
+
+[`dotprodsimp()`](https://adamrsophie.github.io/symcompR/reference/dotprodsimp.md)
+is the light simplification that matrix routines apply to the
+intermediate sums of products:
+
+``` r
+
+dotprodsimp(x / (x - 1) - 1 / (x - 1))
+#> 1
+```
+
+## Derivatives of matrix expressions
+
+[`diff()`](https://rdrr.io/r/base/diff.html) differentiates a scalar or
+matrix valued matrix expression with respect to a matrix symbol. A
+scalar function such as a trace has a matrix derivative; a matrix valued
+function has a derivative of rank four, written as an array expression
+(see the arrays and tensors vignette).
+[`matrix_derive()`](https://adamrsophie.github.io/symcompR/reference/array_derive.md)
+does the same and converts the result back to matrix form where
+possible.
+
+``` r
+
+diff(Trace(Xk^2), Xk)
+#> 2*X.T
+diff(Trace(Pk * Xk * Qk), Xk)
+#> P.T*Q.T
+matrix_derive(Trace(Pk * Xk), Xk)
+#> P.T
+matrix_derive(t(Xk) * Pk * Xk, Xk)
+#> ArrayAdd(PermuteDims(ArrayTensorProduct(P*X, I), (1 2 3)), PermuteDims(ArrayTensorProduct(P.T*X, I), (3)(1 2)))
+```

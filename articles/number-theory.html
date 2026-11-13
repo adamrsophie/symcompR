@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -372,19 +378,51 @@ distinct unit fractions:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/egyptian_fraction.html">egyptian_fraction</a></span><span class="op">(</span><span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">13</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]   4  18 468</span></span></code></pre></div>
 <p>so <span class="math inline">4/13 = 1/4 + 1/18 + 1/468</span>.</p>
+<p><code><a href="../reference/egypt_harmonic.html">egypt_harmonic()</a></code> writes a rational number as a sum of
+the first terms of the harmonic series and a remainder:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/egypt_harmonic.html">egypt_harmonic</a></span><span class="op">(</span><span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [[1]][[1]]</span></span>
+<span><span class="co">#&gt; 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[1]][[2]]</span></span>
+<span><span class="co">#&gt; 2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[1]][[3]]</span></span>
+<span><span class="co">#&gt; 3</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[1]][[4]]</span></span>
+<span><span class="co">#&gt; 4</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[1]][[5]]</span></span>
+<span><span class="co">#&gt; 5</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[1]][[6]]</span></span>
+<span><span class="co">#&gt; 6</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; 1/20</span></span>
+<span><span class="fu"><a href="../reference/egypt_harmonic.html">egypt_harmonic</a></span><span class="op">(</span><span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; list()</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; 1/3</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="partitions-and-digits">Partitions and digits<a class="anchor" aria-label="anchor" href="#partitions-and-digits"></a>
 </h2>
 <p><code><a href="../reference/npartitions.html">npartitions()</a></code> counts the partitions of an integer with
 the Hardy-Ramanujan-Rademacher formula, so large arguments are fast.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/npartitions.html">npartitions</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 190569292</span></span>
 <span><span class="fu"><a href="../reference/npartitions.html">npartitions</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Big Integer ('bigz') :</span></span>
 <span><span class="co">#&gt; [1] 24061467864032622473692149727991</span></span></code></pre></div>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/digits.html">digits</a></span><span class="op">(</span><span class="fl">123</span>, <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 10  1  2  3</span></span>
 <span><span class="fu"><a href="../reference/digits.html">digits</a></span><span class="op">(</span><span class="fl">255</span>, <span class="fl">16</span><span class="op">)</span></span>
@@ -406,7 +444,7 @@ starting at any position, without computing the earlier ones.</p>
 </h2>
 <p>The classical combinatorial numbers are functions that evaluate for
 integer arguments and stay symbolic otherwise.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/special-functions.html">fibonacci</a></span><span class="op">(</span><span class="fl">50</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 12586269025</span></span>
 <span><span class="fu"><a href="../reference/special-functions.html">lucas</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span></span>
@@ -431,7 +469,7 @@ integer arguments and stay symbolic otherwise.</p>
 </h2>
 <p><code>sieve</code> is a shared, growing table of primes, totients,
 and Möbius values. <code><a href="../reference/Sieve.html">Sieve()</a></code> creates a fresh one.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Sieve.html">Sieve</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">s</span></span>
 <span><span class="co">#&gt; prime sieve (6): 2, 3, 5, ... 11, 13</span></span>
@@ -447,7 +485,7 @@ and Möbius values. <code><a href="../reference/Sieve.html">Sieve()</a></code> c
 individually: Miller-Rabin with given bases (<code><a href="../reference/isprime.html">mr()</a></code>), the
 Lucas tests, the Euler and Euler-Jacobi tests, and Proth’s test for
 numbers <span class="math inline">k 2^n + 1</span>.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/isprime.html">mr</a></span><span class="op">(</span><span class="fl">1373651</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] FALSE</span></span>
 <span><span class="fu"><a href="../reference/isprime.html">mr</a></span><span class="op">(</span><span class="fl">1373653</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
@@ -487,7 +525,7 @@ numbers <span class="math inline">k 2^n + 1</span>.</p>
 = 1</span>, and the antidivisors of <span class="math inline">n</span>
 are the numbers that do not divide <span class="math inline">n</span> by
 the largest possible margin.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/divisors.html">udivisors</a></span><span class="op">(</span><span class="fl">60</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]  1  3  4  5 12 15 20 60</span></span>
 <span><span class="fu"><a href="../reference/divisors.html">udivisor_count</a></span><span class="op">(</span><span class="fl">120</span><span class="op">)</span></span>
@@ -519,7 +557,7 @@ power free part of <span class="math inline">n</span>: 24 is <span class="math i
 smooth <span class="math inline">p - 1</span> (or <span class="math inline">p + 1</span> with <code>m = 1</code>) is; this
 decides how well the Pollard <span class="math inline">p - 1</span> and
 Williams <span class="math inline">p + 1</span> methods work.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/smoothness.html">smoothness_p</a></span><span class="op">(</span><span class="fl">10431</span>, m <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [[1]]</span></span>
 <span><span class="co">#&gt; [1] 1</span></span>
@@ -543,7 +581,7 @@ moduli and a cheap second step. <code><a href="../reference/crt.html">symmetric_
 residue closest to zero, <code><a href="../reference/sqrt_mod.html">sqrt_mod_iter()</a></code> iterates over
 square roots, and <code><a href="../reference/totient.html">kronecker_symbol()</a></code> extends the Jacobi
 symbol to all integers.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pre</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/crt.html">crt1</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">42</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/crt.html">crt2</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">42</span>, <span class="fl">6</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, <span class="va">pre</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="va">pre</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>, <span class="va">pre</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]    0 4536</span></span>
@@ -562,7 +600,7 @@ symbol to all integers.</p>
 <span><span class="fu"><a href="../reference/quadratic_congruence.html">binomial_mod</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">2</span>, <span class="fl">6</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 3</span></span></code></pre></div>
 <p><code><a href="../reference/prime.html">cycle_length()</a></code> finds the tail length <span class="math inline">\mu</span> and cycle length <span class="math inline">\lambda</span> of the sequence <span class="math inline">x_{k+1} = f(x_k)</span> with Brent’s algorithm:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/prime.html">cycle_length</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">12</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">17</span>, <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $lambda</span></span>
 <span><span class="co">#&gt; [1] 3</span></span>
@@ -573,7 +611,7 @@ symbol to all integers.</p>
 <div class="section level2">
 <h2 id="binomial-and-multinomial-coefficients">Binomial and multinomial coefficients<a class="anchor" aria-label="anchor" href="#binomial-and-multinomial-coefficients"></a>
 </h2>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/binomial_coefficients.html">binomial_coefficients_list</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1]  1  5 10 10  5  1</span></span>
 <span><span class="fu"><a href="../reference/binomial_coefficients.html">binomial_coefficients</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
@@ -595,7 +633,7 @@ finds, and <code><a href="../reference/qs_factor.html">qs_factor()</a></code> re
 multiplicities. <code><a href="../reference/FactorCache.html">FactorCache()</a></code> creates a cache of
 factorizations, and <code>factor_cache</code> is the cache that
 <code><a href="../reference/factorint.html">factorint()</a></code> uses.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/qs_factor.html">qs</a></span><span class="op">(</span><span class="fl">10009202107</span>, <span class="fl">100</span>, <span class="fl">10000</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 100043 100049</span></span>
 <span><span class="fu"><a href="../reference/qs_factor.html">qs_factor</a></span><span class="op">(</span><span class="fl">10009202107</span>, <span class="fl">100</span>, <span class="fl">10000</span><span class="op">)</span></span>
@@ -614,7 +652,7 @@ factorizations, and <code>factor_cache</code> is the cache that
 coordinates. <code><a href="../reference/EllipticCurve.html">point_order()</a></code> finds the order of a point; on
 <span class="math inline">y^2 = x^3 + 1</span> the rational torsion
 group is cyclic of order 6.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">E</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/EllipticCurve.html">EllipticCurve</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/EllipticCurve.html">point_order</a></span><span class="op">(</span><span class="va">E</span><span class="op">$</span><span class="fu">point</span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 6</span></span>

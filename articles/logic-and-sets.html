@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -253,6 +259,149 @@ same up to a renaming of variables, and returns the renaming.</p>
 </div>
 </div>
 <div class="section level2">
+<h2 id="algebraic-normal-form-and-gates">Algebraic normal form and gates<a class="anchor" aria-label="anchor" href="#algebraic-normal-form-and-gates"></a>
+</h2>
+<p>The algebraic normal form (ANF) writes a Boolean function as an
+exclusive or of conjunctions. <code><a href="../reference/Xnor.html">Xnor()</a></code> is the negated
+exclusive or and <code><a href="../reference/Xnor.html">Exclusive()</a></code> says that at most one argument
+is true.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"A"</span><span class="op">)</span>; <span class="va">B</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"B"</span><span class="op">)</span>; <span class="va">C</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"C"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/Xnor.html">Xnor</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ~(A ^ B)</span></span>
+<span><span class="fu"><a href="../reference/Xnor.html">Exclusive</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span>, <span class="va">C</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ~(A &amp; B) &amp; ~(A &amp; C) &amp; ~(B &amp; C)</span></span>
+<span><span class="fu"><a href="../reference/distribute_and_over_or.html">distribute_and_over_or</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">And</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span>, <span class="va">C</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (A | C) &amp; (B | C)</span></span>
+<span><span class="fu"><a href="../reference/distribute_and_over_or.html">distribute_xor_over_and</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">And</a></span><span class="op">(</span><span class="va">A</span>, <span class="fu"><a href="../reference/And.html">Xor</a></span><span class="op">(</span><span class="va">B</span>, <span class="va">C</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (A &amp; B) ^ (A &amp; C)</span></span>
+<span><span class="fu"><a href="../reference/to_anf.html">to_anf</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x ^ y ^ (x &amp; y)</span></span>
+<span><span class="fu"><a href="../reference/to_anf.html">to_anf</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Implies</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x ^ True ^ (x &amp; y)</span></span>
+<span><span class="fu"><a href="../reference/to_anf.html">is_anf</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Xor</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="../reference/And.html">And</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/to_anf.html">is_anf</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="fu"><a href="../reference/to_anf.html">anf_coeffs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1 0 0 1</span></span>
+<span><span class="fu"><a href="../reference/to_anf.html">ANFform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; True ^ (x &amp; y)</span></span>
+<span><span class="fu"><a href="../reference/to_anf.html">bool_minterm</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x &amp; y</span></span>
+<span><span class="fu"><a href="../reference/to_anf.html">bool_maxterm</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ~x | ~y</span></span>
+<span><span class="fu"><a href="../reference/to_anf.html">bool_monomial</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x &amp; y</span></span>
+<span><span class="fu"><a href="../reference/gateinputcount.html">gateinputcount</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">A</span>, <span class="fu"><a href="../reference/And.html">And</a></span><span class="op">(</span><span class="va">B</span>, <span class="va">C</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 4</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="inference">Inference<a class="anchor" aria-label="anchor" href="#inference"></a>
+</h2>
+<p><code><a href="../reference/pl_true.html">pl_true()</a></code> evaluates a sentence in a partial model,
+<code><a href="../reference/entails.html">entails()</a></code> decides logical consequence and a
+<code><a href="../reference/entails.html">PropKB()</a></code> knowledge base answers queries about what it has
+been told. <code><a href="../reference/entails.html">KB()</a></code> is the base class.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/literal_symbol.html">literal_symbol</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Not</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; A</span></span>
+<span><span class="fu"><a href="../reference/pl_true.html">pl_true</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/pl_true.html">pl_true</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">And</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>A <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] NA</span></span>
+<span><span class="fu"><a href="../reference/entails.html">entails</a></span><span class="op">(</span><span class="va">B</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Implies</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span>, <span class="va">A</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/entails.html">entails</a></span><span class="op">(</span><span class="va">A</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="va">kb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/entails.html">PropKB</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">kb</span><span class="op">$</span><span class="fu">tell</span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Implies</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span><span class="op">)</span>; <span class="va">kb</span><span class="op">$</span><span class="fu">tell</span><span class="op">(</span><span class="va">A</span><span class="op">)</span></span>
+<span><span class="va">kb</span><span class="op">$</span><span class="fu">ask</span><span class="op">(</span><span class="va">B</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="va">kb</span><span class="op">$</span><span class="fu">ask</span><span class="op">(</span><span class="va">C</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="va">kb</span><span class="op">$</span><span class="fu">clauses</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; A</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; B | ~A</span></span>
+<span><span class="va">kb</span><span class="op">$</span><span class="fu">retract</span><span class="op">(</span><span class="va">A</span><span class="op">)</span></span>
+<span><span class="va">kb</span><span class="op">$</span><span class="fu">ask</span><span class="op">(</span><span class="va">B</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="fu"><a href="../reference/entails.html">KB</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="fu">clauses</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; list()</span></span></code></pre></div>
+<p>The DPLL procedure decides satisfiability. Its steps work on clauses
+written with symbols, or with integers (<code><a href="../reference/dpll_satisfiable.html">to_int_repr()</a></code>),
+where <code>-i</code> is the negation of the <code>i</code>th
+symbol.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/dpll_satisfiable.html">dpll_satisfiable</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">And</a></span><span class="op">(</span><span class="va">A</span>, <span class="fu"><a href="../reference/And.html">Not</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">dpll</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span>, <span class="fu"><a href="../reference/And.html">Not</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $A</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $B</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">find_pure_symbol</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">A</span>, <span class="fu"><a href="../reference/And.html">Not</a></span><span class="op">(</span><span class="va">B</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Not</a></span><span class="op">(</span><span class="va">B</span><span class="op">)</span>, <span class="va">A</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; A</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">find_unit_clause</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span>, <span class="va">A</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; A</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">unit_propagate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">B</span><span class="op">)</span>, <span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Not</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span>, <span class="va">B</span><span class="op">)</span><span class="op">)</span>, <span class="va">A</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; B</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">to_int_repr</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/And.html">Or</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="../reference/And.html">Not</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [1] 1 2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; [1] -1</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">dpll_int_repr</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $`1`</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $`2`</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">find_pure_symbol_int_repr</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="op">-</span><span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [1] 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">find_unit_clause_int_repr</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="op">-</span><span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"1"</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [1] 2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">unit_propagate_int_repr</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [1] 3</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">pl_true_int_repr</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"1"</span> <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] NA</span></span>
+<span><span class="fu"><a href="../reference/dpll_satisfiable.html">pl_true_int_repr</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"1"</span> <span class="op">=</span> <span class="cn">FALSE</span>, <span class="st">"2"</span> <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<p><code><a href="../reference/dimacs_load.html">dimacs_load()</a></code> reads a formula in the DIMACS CNF format,
+and <code><a href="../reference/dimacs_load.html">dimacs_load_file()</a></code> reads it from a file:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/dimacs_load.html">dimacs_load</a></span><span class="op">(</span><span class="st">"1 2 \n 3"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; cnf_3 &amp; (cnf_1 | cnf_2)</span></span>
+<span><span class="va">tf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".cnf"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/writeLines.html" class="external-link">writeLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1 -2 0"</span>, <span class="st">"3 0"</span><span class="op">)</span>, <span class="va">tf</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/dimacs_load.html">dimacs_load_file</a></span><span class="op">(</span><span class="va">tf</span><span class="op">)</span></span>
+<span><span class="co">#&gt; cnf_3 &amp; (cnf_1 | ~cnf_2)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">tf</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="assumptions">Assumptions<a class="anchor" aria-label="anchor" href="#assumptions"></a>
 </h2>
 <p>The assumptions system, with <code><a href="../reference/ask.html">ask()</a></code> and
@@ -269,7 +418,7 @@ same up to a renaming of variables, and returns the renaming.</p>
 <code>left_open</code> and <code>right_open</code> change that, and
 <code><a href="../reference/sets.html">Interval_open()</a></code>, <code><a href="../reference/sets.html">Interval_Lopen()</a></code>, and
 <code><a href="../reference/sets.html">Interval_Ropen()</a></code> are shortcuts.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Interval(0, 1)</span></span>
 <span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -283,7 +432,7 @@ same up to a renaming of variables, and returns the renaming.</p>
 <span><span class="fu"><a href="../reference/sets.html">FiniteSet</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; {1, 2, 3}</span></span></code></pre></div>
 <p>Set operations simplify their result whenever they can.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sets.html">Union</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Interval(0, 3)</span></span>
 <span><span class="fu"><a href="../reference/sets.html">Union</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">EmptySet</span><span class="op">)</span></span>
@@ -309,7 +458,7 @@ same up to a renaming of variables, and returns the renaming.</p>
 <span><span class="fu"><a href="../reference/sets.html">ProductSet</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">FiniteSet</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="../reference/sets.html">FiniteSet</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ProductSet({1, 2}, {3, 4})</span></span></code></pre></div>
 <p>Membership, inclusion, and measure:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sets.html">contains</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="fu"><a href="../reference/sets.html">contains</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">x</span><span class="op">)</span></span>
@@ -327,7 +476,7 @@ same up to a renaming of variables, and returns the renaming.</p>
 <p><code><a href="../reference/sets.html">contains()</a></code> returns a condition when membership depends
 on a symbol, and <code><a href="../reference/as_relational.html">as_relational()</a></code> turns a set into the
 equivalent condition.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/as_relational.html">as_relational</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Union</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span>, <span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ((0 &lt;= x) &amp; (x &lt;= 1)) | ((2 &lt;= x) &amp; (x &lt;= 3))</span></span></code></pre></div>
 </div>
@@ -338,7 +487,7 @@ equivalent condition.</p>
 <code>Rationals</code>, <code>Reals</code>, and <code>Complexes</code>
 are the standard number sets. <code><a href="../reference/Range.html">Range()</a></code> is an arithmetic
 progression of integers, possibly infinite.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sets.html">is_subset</a></span><span class="op">(</span><span class="va">Naturals</span>, <span class="va">Integers</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="va">Naturals0</span></span>
@@ -368,7 +517,7 @@ simplifies it when possible. <code>ConditionSet(x, cond, S)</code> is
 <span class="math inline">\{x \in S : \text{cond}\}</span>. These are
 the sets that <code><a href="../reference/solveset.html">solveset()</a></code> returns for periodic and unsolved
 equations.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">squares</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sets.html">ImageSet</a></span><span class="op">(</span><span class="fu"><a href="../reference/Lambda.html">Lambda</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="va">Naturals</span><span class="op">)</span></span>
 <span><span class="va">squares</span></span>
 <span><span class="co">#&gt; ImageSet(Lambda(x, x^2), Naturals)</span></span>
@@ -386,7 +535,7 @@ equations.</p>
 </h3>
 <p><code><a href="../reference/ComplexRegion.html">ComplexRegion()</a></code> describes a region of the complex plane
 as a product of intervals, in rectangular or polar form.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">R1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComplexRegion.html">ComplexRegion</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">ProductSet</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sets.html">contains</a></span><span class="op">(</span><span class="va">R1</span>, <span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">9</span>, <span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="va">sym_I</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
@@ -398,7 +547,7 @@ as a product of intervals, in rectangular or polar form.</p>
 <code><a href="../reference/ComplexRegion.html">psets()</a></code> return the parts of a region,
 <code><a href="../reference/ComplexRegion.html">complex_region_from_real()</a></code> embeds a set of reals, and
 <code><a href="../reference/ComplexRegion.html">normalize_theta_set()</a></code> reduces a set of angles to <span class="math inline">[0, 2\pi)</span>.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">R2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ComplexRegion.html">ComplexRegion</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">ProductSet</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/ComplexRegion.html">a_interval</a></span><span class="op">(</span><span class="va">R2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Interval(1, 2)</span></span>
@@ -418,7 +567,7 @@ as a product of intervals, in rectangular or polar form.</p>
 </h3>
 <p><code><a href="../reference/SetExpr.html">SetExpr()</a></code> wraps a set so that arithmetic acts on all of
 its elements, which is interval arithmetic for intervals.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/SetExpr.html">SetExpr</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span></span>
 <span><span class="co">#&gt; SetExpr(Interval(1, 2))</span></span>
 <span><span class="fu"><a href="../reference/SetExpr.html">SetExpr</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/SetExpr.html">SetExpr</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
@@ -431,7 +580,7 @@ its elements, which is interval arithmetic for intervals.</p>
 <p>symcompR implements ordinal numbers below <span class="math inline">\varepsilon_0</span> in Cantor normal form.
 <code>ord_omega</code> is <span class="math inline">\omega</span>, and
 ordinal arithmetic is not commutative:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="va">ord_omega</span></span>
 <span><span class="va">w</span> <span class="op">+</span> <span class="fl">1</span></span>
 <span><span class="co">#&gt; w + 1</span></span>

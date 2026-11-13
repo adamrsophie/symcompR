@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -598,6 +604,22 @@ that connect cosets.</p>
 <span><span class="fu"><a href="../reference/CosetTable.html">ct_look_ahead</a></span><span class="op">(</span><span class="va">C2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/CosetTable.html">ct_rep</a></span><span class="op">(</span><span class="va">C2</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 1</span></span>
+<span><span class="va">C2b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CosetTable.html">CosetTable</a></span><span class="op">(</span><span class="va">f</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/CosetTable.html">ct_define_c</a></span><span class="op">(</span><span class="va">C2b</span>, <span class="fl">0</span>, <span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/CosetTable.html">ct_process_deductions_check</a></span><span class="op">(</span><span class="va">C2b</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="va">C2c</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CosetTable.html">CosetTable</a></span><span class="op">(</span><span class="va">f</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/CosetTable.html">ct_define_c</a></span><span class="op">(</span><span class="va">C2c</span>, <span class="fl">0</span>, <span class="va">x</span><span class="op">)</span>; <span class="fu"><a href="../reference/CosetTable.html">ct_define_c</a></span><span class="op">(</span><span class="va">C2c</span>, <span class="fl">0</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/CosetTable.html">ct_process_deductions</a></span><span class="op">(</span><span class="va">C2c</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">C2c</span><span class="op">$</span><span class="va">table</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [1]  1  1  2 NA</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; [1]  0  0 NA NA</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[3]]</span></span>
+<span><span class="co">#&gt; [1] NA NA NA  0</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="../reference/CosetTable.html">ct_conjugates</a></span><span class="op">(</span><span class="va">C2</span>, <span class="va">f</span><span class="op">$</span><span class="va">relators</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 4</span></span>
 <span><span class="va">Cm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CosetTable.html">CosetTable</a></span><span class="op">(</span><span class="va">f</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
@@ -835,6 +857,8 @@ the generators and returns a <code>GroupHomomorphism</code> object. The
 <span><span class="fu"><a href="../reference/orbit_homomorphism.html">hom_invert</a></span><span class="op">(</span><span class="cn">T</span>, <span class="fu"><a href="../reference/Permutation.html">Permutation</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, size <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x</span></span>
 <span><span class="fu"><a href="../reference/GroupHomomorphism.html">is_isomorphic</a></span><span class="op">(</span><span class="va">A4</span>, <span class="va">A4p</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/GroupHomomorphism.html">hom_is_isomorphism</a></span><span class="op">(</span><span class="fu"><a href="../reference/GroupHomomorphism.html">GroupHomomorphism</a></span><span class="op">(</span><span class="va">A4</span>, <span class="va">A4p</span>, <span class="cn">T</span><span class="op">$</span><span class="va">images</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="fu"><a href="../reference/GroupHomomorphism.html">group_isomorphism</a></span><span class="op">(</span><span class="va">A4</span>, <span class="va">A4p</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>

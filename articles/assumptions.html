@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -235,6 +241,60 @@ always consults; <code><a href="../reference/assumptions-context.html">assuming(
 <span><span class="co">#&gt; AssumptionsContext({Q.positive(x)})</span></span>
 <span><span class="va">global_assumptions</span></span>
 <span><span class="co">#&gt; AssumptionsContext()</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="custom-predicates-and-other-solvers">Custom predicates and other solvers<a class="anchor" aria-label="anchor" href="#custom-predicates-and-other-solvers"></a>
+</h2>
+<p><code><a href="../reference/Predicate.html">Predicate()</a></code> creates a new predicate and
+<code><a href="../reference/Predicate.html">AppliedPredicate()</a></code> applies one to arguments. A predicate
+created with <code>dispatch = TRUE</code> answers through handlers added
+by <code><a href="../reference/register_predicate.html">register_predicate()</a></code> for given expression types.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">P</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Predicate.html">Predicate</a></span><span class="op">(</span><span class="st">"P"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/E.html">P</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Q.P(x)</span></span>
+<span><span class="fu"><a href="../reference/ask.html">ask</a></span><span class="op">(</span><span class="fu"><a href="../reference/E.html">P</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="fu"><a href="../reference/E.html">P</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">Q</span><span class="op">$</span><span class="fu">positive</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/Predicate.html">AppliedPredicate</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="va">integer</span>, <span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Q.integer(x)</span></span>
+<span><span class="va">K</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Predicate.html">Predicate</a></span><span class="op">(</span><span class="st">"my_key"</span>, dispatch <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/register_predicate.html">register_predicate</a></span><span class="op">(</span><span class="va">K</span>, <span class="st">"Symbol"</span>, <span class="kw">function</span><span class="op">(</span><span class="va">expr</span>, <span class="va">assumptions</span><span class="op">)</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/ask.html">ask</a></span><span class="op">(</span><span class="fu">K</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/ask.html">ask</a></span><span class="op">(</span><span class="fu">K</span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] NA</span></span></code></pre></div>
+<p><code><a href="../reference/satask.html">satask()</a></code> decides a query with a SAT solver, and
+<code><a href="../reference/lra_satask.html">lra_satask()</a></code> with linear real arithmetic, which also
+handles inequalities between real symbols:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"y"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/satask.html">satask</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="fu">zero</span><span class="op">(</span><span class="fu"><a href="../reference/elementary-functions.html">Abs</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>, <span class="va">Q</span><span class="op">$</span><span class="fu">zero</span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/satask.html">satask</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="fu">positive</span><span class="op">(</span><span class="va">x</span> <span class="op">*</span> <span class="va">y</span><span class="op">)</span>, <span class="va">Q</span><span class="op">$</span><span class="fu">positive</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">Q</span><span class="op">$</span><span class="fu">positive</span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="va">xr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"xr"</span>, real <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/lra_satask.html">lra_satask</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="fu">gt</span><span class="op">(</span><span class="va">xr</span>, <span class="fl">0</span><span class="op">)</span>, <span class="va">Q</span><span class="op">$</span><span class="fu">gt</span><span class="op">(</span><span class="va">xr</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/lra_satask.html">lra_satask</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="fu">lt</span><span class="op">(</span><span class="va">xr</span>, <span class="fl">0</span><span class="op">)</span>, <span class="va">Q</span><span class="op">$</span><span class="fu">gt</span><span class="op">(</span><span class="va">xr</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="fu"><a href="../reference/lra_satask.html">lra_satask</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="fu">eq</span><span class="op">(</span><span class="va">xr</span>, <span class="fl">1</span><span class="op">)</span>, <span class="op">!</span><span class="va">Q</span><span class="op">$</span><span class="fu">ne</span><span class="op">(</span><span class="va">xr</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<p><code><a href="../reference/AssumptionsWrapper.html">AssumptionsWrapper()</a></code> reads the assumption properties of
+an expression under extra assumptions, and
+<code><a href="../reference/AssumptionsWrapper.html">is_extended_real()</a></code> and
+<code><a href="../reference/AssumptionsWrapper.html">is_extended_nonnegative()</a></code> are shortcuts for two of
+them.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/AssumptionsWrapper.html">AssumptionsWrapper</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">is_positive</span></span>
+<span><span class="co">#&gt; [1] NA</span></span>
+<span><span class="fu"><a href="../reference/AssumptionsWrapper.html">AssumptionsWrapper</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">Q</span><span class="op">$</span><span class="fu">positive</span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">is_positive</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/AssumptionsWrapper.html">is_extended_real</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">Q</span><span class="op">$</span><span class="fu">extended_real</span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/AssumptionsWrapper.html">is_extended_nonnegative</a></span><span class="op">(</span><span class="va">y</span>, <span class="va">Q</span><span class="op">$</span><span class="fu">positive</span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/AssumptionsWrapper.html">is_extended_nonnegative</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] NA</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

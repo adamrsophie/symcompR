@@ -314,6 +314,144 @@ reduce_abs_inequalities(list(list(Abs(3 * x - 5) - 7, "<"),
 #> (-2/3 < x) & (x < 4) & (((-oo < x) & (x < -38)) | ((-12 < x) & (x < oo)))
 solve_rational_inequalities(list(list(list(list(Poly(-x + 1, x), Poly(1, x)), ">="))))
 #> Interval(-oo, 1)
+solve_poly_inequalities(list(list(Poly(x^2 - 3), ">"), list(Poly(-x^2 + 1), ">")))
+#> Union(Interval.open(-oo, -sqrt(3)), Interval.open(-1, 1), Interval.open(sqrt(3), oo))
+```
+
+## Helpers of `solveset()`
+
+[`solveset_real()`](https://adamrsophie.github.io/symcompR/reference/solveset.md)
+and
+[`solveset_complex()`](https://adamrsophie.github.io/symcompR/reference/solveset.md)
+fix the domain;
+[`invert_real()`](https://adamrsophie.github.io/symcompR/reference/invert_real.md)
+and
+[`invert_complex()`](https://adamrsophie.github.io/symcompR/reference/invert_real.md)
+reduce `f(x) = y` to a simpler equation in `x`;
+[`domain_check()`](https://adamrsophie.github.io/symcompR/reference/domain_check.md)
+tests whether a point is in the domain of an expression;
+[`solve_decomposition()`](https://adamrsophie.github.io/symcompR/reference/solve_decomposition.md)
+solves by decomposing the expression into simpler functions; and
+[`solvify()`](https://adamrsophie.github.io/symcompR/reference/solvify.md)
+returns the solutions as a list, as
+[`solve()`](https://rdrr.io/r/base/solve.html) does.
+[`unrad()`](https://adamrsophie.github.io/symcompR/reference/unrad.md)
+removes radicals from an equation, returning the new equation and any
+change of variables, and
+[`linear_coeffs()`](https://adamrsophie.github.io/symcompR/reference/linear_coeffs.md)
+gives the coefficients of a linear expression.
+
+``` r
+
+solveset_real(x^2 - 1, x)
+#> {-1, 1}
+solveset_complex(exp(x) - 1, x)
+#> ImageSet(Lambda(_n, 2*_n*I*pi), Integers)
+invert_real(exp(x), y, x)
+#> (x, Intersection({log(y)}, Reals))
+invert_complex(exp(x), y, x)
+#> (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
+domain_check(1 / x, x, 0)
+#> [1] FALSE
+domain_check(x^2, x, 3)
+#> [1] TRUE
+solve_decomposition(exp(2 * x) - 3 * exp(x) + 2, x, Reals)
+#> {0, log(2)}
+solvify(x^2 - 9, x, Reals)
+#> [[1]]
+#> -3
+#> 
+#> [[2]]
+#> 3
+solvify(sin(x) + 1, x, Reals)
+#> [[1]]
+#> 3*pi/2
+unrad(sqrt(x) + sqrt(1 - x))
+#> (2*x - 1, [])
+unrad(x^Rational(5, 6) + 2)
+#> (x^5 - 64, [])
+linear_coeffs(3 * x + 2 * y - 1, x, y)
+#> [[1]]
+#> 3
+#> 
+#> [[2]]
+#> 2
+#> 
+#> [[3]]
+#> -1
+```
+
+## Linear programming
+
+[`lpmax()`](https://adamrsophie.github.io/symcompR/reference/lpmin.md)
+and
+[`lpmin()`](https://adamrsophie.github.io/symcompR/reference/lpmin.md)
+optimize a linear objective under linear constraints and return the
+optimum and the values of the symbols.
+[`linprog()`](https://adamrsophie.github.io/symcompR/reference/lpmin.md)
+takes the problem in matrix form, minimizing `c x` subject to `A x <= b`
+with `x >= 0` by default, and
+[`show_linprog()`](https://adamrsophie.github.io/symcompR/reference/lpmin.md)
+writes that problem with symbols.
+
+``` r
+
+lpmax(x - y, list(Le(x, y + 2), Ge(x, 0), Ge(y, 0)))
+#> [[1]]
+#> 2
+#> 
+#> [[2]]
+#> [[2]]$x
+#> 2
+#> 
+#> [[2]]$y
+#> 0
+lpmin(x, list(Ge(y, 1), Ge(x, y)))
+#> [[1]]
+#> 1
+#> 
+#> [[2]]
+#> [[2]]$x
+#> 1
+#> 
+#> [[2]]$y
+#> 1
+linprog(c(-1, -2), list(c(1, 1), c(1, 3)), c(4, 6))
+#> [[1]]
+#> -5
+#> 
+#> [[2]]
+#> [[2]][[1]]
+#> 3
+#> 
+#> [[2]][[2]]
+#> 1
+linprog(c(1, -1), list(c(1, 1)), 2, bounds = list(`1` = list(NULL, NULL)))
+#> [[1]]
+#> -2
+#> 
+#> [[2]]
+#> [[2]][[1]]
+#> 0
+#> 
+#> [[2]][[2]]
+#> 2
+show_linprog(c(-1, -2), list(c(1, 1), c(1, 3)), c(4, 6))
+#> [[1]]
+#> -x1 - 2*x2
+#> 
+#> [[2]]
+#> [[2]][[1]]
+#> x1 + x2 <= 4
+#> 
+#> [[2]][[2]]
+#> x1 + 3*x2 <= 6
+#> 
+#> [[2]][[3]]
+#> x1 >= 0
+#> 
+#> [[2]][[4]]
+#> x2 >= 0
 ```
 
 ## Numerical solutions
@@ -525,6 +663,69 @@ ode_order(diff(f(x), x, 3) + f(x), f(x))
 #> [1] 3
 checkodesol(diff(f(x), x) - f(x), Eq(f(x), exp(x)), f(x))
 #> (True, 0)
+```
+
+### Lower level ODE tools
+
+[`infinitesimals()`](https://adamrsophie.github.io/symcompR/reference/infinitesimals.md)
+finds the infinitesimals of a Lie group of symmetries of a first order
+ODE, and
+[`checkinfsol()`](https://adamrsophie.github.io/symcompR/reference/checkinfsol.md)
+checks them.
+[`classify_sysode()`](https://adamrsophie.github.io/symcompR/reference/classify_sysode.md)
+describes a system of ODEs,
+[`linear_ode_to_matrix()`](https://adamrsophie.github.io/symcompR/reference/linear_ode_to_matrix.md)
+writes a linear system as matrices,
+[`canonical_odes()`](https://adamrsophie.github.io/symcompR/reference/canonical_odes.md)
+solves the system for the highest derivatives,
+[`matrix_exp_jordan_form()`](https://adamrsophie.github.io/symcompR/reference/matrix_exp_jordan_form.md)
+computes the matrix exponential through the Jordan form, and
+[`linodesolve()`](https://adamrsophie.github.io/symcompR/reference/linodesolve.md)
+solves a constant coefficient system x' = A x with dummy symbols as the
+arbitrary constants.
+[`constantsimp()`](https://adamrsophie.github.io/symcompR/reference/constantsimp.md)
+absorbs expressions into arbitrary constants, and
+[`constant_renumber()`](https://adamrsophie.github.io/symcompR/reference/constantsimp.md)
+renumbers them.
+
+``` r
+
+infinitesimals(Eq(Derivative(f(x), x), x^2 * f(x)), f(x))
+#> [[1]]
+#> {xi(x, f(x)): 0, eta(x, f(x)): exp(x^3/3)}
+eq1 <- Derivative(f(x), x) - x^2
+checkinfsol(eq1, infinitesimals(eq1, f(x)), f(x))
+#> [[1]]
+#> (True, 0)
+t <- Symbol("t")
+classify_sysode(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), -f(t))))
+#> {no_of_equation: 2, eq: [-g(t) + Derivative(f(t), t), f(t) + Derivative(g(t), t)], func: [f(t), g(t)], order: {f(t): 1, g(t): 1}, func_coeff: {(0, f(t), 0): 0, (0, f(t), 1): 1, (0, g(t), 0): -1, (0, g(t), 1): 0, (1, f(t), 0): 1, (1, f(t), 1): 0, (1, g(t), 0): 0, (1, g(t), 1): 1}, is_linear: True, type_of_equation: None}
+linear_ode_to_matrix(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), f(t))),
+                     list(f(t), g(t)), t, 1)
+#> ([Matrix([[1, 0], [0, 1]]), Matrix([[0, 1], [1, 0]])], Matrix([[0], [0]]))
+canonical_odes(list(Eq(Derivative(f(x), x), g(x)), Eq(Derivative(g(x), x) + f(x), 0)),
+               list(f(x), g(x)), x)
+#> [[1]]
+#> [[1]][[1]]
+#> Eq(Derivative(f(x), x), g(x))
+#> 
+#> [[1]][[2]]
+#> Eq(Derivative(g(x), x), -f(x))
+matrix_exp_jordan_form(Matrix(list(list(1, 1), list(0, 1))), t)
+#> (Matrix([[1, 0], [0, 1]]), Matrix([[exp(t), t*exp(t)], [0, exp(t)]]))
+linodesolve(Matrix(list(list(1, 0), list(0, 2))), t)
+#> [[1]]
+#> _Dummy_618*exp(t)
+#> 
+#> [[2]]
+#> _Dummy_619*exp(2*t)
+C1 <- Symbol("C1"); C2 <- Symbol("C2")
+constantsimp(2 * C1 * x, list(C1))
+#> C1*x
+constantsimp(C1 + C2 + x, list(C1, C2))
+#> C1 + x
+constant_renumber(C2 * x + C1)
+#> C1 + C2*x
 ```
 
 ## Partial differential equations

@@ -6,6 +6,7 @@ articles:
   assumptions: assumptions.html
   calculus: calculus.html
   categories: categories.html
+  code-generation: code-generation.html
   code-printers: code-printers.html
   combinatorics: combinatorics.html
   cryptography: cryptography.html
@@ -19,23 +20,28 @@ articles:
   lie-algebras: lie-algebras.html
   logic-and-sets: logic-and-sets.html
   matrices: matrices.html
+  mechanics: mechanics.html
   number-theory: number-theory.html
   other-modules: other-modules.html
   parsing: parsing.html
   pattern-matching: pattern-matching.html
   permutation-groups: permutation-groups.html
+  physics-engineering: physics-engineering.html
   physics-units: physics-units.html
   polynomial-domains: polynomial-domains.html
   polynomials: polynomials.html
   printing: printing.html
+  quadrature-and-polytopes: quadrature-and-polytopes.html
+  quantum-mechanics: quantum-mechanics.html
   series-and-sequences: series-and-sequences.html
   simplification: simplification.html
   solvers: solvers.html
   special-functions: special-functions.html
+  statistics: statistics.html
   symcompR: symcompR.html
   tensors: tensors.html
   vector-calculus: vector-calculus.html
-last_built: 2026-11-13T11:40Z
+last_built: 2026-11-13T13:55Z
 urls:
   reference: https://adamrsophie.github.io/symcompR/reference
   article: https://adamrsophie.github.io/symcompR/articles

@@ -545,6 +545,22 @@ C2$table
 ct_look_ahead(C2)
 ct_rep(C2, 1)
 #> [1] 1
+C2b <- CosetTable(f, list())
+ct_define_c(C2b, 0, x)
+ct_process_deductions_check(C2b, list(x^2), list(x^2))
+#> [1] TRUE
+C2c <- CosetTable(f, list())
+ct_define_c(C2c, 0, x); ct_define_c(C2c, 0, y)
+ct_process_deductions(C2c, list(x^2), list(x^2))
+C2c$table
+#> [[1]]
+#> [1]  1  1  2 NA
+#> 
+#> [[2]]
+#> [1]  0  0 NA NA
+#> 
+#> [[3]]
+#> [1] NA NA NA  0
 length(ct_conjugates(C2, f$relators))
 #> [1] 4
 Cm <- CosetTable(f, list(x))
@@ -811,6 +827,8 @@ hom_apply(T, x * y)
 hom_invert(T, Permutation(0, 1, 2, size = 4))
 #> x
 is_isomorphic(A4, A4p)
+#> [1] TRUE
+hom_is_isomorphism(GroupHomomorphism(A4, A4p, T$images))
 #> [1] TRUE
 group_isomorphism(A4, A4p)[[1]]
 #> [1] TRUE

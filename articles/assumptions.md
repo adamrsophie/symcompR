@@ -154,3 +154,74 @@ ctx
 global_assumptions
 #> AssumptionsContext()
 ```
+
+## Custom predicates and other solvers
+
+[`Predicate()`](https://adamrsophie.github.io/symcompR/reference/Predicate.md)
+creates a new predicate and
+[`AppliedPredicate()`](https://adamrsophie.github.io/symcompR/reference/Predicate.md)
+applies one to arguments. A predicate created with `dispatch = TRUE`
+answers through handlers added by
+[`register_predicate()`](https://adamrsophie.github.io/symcompR/reference/register_predicate.md)
+for given expression types.
+
+``` r
+
+P <- Predicate("P")
+P(x)
+#> Q.P(x)
+ask(P(x), P(x) & Q$positive(x))
+#> [1] TRUE
+AppliedPredicate(Q$integer, x)
+#> Q.integer(x)
+K <- Predicate("my_key", dispatch = TRUE)
+register_predicate(K, "Symbol", function(expr, assumptions) TRUE)
+ask(K(x))
+#> [1] TRUE
+ask(K(x + 1))
+#> [1] NA
+```
+
+[`satask()`](https://adamrsophie.github.io/symcompR/reference/satask.md)
+decides a query with a SAT solver, and
+[`lra_satask()`](https://adamrsophie.github.io/symcompR/reference/lra_satask.md)
+with linear real arithmetic, which also handles inequalities between
+real symbols:
+
+``` r
+
+y <- Symbol("y")
+satask(Q$zero(Abs(y)), Q$zero(y))
+#> [1] TRUE
+satask(Q$positive(x * y), Q$positive(x) & Q$positive(y))
+#> [1] TRUE
+xr <- Symbol("xr", real = TRUE)
+lra_satask(Q$gt(xr, 0), Q$gt(xr, 1))
+#> [1] TRUE
+lra_satask(Q$lt(xr, 0), Q$gt(xr, 1))
+#> [1] FALSE
+lra_satask(Q$eq(xr, 1), !Q$ne(xr, 0))
+#> [1] FALSE
+```
+
+[`AssumptionsWrapper()`](https://adamrsophie.github.io/symcompR/reference/AssumptionsWrapper.md)
+reads the assumption properties of an expression under extra
+assumptions, and
+[`is_extended_real()`](https://adamrsophie.github.io/symcompR/reference/AssumptionsWrapper.md)
+and
+[`is_extended_nonnegative()`](https://adamrsophie.github.io/symcompR/reference/AssumptionsWrapper.md)
+are shortcuts for two of them.
+
+``` r
+
+AssumptionsWrapper(y)$is_positive
+#> [1] NA
+AssumptionsWrapper(y, Q$positive(y))$is_positive
+#> [1] TRUE
+is_extended_real(y, Q$extended_real(y))
+#> [1] TRUE
+is_extended_nonnegative(y, Q$positive(y))
+#> [1] TRUE
+is_extended_nonnegative(y)
+#> [1] NA
+```

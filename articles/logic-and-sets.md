@@ -187,6 +187,169 @@ bool_map(Or(And(p, q), Not(p)), Or(And(x, y), Not(x)))
 #> y
 ```
 
+## Algebraic normal form and gates
+
+The algebraic normal form (ANF) writes a Boolean function as an
+exclusive or of conjunctions.
+[`Xnor()`](https://adamrsophie.github.io/symcompR/reference/Xnor.md) is
+the negated exclusive or and
+[`Exclusive()`](https://adamrsophie.github.io/symcompR/reference/Xnor.md)
+says that at most one argument is true.
+
+``` r
+
+A <- Symbol("A"); B <- Symbol("B"); C <- Symbol("C")
+Xnor(A, B)
+#> ~(A ^ B)
+Exclusive(A, B, C)
+#> ~(A & B) & ~(A & C) & ~(B & C)
+distribute_and_over_or(Or(And(A, B), C))
+#> (A | C) & (B | C)
+distribute_xor_over_and(And(A, Xor(B, C)))
+#> (A & B) ^ (A & C)
+to_anf(Or(x, y))
+#> x ^ y ^ (x & y)
+to_anf(Implies(x, y))
+#> x ^ True ^ (x & y)
+is_anf(Xor(x, And(x, y)))
+#> [1] TRUE
+is_anf(Or(x, y))
+#> [1] FALSE
+anf_coeffs(c(1, 1, 1, 0))
+#> [1] 1 0 0 1
+ANFform(list(x, y), c(1, 1, 1, 0))
+#> True ^ (x & y)
+bool_minterm(3, list(x, y))
+#> x & y
+bool_maxterm(3, list(x, y))
+#> ~x | ~y
+bool_monomial(3, list(x, y))
+#> x & y
+gateinputcount(Or(A, And(B, C)))
+#> [1] 4
+```
+
+## Inference
+
+[`pl_true()`](https://adamrsophie.github.io/symcompR/reference/pl_true.md)
+evaluates a sentence in a partial model,
+[`entails()`](https://adamrsophie.github.io/symcompR/reference/entails.md)
+decides logical consequence and a
+[`PropKB()`](https://adamrsophie.github.io/symcompR/reference/entails.md)
+knowledge base answers queries about what it has been told.
+[`KB()`](https://adamrsophie.github.io/symcompR/reference/entails.md) is
+the base class.
+
+``` r
+
+literal_symbol(Not(A))
+#> A
+pl_true(Or(A, B), list(A = TRUE))
+#> [1] TRUE
+pl_true(And(A, B), list(A = TRUE))
+#> [1] NA
+entails(B, list(Implies(A, B), A))
+#> [1] TRUE
+entails(A, list(Or(A, B)))
+#> [1] FALSE
+kb <- PropKB()
+kb$tell(Implies(A, B)); kb$tell(A)
+kb$ask(B)
+#> [1] TRUE
+kb$ask(C)
+#> [1] FALSE
+kb$clauses()
+#> [[1]]
+#> A
+#> 
+#> [[2]]
+#> B | ~A
+kb$retract(A)
+kb$ask(B)
+#> [1] FALSE
+KB()$clauses()
+#> list()
+```
+
+The DPLL procedure decides satisfiability. Its steps work on clauses
+written with symbols, or with integers
+([`to_int_repr()`](https://adamrsophie.github.io/symcompR/reference/dpll_satisfiable.md)),
+where `-i` is the negation of the `i`th symbol.
+
+``` r
+
+dpll_satisfiable(And(A, Not(A)))
+#> [1] FALSE
+dpll(list(Or(A, B), Not(A)), list(A, B), list())
+#> $A
+#> [1] FALSE
+#> 
+#> $B
+#> [1] TRUE
+find_pure_symbol(list(A, B), list(Or(A, Not(B)), Or(Not(B), A)))
+#> [[1]]
+#> A
+#> 
+#> [[2]]
+#> [1] TRUE
+find_unit_clause(list(Or(A, B), A), list())
+#> [[1]]
+#> A
+#> 
+#> [[2]]
+#> [1] TRUE
+unit_propagate(list(Or(A, B), Or(Not(A), B)), A)
+#> [[1]]
+#> B
+to_int_repr(list(Or(x, y), Not(x)), list(x, y))
+#> [[1]]
+#> [1] 1 2
+#> 
+#> [[2]]
+#> [1] -1
+dpll_int_repr(list(c(1, 2), -1), c(1, 2), list())
+#> $`1`
+#> [1] FALSE
+#> 
+#> $`2`
+#> [1] TRUE
+find_pure_symbol_int_repr(c(1, 2, 3), list(c(1, -2), c(-2, -3), c(3, 1)))
+#> [[1]]
+#> [1] 1
+#> 
+#> [[2]]
+#> [1] TRUE
+find_unit_clause_int_repr(list(c(1, 2, 3), c(2, -3), c(1, -2)), list("1" = TRUE))
+#> [[1]]
+#> [1] 2
+#> 
+#> [[2]]
+#> [1] FALSE
+unit_propagate_int_repr(list(c(1, 2), c(3, -2), 2), 2)
+#> [[1]]
+#> [1] 3
+pl_true_int_repr(c(1, 2), list("1" = FALSE))
+#> [1] NA
+pl_true_int_repr(c(1, 2), list("1" = FALSE, "2" = FALSE))
+#> [1] FALSE
+```
+
+[`dimacs_load()`](https://adamrsophie.github.io/symcompR/reference/dimacs_load.md)
+reads a formula in the DIMACS CNF format, and
+[`dimacs_load_file()`](https://adamrsophie.github.io/symcompR/reference/dimacs_load.md)
+reads it from a file:
+
+``` r
+
+dimacs_load("1 2 \n 3")
+#> cnf_3 & (cnf_1 | cnf_2)
+tf <- tempfile(fileext = ".cnf")
+writeLines(c("1 -2 0", "3 0"), tf)
+dimacs_load_file(tf)
+#> cnf_3 & (cnf_1 | ~cnf_2)
+unlink(tf)
+```
+
 ## Assumptions
 
 The assumptions system, with

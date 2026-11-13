@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -429,6 +435,106 @@ expansion engine behind <code><a href="../reference/series.html">series()</a></c
 <span><span class="co">#&gt; 1/2</span></span>
 <span><span class="fu"><a href="../reference/series-helpers.html">residue</a></span><span class="op">(</span><span class="fu"><a href="../reference/elementary-functions.html">cot</a></span><span class="op">(</span><span class="va">sym_pi</span> <span class="op">*</span> <span class="va">z</span><span class="op">)</span>, <span class="va">z</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 1/pi</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="guessing-and-accelerating-sequences">Guessing and accelerating sequences<a class="anchor" aria-label="anchor" href="#guessing-and-accelerating-sequences"></a>
+</h2>
+<p>The functions of <code>sympy.concrete.guess</code> find a formula, a
+linear recurrence or a generating function that fits the first terms of
+a sequence.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fib</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">13</span>, <span class="fl">21</span>, <span class="fl">34</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/find_simple_recurrence_vector.html">find_simple_recurrence_vector</a></span><span class="op">(</span><span class="va">fib</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; -1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[3]]</span></span>
+<span><span class="co">#&gt; -1</span></span>
+<span><span class="fu"><a href="../reference/find_simple_recurrence_vector.html">find_simple_recurrence</a></span><span class="op">(</span><span class="va">fib</span><span class="op">)</span></span>
+<span><span class="co">#&gt; -a(n) - a(n + 1) + a(n + 2)</span></span>
+<span><span class="fu"><a href="../reference/find_simple_recurrence_vector.html">guess</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">6</span>, <span class="fl">24</span>, <span class="fl">120</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; RisingFactorial(2, i0 - 1)</span></span>
+<span><span class="fu"><a href="../reference/find_simple_recurrence_vector.html">guess</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">6</span>, <span class="fl">10</span>, <span class="fl">15</span>, <span class="fl">21</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; i0^2/2 + i0/2</span></span>
+<span><span class="fu"><a href="../reference/find_simple_recurrence_vector.html">guess_generating_function_rational</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">13</span>, <span class="fl">21</span>, <span class="fl">34</span>, <span class="fl">55</span>, <span class="fl">89</span>, <span class="fl">144</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (3*x + 5)/(-x^2 - x + 1)</span></span>
+<span><span class="fu"><a href="../reference/find_simple_recurrence_vector.html">guess_generating_function</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">8</span>, <span class="fl">16</span>, <span class="fl">32</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">ogf</span></span>
+<span><span class="co">#&gt; 1/(1 - 2*x)</span></span>
+<span><span class="fu"><a href="../reference/find_simple_recurrence_vector.html">rationalize</a></span><span class="op">(</span><span class="va">pi</span>, maxcoeff <span class="op">=</span> <span class="fl">250</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 355/113</span></span></code></pre></div>
+<p><code><a href="../reference/richardson.html">richardson()</a></code> and <code><a href="../reference/richardson.html">shanks()</a></code> accelerate the
+convergence of a sequence toward its limit:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/richardson.html">richardson</a></span><span class="op">(</span><span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fl">1</span> <span class="op">/</span> <span class="va">k</span><span class="op">)</span><span class="op">^</span><span class="va">k</span>, <span class="va">k</span>, <span class="fl">10</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 64760917612327084418953891207076443/23824634392675154069619793920000000</span></span>
+<span><span class="fu"><a href="../reference/richardson.html">shanks</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fl">1</span> <span class="op">/</span> <span class="va">k</span>, <span class="va">k</span>, <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 7/8</span></span></code></pre></div>
+<p><code><a href="../reference/finite_diff.html">finite_diff()</a></code> is the forward difference of an expression
+and <code><a href="../reference/finite_diff.html">finite_diff_kauers()</a></code> the difference of a sum with
+respect to its upper limit:</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"m"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/finite_diff.html">finite_diff</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">1</span>, <span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 2*x + 3</span></span>
+<span><span class="fu"><a href="../reference/finite_diff.html">finite_diff_kauers</a></span><span class="op">(</span><span class="fu"><a href="../reference/summation.html">Sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span>, <span class="va">m</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (m + 1)^2</span></span></code></pre></div>
+<p><code><a href="../reference/pade_approximants_gcdex.html">pade_approximants_gcdex()</a></code> lists the Padé approximants of
+a truncated power series from the steps of the extended Euclidean
+algorithm, and <code><a href="../reference/pade_approximants_gcdex.html">pade_approximant_gcdex()</a></code> picks the one with
+given degrees:</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">+</span> <span class="va">x</span> <span class="op">+</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">/</span> <span class="fl">2</span> <span class="op">+</span> <span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">/</span> <span class="fl">6</span> <span class="op">+</span> <span class="va">x</span><span class="op">^</span><span class="fl">4</span> <span class="op">/</span> <span class="fl">24</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="../reference/pade_approximants_gcdex.html">pade_approximants_gcdex</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">f</span>, <span class="va">x</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">pq</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">pq</span>, <span class="va">as_expr</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [[1]][[1]]</span></span>
+<span><span class="co">#&gt; x^2/2 + x + 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[1]][[2]]</span></span>
+<span><span class="co">#&gt; 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; [[2]][[1]]</span></span>
+<span><span class="co">#&gt; 2*x + 4</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]][[2]]</span></span>
+<span><span class="co">#&gt; 4 - 2*x</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[3]]</span></span>
+<span><span class="co">#&gt; [[3]][[1]]</span></span>
+<span><span class="co">#&gt; 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[3]][[2]]</span></span>
+<span><span class="co">#&gt; x^2/2 - x + 1</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="../reference/pade_approximants_gcdex.html">pade_approximant_gcdex</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">f</span>, <span class="va">x</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>, <span class="va">as_expr</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; x^2/4 + 3*x/2 + 3</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; x^2/4 - 3*x/2 + 3</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="../reference/pade_approximants_gcdex.html">pade_approximant_gcdex</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">f</span>, <span class="va">x</span><span class="op">)</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">as_expr</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; 4*x^3 + 24*x^2 + 72*x + 96</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; 96 - 24*x</span></span></code></pre></div>
+<p><code><a href="../reference/recurrence_memo.html">recurrence_memo()</a></code> and
+<code><a href="../reference/recurrence_memo.html">assoc_recurrence_memo()</a></code> build memoized functions for
+sequences defined by recurrences, with one or two indices:</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fibm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/recurrence_memo.html">recurrence_memo</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">n</span>, <span class="va">prev</span><span class="op">)</span> <span class="va">prev</span><span class="op">[[</span><span class="va">n</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="va">prev</span><span class="op">[[</span><span class="va">n</span> <span class="op">-</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu">fibm</span><span class="op">(</span><span class="fl">30</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 832040</span></span>
+<span><span class="va">binom</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/recurrence_memo.html">assoc_recurrence_memo</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fl">1</span><span class="op">)</span><span class="op">(</span></span>
+<span>  <span class="kw">function</span><span class="op">(</span><span class="va">i</span>, <span class="va">j</span>, <span class="va">prev</span><span class="op">)</span> <span class="va">prev</span><span class="op">[[</span><span class="va">i</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">[[</span><span class="va">j</span><span class="op">]</span><span class="op">]</span> <span class="op">*</span> <span class="op">(</span><span class="va">i</span> <span class="op">-</span> <span class="va">j</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">/</span> <span class="va">j</span><span class="op">)</span></span>
+<span><span class="fu">binom</span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 10</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

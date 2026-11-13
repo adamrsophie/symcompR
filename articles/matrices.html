@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -881,6 +887,140 @@ symbols.</p>
 <span><span class="co">#&gt; Matrix(2, 2)</span></span>
 <span><span class="co">#&gt; [a_0_0, a_0_1]</span></span>
 <span><span class="co">#&gt; [a_1_0, a_1_1]</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="structured-matrix-expressions">Structured matrix expressions<a class="anchor" aria-label="anchor" href="#structured-matrix-expressions"></a>
+</h2>
+<p><code><a href="../reference/structured-matrices.html">CompanionMatrix()</a></code> is the companion matrix of a monic
+polynomial, and <code><a href="../reference/structured-matrices.html">DFT()</a></code> and <code><a href="../reference/structured-matrices.html">IDFT()</a></code> are the
+unitary discrete Fourier transform matrix and its inverse.
+<code>MatrixUnit(rows, cols, i, j)</code> has a single one in position
+<code>(i, j)</code>, with zero based indices as in SymPy.</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/matrix-expressions.html">as_explicit</a></span><span class="op">(</span><span class="fu"><a href="../reference/structured-matrices.html">CompanionMatrix</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">5</span>, <span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Matrix(3, 3)</span></span>
+<span><span class="co">#&gt; [0, 0, -5]</span></span>
+<span><span class="co">#&gt; [1, 0, -2]</span></span>
+<span><span class="co">#&gt; [0, 1, 0 ]</span></span>
+<span><span class="fu"><a href="../reference/matrix-expressions.html">as_explicit</a></span><span class="op">(</span><span class="fu"><a href="../reference/structured-matrices.html">DFT</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Matrix(2, 2)</span></span>
+<span><span class="co">#&gt; [sqrt(2)/2, sqrt(2)/2 ]</span></span>
+<span><span class="co">#&gt; [sqrt(2)/2, -sqrt(2)/2]</span></span>
+<span><span class="fu"><a href="../reference/matrix-expressions.html">as_explicit</a></span><span class="op">(</span><span class="fu"><a href="../reference/structured-matrices.html">IDFT</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Matrix(2, 2)</span></span>
+<span><span class="co">#&gt; [sqrt(2)/2, sqrt(2)/2 ]</span></span>
+<span><span class="co">#&gt; [sqrt(2)/2, -sqrt(2)/2]</span></span>
+<span><span class="fu"><a href="../reference/matrix-expressions.html">as_explicit</a></span><span class="op">(</span><span class="fu"><a href="../reference/MatrixUnit.html">MatrixUnit</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Matrix(2, 2)</span></span>
+<span><span class="co">#&gt; [0, 1]</span></span>
+<span><span class="co">#&gt; [0, 0]</span></span></code></pre></div>
+<p>The factors of a matrix factorization are matrix expressions of their
+own: <code><a href="../reference/structured-matrices.html">LofLU()</a></code> and <code><a href="../reference/structured-matrices.html">UofLU()</a></code>,
+<code><a href="../reference/structured-matrices.html">LofCholesky()</a></code> and <code><a href="../reference/structured-matrices.html">UofCholesky()</a></code>,
+<code><a href="../reference/structured-matrices.html">QofQR()</a></code> and <code><a href="../reference/structured-matrices.html">RofQR()</a></code>,
+<code><a href="../reference/structured-matrices.html">EigenValues()</a></code> and <code><a href="../reference/structured-matrices.html">EigenVectors()</a></code>, and
+<code><a href="../reference/structured-matrices.html">UofSVD()</a></code>, <code><a href="../reference/structured-matrices.html">SofSVD()</a></code> and <code><a href="../reference/structured-matrices.html">VofSVD()</a></code>.
+The functions <code><a href="../reference/structured-matrices.html">mat_lu()</a></code>, <code><a href="../reference/structured-matrices.html">mat_qr()</a></code>,
+<code><a href="../reference/structured-matrices.html">mat_eig()</a></code> and <code><a href="../reference/structured-matrices.html">mat_svd()</a></code> return all the factors
+at once.</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"k"</span><span class="op">)</span></span>
+<span><span class="va">Xk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/matrix-expressions.html">MatrixSymbol</a></span><span class="op">(</span><span class="st">"X"</span>, <span class="va">k</span>, <span class="va">k</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">LofLU</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; LofLU(X)</span></span>
+<span><span class="fu"><a href="../reference/matrix-expressions.html">mat_shape</a></span><span class="op">(</span><span class="fu"><a href="../reference/structured-matrices.html">UofLU</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; k</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; k</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">LofCholesky</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; LofCholesky(X)</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">UofCholesky</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; UofCholesky(X)</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">QofQR</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; QofQR(X)</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">RofQR</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; RofQR(X)</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">EigenValues</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; EigenValues(X)</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">EigenVectors</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; EigenVectors(X)</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">UofSVD</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; UofSVD(X)</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">SofSVD</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; SofSVD(X)</span></span>
+<span><span class="fu"><a href="../reference/structured-matrices.html">VofSVD</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; VofSVD(X)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">Tuple</span>, <span class="fu"><a href="../reference/structured-matrices.html">mat_lu</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (LofLU(X), UofLU(X))</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">Tuple</span>, <span class="fu"><a href="../reference/structured-matrices.html">mat_qr</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (QofQR(X), RofQR(X))</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">Tuple</span>, <span class="fu"><a href="../reference/structured-matrices.html">mat_eig</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (EigenValues(X), EigenVectors(X))</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">Tuple</span>, <span class="fu"><a href="../reference/structured-matrices.html">mat_svd</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (UofSVD(X), SofSVD(X), VofSVD(X))</span></span></code></pre></div>
+<p><code><a href="../reference/GenericIdentity.html">GenericIdentity()</a></code> and <code><a href="../reference/GenericIdentity.html">GenericZeroMatrix()</a></code>
+are an identity and a zero matrix of unspecified size.
+<code><a href="../reference/hadamard_product.html">hadamard_power()</a></code> is the elementwise power,
+<code><a href="../reference/kronecker_product.html">combine_kronecker()</a></code> combines sums and products of Kronecker
+products, and <code><a href="../reference/ElementwiseApplyFunction.html">ElementwiseApplyFunction()</a></code> applies a scalar
+function to every entry.</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">Pk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/matrix-expressions.html">MatrixSymbol</a></span><span class="op">(</span><span class="st">"P"</span>, <span class="va">k</span>, <span class="va">k</span><span class="op">)</span>; <span class="va">Qk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/matrix-expressions.html">MatrixSymbol</a></span><span class="op">(</span><span class="st">"Q"</span>, <span class="va">k</span>, <span class="va">k</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/GenericIdentity.html">GenericIdentity</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; I</span></span>
+<span><span class="fu"><a href="../reference/GenericIdentity.html">GenericZeroMatrix</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 0</span></span>
+<span><span class="va">Pk</span> <span class="op">*</span> <span class="fu"><a href="../reference/GenericIdentity.html">GenericIdentity</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; P</span></span>
+<span><span class="fu"><a href="../reference/hadamard_product.html">hadamard_power</a></span><span class="op">(</span><span class="va">Pk</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; HadamardPower(P, 2)</span></span>
+<span><span class="fu"><a href="../reference/kronecker_product.html">combine_kronecker</a></span><span class="op">(</span><span class="fu"><a href="../reference/kronecker_product.html">kronecker_product</a></span><span class="op">(</span><span class="va">Pk</span>, <span class="va">Qk</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="../reference/kronecker_product.html">kronecker_product</a></span><span class="op">(</span><span class="va">Qk</span>, <span class="va">Qk</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; KroneckerProduct(P + Q, Q)</span></span>
+<span><span class="fu"><a href="../reference/kronecker_product.html">combine_kronecker</a></span><span class="op">(</span><span class="fu"><a href="../reference/kronecker_product.html">kronecker_product</a></span><span class="op">(</span><span class="va">Pk</span>, <span class="va">Qk</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/kronecker_product.html">kronecker_product</a></span><span class="op">(</span><span class="va">Qk</span>, <span class="va">Xk</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; KroneckerProduct(P*Q, Q*X)</span></span>
+<span><span class="fu"><a href="../reference/ElementwiseApplyFunction.html">ElementwiseApplyFunction</a></span><span class="op">(</span><span class="va">sin</span>, <span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Lambda(_d, sin(_d)).(X)</span></span>
+<span><span class="fu"><a href="../reference/matrix-expressions.html">as_explicit</a></span><span class="op">(</span><span class="fu"><a href="../reference/ElementwiseApplyFunction.html">ElementwiseApplyFunction</a></span><span class="op">(</span><span class="va">exp</span>, <span class="fu"><a href="../reference/matrix-expressions.html">MatrixSymbol</a></span><span class="op">(</span><span class="st">"Y"</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Matrix(2, 2)</span></span>
+<span><span class="co">#&gt; [exp(Y[0, 0]), exp(Y[0, 1])]</span></span>
+<span><span class="co">#&gt; [exp(Y[1, 0]), exp(Y[1, 1])]</span></span></code></pre></div>
+<p><code>MatrixSet(n, m, set)</code> is the set of <code>n</code> by
+<code>m</code> matrices with entries in <code>set</code>;
+<code><a href="../reference/MatrixSet.html">matrix_set_contains()</a></code> tests membership.</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">M22</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MatrixSet.html">MatrixSet</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="va">Reals</span><span class="op">)</span></span>
+<span><span class="va">M22</span></span>
+<span><span class="co">#&gt; MatrixSet(2, 2, Reals)</span></span>
+<span><span class="fu"><a href="../reference/MatrixSet.html">matrix_set_contains</a></span><span class="op">(</span><span class="va">M22</span>, <span class="fu"><a href="../reference/Matrix.html">Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/MatrixSet.html">matrix_set_contains</a></span><span class="op">(</span><span class="va">M22</span>, <span class="fu"><a href="../reference/Matrix.html">Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">3</span>, <span class="va">sym_I</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<p><code><a href="../reference/dotprodsimp.html">dotprodsimp()</a></code> is the light simplification that matrix
+routines apply to the intermediate sums of products:</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/dotprodsimp.html">dotprodsimp</a></span><span class="op">(</span><span class="va">x</span> <span class="op">/</span> <span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 1</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="derivatives-of-matrix-expressions">Derivatives of matrix expressions<a class="anchor" aria-label="anchor" href="#derivatives-of-matrix-expressions"></a>
+</h2>
+<p><code><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff()</a></code> differentiates a scalar or matrix valued matrix
+expression with respect to a matrix symbol. A scalar function such as a
+trace has a matrix derivative; a matrix valued function has a derivative
+of rank four, written as an array expression (see the arrays and tensors
+vignette). <code><a href="../reference/array_derive.html">matrix_derive()</a></code> does the same and converts the
+result back to matrix form where possible.</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="../reference/matrix-expressions.html">Trace</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 2*X.T</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="../reference/matrix-expressions.html">Trace</a></span><span class="op">(</span><span class="va">Pk</span> <span class="op">*</span> <span class="va">Xk</span> <span class="op">*</span> <span class="va">Qk</span><span class="op">)</span>, <span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; P.T*Q.T</span></span>
+<span><span class="fu"><a href="../reference/array_derive.html">matrix_derive</a></span><span class="op">(</span><span class="fu"><a href="../reference/matrix-expressions.html">Trace</a></span><span class="op">(</span><span class="va">Pk</span> <span class="op">*</span> <span class="va">Xk</span><span class="op">)</span>, <span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; P.T</span></span>
+<span><span class="fu"><a href="../reference/array_derive.html">matrix_derive</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span> <span class="op">*</span> <span class="va">Pk</span> <span class="op">*</span> <span class="va">Xk</span>, <span class="va">Xk</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ArrayAdd(PermuteDims(ArrayTensorProduct(P*X, I), (1 2 3)), PermuteDims(ArrayTensorProduct(P.T*X, I), (3)(1 2)))</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

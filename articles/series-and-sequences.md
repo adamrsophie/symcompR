@@ -395,3 +395,127 @@ residue(exp(z) / z^3, z, 0)
 residue(cot(sym_pi * z), z, 0)
 #> 1/pi
 ```
+
+## Guessing and accelerating sequences
+
+The functions of `sympy.concrete.guess` find a formula, a linear
+recurrence or a generating function that fits the first terms of a
+sequence.
+
+``` r
+
+fib <- c(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
+find_simple_recurrence_vector(fib)
+#> [[1]]
+#> 1
+#> 
+#> [[2]]
+#> -1
+#> 
+#> [[3]]
+#> -1
+find_simple_recurrence(fib)
+#> -a(n) - a(n + 1) + a(n + 2)
+guess(c(1, 2, 6, 24, 120))
+#> [[1]]
+#> RisingFactorial(2, i0 - 1)
+guess(c(1, 3, 6, 10, 15, 21))
+#> [[1]]
+#> i0^2/2 + i0/2
+guess_generating_function_rational(c(5, 8, 13, 21, 34, 55, 89, 144))
+#> (3*x + 5)/(-x^2 - x + 1)
+guess_generating_function(c(1, 2, 4, 8, 16, 32))$ogf
+#> 1/(1 - 2*x)
+rationalize(pi, maxcoeff = 250)
+#> 355/113
+```
+
+[`richardson()`](https://adamrsophie.github.io/symcompR/reference/richardson.md)
+and
+[`shanks()`](https://adamrsophie.github.io/symcompR/reference/richardson.md)
+accelerate the convergence of a sequence toward its limit:
+
+``` r
+
+richardson((1 + 1 / k)^k, k, 10, 3)
+#> 64760917612327084418953891207076443/23824634392675154069619793920000000
+shanks(1 - 1 / k, k, 4)
+#> 7/8
+```
+
+[`finite_diff()`](https://adamrsophie.github.io/symcompR/reference/finite_diff.md)
+is the forward difference of an expression and
+[`finite_diff_kauers()`](https://adamrsophie.github.io/symcompR/reference/finite_diff.md)
+the difference of a sum with respect to its upper limit:
+
+``` r
+
+m <- Symbol("m")
+finite_diff(x^2 + 2 * x + 1, x)
+#> 2*x + 3
+finite_diff_kauers(Sum(x^2, list(x, 1, m)))
+#> (m + 1)^2
+```
+
+[`pade_approximants_gcdex()`](https://adamrsophie.github.io/symcompR/reference/pade_approximants_gcdex.md)
+lists the Padé approximants of a truncated power series from the steps
+of the extended Euclidean algorithm, and
+[`pade_approximant_gcdex()`](https://adamrsophie.github.io/symcompR/reference/pade_approximants_gcdex.md)
+picks the one with given degrees:
+
+``` r
+
+f <- 1 + x + x^2 / 2 + x^3 / 6 + x^4 / 24
+lapply(pade_approximants_gcdex(Poly(f, x), 2), function(pq) lapply(pq, as_expr))
+#> [[1]]
+#> [[1]][[1]]
+#> x^2/2 + x + 1
+#> 
+#> [[1]][[2]]
+#> 1
+#> 
+#> 
+#> [[2]]
+#> [[2]][[1]]
+#> 2*x + 4
+#> 
+#> [[2]][[2]]
+#> 4 - 2*x
+#> 
+#> 
+#> [[3]]
+#> [[3]][[1]]
+#> 1
+#> 
+#> [[3]][[2]]
+#> x^2/2 - x + 1
+lapply(pade_approximant_gcdex(Poly(f, x), 2), as_expr)
+#> [[1]]
+#> x^2/4 + 3*x/2 + 3
+#> 
+#> [[2]]
+#> x^2/4 - 3*x/2 + 3
+lapply(pade_approximant_gcdex(Poly(f, x), 3, 1), as_expr)
+#> [[1]]
+#> 4*x^3 + 24*x^2 + 72*x + 96
+#> 
+#> [[2]]
+#> 96 - 24*x
+```
+
+[`recurrence_memo()`](https://adamrsophie.github.io/symcompR/reference/recurrence_memo.md)
+and
+[`assoc_recurrence_memo()`](https://adamrsophie.github.io/symcompR/reference/recurrence_memo.md)
+build memoized functions for sequences defined by recurrences, with one
+or two indices:
+
+``` r
+
+fibm <- recurrence_memo(list(0, 1))(function(n, prev) prev[[n]] + prev[[n - 1]])
+fibm(30)
+#> [1] 832040
+binom <- assoc_recurrence_memo(function(i) 1)(
+  function(i, j, prev) prev[[i + 1]][[j]] * (i - j + 1) / j)
+binom(5, 2)
+#> [1] 10
+```

@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -724,6 +730,19 @@ harmonic and <code><a href="../reference/special-functions-extra.html">Znm()</a>
 <span><span class="co">#&gt; sqrt(3)*cos(a)/(2*sqrt(pi))</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="motzkin-numbers-and-subfactorials">Motzkin numbers and subfactorials<a class="anchor" aria-label="anchor" href="#motzkin-numbers-and-subfactorials"></a>
+</h2>
+<p><code>motzkin(n)</code> counts the ways to draw nonintersecting
+chords between <code>n</code> points on a circle, and
+<code>subfactorial(n)</code> counts the derangements of <code>n</code>
+objects.</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">7</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="../reference/sstr.html">sstr</a></span><span class="op">(</span><span class="fu"><a href="../reference/special-functions.html">motzkin</a></span><span class="op">(</span><span class="va">i</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "1"  "1"  "1"  "2"  "4"  "9"  "21" "51"</span></span>
+<span><span class="fu"><a href="../reference/special-functions.html">subfactorial</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 44</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="polar-numbers-and-branches">Polar numbers and branches<a class="anchor" aria-label="anchor" href="#polar-numbers-and-branches"></a>
 </h2>
 <p><code><a href="../reference/special-functions-extra.html">exp_polar()</a></code> is an exponential that is not reduced modulo
@@ -733,7 +752,7 @@ on the Riemann surface of the logarithm. <code><a href="../reference/special-fun
 <code><a href="../reference/special-functions-extra.html">unbranched_argument()</a></code> work with such numbers, and
 <code><a href="../reference/special-functions-extra.html">unpolarify()</a></code> and <code><a href="../reference/misc-helpers.html">polarify()</a></code> convert
 expressions.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/special-functions-extra.html">exp_polar</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; exp_polar(0)</span></span>
 <span><span class="fu"><a href="../reference/special-functions-extra.html">unpolarify</a></span><span class="op">(</span><span class="fu"><a href="../reference/special-functions-extra.html">exp_polar</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
@@ -752,7 +771,7 @@ expressions.</p>
 <span><span class="co">#&gt; y*exp(x)</span></span></code></pre></div>
 <p><code><a href="../reference/special-functions-extra.html">piecewise_exclusive()</a></code> rewrites a <code>Piecewise</code>
 so that its conditions do not overlap:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/special-functions-extra.html">piecewise_exclusive</a></span><span class="op">(</span><span class="fu"><a href="../reference/Piecewise.html">Piecewise</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">x</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">2</span>, <span class="va">x</span> <span class="op">&lt;</span> <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">3</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Piecewise((1, x &lt; 0), (2, (x &gt;= 0) &amp; (x &lt; 1)), (3, x &gt;= 1))</span></span></code></pre></div>
 </div>

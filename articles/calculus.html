@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -447,9 +453,33 @@ continuous.</p>
 <span><span class="co">#&gt; Union(Interval.open(-oo, 0), Interval.open(0, oo))</span></span>
 <span><span class="fu"><a href="../reference/sum-limits.html">continuous_domain</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">x</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">Reals</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Interval.Lopen(0, 1)</span></span></code></pre></div>
+<p><code><a href="../reference/function_range.html">function_range()</a></code> gives the range of a function on a
+domain, <code><a href="../reference/monotonicity_helper.html">monotonicity_helper()</a></code> tests the sign of the
+derivative on an interval, and <code><a href="../reference/lcim.html">lcim()</a></code> is the least common
+multiple of numbers whose ratios are rational (<code>NULL</code> when
+there is none):</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/function_range.html">function_range</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="va">x</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">sym_pi</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Interval(-1, 1)</span></span>
+<span><span class="fu"><a href="../reference/function_range.html">function_range</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="va">x</span>, <span class="va">x</span>, <span class="va">Reals</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Union(Interval.open(-oo, 0), Interval.open(0, oo))</span></span>
+<span><span class="fu"><a href="../reference/function_range.html">function_range</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="va">x</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Interval(exp(-1), E)</span></span>
+<span><span class="fu"><a href="../reference/monotonicity_helper.html">monotonicity_helper</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">3</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="fu"><a href="../reference/Eq.html">Ge</a></span><span class="op">(</span><span class="va">d</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/monotonicity_helper.html">monotonicity_helper</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="fu"><a href="../reference/Eq.html">Ge</a></span><span class="op">(</span><span class="va">d</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="fu"><a href="../reference/monotonicity_helper.html">monotonicity_helper</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="fu"><a href="../reference/Eq.html">Ge</a></span><span class="op">(</span><span class="va">d</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">oo</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/lcim.html">lcim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 6</span></span>
+<span><span class="fu"><a href="../reference/lcim.html">lcim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">sym_pi</span>, <span class="va">sym_pi</span> <span class="op">/</span> <span class="fl">2</span>, <span class="va">sym_pi</span> <span class="op">/</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; pi</span></span>
+<span><span class="fu"><a href="../reference/lcim.html">lcim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">sym_pi</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; NULL</span></span></code></pre></div>
 <p><code><a href="../reference/calculus-utils.html">euler_equations()</a></code> derives the Euler-Lagrange equations
 of a functional. For the harmonic oscillator Lagrangian <span class="math inline">L = \dot f^2/2 - f^2/2</span>:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/calculus-utils.html">euler_equations</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="va">t</span><span class="op">)</span>, <span class="va">t</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">/</span> <span class="fl">2</span> <span class="op">-</span> <span class="fu">f</span><span class="op">(</span><span class="va">t</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">/</span> <span class="fl">2</span>, <span class="fu">f</span><span class="op">(</span><span class="va">t</span><span class="op">)</span>, <span class="va">t</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [[1]]</span></span>
 <span><span class="co">#&gt; Eq(-f(t) - Derivative(f(t), (t, 2)), 0)</span></span></code></pre></div>
@@ -461,7 +491,7 @@ of a functional. For the harmonic oscillator Lagrangian <span class="math inline
 in <span class="math inline">[a, b]</span>. Arithmetic on these bounds
 gives guaranteed enclosures, and functions such as <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin()</a></code>
 return them at infinity.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/AccumBounds.html">AccumBounds</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="../reference/AccumBounds.html">AccumBounds</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; AccumBounds(1, 4)</span></span>
 <span><span class="fu"><a href="../reference/AccumBounds.html">AccumBounds</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
@@ -481,7 +511,7 @@ return them at infinity.</p>
 <p><code><a href="../reference/not_empty_in.html">not_empty_in()</a></code> finds the values of a parameter for which
 a set expression is nonempty: here, where at least one of <span class="math inline">x</span> and <span class="math inline">2x</span>
 lies in <span class="math inline">[1, 2]</span>.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/not_empty_in.html">not_empty_in</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Intersection</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">FiniteSet</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">)</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>, <span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Interval(1/2, 2)</span></span></code></pre></div>
 </div>

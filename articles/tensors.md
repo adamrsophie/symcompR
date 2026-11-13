@@ -481,3 +481,141 @@ double_coset_can_rep(list(0:5), list(0), c(0, 2), dg,
                      get_transversals(c(0, 2), dg), P(4, 1, 3, 0, 5, 2, 6, 7))
 #> [1] 0 2 1 4 3 5 6 7
 ```
+
+## Array expressions
+
+The array expressions of `sympy.tensor.array.expressions` describe
+operations on arrays whose entries are not given.
+[`ArraySymbol()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+is an array of a given shape,
+[`ArrayTensorProduct()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+the tensor product,
+[`ArrayContraction()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+contracts pairs of axes,
+[`ArrayDiagonal()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+takes a diagonal over axes,
+[`PermuteDims()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+permutes the axes, and
+[`ArrayAdd()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+adds arrays. Axes are numbered from zero, as in SymPy.
+[`get_shape()`](https://adamrsophie.github.io/symcompR/reference/get_shape.md)
+returns the shape as an R list, shown here as a
+[`Tuple()`](https://adamrsophie.github.io/symcompR/reference/Tuple.md).
+
+``` r
+
+AA <- ArraySymbol("A", c(3, 3)); BB <- ArraySymbol("B", c(3, 3))
+tp <- ArrayTensorProduct(AA, BB)
+tp
+#> ArrayTensorProduct(A, B)
+do.call(Tuple, get_shape(tp))
+#> (3, 3, 3, 3)
+get_rank(tp)
+#> [1] 4
+get_ndim(tp)
+#> [1] 4
+ArrayContraction(tp, c(1, 2))
+#> ArrayContraction(ArrayTensorProduct(A, B), (1, 2))
+ArrayDiagonal(tp, c(1, 2))
+#> ArrayDiagonal(ArrayTensorProduct(A, B), (1, 2))
+PermuteDims(AA, c(1, 0))
+#> PermuteDims(A, (0 1))
+ArrayAdd(AA, BB)
+#> ArrayAdd(A, B)
+nest_permutation(PermuteDims(tp, c(1, 0, 3, 2)))
+#> PermuteDims(ArrayTensorProduct(A, B), (0 1)(2 3))
+```
+
+[`ArrayElement()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+is a single entry,
+[`ZeroArray()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+and
+[`OneArray()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+are the arrays of zeros and ones,
+[`Reshape()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+changes the shape,
+[`ArrayElementwiseApplyFunc()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+applies a function to every entry, and
+[`ArraySum()`](https://adamrsophie.github.io/symcompR/reference/array-expressions.md)
+is a sum of array expressions.
+
+``` r
+
+ArrayElement(AA, c(0, 1))
+#> A[0, 1]
+ZeroArray(2, 3)
+#> ZeroArray(2, 3)
+OneArray(2, 3)
+#> OneArray(2, 3)
+as_explicit(OneArray(2, 2))
+#> [[1, 1], [1, 1]]
+Reshape(AA, 9)
+#> Reshape(A, (9,))
+do.call(Tuple, get_shape(Reshape(AA, 9)))
+#> (9,)
+ArrayElementwiseApplyFunc(sin, AA)
+#> ArrayElementwiseApplyFunc(Lambda(_d, sin(_d)), A)
+i <- Symbol("i"); j <- Symbol("j"); d <- Symbol("d")
+ArraySum(i * AA, list(i, 1, 3))
+#> Sum(i*A, (i, 1, 3))
+doit(ArraySum(i * AA, list(i, 1, 3)))
+#> ArrayTensorProduct(6, A)
+```
+
+[`ArrayComprehension()`](https://adamrsophie.github.io/symcompR/reference/ArrayComprehension.md)
+builds an array from an expression in its index variables.
+
+``` r
+
+ac <- ArrayComprehension(i * j, list(i, 1, 3), list(j, 2, 4))
+do.call(Tuple, get_shape(ac))
+#> (3, 3)
+doit(ac)
+#> [[2, 3, 4], [4, 6, 8], [6, 9, 12]]
+```
+
+Matrix expressions convert to array expressions and back, and so do
+indexed sums.
+[`collect_tensor_products()`](https://adamrsophie.github.io/symcompR/reference/collect_tensor_products.md)
+collects sums of tensor products with a common factor.
+
+``` r
+
+k <- Symbol("k")
+MP <- MatrixSymbol("P", k, k); MQ <- MatrixSymbol("Q", k, k)
+MX <- MatrixSymbol("X", k, k)
+cg <- convert_matrix_to_array(MP * t(MQ))
+cg
+#> ArrayContraction(ArrayTensorProduct(P, Q), (1, 3))
+convert_array_to_matrix(cg)
+#> P*Q.T
+convert_matrix_to_array(Trace(MP * MQ))
+#> ArrayContraction(ArrayTensorProduct(P, Q), (0, 3), (1, 2))
+convert_indexed_to_array(Sum(MatrixElement(MP, i, d) * MatrixElement(MQ, d, j),
+                             list(d, 0, k - 1)), list(i, j))
+#> ArrayContraction(ArrayTensorProduct(P, Q), (1, 2))
+convert_array_to_indexed(ArrayContraction(ArrayTensorProduct(MP, MQ), c(1, 2)), list(i, j))
+#> Sum(P[i, _d0]*Q[_d0, j], (_d0, 0, k - 1))
+collect_tensor_products(ArrayAdd(ArrayTensorProduct(MP, MQ), ArrayTensorProduct(MP, MX)))
+#> ArrayTensorProduct(P, Q + X)
+```
+
+[`array_derive()`](https://adamrsophie.github.io/symcompR/reference/array_derive.md)
+differentiates an array expression with respect to a matrix or array
+symbol, and
+[`ArrayDerivative()`](https://adamrsophie.github.io/symcompR/reference/array_derive.md)
+is the unevaluated derivative of an array.
+
+``` r
+
+array_derive(convert_matrix_to_array(MP * MX), MX)
+#> PermuteDims(ArrayContraction(ArrayTensorProduct(I, I, P), (1, 5)), (2 3))
+ArrayDerivative(MX, MX)
+#> Derivative(X, X)
+ArrayDerivative(MX, MX, evaluate = TRUE)
+#> PermuteDims(ArrayTensorProduct(I, I), (3)(1 2))
+ArrayDerivative(Array(list(x^2, x * y)), x)
+#> Derivative([x^2, x*y], x)
+doit(ArrayDerivative(Array(list(x^2, x * y)), x))
+#> [2*x, y]
+```

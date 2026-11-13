@@ -205,3 +205,175 @@ pp(enum_range(c(2, 2), 1, 3))
 `enum_small(m, ub)` lists the partitions with at most `ub` parts,
 `enum_large(m, lb)` those with more than `lb` parts, and
 `enum_range(m, lb, ub)` those in between.
+
+## Gray codes
+
+A `GrayCode` object steps through the binary reflected Gray code; ranks,
+unranking and conversions between binary and Gray strings are available.
+
+``` r
+
+g <- GrayCode(3)
+generate_gray(g)
+#> [1] "000" "001" "011" "010" "110" "111" "101" "100"
+GrayCode(5, start = "10010")$rank
+#> [1] 28
+graycode_next(GrayCode(6), -1)$current
+#> [1] "100000"
+graycode_unrank(4, 6)
+#> [1] "0101"
+bin_to_gray("111")
+#> [1] "100"
+gray_to_bin("100")
+#> [1] "111"
+get_subset_from_bitstring(c("a", "b", "c", "d"), "0011")
+#> [1] "c" "d"
+flat(graycode_subsets(c("a", "b", "c")))
+#> [1] ""      "c"     "b c"   "b"     "a b"   "a b c" "a c"   "a"
+```
+
+[`graycode_skip()`](https://adamrsophie.github.io/symcompR/reference/GrayCode.md)
+is used inside a loop over
+[`generate_gray()`](https://adamrsophie.github.io/symcompR/reference/GrayCode.md)
+to skip the bit strings below the current one, and `random_bitstring(n)`
+draws a random bit string:
+
+``` r
+
+set.seed(1)
+nchar(random_bitstring(8))
+#> [1] 8
+invisible(graycode_skip(GrayCode(3)))
+```
+
+## Set and integer partitions
+
+[`Partition()`](https://adamrsophie.github.io/symcompR/reference/Partition.md)
+is a partition of a set, ranked by its restricted growth string (RGS);
+[`IntegerPartition()`](https://adamrsophie.github.io/symcompR/reference/IntegerPartition.md)
+is a partition of an integer.
+
+``` r
+
+p <- Partition(c(1, 2, 3), 4)
+p$RGS
+#> [1] 0 0 0 1
+p$rank
+#> 1
+blocks <- function(q) flat(lapply(q$partition, function(b) sapply(b, sstr)))
+blocks(p + 1)
+#> [1] "1 2 4" "3"
+blocks(partition_from_rgs(c(0, 1, 2, 0, 1), c(1, 3, 2, 4, 5)))
+#> [1] "1 4" "2"   "3 5"
+ip <- IntegerPartition(c(5, 4, 3, 1, 1))
+ip$conjugate
+#> [1] 5 3 3 2 1
+as_dict(ip)
+#> 5 4 3 1 
+#> 1 1 1 2
+next_lex(IntegerPartition(c(3, 1)))$partition
+#> [1] 4
+prev_lex(IntegerPartition(c(3, 1)))$partition
+#> [1] 2 2
+cat(as_ferrers(IntegerPartition(c(1, 2, 3))), "\n")
+#> ###
+#> ##
+#> #
+random_integer_partition(10, seed = c(1, 3, 2, 1, 5, 1))
+#> [1] 5 2 1 1 1
+length(partition_sort_key(p))
+#> [1] 3
+```
+
+The restricted growth strings of a set of `n` elements are counted by
+[`RGS_enum()`](https://adamrsophie.github.io/symcompR/reference/RGS_generalized.md)
+and ranked by
+[`RGS_rank()`](https://adamrsophie.github.io/symcompR/reference/RGS_generalized.md)
+and
+[`RGS_unrank()`](https://adamrsophie.github.io/symcompR/reference/RGS_generalized.md);
+[`RGS_generalized()`](https://adamrsophie.github.io/symcompR/reference/RGS_generalized.md)
+is the table used for unranking.
+
+``` r
+
+RGS_enum(4)
+#> 15
+RGS_unrank(7, 5)
+#> [1] 0 0 1 0 2
+RGS_rank(c(0, 1, 2, 1, 2, 3))
+#> 154
+RGS_generalized(3)
+#> Matrix(4, 4)
+#> [1, 1, 1, 1]
+#> [1, 2, 3, 0]
+#> [2, 5, 0, 0]
+#> [5, 0, 0, 0]
+```
+
+## Prüfer objects and subsets
+
+A `Prufer` object holds both the tree and its Prüfer sequence, and steps
+through trees in rank order.
+
+``` r
+
+a <- Prufer(list(c(0, 1), c(0, 2), c(0, 3), c(0, 4)))
+a$prufer_repr
+#> [1] 0 0 0
+a$rank
+#> [1] 0
+flat(prufer_next(a)$tree_repr)
+#> [1] "0 2" "0 3" "0 1" "1 4"
+flat(prufer_prev(a)$tree_repr)
+#> [1] "0 4" "1 4" "2 4" "3 4"
+prufer_unrank(6, 5)$prufer_repr
+#> [1] 0 1 1
+prufer_to_prufer(list(c(0, 1), c(0, 2), c(0, 3)), 4)
+#> [1] 0 0
+flat(prufer_to_tree(c(0, 2)))
+#> [1] "0 1" "0 2" "2 3"
+e <- prufer_edges(c(0, 1, 2, 3), c(1, 4, 5), c(1, 4, 6))
+flat(e[[1]]); e[[2]]
+#> [1] "0 1" "1 2" "1 4" "2 3" "4 5" "4 6"
+#> [1] 7
+```
+
+A `Subset` of a superset is ordered in binary, Gray code and
+lexicographic order:
+
+``` r
+
+s <- Subset(c("c", "d"), c("a", "b", "c", "d"))
+s$rank_binary
+#> [1] 3
+s$rank_gray
+#> [1] 2
+subset_next_binary(s)$subset
+#> [1] "b"
+subset_prev_binary(s)$subset
+#> [1] "c"
+subset_next_gray(s)$subset
+#> [1] "c"
+subset_prev_gray(s)$subset
+#> [1] "d"
+subset_next_lexicographic(s)$subset
+#> [1] "d"
+subset_prev_lexicographic(s)$subset
+#> [1] "c"
+subset_iterate_binary(s, -2)$subset
+#> [1] "d"
+subset_iterate_graycode(s, 2)$subset
+#> [1] "b" "c"
+subset_unrank_binary(3, c("a", "b", "c", "d"))$subset
+#> [1] "c" "d"
+subset_unrank_gray(10, c("a", "b", "c", "d"))$subset
+#> [1] "a" "b" "c" "d"
+bitlist_from_subset(c("c", "d"), c("a", "b", "c", "d"))
+#> [1] "0011"
+subset_from_bitlist(c("a", "b", "c", "d"), "0011")$subset
+#> [1] "c" "d"
+subset_indices(c("c", "d"), c("a", "b", "c", "d"))
+#> [1] 2 3
+flat(ksubsets(1:3, 2))
+#> [1] "1 2" "1 3" "2 3"
+```

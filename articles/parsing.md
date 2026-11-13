@@ -204,3 +204,26 @@ parse_mathematica_to_fullformlist("x + Sin[y]")
 #> [[3]][[2]]
 #> [1] "y"
 ```
+
+## SMT-LIB
+
+[`parse_smtlib()`](https://adamrsophie.github.io/symcompR/reference/parse_smtlib.md)
+reads declarations and assertions in the SMT-LIB format. Declaring a
+constant of sort `Int` or `Real` adds the matching predicate to the
+assertions.
+
+``` r
+
+r <- parse_smtlib("(declare-const x Int) (declare-const y Int) (assert (= (+ x y) 10))")
+r$symbols$x
+#> x
+r$assertions
+#> [[1]]
+#> Q.integer(x)
+#> 
+#> [[2]]
+#> Q.integer(y)
+#> 
+#> [[3]]
+#> Eq(x + y, 10)
+```

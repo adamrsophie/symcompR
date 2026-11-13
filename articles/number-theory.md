@@ -309,6 +309,43 @@ egyptian_fraction(Rational(4, 13))
 
 so 4/13 = 1/4 + 1/18 + 1/468.
 
+[`egypt_harmonic()`](https://adamrsophie.github.io/symcompR/reference/egypt_harmonic.md)
+writes a rational number as a sum of the first terms of the harmonic
+series and a remainder:
+
+``` r
+
+egypt_harmonic(Rational(5, 2))
+#> [[1]]
+#> [[1]][[1]]
+#> 1
+#> 
+#> [[1]][[2]]
+#> 2
+#> 
+#> [[1]][[3]]
+#> 3
+#> 
+#> [[1]][[4]]
+#> 4
+#> 
+#> [[1]][[5]]
+#> 5
+#> 
+#> [[1]][[6]]
+#> 6
+#> 
+#> 
+#> [[2]]
+#> 1/20
+egypt_harmonic(Rational(1, 3))
+#> [[1]]
+#> list()
+#> 
+#> [[2]]
+#> 1/3
+```
+
 ## Partitions and digits
 
 [`npartitions()`](https://adamrsophie.github.io/symcompR/reference/npartitions.md)

@@ -287,3 +287,156 @@ Options(list(x, y), list(domain = "QQ"))
 #> attr(,"class")
 #> [1] "sym_poly_options"
 ```
+
+## Domain matrices
+
+A `DomainMatrix` is a matrix whose entries are elements of a domain, the
+fast matrix type that SymPy uses internally.
+[`DM()`](https://adamrsophie.github.io/symcompR/reference/DomainMatrix.md)
+builds one from a list of rows; the other constructors build it from
+flat lists, dictionaries, SymPy matrices or expressions, or as special
+matrices.
+
+``` r
+
+A <- DM(list(list(1, 2), list(3, 4)), ZZ)
+A
+#> DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+A$det()
+#> Big Integer ('bigz') :
+#> [1] -2
+A$rank()
+#> [1] 2
+A$rref()
+#> (DomainMatrix([[1, 0], [0, 1]], (2, 2), QQ), (0, 1))
+A$charpoly()
+#> [[1]]
+#> Big Integer ('bigz') :
+#> [1] 1
+#> 
+#> [[2]]
+#> Big Integer ('bigz') :
+#> [1] -5
+#> 
+#> [[3]]
+#> Big Integer ('bigz') :
+#> [1] -2
+A$transpose()
+#> DomainMatrix([[1, 3], [2, 4]], (2, 2), ZZ)
+A$convert_to(QQ)$inv()
+#> DomainMatrix([[-2, 1], [3/2, -1/2]], (2, 2), QQ)
+A * A
+#> DomainMatrix([[7, 10], [15, 22]], (2, 2), ZZ)
+A$to_Matrix()
+#> Matrix(2, 2)
+#> [1, 2]
+#> [3, 4]
+DomainMatrix(list(list(ZZ(1), ZZ(2)), list(ZZ(3), ZZ(4))), c(2, 2), ZZ)
+#> DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+DomainMatrix_from_list(list(list(1, 2), list(3, 4)), ZZ)
+#> DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+DomainMatrix_from_list_flat(list(ZZ(1), ZZ(2), ZZ(3), ZZ(4)), c(2, 2), ZZ)
+#> DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+DomainMatrix_from_dod(list(`0` = list(`0` = ZZ(5)), `1` = list(`1` = ZZ(7))), c(2, 2), ZZ)
+#> DomainMatrix({0: {0: 5}, 1: {1: 7}}, (2, 2), ZZ)
+DomainMatrix_from_dok(list(`0,1` = ZZ(3)), c(2, 2), ZZ)
+#> DomainMatrix({0: {1: 3}}, (2, 2), ZZ)
+DomainMatrix_from_Matrix(Matrix(list(list(1, x), list(0, 2))))
+#> DomainMatrix({0: {0: 1, 1: x}, 1: {1: 2}}, (2, 2), ZZ[x])
+DomainMatrix_from_list_sympy(1, 2, list(list(Rational(1, 2), x)))
+#> DomainMatrix([[1/2, x]], (1, 2), QQ[x])
+DomainMatrix_from_dict_sympy(2, 2, list(`0` = list(`0` = x), `1` = list(`1` = Rational(1, 2))))
+#> DomainMatrix({0: {0: x}, 1: {1: 1/2}}, (2, 2), QQ[x])
+DomainMatrix_diag(list(ZZ(1), ZZ(2)), ZZ)
+#> DomainMatrix({0: {0: 1}, 1: {1: 2}}, (2, 2), ZZ)
+DomainMatrix_eye(2, QQ)
+#> DomainMatrix({0: {0: 1}, 1: {1: 1}}, (2, 2), QQ)
+DomainMatrix_ones(c(2, 3), ZZ)
+#> DomainMatrix([[1, 1, 1], [1, 1, 1]], (2, 3), ZZ)
+DomainMatrix_zeros(c(2, 2), ZZ)
+#> DomainMatrix({}, (2, 2), ZZ)
+```
+
+The dense (`DDM`) and sparse (`SDM`) representations can be used
+directly, and
+[`DomainMatrix_from_rep()`](https://adamrsophie.github.io/symcompR/reference/DomainMatrix.md)
+wraps one:
+
+``` r
+
+D <- DDM(list(list(ZZ(1), ZZ(2)), list(ZZ(3), ZZ(4))), c(2, 2), ZZ)
+D
+#> DDM([[1, 2], [3, 4]], (2, 2), ZZ)
+D$det()
+#> Big Integer ('bigz') :
+#> [1] -2
+D$charpoly()
+#> [[1]]
+#> Big Integer ('bigz') :
+#> [1] 1
+#> 
+#> [[2]]
+#> Big Integer ('bigz') :
+#> [1] -5
+#> 
+#> [[3]]
+#> Big Integer ('bigz') :
+#> [1] -2
+Sp <- SDM(list(`0` = list(`1` = ZZ(2))), c(2, 2), ZZ)
+Sp
+#> SDM({0: {1: 2}}, (2, 2), ZZ)
+Sp$to_ddm()
+#> DDM([[0, 2], [0, 0]], (2, 2), ZZ)
+DomainMatrix_from_rep(Sp)
+#> DomainMatrix({0: {1: 2}}, (2, 2), ZZ)
+```
+
+The Smith normal form of an integer matrix, with the unimodular matrices
+that produce it:
+
+``` r
+
+smith_normal_decomp(DM(list(list(12, 6, 4), list(3, 9, 6), list(2, 16, 14)), ZZ))
+#> (DomainMatrix([[1, 0, 0], [0, 10, 0], [0, 0, 30]], (3, 3), ZZ), DomainMatrix([[0, 1, -1], [1, -4, 0], [0, -2, 3]], (3, 3), ZZ), DomainMatrix([[1, 1, 10], [0, -1, -2], [0, 1, 3]], (3, 3), ZZ))
+is_smith_normal_form(DM(list(list(1, 0), list(0, 2)), ZZ))
+#> [1] TRUE
+is_smith_normal_form(DM(list(list(2, 0), list(0, 3)), ZZ))
+#> [1] FALSE
+```
+
+A `DomainScalar` is a domain element that knows its domain, so that
+arithmetic unifies the domains:
+
+``` r
+
+DomainScalar(ZZ(3), ZZ) + DomainScalar(QQ(1, 2), QQ)
+#> MPQ(7,2)
+DomainScalar(ZZ(3), ZZ)$to_sympy()
+#> 3
+DomainScalar_from_sympy(Rational(3, 4))
+#> MPQ(3,4)
+DomainScalar_from_sympy(Rational(3, 4))$domain
+#> QQ
+```
+
+## Power series rings
+
+[`PythonPowerSeriesRingZZ()`](https://adamrsophie.github.io/symcompR/reference/power_series_rings.md)
+and
+[`PythonPowerSeriesRingQQ()`](https://adamrsophie.github.io/symcompR/reference/power_series_rings.md)
+are rings of truncated univariate power series with integer and rational
+coefficients:
+
+``` r
+
+Rz <- PythonPowerSeriesRingZZ()
+Rz$pretty(Rz$pow_int(Rz(c(1, 2, 3)), 2))
+#> [1] "1 + 4*x + 10*x**2 + 12*x**3 + 9*x**4"
+Rz$pretty(Rz$inverse(Rz(c(1, 1))))
+#> [1] "1 - x + x**2 - x**3 + x**4 - x**5 + O(x**6)"
+Rq <- PythonPowerSeriesRingQQ(4)
+Rq$pretty(Rq$exp(Rq$gen))
+#> [1] "1 + x + 1/2*x**2 + 1/6*x**3 + O(x**4)"
+Rq$pretty(Rq$log(Rq(c(1, 1))))
+#> [1] "x - 1/2*x**2 + 1/3*x**3 + O(x**4)"
+```

@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -312,6 +318,17 @@ singularity functions.</p>
 <span><span class="co">#&gt; sin(t)*Heaviside(t)</span></span>
 <span><span class="fu"><a href="../reference/transform-helpers.html">singularityintegrate</a></span><span class="op">(</span><span class="fu"><a href="../reference/special-functions-extra.html">SingularityFunction</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">b</span>, <span class="fl">3</span><span class="op">)</span>, <span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; SingularityFunction(x, b, 4)/4</span></span></code></pre></div>
+<p><code><a href="../reference/ratint.html">log_to_atan()</a></code> and <code><a href="../reference/ratint.html">log_to_real()</a></code> turn the
+complex logarithms of the logarithmic part into real arctangents and
+logarithms:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ratint.html">log_to_atan</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">x</span>, domain <span class="op">=</span> <span class="st">"ZZ"</span><span class="op">)</span>, <span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">x</span>, domain <span class="op">=</span> <span class="st">"ZZ"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 2*atan(x)</span></span>
+<span><span class="fu"><a href="../reference/ratint.html">log_to_real</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">t</span> <span class="op">/</span> <span class="fl">2</span> <span class="op">+</span> <span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="va">x</span>, domain <span class="op">=</span> <span class="st">"QQ[t]"</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="fl">3</span> <span class="op">*</span> <span class="va">t</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span>, <span class="va">t</span>, domain <span class="op">=</span> <span class="st">"ZZ"</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">t</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 2*sqrt(3)*atan(2*sqrt(3)*x/3 + sqrt(3)/3)/3</span></span>
+<span><span class="fu"><a href="../reference/ratint.html">log_to_real</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span>, domain <span class="op">=</span> <span class="st">"ZZ"</span><span class="op">)</span>, <span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span> <span class="op">*</span> <span class="va">t</span> <span class="op">+</span> <span class="fl">1</span>, <span class="va">t</span>, domain <span class="op">=</span> <span class="st">"ZZ"</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">t</span><span class="op">)</span></span>
+<span><span class="co">#&gt; log(x^2 - 1)/2</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="line-integrals">Line integrals<a class="anchor" aria-label="anchor" href="#line-integrals"></a>
@@ -319,7 +336,7 @@ singularity functions.</p>
 <p><code><a href="../reference/line_integrate.html">line_integrate()</a></code> integrates along a parametric curve,
 given as <code>list(t, a, b, x(t), y(t))</code>. Integrating <span class="math inline">x^2 + y^2</span> around the unit circle gives its
 circumference:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/line_integrate.html">line_integrate</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">t</span>, <span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">sym_pi</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 2*pi</span></span>
 <span><span class="fu"><a href="../reference/line_integrate.html">line_integrate</a></span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="va">y</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">t</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="va">t</span>, <span class="va">t</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
@@ -332,7 +349,7 @@ circumference:</p>
 default it returns the transform, the abscissa of convergence, and
 auxiliary conditions; with <code>noconds = TRUE</code> only the
 transform is returned.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">L</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/laplace_transform.html">laplace_transform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">a</span> <span class="op">*</span> <span class="va">t</span><span class="op">)</span>, <span class="va">t</span>, <span class="va">s</span><span class="op">)</span></span>
 <span><span class="va">L</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="co">#&gt; 1/(a + s)</span></span>
@@ -350,13 +367,13 @@ transform is returned.</p>
 <span><span class="co">#&gt; 1</span></span></code></pre></div>
 <p>The transform of a derivative brings in the initial value, which is
 how the Laplace transform turns linear ODEs into algebra:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/laplace_transform.html">laplace_transform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="va">t</span><span class="op">)</span>, <span class="va">t</span><span class="op">)</span>, <span class="va">t</span>, <span class="va">s</span>, noconds <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; s*LaplaceTransform(f(t), t, s) - f(0)</span></span></code></pre></div>
 <p><code><a href="../reference/laplace_transform.html">inverse_laplace_transform()</a></code> goes back. The
 <code>Heaviside(t)</code> factor records that the original function is
 taken to vanish for <span class="math inline">t &lt; 0</span>.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/laplace_transform.html">inverse_laplace_transform</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="va">s</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span>, <span class="va">s</span>, <span class="va">t</span><span class="op">)</span></span>
 <span><span class="co">#&gt; sin(t)*Heaviside(t)</span></span>
 <span><span class="fu"><a href="../reference/laplace_transform.html">inverse_laplace_transform</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="va">s</span> <span class="op">*</span> <span class="op">(</span><span class="va">s</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="va">s</span>, <span class="va">t</span><span class="op">)</span></span>
@@ -366,7 +383,7 @@ taken to vanish for <span class="math inline">t &lt; 0</span>.</p>
 <span><span class="fu"><a href="../reference/laplace_transform.html">inverse_laplace_transform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span> <span class="op">*</span> <span class="va">s</span><span class="op">)</span> <span class="op">/</span> <span class="va">s</span>, <span class="va">s</span>, <span class="va">t</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Heaviside(t - 2)</span></span></code></pre></div>
 <p><code><a href="../reference/integral-transforms.html">LaplaceTransform()</a></code> is the unevaluated form.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/integral-transforms.html">LaplaceTransform</a></span><span class="op">(</span><span class="va">t</span><span class="op">^</span><span class="fl">2</span>, <span class="va">t</span>, <span class="va">s</span><span class="op">)</span></span>
 <span><span class="co">#&gt; LaplaceTransform(t^2, t, s)</span></span>
 <span><span class="fu"><a href="../reference/doit.html">doit</a></span><span class="op">(</span><span class="fu"><a href="../reference/integral-transforms.html">LaplaceTransform</a></span><span class="op">(</span><span class="va">t</span><span class="op">^</span><span class="fl">2</span>, <span class="va">t</span>, <span class="va">s</span><span class="op">)</span><span class="op">)</span></span>
@@ -381,7 +398,7 @@ of known functions by names of their transforms,
 <code><a href="../reference/laplace_transform.html">expand_dirac_delta()</a></code> writes an expression as a linear
 combination of Dirac deltas (a constant term and a coefficient for each
 delta).</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Fs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Function.html">Function</a></span><span class="op">(</span><span class="st">"F"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/transform-helpers.html">laplace_correspondence</a></span><span class="op">(</span><span class="fu"><a href="../reference/integral-transforms.html">LaplaceTransform</a></span><span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="va">t</span><span class="op">)</span>, <span class="va">t</span>, <span class="va">s</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">f</span>, <span class="va">Fs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; F(s)</span></span>
@@ -399,7 +416,7 @@ delta).</p>
 </h2>
 <p>The Fourier transform uses SymPy’s convention <span class="math inline">F(k) = \int_{-\infty}^\infty f(x) e^{-2\pi i x
 k}\,dx</span>.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/fourier_transform.html">fourier_transform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">k</span><span class="op">)</span></span>
 <span><span class="co">#&gt; sqrt(pi)*exp(-pi^2*k^2)</span></span>
 <span><span class="fu"><a href="../reference/fourier_transform.html">inverse_fourier_transform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">sym_pi</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="op">(</span><span class="va">sym_pi</span> <span class="op">*</span> <span class="va">k</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="va">k</span>, <span class="va">x</span><span class="op">)</span></span>
@@ -408,7 +425,7 @@ k}\,dx</span>.</p>
 <span><span class="co">#&gt; 2/(4*pi^2*k^2 + 1)</span></span></code></pre></div>
 <p>The Mellin transform <span class="math inline">\int_0^\infty x^{s-1}
 f(x)\,dx</span> returns the transform and its fundamental strip.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mellin_transform.html">mellin_transform</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="va">x</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">s</span><span class="op">)</span></span>
 <span><span class="va">M</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="co">#&gt; pi/sin(pi*s)</span></span>
@@ -423,7 +440,7 @@ f(x)\,dx</span> returns the transform and its fundamental strip.</p>
 <span><span class="fu"><a href="../reference/mellin_transform.html">inverse_mellin_transform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Special.html" class="external-link">gamma</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>, <span class="va">s</span>, <span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">oo</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; exp(-x)</span></span></code></pre></div>
 <p>Sine and cosine transforms, and the Hankel transform of order <span class="math inline">\nu</span>:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/fourier_transform.html">sine_transform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">a</span> <span class="op">*</span> <span class="va">x</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">k</span><span class="op">)</span></span>
 <span><span class="co">#&gt; sqrt(2)*k/(sqrt(pi)*(a^2 + k^2))</span></span>
 <span><span class="fu"><a href="../reference/fourier_transform.html">cosine_transform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">a</span> <span class="op">*</span> <span class="va">x</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">k</span><span class="op">)</span></span>
@@ -442,7 +459,7 @@ f(x)\,dx</span> returns the transform and its fundamental strip.</p>
 <code><a href="../reference/integral-transforms.html">HankelTransform()</a></code>, with inverses. Calling
 <code><a href="../reference/doit.html">doit()</a></code> on one gives the same result as the matching
 function above.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/integral-transforms.html">FourierTransform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">k</span><span class="op">)</span></span>
 <span><span class="co">#&gt; FourierTransform(exp(-x^2), x, k)</span></span>
 <span><span class="fu"><a href="../reference/integral-transforms.html">InverseFourierTransform</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">k</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="va">k</span>, <span class="va">x</span><span class="op">)</span></span>

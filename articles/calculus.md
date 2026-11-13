@@ -443,6 +443,36 @@ continuous_domain(log(x) + sqrt(1 - x), x, Reals)
 #> Interval.Lopen(0, 1)
 ```
 
+[`function_range()`](https://adamrsophie.github.io/symcompR/reference/function_range.md)
+gives the range of a function on a domain,
+[`monotonicity_helper()`](https://adamrsophie.github.io/symcompR/reference/monotonicity_helper.md)
+tests the sign of the derivative on an interval, and
+[`lcim()`](https://adamrsophie.github.io/symcompR/reference/lcim.md) is
+the least common multiple of numbers whose ratios are rational (`NULL`
+when there is none):
+
+``` r
+
+function_range(sin(x), x, Interval(0, 2 * sym_pi))
+#> Interval(-1, 1)
+function_range(1 / x, x, Reals)
+#> Union(Interval.open(-oo, 0), Interval.open(0, oo))
+function_range(exp(x), x, Interval(-1, 1))
+#> Interval(exp(-1), E)
+monotonicity_helper(x^3, function(d) Ge(d, 0))
+#> [1] TRUE
+monotonicity_helper(x^2, function(d) Ge(d, 0))
+#> [1] FALSE
+monotonicity_helper(x^2, function(d) Ge(d, 0), Interval(0, oo))
+#> [1] TRUE
+lcim(list(Rational(1, 2), 2, 3))
+#> 6
+lcim(list(sym_pi, sym_pi / 2, sym_pi / 4))
+#> pi
+lcim(list(1, sym_pi))
+#> NULL
+```
+
 [`euler_equations()`](https://adamrsophie.github.io/symcompR/reference/calculus-utils.md)
 derives the Euler-Lagrange equations of a functional. For the harmonic
 oscillator Lagrangian L = \dot f^2/2 - f^2/2:

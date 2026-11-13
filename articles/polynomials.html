@@ -48,10 +48,12 @@
     <li><h6 class="dropdown-header" data-toc-skip>Calculus and equations</h6></li>
     <li><a class="dropdown-item" href="../articles/calculus.html">Calculus: derivatives, limits, series, and sums</a></li>
     <li><a class="dropdown-item" href="../articles/integration.html">Integration and integral transforms</a></li>
+    <li><a class="dropdown-item" href="../articles/quadrature-and-polytopes.html">Quadrature and integration over polytopes</a></li>
     <li><a class="dropdown-item" href="../articles/series-and-sequences.html">Sequences, Fourier series, and formal power series</a></li>
     <li><a class="dropdown-item" href="../articles/holonomic.html">Holonomic functions</a></li>
     <li><a class="dropdown-item" href="../articles/special-functions.html">Special functions</a></li>
     <li><a class="dropdown-item" href="../articles/solvers.html">Solving equations</a></li>
+    <li><a class="dropdown-item" href="../articles/statistics.html">Statistics and random variables</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Discrete mathematics and algebra</h6></li>
     <li><a class="dropdown-item" href="../articles/number-theory.html">Number theory</a></li>
@@ -69,10 +71,14 @@
     <li><a class="dropdown-item" href="../articles/tensors.html">Arrays and tensors</a></li>
     <li><a class="dropdown-item" href="../articles/differential-geometry.html">Differential geometry</a></li>
     <li><a class="dropdown-item" href="../articles/physics-units.html">Physical units</a></li>
+    <li><a class="dropdown-item" href="../articles/mechanics.html">Classical mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/quantum-mechanics.html">Quantum mechanics</a></li>
+    <li><a class="dropdown-item" href="../articles/physics-engineering.html">Optics, control and continuum mechanics</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Input, output, and utilities</h6></li>
     <li><a class="dropdown-item" href="../articles/printing.html">Printing</a></li>
     <li><a class="dropdown-item" href="../articles/code-printers.html">Code printers</a></li>
+    <li><a class="dropdown-item" href="../articles/code-generation.html">Code generation</a></li>
     <li><a class="dropdown-item" href="../articles/parsing.html">Parsing</a></li>
     <li><a class="dropdown-item" href="../articles/other-modules.html">Statistics, discrete transforms, and utilities</a></li>
     <li><a class="dropdown-item" href="../articles/aliases-and-conditions.html">Aliases and error conditions</a></li>
@@ -717,6 +723,97 @@ fraction apart.</p>
 <span><span class="co">#&gt; x + 1</span></span>
 <span><span class="fu"><a href="../reference/fraction.html">denom</a></span><span class="op">(</span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x - 1</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="square-free-parts-appell-sequences-and-interpolation">Square free parts, Appell sequences and interpolation<a class="anchor" aria-label="anchor" href="#square-free-parts-appell-sequences-and-interpolation"></a>
+</h2>
+<p><code><a href="../reference/sym_factor.html">sqf_part()</a></code> is the square free part, the product of the
+distinct irreducible factors. <code><a href="../reference/gcdex_steps.html">gcdex_steps()</a></code> lists the steps
+of the extended Euclidean algorithm as triples <code>(s, t, r)</code>
+with <code>s f + t g = r</code>.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sym_factor.html">sqf_part</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">-</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">-</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x^2 - x - 2</span></span>
+<span><span class="fu"><a href="../reference/Poly.html">as_expr</a></span><span class="op">(</span><span class="fu"><a href="../reference/sym_factor.html">sqf_part</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">-</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">-</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x^2 - x - 2</span></span>
+<span><span class="fu"><a href="../reference/gcdex_steps.html">gcdex_steps</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">4</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">-</span> <span class="fl">6</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">12</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">15</span>, <span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">+</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">4</span> <span class="op">*</span> <span class="va">x</span> <span class="op">-</span> <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [[1]][[1]]</span></span>
+<span><span class="co">#&gt; 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[1]][[2]]</span></span>
+<span><span class="co">#&gt; 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[1]][[3]]</span></span>
+<span><span class="co">#&gt; x^3 + x^2 - 4*x - 4</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; [[2]][[1]]</span></span>
+<span><span class="co">#&gt; 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]][[2]]</span></span>
+<span><span class="co">#&gt; 3 - x</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]][[3]]</span></span>
+<span><span class="co">#&gt; x^2 + 4*x + 3</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[3]]</span></span>
+<span><span class="co">#&gt; [[3]][[1]]</span></span>
+<span><span class="co">#&gt; 3 - x</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[3]][[2]]</span></span>
+<span><span class="co">#&gt; x^2 - 6*x + 10</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[3]][[3]]</span></span>
+<span><span class="co">#&gt; 5*x + 5</span></span></code></pre></div>
+<p>The Appell sequences of <code>sympy.polys.appellseqs</code>:</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/bernoulli_poly.html">bernoulli_poly</a></span><span class="op">(</span><span class="fl">4</span>, <span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x^4 - 2*x^3 + x^2 - 1/30</span></span>
+<span><span class="fu"><a href="../reference/bernoulli_poly.html">bernoulli_c_poly</a></span><span class="op">(</span><span class="fl">4</span>, <span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x^4 - 2*x^2 + 7/15</span></span>
+<span><span class="fu"><a href="../reference/bernoulli_poly.html">genocchi_poly</a></span><span class="op">(</span><span class="fl">5</span>, <span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; -5*x^4 + 10*x^3 - 5*x</span></span>
+<span><span class="fu"><a href="../reference/bernoulli_poly.html">euler_poly</a></span><span class="op">(</span><span class="fl">3</span>, <span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x^3 - 3*x^2/2 + 1/4</span></span>
+<span><span class="fu"><a href="../reference/bernoulli_poly.html">andre_poly</a></span><span class="op">(</span><span class="fl">4</span>, <span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x^4 - 6*x^2 + 5</span></span></code></pre></div>
+<p><code><a href="../reference/polys-extra.html">rational_interpolate()</a></code> fits a rational function with a
+numerator of the given degree to data points:</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/polys-extra.html">rational_interpolate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (2*x^2 - 3*x + 1)/(x - 1)</span></span>
+<span><span class="fu"><a href="../reference/polys-extra.html">rational_interpolate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span>, x <span class="op">=</span> <span class="va">y</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (2*y^2 - 3*y + 1)/(y - 1)</span></span></code></pre></div>
+<p><code><a href="../reference/poly-aliases.html">PurePoly()</a></code> is a polynomial that does not depend on the
+names of its generators, and <code><a href="../reference/solver-helpers.html">solve_poly_system()</a></code> solves a
+system of polynomial equations.</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/poly-aliases.html">PurePoly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="../reference/poly-aliases.html">PurePoly</a></span><span class="op">(</span><span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/Poly.html">as_expr</a></span><span class="op">(</span><span class="fu"><a href="../reference/poly-aliases.html">PurePoly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; _0^2 + 1</span></span>
+<span><span class="fu"><a href="../reference/degree.html">degree</a></span><span class="op">(</span><span class="fu"><a href="../reference/poly-aliases.html">PurePoly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span>, <span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 2</span></span>
+<span><span class="fu"><a href="../reference/solver-helpers.html">solve_poly_system</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span> <span class="op">*</span> <span class="va">y</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">y</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; (0, 0) </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[2]]</span></span>
+<span><span class="co">#&gt; (2, -sqrt(2)) </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [[3]]</span></span>
+<span><span class="co">#&gt; (2, sqrt(2))</span></span></code></pre></div>
+<p><code><a href="../reference/PolyQuintic.html">PolyQuintic()</a></code> holds the resolvents used to solve a
+quintic in radicals, and <code><a href="../reference/PolyQuintic.html">roots_quintic()</a></code> returns the roots,
+or an empty list when the quintic is not solvable in radicals.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/Poly.html">as_expr</a></span><span class="op">(</span><span class="fu"><a href="../reference/PolyQuintic.html">PolyQuintic</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">-</span> <span class="fl">5</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">12</span><span class="op">)</span><span class="op">$</span><span class="va">f20</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x^6 - 40*x^5 + 1000*x^4 - 20000*x^3 + 250000*x^2 - 66400000*x + 976000000</span></span>
+<span><span class="fu"><a href="../reference/PolyQuintic.html">roots_quintic</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">-</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; list()</span></span></code></pre></div>
 <p>Coefficient domains and rings are covered in
 <code><a href="../articles/polynomial-domains.html">vignette("polynomial-domains", package = "symcompR")</a></code>, and
 Galois groups and algebraic number fields in

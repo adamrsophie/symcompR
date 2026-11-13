@@ -260,6 +260,23 @@ singularityintegrate(SingularityFunction(x, b, 3), x)
 #> SingularityFunction(x, b, 4)/4
 ```
 
+[`log_to_atan()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
+and
+[`log_to_real()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
+turn the complex logarithms of the logarithmic part into real
+arctangents and logarithms:
+
+``` r
+
+log_to_atan(Poly(x, x, domain = "ZZ"), Poly(1, x, domain = "ZZ"))
+#> 2*atan(x)
+log_to_real(Poly(x + 3 * t / 2 + Rational(1, 2), x, domain = "QQ[t]"),
+            Poly(3 * t^2 + 1, t, domain = "ZZ"), x, t)
+#> 2*sqrt(3)*atan(2*sqrt(3)*x/3 + sqrt(3)/3)/3
+log_to_real(Poly(x^2 - 1, x, domain = "ZZ"), Poly(-2 * t + 1, t, domain = "ZZ"), x, t)
+#> log(x^2 - 1)/2
+```
+
 ## Line integrals
 
 [`line_integrate()`](https://adamrsophie.github.io/symcompR/reference/line_integrate.md)

@@ -205,6 +205,40 @@ show(intersecting_product(c(1, 2, 3, 4), c(5, 6, 7, 8)))
 #> [1] "103" "52"  "73"  "32"
 ```
 
+The specialized convolutions are also available:
+[`convolution_fft()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+by the fast Fourier transform,
+[`convolution_ntt()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+modulo a prime,
+[`convolution_fwht()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+(dyadic, by the Walsh-Hadamard transform),
+[`convolution_subset()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+(over subsets of bit positions) and
+[`convolution_int()`](https://adamrsophie.github.io/symcompR/reference/convolution.md)
+for integer sequences.
+[`linrec()`](https://adamrsophie.github.io/symcompR/reference/linrec.md)
+evaluates a linear recurrence with constant coefficients.
+
+``` r
+
+show(convolution_fft(c(1, 2, 3), c(4, 5, 6)))
+#> [1] "4"  "13" "28" "27" "18"
+show(convolution_ntt(c(2, 3), c(4, 5), prime = 19 * 2^10 + 1))
+#> [1] "8"  "22" "15"
+show(convolution_fwht(c(1, 2, 3), c(4, 5, 6)))
+#> [1] "32" "13" "18" "27"
+show(convolution_subset(c(1, 2, 3, 4), c(5, 6, 7, 8)))
+#> [1] "5"  "16" "22" "60"
+show(convolution_subset(list(Symbol("a"), Symbol("b")), list(Symbol("c"))))
+#> [1] "a*c" "b*c"
+show(convolution_int(c(10, -5, 1, 3), c(-5, 6, 7)))
+#> [1] "-50" "85"  "35"  "-44" "25"  "21"
+linrec(c(1, 1), c(0, 1), 10)
+#> 55
+linrec(list(Symbol("p"), Symbol("q"), Symbol("r")), c(1, 1, 1), 4)
+#> p^2 + p*q + p*r + q + r
+```
+
 ## Cryptography
 
 The ciphers and key exchange protocols of `sympy.crypto` have their own
@@ -241,7 +275,7 @@ x <- Symbol("x")
 plot(sin(x) / x, list(x, -10, 10))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-11-1.png)
+![](other-modules_files/figure-html/unnamed-chunk-12-1.png)
 
 ``` r
 
@@ -249,21 +283,36 @@ t <- Symbol("t"); y <- Symbol("y")
 plot_parametric(cos(3 * t), sin(2 * t), list(t, 0, 2 * sym_pi))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-12-1.png)
+![](other-modules_files/figure-html/unnamed-chunk-13-1.png)
 
 ``` r
 
 plot_implicit(x^2 + y^2 - 1, list(x, -1.5, 1.5), list(y, -1.5, 1.5))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-12-2.png)
+![](other-modules_files/figure-html/unnamed-chunk-13-2.png)
 
 ``` r
 
 plot3d(x * y, list(x, -1, 1), list(y, -1, 1))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-12-3.png)
+![](other-modules_files/figure-html/unnamed-chunk-13-3.png)
+
+[`textplot()`](https://adamrsophie.github.io/symcompR/reference/textplot.md)
+draws a rough plot with text characters:
+
+``` r
+
+textplot(x^2, -2, 2, W = 20, H = 6)
+#>       4 |\                  /
+#>         | \                / 
+#>     2.4 |--\--------------/--
+#>         |   ..          ..   
+#>         |     ..      ..     
+#>       0 |____________________
+#>          -2        0.105263 2
+```
 
 ## Iteration utilities
 
@@ -398,6 +447,27 @@ names(timed(function() sum(1:10)))
 #> [1] "number" "time"   "scaled" "unit"
 ```
 
+[`default_sort_key()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+gives the key that SymPy uses to order expressions canonically, as a
+string that sorts in the same order:
+
+``` r
+
+l <- list(x^2, Symbol("y"), S(3), x)
+l[order(vapply(l, default_sort_key, ""), method = "radix")]
+#> [[1]]
+#> 3
+#> 
+#> [[2]]
+#> x
+#> 
+#> [[3]]
+#> x^2
+#> 
+#> [[4]]
+#> y
+```
+
 [`init_printing()`](https://adamrsophie.github.io/symcompR/reference/interactive-session.md)
 chooses the default printer for the session (`"pretty"` for two
 dimensional output, `"latex"`, or `"str"`), and
@@ -405,7 +475,8 @@ dimensional output, `"latex"`, or `"str"`), and
 also creates the usual symbols `x`, `y`, `z`, `t`, the integer symbols
 `k`, `m`, `n`, and the functions `f`, `g`, `h`.
 [`interactive_traversal()`](https://adamrsophie.github.io/symcompR/reference/interactive-session.md)
-walks an expression tree interactively, so it is not run here.
+walks an expression tree interactively; outside an interactive session
+it returns the expression unchanged.
 
 ``` r
 
@@ -422,4 +493,10 @@ f(k) + n
 options(old)
 x^2 / 2
 #> x^2/2
+```
+
+``` r
+
+interactive_traversal(x + 1)
+#> x + 1
 ```

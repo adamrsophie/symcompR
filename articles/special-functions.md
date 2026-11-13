@@ -711,6 +711,20 @@ expand_func(Znm(1, 0, a, b))
 #> sqrt(3)*cos(a)/(2*sqrt(pi))
 ```
 
+## Motzkin numbers and subfactorials
+
+`motzkin(n)` counts the ways to draw nonintersecting chords between `n`
+points on a circle, and `subfactorial(n)` counts the derangements of `n`
+objects.
+
+``` r
+
+sapply(0:7, function(i) sstr(motzkin(i)))
+#> [1] "1"  "1"  "1"  "2"  "4"  "9"  "21" "51"
+subfactorial(5)
+#> 44
+```
+
 ## Polar numbers and branches
 
 [`exp_polar()`](https://adamrsophie.github.io/symcompR/reference/special-functions-extra.md)

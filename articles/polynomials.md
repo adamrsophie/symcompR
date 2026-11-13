@@ -728,6 +728,121 @@ denom((x + 1) / (x - 1))
 #> x - 1
 ```
 
+## Square free parts, Appell sequences and interpolation
+
+[`sqf_part()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md)
+is the square free part, the product of the distinct irreducible
+factors.
+[`gcdex_steps()`](https://adamrsophie.github.io/symcompR/reference/gcdex_steps.md)
+lists the steps of the extended Euclidean algorithm as triples
+`(s, t, r)` with `s f + t g = r`.
+
+``` r
+
+sqf_part(x^3 - 3 * x - 2)
+#> x^2 - x - 2
+as_expr(sqf_part(Poly(x^3 - 3 * x - 2)))
+#> x^2 - x - 2
+gcdex_steps(x^4 - 2 * x^3 - 6 * x^2 + 12 * x + 15, x^3 + x^2 - 4 * x - 4)
+#> [[1]]
+#> [[1]][[1]]
+#> 0
+#> 
+#> [[1]][[2]]
+#> 1
+#> 
+#> [[1]][[3]]
+#> x^3 + x^2 - 4*x - 4
+#> 
+#> 
+#> [[2]]
+#> [[2]][[1]]
+#> 1
+#> 
+#> [[2]][[2]]
+#> 3 - x
+#> 
+#> [[2]][[3]]
+#> x^2 + 4*x + 3
+#> 
+#> 
+#> [[3]]
+#> [[3]][[1]]
+#> 3 - x
+#> 
+#> [[3]][[2]]
+#> x^2 - 6*x + 10
+#> 
+#> [[3]][[3]]
+#> 5*x + 5
+```
+
+The Appell sequences of `sympy.polys.appellseqs`:
+
+``` r
+
+bernoulli_poly(4, x)
+#> x^4 - 2*x^3 + x^2 - 1/30
+bernoulli_c_poly(4, x)
+#> x^4 - 2*x^2 + 7/15
+genocchi_poly(5, x)
+#> -5*x^4 + 10*x^3 - 5*x
+euler_poly(3, x)
+#> x^3 - 3*x^2/2 + 1/4
+andre_poly(4, x)
+#> x^4 - 6*x^2 + 5
+```
+
+[`rational_interpolate()`](https://adamrsophie.github.io/symcompR/reference/polys-extra.md)
+fits a rational function with a numerator of the given degree to data
+points:
+
+``` r
+
+rational_interpolate(list(c(1, 2), c(2, 3), c(3, 5), c(4, 7)), 2)
+#> (2*x^2 - 3*x + 1)/(x - 1)
+rational_interpolate(list(c(1, 2), c(2, 3), c(3, 5), c(4, 7)), 2, x = y)
+#> (2*y^2 - 3*y + 1)/(y - 1)
+```
+
+[`PurePoly()`](https://adamrsophie.github.io/symcompR/reference/poly-aliases.md)
+is a polynomial that does not depend on the names of its generators, and
+[`solve_poly_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+solves a system of polynomial equations.
+
+``` r
+
+PurePoly(x^2 + 1) == PurePoly(y^2 + 1)
+#> [1] TRUE
+as_expr(PurePoly(x^2 + 1))
+#> _0^2 + 1
+degree(PurePoly(x^2 + 1, x))
+#> [1] 2
+solve_poly_system(list(x * y - 2 * y, 2 * y^2 - x^2), x, y)
+#> [[1]]
+#> (0, 0) 
+#> 
+#> [[2]]
+#> (2, -sqrt(2)) 
+#> 
+#> [[3]]
+#> (2, sqrt(2))
+```
+
+[`PolyQuintic()`](https://adamrsophie.github.io/symcompR/reference/PolyQuintic.md)
+holds the resolvents used to solve a quintic in radicals, and
+[`roots_quintic()`](https://adamrsophie.github.io/symcompR/reference/PolyQuintic.md)
+returns the roots, or an empty list when the quintic is not solvable in
+radicals.
+
+``` r
+
+as_expr(PolyQuintic(x^5 - 5 * x + 12)$f20)
+#> x^6 - 40*x^5 + 1000*x^4 - 20000*x^3 + 250000*x^2 - 66400000*x + 976000000
+roots_quintic(x^5 - x + 1)
+#> list()
+```
+
 Coefficient domains and rings are covered in
 [`vignette("polynomial-domains", package = "symcompR")`](https://adamrsophie.github.io/symcompR/articles/polynomial-domains.md),
 and Galois groups and algebraic number fields in
