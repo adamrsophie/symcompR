@@ -138,7 +138,7 @@ Rk <- RkGate
 #' @param iterations The number of iterations.
 #' @return A state or a gate.
 #' @examples
-#' f <- function(q) .qeq(q, IntQubit(2, nqubits = 2))
+#' f <- function(q) isTRUE(q == IntQubit(2, nqubits = 2))
 #' apply_grover(f, 2)
 #' @name grover
 NULL

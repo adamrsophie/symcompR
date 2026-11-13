@@ -42,6 +42,6 @@ operator, and \code{grover_iteration()} and \code{apply_grover()} run the
 algorithm, as in \code{sympy.physics.quantum.grover}.
 }
 \examples{
-f <- function(q) .qeq(q, IntQubit(2, nqubits = 2))
+f <- function(q) isTRUE(q == IntQubit(2, nqubits = 2))
 apply_grover(f, 2)
 }
