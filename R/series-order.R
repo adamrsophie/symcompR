@@ -295,6 +295,8 @@ as_leading_term <- function(e, x, logx = NULL, cdir = 0) {
 
 # Function._eval_as_leading_term
 .so_alt_function <- function(e, x, logx, cdir) {
+  # AppliedUndef._eval_as_leading_term
+  if (.is_undefined_application(e)) return(e)
   args <- lapply(e$args, function(a) as_leading_term(a, x, logx))
   o <- .so_new(S_One, list(x))
   if (any(vapply(args, function(a) .has1(a, x) && isTRUE(.so_contains(o, a)), NA)))

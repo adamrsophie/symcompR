@@ -261,6 +261,17 @@ reference:
   - rsolve
   - rsolve-parts
   - dsolve
+  - canonical_odes
+  - checkinfsol
+  - checkodesol
+  - checksysodesol
+  - classify_ode
+  - classify_sysode
+  - infinitesimals
+  - linear_ode_to_matrix
+  - linodesolve
+  - matrix_exp_jordan_form
+  - ode_order
   - pdsolve
   - diophantine
 - title: Polynomials

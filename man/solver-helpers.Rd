@@ -5,7 +5,6 @@
 \alias{solve_linear_system}
 \alias{solve_linear}
 \alias{checksol}
-\alias{checkodesol}
 \alias{solve_undetermined_coeffs}
 \alias{solve_poly_system}
 \alias{det_quick}
@@ -17,8 +16,6 @@ solve_linear_system(M, syms, ...)
 solve_linear(lhs, rhs = 0, symbols = list(), exclude = list(), x = NULL)
 
 checksol(f, symbol, sol = NULL, ...)
-
-checkodesol(eq, sol, fx = NULL)
 
 solve_undetermined_coeffs(eq, coeffs, ..., dict = FALSE, set = FALSE)
 
@@ -48,9 +45,7 @@ inv_quick(M)
 \item{symbol}{A symbol, or a named list (or list of \code{list(symbol, value)}
 pairs) giving the whole solution.}
 
-\item{sol}{The value of \code{symbol}, or an \code{\link[=Eq]{Eq()}} for \code{checkodesol()}.}
-
-\item{fx}{Unknown function application; found from \code{eq} when omitted.}
+\item{sol}{The value of \code{symbol}.}
 
 \item{dict, set}{Output forms of \code{solve_undetermined_coeffs()}, as for
 \code{\link[=solve]{solve()}}.}
@@ -70,8 +65,7 @@ symbols may follow \code{syms}. It returns \code{NULL} when there is no solution
 \code{symbols} when it is linear in it, and returns the pair \verb{(symbol, value)},
 \verb{(0, 1)} when nothing is free, or \verb{(numerator, denominator)} otherwise.
 \code{checksol(f, symbol, sol)} tests a solution by substitution and returns
-\code{TRUE}, \code{FALSE} or \code{NA} when undecided; \code{checkodesol(eq, sol, fx)} checks an
-ODE solution and returns the pair \verb{(TRUE, 0)} or \verb{(FALSE, residual)}.
+\code{TRUE}, \code{FALSE} or \code{NA} when undecided.
 \code{solve_undetermined_coeffs(eq, coeffs, ...)} makes \code{eq} vanish identically
 in the symbols \code{...}, as SymPy: a named list for one solution, a list of
 them for several, and \code{NULL} when no solution exists.

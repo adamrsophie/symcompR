@@ -598,6 +598,14 @@
 
 .kd_from_expr <- function(e, gens, K) {
   e <- expand(as_sym(e))
+  # generators that are not symbols (f(t), its derivatives) become symbols,
+  # so that a symbol generator inside them does not hide the polynomial
+  nonsym <- which(!vapply(gens, function(g) g$type %in% c("Symbol", "Dummy"), TRUE))
+  if (length(nonsym)) {
+    ds <- lapply(nonsym, function(i) Dummy())
+    e <- xreplace(e, lapply(seq_along(nonsym), function(k) list(gens[[nonsym[k]]], ds[[k]])))
+    gens[nonsym] <- ds
+  }
   terms <- if (e$type == "Add") e$args else list(e)
   if (length(terms) == 1L && is_zero_num(terms[[1L]])) return(list())
   # the monomial in the generators of each term and its coefficient

@@ -440,7 +440,11 @@
     }
     if (lhs$type == "Function") {
       invn <- .sp_inverse_fn(lhs$name)
-      if (!is.null(invn) && length(lhs$args) == 1L) {
+      if (identical(lhs$name, "diffx") && length(lhs$args) == 1L && !is.null(.ode_state$diffx_var)) {
+        # the diffx function of the nth_algebraic ODE solver
+        rhs <- .ode_diffx_inverse(rhs)
+        lhs <- lhs$args[[1L]]
+      } else if (!is.null(invn) && length(lhs$args) == 1L) {
         rhs <- fcall(invn, list(rhs))
         lhs <- lhs$args[[1L]]
       } else if (lhs$name == "atan2") {

@@ -1039,8 +1039,7 @@ apply_finite_diff <- function(order, x_list, y_list, x0 = 0) {
 #' `symbols` when it is linear in it, and returns the pair `(symbol, value)`,
 #' `(0, 1)` when nothing is free, or `(numerator, denominator)` otherwise.
 #' `checksol(f, symbol, sol)` tests a solution by substitution and returns
-#' `TRUE`, `FALSE` or `NA` when undecided; `checkodesol(eq, sol, fx)` checks an
-#' ODE solution and returns the pair `(TRUE, 0)` or `(FALSE, residual)`.
+#' `TRUE`, `FALSE` or `NA` when undecided.
 #' `solve_undetermined_coeffs(eq, coeffs, ...)` makes `eq` vanish identically
 #' in the symbols `...`, as SymPy: a named list for one solution, a list of
 #' them for several, and `NULL` when no solution exists.
@@ -1064,8 +1063,7 @@ apply_finite_diff <- function(order, x_list, y_list, x0 = 0) {
 #' @param symbol A symbol, or a named list (or list of `list(symbol, value)`
 #'   pairs) giving the whole solution.
 #' @param f,eq An equation or expression.
-#' @param sol The value of `symbol`, or an [Eq()] for `checkodesol()`.
-#' @param fx Unknown function application; found from `eq` when omitted.
+#' @param sol The value of `symbol`.
 #' @return A list, expression, logical or set.
 #' @examples
 #' x <- Symbol("x"); y <- Symbol("y")
@@ -1120,25 +1118,6 @@ checksol <- function(f, symbol, sol = NULL, ...) {
                                                .str(as_sym(symbol)), ", None)")))
   }
   .sp_checksol(f, d, flags)
-}
-
-#' @rdname solver-helpers
-#' @export
-checkodesol <- function(eq, sol, fx = NULL) {
-  e <- .eq_to_expr(eq)
-  sol <- as_sym(sol)
-  if (is.null(fx)) {
-    fs <- Filter(.is_undefined_application, atoms(e, "Function"))
-    fs <- fs[!duplicated(vapply(fs, .k, ""))]
-    if (length(fs) != 1L)
-      stop(.sympy_condition("ValueError", "must pass func arg to checkodesol for this case."))
-    fx <- fs[[1L]]
-  }
-  fx <- as_sym(fx)
-  # a bare expression is the value of the function, as Eq(func, sol)
-  rhs <- if (sol$type == "Equality") sol$args[[2L]] else sol
-  r <- simplify(doit(subs(e, fx, rhs)))
-  if (is_zero_num(r)) .pytuple(list(TRUE, S_Zero)) else .pytuple(list(FALSE, r))
 }
 
 #' @rdname solver-helpers

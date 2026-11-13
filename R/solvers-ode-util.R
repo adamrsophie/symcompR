@@ -22,7 +22,8 @@
       Ces[[length(Ces) + 1L]] <<- e
       return(invisible())
     }
-    if (e$type == "Function" && e$name == "exp") e <- expand_mul(e)
+    # expr.expand(mul=True) keeps the other default hints, power_exp among them
+    if (e$type == "Function" && e$name == "exp") e <- expand(e)
     if (e$type %in% c("Add", "Mul")) {
       tr <- Filter(function(i) .cs_subset(free_symbols(i), Cs), e$args)
       if (length(tr) > 1L) {

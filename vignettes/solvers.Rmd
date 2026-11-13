@@ -297,16 +297,28 @@ equation. A homogeneous linear equation with constant coefficients has one:
 classify_ode(diff(f(x), x, 3) - f(x), f(x))
 ```
 
-### Initial conditions
-
-`ics` is a list of conditions `list(x0, k, value)`, meaning
-$f^{(k)}(x_0) = \text{value}$.
+`dsolve()` also solves systems of linear ODEs, which `classify_sysode()`
+classifies and `checksysodesol()` checks.
 
 ```{r}
-dsolve(Eq(diff(f(x), x), f(x)), f(x), ics = list(list(0, 0, 1)))
-dsolve(diff(f(x), x) + f(x) - x, f(x), ics = list(list(0, 0, 2)))
+g <- Function("g")
+sys <- list(Eq(diff(f(x), x), g(x)), Eq(diff(g(x), x), -f(x)))
+dsolve(sys)
+checksysodesol(sys, dsolve(sys))
+```
+
+### Initial conditions
+
+`ics` takes the place of SymPy's dictionary: a list of pairs
+`list(f(x0), value)`, with `Subs(Derivative(f(x), x, k), x, x0)` for a
+derivative. The shorter triple `list(x0, k, value)`, meaning
+$f^{(k)}(x_0) = \text{value}$, is accepted too.
+
+```{r}
+dsolve(Eq(diff(f(x), x), f(x)), f(x), ics = list(list(f(0), 1)))
+dsolve(diff(f(x), x) + f(x) - x, f(x), ics = list(list(f(0), 2)))
 dsolve(diff(f(x), x, 2) + f(x), f(x),
-       ics = list(list(0, 0, 0), list(0, 1, 1)))
+       ics = list(list(f(0), 0), list(Subs(Derivative(f(x), x), x, 0), 1)))
 dsolve(diff(f(x), x, 2) + 4 * f(x), f(x),
        ics = list(list(0, 0, 1), list(0, 1, 0)))
 ```
