@@ -26,7 +26,7 @@ for a scalar). \code{get_ndim()} returns the number of axes, and \code{get_rank(
 is its older name.
 }
 \examples{
-A <- ArraySymbol("A", c(2, 3, 4))
+A <- ArraySymbol("A", c(3, 3, 4))
 get_shape(A)
 get_ndim(ArrayContraction(A, c(0, 1)))
 }

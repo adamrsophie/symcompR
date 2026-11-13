@@ -173,7 +173,7 @@
 #' q <- Qubit("01")
 #' qubit_to_matrix(q)
 #' matrix_to_qubit(qubit_to_matrix(q))
-#' measure_all(HadamardGate(0) * Qubit("0"))
+#' measure_all(qapply(HadamardGate(0) * Qubit("0")))
 #' @name quantum-qubits
 NULL
 

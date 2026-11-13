@@ -95,7 +95,7 @@ register_rebuilder("Permutation", function(e, args) e)
 #' @return `get_shape()` returns a list of `sym` dimensions; `get_ndim()`
 #'   and `get_rank()` return an integer.
 #' @examples
-#' A <- ArraySymbol("A", c(2, 3, 4))
+#' A <- ArraySymbol("A", c(3, 3, 4))
 #' get_shape(A)
 #' get_ndim(ArrayContraction(A, c(0, 1)))
 #' @export

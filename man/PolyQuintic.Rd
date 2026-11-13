@@ -44,5 +44,8 @@ uses it.
 x <- Symbol("x")
 q <- PolyQuintic(x^5 - 5 * x + 12)
 q$f20
+\donttest{
+# solving the quintic in radicals takes about 30 seconds
 length(roots_quintic(x^5 - 5 * x + 12))
+}
 }
