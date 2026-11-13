@@ -35,7 +35,7 @@ set_inf(s)
 
 set_sup(s)
 
-ImageSet(lam, base)
+ImageSet(lam, base, ...)
 
 Reals
 
@@ -86,7 +86,8 @@ ConditionSet(sym, condition, base = UniversalSet)
 
 - ...:
 
-  Elements or sets.
+  Elements or sets; for `ImageSet()`, further sets, one for each
+  argument of a `Lambda` with several arguments.
 
 - lam:
 

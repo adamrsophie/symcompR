@@ -277,30 +277,23 @@ intervals.</p>
 <div class="section level2">
 <h2 id="linear-and-polynomial-systems">Linear and polynomial systems<a class="anchor" aria-label="anchor" href="#linear-and-polynomial-systems"></a>
 </h2>
-<p><code><a href="../reference/linsolve.html">linsolve()</a></code> solves systems of linear equations. It
-returns a named list; when the system is underdetermined, the free
-unknowns are left out and the solution is written in terms of them
-(SymPy returns the same solution as a set of tuples).</p>
+<p><code><a href="../reference/linsolve.html">linsolve()</a></code> solves systems of linear equations. As in
+SymPy, it returns a <code>FiniteSet</code> holding one tuple of values;
+when the system is underdetermined, free unknowns stay as themselves and
+the others are written in terms of them.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/linsolve.html">linsolve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">y</span> <span class="op">-</span> <span class="fl">3</span>, <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">-</span> <span class="va">y</span> <span class="op">-</span> <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $x</span></span>
-<span><span class="co">#&gt; 1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $y</span></span>
-<span><span class="co">#&gt; 1</span></span>
+<span><span class="co">#&gt; {(1, 1)}</span></span>
 <span><span class="fu"><a href="../reference/linsolve.html">linsolve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="va">y</span> <span class="op">+</span> <span class="va">z</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span> <span class="op">+</span> <span class="va">y</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">z</span> <span class="op">-</span> <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $x</span></span>
-<span><span class="co">#&gt; -y - 1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $z</span></span>
-<span><span class="co">#&gt; 2</span></span></code></pre></div>
+<span><span class="co">#&gt; {(-y - 1, y, 2)}</span></span></code></pre></div>
 <p>Here <span class="math inline">z = 2</span>, <span class="math inline">x = -y - 1</span>, and <span class="math inline">y</span> is free. Nonlinear polynomial systems are
-solved with Groebner bases by <code><a href="../reference/solver-helpers.html">nonlinsolve()</a></code> and
-<code><a href="../reference/solver-helpers.html">solve_poly_system()</a></code>.</p>
+solved by <code><a href="../reference/nonlinsolve.html">nonlinsolve()</a></code>, which returns a set of solution
+tuples, and by <code><a href="../reference/solver-helpers.html">solve_poly_system()</a></code> through Groebner
+bases.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/solver-helpers.html">nonlinsolve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span> <span class="op">*</span> <span class="va">y</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span> <span class="op">-</span> <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nonlinsolve.html">nonlinsolve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span> <span class="op">*</span> <span class="va">y</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span> <span class="op">-</span> <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; {(2, 1/2)}</span></span>
-<span><span class="fu"><a href="../reference/solver-helpers.html">nonlinsolve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">4</span>, <span class="va">x</span> <span class="op">-</span> <span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/nonlinsolve.html">nonlinsolve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">4</span>, <span class="va">x</span> <span class="op">-</span> <span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; {(-sqrt(2), -sqrt(2)), (sqrt(2), sqrt(2))}</span></span></code></pre></div>
 <p>Several lower level solvers are available on their own.
 <code><a href="../reference/solver-helpers.html">solve_linear()</a></code> isolates one symbol in a linear expression,
@@ -309,7 +302,7 @@ solved with Groebner bases by <code><a href="../reference/solver-helpers.html">n
 <code><a href="../reference/solver-helpers.html">solve_undetermined_coeffs()</a></code> matches the coefficients of a
 polynomial identity. <code><a href="../reference/solver-helpers.html">checksol()</a></code> verifies a candidate
 solution, and <code><a href="../reference/substitution.html">substitution()</a></code> solves a system by successive
-substitution.</p>
+substitution and returns a set of tuples.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">show</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">l</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">l</span>, <span class="va">sstr</span>, <span class="st">""</span><span class="op">)</span></span>
 <span><span class="va">rows</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">l</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">l</span>, <span class="kw">function</span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu">show</span><span class="op">(</span><span class="va">r</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>, <span class="st">""</span><span class="op">)</span></span>

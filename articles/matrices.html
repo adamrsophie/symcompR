@@ -866,22 +866,15 @@ rotation in a coordinate plane.</p>
 <span><span class="co">#&gt; [-sqrt(3)/2, 1/2      , 0]</span></span>
 <span><span class="co">#&gt; [0         , 0        , 1]</span></span></code></pre></div>
 <p>Linear systems and other constructions:
-<code><a href="../reference/solver-helpers.html">linear_eq_to_matrix()</a></code> extracts the coefficient matrix and
-right hand side, <code><a href="../reference/matrix-constructions.html">casoratian()</a></code> is the Casoratian of
-sequences (the discrete Wronskian), and <code><a href="../reference/matrix-constructions.html">symarray()</a></code> is a
-matrix of indexed symbols.</p>
+<code><a href="../reference/linear_eq_to_matrix.html">linear_eq_to_matrix()</a></code> returns the coefficient matrix and
+right hand side as a tuple <code>(A, b)</code>,
+<code><a href="../reference/matrix-constructions.html">casoratian()</a></code> is the Casoratian of sequences (the discrete
+Wronskian), and <code><a href="../reference/matrix-constructions.html">symarray()</a></code> is a matrix of indexed
+symbols.</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"k"</span>, integer <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/solver-helpers.html">linear_eq_to_matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">y</span> <span class="op">-</span> <span class="fl">3</span>, <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">-</span> <span class="va">y</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $A</span></span>
-<span><span class="co">#&gt; Matrix(2, 2)</span></span>
-<span><span class="co">#&gt; [1, 2 ]</span></span>
-<span><span class="co">#&gt; [3, -1]</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $b</span></span>
-<span><span class="co">#&gt; Matrix(2, 1)</span></span>
-<span><span class="co">#&gt; [3 ]</span></span>
-<span><span class="co">#&gt; [-1]</span></span>
+<span><span class="fu"><a href="../reference/linear_eq_to_matrix.html">linear_eq_to_matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">y</span> <span class="op">-</span> <span class="fl">3</span>, <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">-</span> <span class="va">y</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (Matrix([[1, 2], [3, -1]]), Matrix([[3], [-1]]))</span></span>
 <span><span class="fu"><a href="../reference/matrix-constructions.html">casoratian</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">^</span><span class="va">k</span><span class="op">)</span>, <span class="va">k</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 1</span></span>
 <span><span class="fu"><a href="../reference/matrix-constructions.html">symarray</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>

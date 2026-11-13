@@ -809,6 +809,21 @@ system.
 
 ## Solvers
 
+- [`domain_check()`](https://adamrsophie.github.io/symcompR/reference/domain_check.md)
+  : Check that a point is in the domain of a function
+- [`invert_real()`](https://adamrsophie.github.io/symcompR/reference/invert_real.md)
+  [`invert_complex()`](https://adamrsophie.github.io/symcompR/reference/invert_real.md)
+  : Invert real and complex valued functions
+- [`linear_coeffs()`](https://adamrsophie.github.io/symcompR/reference/linear_coeffs.md)
+  : Coefficients of a linear expression
+- [`linear_eq_to_matrix()`](https://adamrsophie.github.io/symcompR/reference/linear_eq_to_matrix.md)
+  : Matrix form of a linear system
+- [`nonlinsolve()`](https://adamrsophie.github.io/symcompR/reference/nonlinsolve.md)
+  : Solve a system of nonlinear equations as a set
+- [`solve_decomposition()`](https://adamrsophie.github.io/symcompR/reference/solve_decomposition.md)
+  : Solve a composite equation by decomposition
+- [`solvify()`](https://adamrsophie.github.io/symcompR/reference/solvify.md)
+  : Solve an equation as a list, as solve() would
 - [`lpmin()`](https://adamrsophie.github.io/symcompR/reference/lpmin.md)
   [`lpmax()`](https://adamrsophie.github.io/symcompR/reference/lpmin.md)
   [`linprog()`](https://adamrsophie.github.io/symcompR/reference/lpmin.md)
@@ -820,9 +835,11 @@ system.
   [`solve(`*`<list>`*`)`](https://adamrsophie.github.io/symcompR/reference/solve.sym.md)
   : Solve equations
 - [`solveset()`](https://adamrsophie.github.io/symcompR/reference/solveset.md)
-  : Solve equations as sets
+  [`solveset_real()`](https://adamrsophie.github.io/symcompR/reference/solveset.md)
+  [`solveset_complex()`](https://adamrsophie.github.io/symcompR/reference/solveset.md)
+  : Solve an equation or inequality as a set
 - [`linsolve()`](https://adamrsophie.github.io/symcompR/reference/linsolve.md)
-  : Solve linear systems
+  : Solve a linear system as a set
 - [`decompogen()`](https://adamrsophie.github.io/symcompR/reference/more-solvers.md)
   [`homogeneous_order()`](https://adamrsophie.github.io/symcompR/reference/more-solvers.md)
   [`solve_linear_system_LU()`](https://adamrsophie.github.io/symcompR/reference/more-solvers.md)
@@ -830,14 +847,12 @@ system.
   [`factor_system()`](https://adamrsophie.github.io/symcompR/reference/more-solvers.md)
   : More equation solvers
 - [`substitution()`](https://adamrsophie.github.io/symcompR/reference/substitution.md)
-  : Solve a system by substitution
-- [`linear_eq_to_matrix()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
-  [`solve_linear_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+  : Solve a system of equations by substitution
+- [`solve_linear_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`solve_linear()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`checksol()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`checkodesol()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`solve_undetermined_coeffs()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
-  [`nonlinsolve()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`solve_poly_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`det_quick()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
   [`inv_quick()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
@@ -852,16 +867,13 @@ system.
   [`reduce_abs_inequalities()`](https://adamrsophie.github.io/symcompR/reference/inequality-solvers.md)
   [`reduce_inequalities()`](https://adamrsophie.github.io/symcompR/reference/inequality-solvers.md)
   : Inequalities in one real variable
-- [`solveset_real()`](https://adamrsophie.github.io/symcompR/reference/solveset_real.md)
-  [`solveset_complex()`](https://adamrsophie.github.io/symcompR/reference/solveset_real.md)
-  : Solve equations as sets over the reals or the complexes
 - [`unrad()`](https://adamrsophie.github.io/symcompR/reference/unrad.md)
   : Remove radicals from an equation
 - [`constantsimp()`](https://adamrsophie.github.io/symcompR/reference/constantsimp.md)
   [`constant_renumber()`](https://adamrsophie.github.io/symcompR/reference/constantsimp.md)
   : Simplify arbitrary constants in an ODE solution
 - [`solve_univariate_inequality()`](https://adamrsophie.github.io/symcompR/reference/solve_univariate_inequality.md)
-  : Solve univariate inequalities
+  : Solve a univariate inequality
 - [`not_empty_in()`](https://adamrsophie.github.io/symcompR/reference/not_empty_in.md)
   : Where an intersection with a finite set is not empty
 - [`rsolve()`](https://adamrsophie.github.io/symcompR/reference/rsolve.md)

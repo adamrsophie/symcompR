@@ -261,6 +261,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/div.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/divisors.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/doit.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/domain_check.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/domains.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/dot.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/dot_rot_grad_Ynm.html</loc></url>
@@ -337,6 +338,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integral-transforms.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integral_steps.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/interactive-session.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/invert_real.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/is_nthpow_residue.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/is_polynomial.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/is_sym.html</loc></url>
@@ -360,6 +362,8 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/limit.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/limit_seq.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/line_integrate.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/linear_coeffs.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/linear_eq_to_matrix.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/linear_momentum.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/linrec.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/linsolve.html</loc></url>
@@ -392,6 +396,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/nc_simplify.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/nest_permutation.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/newtons_method.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/nonlinsolve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/normalized.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/not_empty_in.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/npartitions.html</loc></url>
@@ -501,10 +506,11 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/smith_normal_decomp.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/smoothness.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/solve.sym.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/solve_decomposition.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/solve_univariate_inequality.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/solver-helpers.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/solveset.html</loc></url>
-<url><loc>https://adamrsophie.github.io/symcompR/reference/solveset_real.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/solvify.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/special-functions-extra.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/special-functions.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/spin-operators.html</loc></url>

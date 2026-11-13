@@ -1,37 +1,38 @@
-# Solve linear systems
+# Solve a linear system as a set
 
-`linsolve(eqs, syms)` solves a linear system, returning a named list
-with free variables left as parameters, or `NULL` if inconsistent.
+`linsolve(system, ...)` solves a system of linear equations and returns
+the `FiniteSet` of one `Tuple` (or the empty set), as SymPy's
+`linsolve()`. Free unknowns stay as parameters. The system may be a list
+of equations or expressions, a list `(A, b)` of matrices, or an
+augmented matrix; the symbols follow one by one or as a list, and for
+matrix input they default to `tau0, tau1, ...`.
 
 ## Usage
 
 ``` r
-linsolve(eqs, syms)
+linsolve(system, ...)
 ```
 
 ## Arguments
 
-- eqs:
+- system:
 
-  A list of linear equations or expressions.
+  The linear system.
 
-- syms:
+- ...:
 
-  A list of symbols.
+  The symbols, or one list of them.
 
 ## Value
 
-A named list, or `NULL`.
+A set of tuples.
 
 ## Examples
 
 ``` r
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
 linsolve(list(x + y + z - 1, x + y + 2*z - 3), list(x, y, z))
-#> $x
-#> -y - 1
-#> 
-#> $z
-#> 2
-#> 
+#> {(-y - 1, y, 2)}
+linsolve(Matrix(list(list(1, 2, 3), list(4, 5, 6))))
+#> {(-1, 2)}
 ```

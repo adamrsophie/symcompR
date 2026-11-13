@@ -189,32 +189,25 @@ solveset(abs(x) - 2, x, Reals)
 ## Linear and polynomial systems
 
 [`linsolve()`](https://adamrsophie.github.io/symcompR/reference/linsolve.md)
-solves systems of linear equations. It returns a named list; when the
-system is underdetermined, the free unknowns are left out and the
-solution is written in terms of them (SymPy returns the same solution as
-a set of tuples).
+solves systems of linear equations. As in SymPy, it returns a
+`FiniteSet` holding one tuple of values; when the system is
+underdetermined, free unknowns stay as themselves and the others are
+written in terms of them.
 
 ``` r
 
 linsolve(list(x + 2 * y - 3, 3 * x - y - 2), list(x, y))
-#> $x
-#> 1
-#> 
-#> $y
-#> 1
+#> {(1, 1)}
 linsolve(list(x + y + z - 1, x + y + 2 * z - 3), list(x, y, z))
-#> $x
-#> -y - 1
-#> 
-#> $z
-#> 2
+#> {(-y - 1, y, 2)}
 ```
 
 Here z = 2, x = -y - 1, and y is free. Nonlinear polynomial systems are
-solved with Groebner bases by
-[`nonlinsolve()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
-and
-[`solve_poly_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md).
+solved by
+[`nonlinsolve()`](https://adamrsophie.github.io/symcompR/reference/nonlinsolve.md),
+which returns a set of solution tuples, and by
+[`solve_poly_system()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
+through Groebner bases.
 
 ``` r
 
@@ -236,7 +229,7 @@ matches the coefficients of a polynomial identity.
 [`checksol()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
 verifies a candidate solution, and
 [`substitution()`](https://adamrsophie.github.io/symcompR/reference/substitution.md)
-solves a system by successive substitution.
+solves a system by successive substitution and returns a set of tuples.
 
 ``` r
 

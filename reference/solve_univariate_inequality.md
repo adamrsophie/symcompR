@@ -1,21 +1,29 @@
-# Solve univariate inequalities
+# Solve a univariate inequality
 
-Solves polynomial and rational inequalities in one real variable by
-locating the real roots of numerator and denominator and testing the
-sign on each piece, like SymPy's `solve_univariate_inequality()`.
-Returns a relational (default) or a set with `relational = FALSE`.
+`solve_univariate_inequality(expr, x)` solves a real inequality in one
+variable, as SymPy's function of the same name: the critical points come
+from
+[`solvify()`](https://adamrsophie.github.io/symcompR/reference/solvify.md),
+the singularities and the discontinuities of the domain, and a test
+point decides each interval between them.
 
 ## Usage
 
 ``` r
-solve_univariate_inequality(expr, x, relational = TRUE, domain = Reals)
+solve_univariate_inequality(
+  expr,
+  x,
+  relational = TRUE,
+  domain = Reals,
+  continuous = FALSE
+)
 ```
 
 ## Arguments
 
 - expr:
 
-  An inequality such as `x^2 > 4`.
+  A relational such as `x^2 > 4`.
 
 - x:
 
@@ -23,15 +31,19 @@ solve_univariate_inequality(expr, x, relational = TRUE, domain = Reals)
 
 - relational:
 
-  Return a relational instead of a set.
+  Return a relational (default) instead of a set.
 
 - domain:
 
-  The domain, by default the real line.
+  A subset of the real line, `Reals` by default.
+
+- continuous:
+
+  Whether `expr` is known to be continuous on `domain`.
 
 ## Value
 
-A boolean expression or a set.
+A boolean expression, or a set when `relational = FALSE`.
 
 ## Examples
 

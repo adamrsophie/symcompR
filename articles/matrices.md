@@ -886,8 +886,8 @@ rot_givens(0, 1, sym_pi / 3)
 ```
 
 Linear systems and other constructions:
-[`linear_eq_to_matrix()`](https://adamrsophie.github.io/symcompR/reference/solver-helpers.md)
-extracts the coefficient matrix and right hand side,
+[`linear_eq_to_matrix()`](https://adamrsophie.github.io/symcompR/reference/linear_eq_to_matrix.md)
+returns the coefficient matrix and right hand side as a tuple `(A, b)`,
 [`casoratian()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
 is the Casoratian of sequences (the discrete Wronskian), and
 [`symarray()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
@@ -897,15 +897,7 @@ is a matrix of indexed symbols.
 
 k <- Symbol("k", integer = TRUE)
 linear_eq_to_matrix(list(x + 2 * y - 3, 3 * x - y + 1), list(x, y))
-#> $A
-#> Matrix(2, 2)
-#> [1, 2 ]
-#> [3, -1]
-#> 
-#> $b
-#> Matrix(2, 1)
-#> [3 ]
-#> [-1]
+#> (Matrix([[1, 2], [3, -1]]), Matrix([[3], [-1]]))
 casoratian(list(1, 2^k), k)
 #> 1
 symarray("a", c(2, 2))

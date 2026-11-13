@@ -1,11 +1,11 @@
-# Solve a system by substitution
+# Solve a system of equations by substitution
 
 `substitution(system, symbols, result, known_symbols, exclude, all_symbols)`
-solves `system` for `symbols` after substituting each partial solution
-in `result`, and returns a `FiniteSet` of `Tuple`s ordered like
-`all_symbols` (default `symbols`). Unknowns left free stay symbolic.
-This is SymPy's `substitution()` interface over
-[`solve()`](https://rdrr.io/r/base/solve.html).
+solves the equations of `system` one after the other for the unknowns
+`symbols`, substituting the values found so far, as SymPy's
+`substitution()`. It returns a `FiniteSet` of `Tuple`s ordered like
+`all_symbols` (by default `symbols`); unknowns left free stay symbolic,
+and periodic solutions are `ImageSet`s.
 
 ## Usage
 
@@ -24,32 +24,39 @@ substitution(
 
 - system:
 
-  A list of equations.
+  A list of equations or expressions.
 
 - symbols:
 
-  Unknowns.
+  A list of the unknowns.
 
 - result:
 
-  A list of named lists of known values.
+  A list of known partial solutions, each a list of
+  `list(symbol, value)` pairs or a named list.
 
-- known_symbols, exclude:
+- known_symbols:
 
-  Ignored; kept for SymPy compatibility.
+  Symbols whose values are known.
+
+- exclude:
+
+  Expressions that must not vanish, such as denominators.
 
 - all_symbols:
 
-  Symbols to report, in order.
+  The symbols to report, in order.
 
 ## Value
 
-A `FiniteSet`.
+A set of tuples, or a `ConditionSet`.
 
 ## Examples
 
 ``` r
 x <- Symbol("x"); y <- Symbol("y")
-substitution(list(x + y), list(x), list(list(y = 1)), list(y), list(), list(x, y))
+substitution(list(x + y), list(x), list(list(list(y, 1))), list(y), list(), list(x, y))
 #> {(-1, 1)}
+substitution(list(x^2 - 1, y - x), list(x, y))
+#> {(-1, -1), (1, 1)}
 ```
