@@ -1,0 +1,727 @@
+---
+title: "Quantum mechanics"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quantum mechanics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+This vignette covers `sympy.physics.quantum` (states, operators, Hilbert
+spaces, spin, qubits, gates and quantum algorithms),
+`sympy.physics.secondquant` (second quantization),
+`sympy.physics.paulialgebra`, `sympy.physics.hep.gamma_matrices`, and the
+solvable models and angular momentum coefficients of `sympy.physics`
+(hydrogen atom, harmonic oscillators, particle on a ring, Wigner symbols)
+together with `sympy.physics.matrices`.
+
+```{r setup}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y")
+f <- Function("f"); g <- Function("g")
+```
+
+Several functions return R lists of expressions. The small helper `tup()`
+shows such a list compactly as a (nested) `Tuple()`.
+
+```{r}
+tup <- function(v) {
+  do.call(Tuple, lapply(v, function(e) if (is.list(e) && !is_sym(e)) tup(e) else e))
+}
+```
+
+## States, operators and Hilbert spaces
+
+`Ket()` and `Bra()` are abstract states, `Operator()` is an abstract
+operator, and `Dagger()` is the Hermitian conjugate. Products of a bra and
+a ket form inner and outer products.
+
+```{r}
+A <- Operator("A"); Bop <- Operator("B")
+Dagger(A * Bop)
+Dagger(Ket("psi"))
+Dagger(sym_I * A)
+Bra("phi") * Ket("psi")
+Ket("psi") * Bra("phi")
+OuterProduct(Ket("a"), Bra("b"))
+Dagger(OuterProduct(Ket("a"), Bra("b")))
+A * Bop - Bop * A
+```
+
+Quantum objects are Python classes in SymPy. `qattr()` reads an attribute,
+`qcall()` calls a method, `qclass()` gives the class name, and
+`qisinstance()` tests the class hierarchy (`QExpr`, `State`, `StateBase`,
+`KetBase`, `BraBase` and so on).
+
+```{r}
+k <- Ket("psi")
+qattr(k, "label")
+qattr(k, "dual")
+qattr(k, "hilbert_space")
+qcall(k, "dual_class")
+qclass(k)
+qisinstance(k, "QExpr")
+qisinstance(k, "State")
+qisinstance(k, "StateBase")
+qisinstance(k, "KetBase")
+qisinstance(Bra("psi"), "BraBase")
+```
+
+Time dependent states carry a time label, and orthogonal states have
+inner products that evaluate to a Kronecker delta.
+
+```{r}
+TimeDepKet("psi", "t")
+Dagger(TimeDepKet("psi", "t"))
+qattr(TimeDepBra("psi", "t"), "time")
+qisinstance(TimeDepKet("psi", "t"), "TimeDepState")
+OrthogonalBra(1) * OrthogonalKet(2)
+doit(InnerProduct(OrthogonalBra(1), OrthogonalKet(2)))
+doit(InnerProduct(OrthogonalBra(1), OrthogonalKet(1)))
+qisinstance(OrthogonalKet(1), "OrthogonalState")
+```
+
+Special operators: `HermitianOperator()`, `UnitaryOperator()`,
+`IdentityOperator()`, `AntiCommutator()`, and the reduced Planck constant
+`HBar()` (also available as `hbar`).
+
+```{r}
+qcall(HermitianOperator("H"), "inverse")
+Dagger(HermitianOperator("H"))
+Dagger(UnitaryOperator("U")) * UnitaryOperator("U")
+IdentityOperator() * A
+represent(IdentityOperator(2))
+AntiCommutator(Bop, A)
+doit(AntiCommutator(A, Bop))
+HBar()
+2 * hbar
+```
+
+Hilbert spaces combine by direct sums (`+`), tensor products (`*`) and
+tensor powers (`^`); `hs_contains()` tests whether a state lives in a
+space.
+
+```{r}
+ComplexSpace(2) * FockSpace()
+ComplexSpace(2)^3
+qattr(ComplexSpace(2)^3, "dimension")
+qattr(ComplexSpace(2) + FockSpace(), "dimension")
+HilbertSpace()
+L2(Interval(0, 1))
+DirectSumHilbertSpace(ComplexSpace(2), FockSpace())
+TensorProductHilbertSpace(ComplexSpace(2), ComplexSpace(3))
+TensorPowerHilbertSpace(ComplexSpace(2), 3)
+hs_contains(ComplexSpace(2), Qubit("0"))
+hs_contains(ComplexSpace(2), Ket("a"))
+```
+
+Tensor products of operators multiply factor by factor;
+`tensor_product_simp()` performs that simplification and
+`combined_tensor_printing()` switches the combined printing of tensor
+products of kets.
+
+```{r}
+TensorProduct(A, Bop) * TensorProduct(Operator("C"), Operator("D"))
+tensor_product_simp(TensorProduct(A, Bop) * TensorProduct(Operator("C"), Operator("D")))
+combined_tensor_printing(FALSE)
+TensorProduct(Ket("a"), Ket("b"))
+combined_tensor_printing(TRUE)
+```
+
+## Wavefunctions and representations
+
+`Wavefunction()` is a function of position together with its domain;
+`DifferentialOperator()` acts on wavefunctions.
+
+```{r}
+L <- Symbol("L", positive = TRUE)
+psi <- Wavefunction(sqrt(2 / L) * sin(sym_pi * x / L), list(x, 0, L))
+qattr(psi, "norm")
+qattr(Wavefunction(x^2, x), "expr")
+qcall(Wavefunction(x^2, list(x, 0, 1)), "normalize")
+D <- DifferentialOperator(Derivative(f(x), x), f(x))
+D
+qapply(D * Wavefunction(x^3, x))
+```
+
+`qapply()` applies operators to states, and `represent()` gives an
+operator or state in a basis. The position and momentum states and
+operators of `sympy.physics.quantum.cartesian` are the usual continuous
+bases.
+
+```{r}
+qapply(OuterProduct(Ket("a"), Bra("b")) * Ket("c"))
+qapply(XOp() * XKet(x))
+XBra(x) * PxKet(y)
+PxBra(y)
+YOp()
+ZOp()
+PositionKet3D("x", "y", "z")
+Dagger(PositionKet3D("x", "y", "z"))
+PositionBra3D("x", "y", "z")
+qisinstance(PositionKet3D("x", "y", "z"), "PositionState3D")
+operators_to_state(XOp())
+operators_to_state(PxOp())
+state_to_operators(XKet())
+represent(XOp(), basis = XKet())
+represent(XKet(x) * XBra(y), basis = XKet())
+```
+
+The helpers behind `represent()` are exported too: the basis of an
+operator or state, enumerated states, the inner product and expectation
+value forms, and the integration over unities.
+
+```{r}
+get_basis(XKet())
+get_basis(PxOp())
+tup(enumerate_states(XKet(x), 1, 2))
+rep_innerproduct(XKet(x))
+rep_expectation(XOp())
+x_1 <- Symbol("x_1"); x_2 <- Symbol("x_2")
+integrate_result(XOp() * XKet(), x * DiracDelta(x - x_1) * DiracDelta(x_1 - x_2))
+integrate_result(XOp() * XKet(), x * DiracDelta(x - x_1) * DiracDelta(x_1 - x_2),
+                 unities = list(1))
+```
+
+## Bosons, fermions and simple systems
+
+`BosonOp()` and `FermionOp()` are annihilation operators; their daggers
+create particles in Fock states. `normal_ordered_form()` moves creation
+operators to the left using the commutation relations, while
+`normal_order()` only reorders.
+
+```{r}
+a <- BosonOp("a")
+Dagger(a)
+qapply(a * BosonFockKet(2))
+qapply(Dagger(a) * BosonFockKet(2))
+doit(Commutator(a, Dagger(a)))
+BosonFockBra(1) * BosonFockKet(1)
+qapply(a * BosonCoherentKet(x))
+Dagger(BosonCoherentKet(x))
+doit(BosonCoherentBra(x) * BosonCoherentKet(y))
+cf <- FermionOp("c")
+doit(AntiCommutator(cf, Dagger(cf)))
+qapply(Dagger(cf) * FermionFockKet(0))
+qapply(Dagger(cf) * FermionFockKet(1))
+FermionFockBra(0)
+normal_ordered_form(a * Dagger(a))
+normal_order(a * Dagger(a))
+normal_ordered_form(cf * Dagger(cf))
+```
+
+The particle in a box and the one dimensional harmonic oscillator:
+
+```{r}
+n <- Symbol("n"); m <- Symbol("m")
+qapply(PIABHamiltonian("H") * PIABKet(n))
+PIABBra(n) * PIABKet(m)
+qapply(RaisingOp("a") * SHOKet(1))
+qapply(LoweringOp("a") * SHOKet(1))
+qapply(NumberOp("N") * SHOKet(3))
+qapply(Hamiltonian("H") * SHOKet(Symbol("k")))
+represent(NumberOp("N"), ndim = 3)
+represent(RaisingOp("a"), ndim = 3)
+doit(Commutator(LoweringOp("a"), RaisingOp("a")))
+SHOBra(1) * SHOKet(1)
+doit(SHOBra(1) * SHOKet(1))
+```
+
+## Pauli matrices
+
+`SigmaX()`, `SigmaY()`, `SigmaZ()`, `SigmaPlus()` and `SigmaMinus()` are
+the Pauli operators, which act on `SigmaZKet()` states;
+`qsimplify_pauli()` simplifies their products.
+
+```{r}
+sx <- SigmaX(1); sy <- SigmaY(1)
+doit(Commutator(sx, sy))
+qsimplify_pauli(sx * sy)
+qapply(sx * SigmaZKet(0))
+qapply(SigmaZ() * SigmaZKet(1))
+qapply(SigmaMinus() * SigmaZKet(0))
+qapply(SigmaPlus() * SigmaZKet(0))
+represent(SigmaY())
+represent(SigmaPlus())
+SigmaZBra(0) * SigmaZKet(0)
+```
+
+`sympy.physics.paulialgebra` has its own `Pauli()` symbols with the
+product rule $\sigma_i \sigma_j = \delta_{ij} + i \epsilon_{ijk} \sigma_k$.
+
+```{r}
+Pauli(1) * Pauli(2)
+Pauli(3)^2
+evaluate_pauli_product(sym_I * Pauli(2) * Pauli(3))
+```
+
+## Spin and angular momentum
+
+The spin operators `Jx`, `Jy`, `Jz`, `J2`, `Jplus` and `Jminus` act on
+the eigenstates `JxKet()`, `JyKet()` and `JzKet()`. `JxOp()` and its
+siblings create operators with other labels.
+
+```{r}
+JzKet(1, 0)
+qapply(Jz * JzKet(1, 1))
+qapply(Jplus * JzKet(1, 0))
+qapply(Jminus * JzKet(1, 0))
+qapply(J2 * JzKet(1, 0))
+doit(Commutator(Jx, Jy))
+represent(Jx, j = S(1) / 2)
+represent(Jy, j = S(1) / 2)
+represent(JzOp("J"), j = 1)
+JxOp("J"); JyOp("J"); J2Op("J"); JplusOp("J"); JminusOp("J")
+represent(JxKet(S(1) / 2, S(1) / 2), basis = Jz)
+rewrite(JxKet(1, 0), "Jz")
+rewrite(JyKet(1, 1), "Jz")
+JxBra(1, 0)
+JyBra(1, 0)
+JzBra(1, 0) * JzKet(1, 0)
+doit(JzBra(1, 0) * JzKet(1, 0))
+qisinstance(JzKet(1, 0), "SpinState")
+tup(m_values(S(3) / 2))
+```
+
+Coupled states: `couple()` and `uncouple()` convert between product
+states and coupled states.
+
+```{r}
+half <- S(1) / 2
+couple(TensorProduct(JzKet(half, half), JzKet(half, half)))
+uncouple(JzKetCoupled(1, 0, list(half, half)))
+JxKetCoupled(1, 0, list(half, half))
+JyKetCoupled(1, 0, list(half, half))
+JzBraCoupled(1, 0, list(half, half))
+JxBraCoupled(1, 0, list(half, half))
+JyBraCoupled(1, 0, list(half, half))
+qisinstance(JzKetCoupled(1, 0, list(half, half)), "CoupledSpinState")
+```
+
+Rotations and the Wigner D matrix: `Rotation_D()` and `Rotation_d()` are
+SymPy's `Rotation.D` and `Rotation.d`.
+
+```{r}
+doit(WignerD(1, 1, 0, 0, sym_pi / 2, 0))
+Rotation_D(1, 1, 0, sym_pi, sym_pi / 2, -sym_pi)
+doit(Rotation_D(1, 1, 0, sym_pi, sym_pi / 2, -sym_pi))
+doit(Rotation_d(1, 1, 0, sym_pi / 2))
+Rotation(sym_pi, 0, sym_pi / 2)
+qcall(Rotation(sym_pi, 0, sym_pi / 2), "inverse")
+```
+
+Clebsch Gordan coefficients and Wigner symbols as unevaluated objects,
+with `cg_simp()` to simplify sums of them:
+
+```{r}
+doit(CG(1, 0, 1, 0, 2, 0))
+doit(CG(half, half, half, -half, 1, 0))
+doit(Wigner3j(2, 0, 6, 0, 4, 0))
+doit(Wigner6j(1, 2, 3, 2, 1, 2))
+doit(Wigner9j(1, 1, 1, 1, 1, 1, 1, 1, 0))
+cg_simp(CG(1, 1, 0, 0, 1, 1) + CG(1, 0, 0, 0, 1, 0) + CG(1, -1, 0, 0, 1, -1))
+```
+
+## Density matrices
+
+`Tr()` is the trace, also of noncommutative symbols. `fidelity()`
+compares two density matrices.
+
+```{r}
+Tr(Symbol("a") * Symbol("A", commutative = FALSE))
+Tr(Matrix(list(list(1, 1), list(2, 2))))
+doit(Density(list(JzKet(1, 0), 0.5), list(JzKet(1, 1), 0.5)))
+up <- JzKet(half, half); down <- JzKet(half, -half)
+updown <- (up + down) / sqrt(S(2))
+fidelity(represent(up * Dagger(up)), represent(updown * Dagger(updown)))
+fidelity(represent(up * Dagger(up)), represent(up * Dagger(up)))
+```
+
+## Qubits and gates
+
+`Qubit()` is a state of several qubits, written with the most significant
+qubit first; `IntQubit()` labels the same states by an integer.
+
+```{r}
+Qubit("01")
+QubitBra("01")
+qattr(Qubit("01"), "dimension")
+qubit_to_matrix(Qubit("01"))
+matrix_to_qubit(Matrix(list(0, 0, 1, 0)))
+IntQubit(5)
+qcall(IntQubit(5), "as_int")
+IntQubit(2, nqubits = 3)
+IntQubitBra(3)
+Qubit(IntQubit(5))
+qisinstance(Qubit("0"), "QubitState")
+```
+
+Gates act on qubits through `qapply()`, and `represent()` gives their
+matrices.
+
+```{r}
+XGate(0)
+qapply(HadamardGate(0) * Qubit("1"))
+qapply(XGate(0) * Qubit("00"))
+qapply(YGate(0) * Qubit("0"))
+qapply(ZGate(0) * Qubit("1"))
+qapply(PhaseGate(0) * Qubit("1"))
+qapply(TGate(0) * Qubit("1"))
+qapply(CNOT(1, 0) * Qubit("10"))
+qapply(SWAP(0, 1) * Qubit("01"))
+represent(CNOT(1, 0), nqubits = 2)
+represent(SWAP(0, 1), nqubits = 2)
+represent(CPHASE(1, 0), nqubits = 2)
+represent(TGate(0), nqubits = 1)
+represent(IdentityGate(0), nqubits = 1)
+CNotGate(1, 0)
+SwapGate(0, 1)
+qisinstance(XGate(0), "Gate")
+qisinstance(XGate(0), "OneQubitGate")
+qisinstance(SwapGate(0, 1), "TwoQubitGate")
+```
+
+`normalized(FALSE)` drops the factor $1/\sqrt{2}$ from the Hadamard gate;
+`normalized(TRUE)` restores it.
+
+```{r}
+normalized(FALSE)
+represent(HadamardGate(0), nqubits = 1)
+normalized(TRUE)
+```
+
+Controlled gates and gates from a matrix:
+
+```{r}
+CGate(list(0), YGate(1))
+represent(CGate(list(0), YGate(1)), nqubits = 2)
+CGateS(list(0), YGate(1))
+UGate(list(0), Matrix(list(list(0, 1), list(1, 0))))
+represent(UGate(list(0), Matrix(list(list(0, 1), list(1, 0)))), nqubits = 1)
+represent_zbasis(list(1), list(0), Matrix(list(list(0, 1), list(1, 0))), 2)
+```
+
+`gate_simp()` and `gate_sort()` simplify and sort circuits:
+
+```{r}
+gate_simp(HadamardGate(0) * HadamardGate(0))
+gate_simp(XGate(0) * XGate(0) * YGate(1))
+gate_sort(YGate(1) * XGate(0) * ZGate(2))
+gate_sort(XGate(1) * HadamardGate(0)^2 * CNOT(0, 1) * XGate(1) * XGate(0))
+```
+
+The matrix helpers of `sympy.physics.quantum.matrixutils`:
+
+```{r}
+matrix_tensor_product(Matrix(list(list(1, 0), list(0, 1))),
+                      Matrix(list(list(0, 1), list(1, 0))))
+matrix_dagger(Matrix(list(list(1, sym_I), list(0, 2))))
+matrix_to_zero(Matrix(list(list(0, 0), list(0, 0))))
+matrix_eye(2)
+matrix_zeros(2, 3)
+```
+
+## Measurement
+
+`measure_all()` and `measure_partial()` list the possible outcomes with
+their probabilities; `matrix_to_density()` turns a density matrix into a
+`Density` object. The `_oneshot` variants simulate a single measurement,
+so their results are random.
+
+```{r}
+tup(measure_all(qapply(HadamardGate(0) * Qubit("0"))))
+bell <- qapply(HadamardGate(0) * HadamardGate(1) * Qubit("00"))
+tup(measure_partial(bell, list(0)))
+matrix_to_density(Matrix(list(list(1, 0), list(0, 0))))
+matrix_to_density(Matrix(list(list(half, 0), list(0, half))))
+set.seed(1)
+measure_all_oneshot(bell)
+measure_partial_oneshot(bell, list(0))
+```
+
+## Quantum algorithms
+
+The quantum Fourier transform and its inverse decompose into Hadamard,
+controlled phase and swap gates.
+
+```{r}
+QFT(0, 3)
+qcall(QFT(0, 3), "decompose")
+qcall(IQFT(0, 2), "decompose")
+represent(QFT(0, 2), nqubits = 2)
+RkGate(1, 2)
+Rk(1, 2)
+represent(RkGate(0, 3), nqubits = 1)
+```
+
+Grover's search: `OracleGate()` flips the sign of the marked states,
+`WGate()` is the diffusion operator, and `apply_grover()` runs the whole
+algorithm.
+
+```{r}
+oracle_fun <- function(q) isTRUE(q == IntQubit(2, nqubits = 2))
+superposition_basis(2)
+qapply(OracleGate(2, oracle_fun) * IntQubit(2, nqubits = 2))
+qapply(grover_iteration(superposition_basis(2), OracleGate(2, oracle_fun)))
+apply_grover(oracle_fun, 2)
+WGate(2)
+qapply(WGate(1) * Qubit("0"))
+```
+
+Shor's algorithm uses the continued fraction helpers `getr()` and
+`ratioize()`. The controlled modular multiplication gate `CMod()` is not
+finished in SymPy, so `CMod()`, `period_find()` and `shor()` stop with
+SymPy's `NotImplementedError`.
+
+```{r}
+getr(513, 1024, 10)
+ratioize(list(1, 2, 3), 10)
+tryCatch(CMod(4, 2, 15), error = conditionMessage)
+tryCatch(period_find(2, 15), error = conditionMessage)
+set.seed(7)
+tryCatch(shor(15), error = conditionMessage)
+```
+
+## Circuits, QASM and identities
+
+`Qasm()` reads the QASM circuit description language, from separate
+lines, from a string (`read_qasm()`), or from a file
+(`read_qasm_file()`). The gate constructors of the circuit plotting
+module create named gates and measurement gates.
+
+```{r}
+Qasm("qubit q0", "qubit q1", "h q0", "cnot q0,q1")$get_circuit()
+read_qasm("qubit q0\nqubit q1\nh q0\ncnot q0,q1")$get_circuit()
+qasm_file <- tempfile(fileext = ".qasm")
+writeLines(c("qubit q0", "qubit q1", "h q0", "cnot q0,q1"), qasm_file)
+read_qasm_file(qasm_file)$get_circuit()
+labeller(3)
+Mz(0)
+Mx(0)
+CreateOneQubitGate("Q")(1)
+CreateCGate("V")(list(0), 1)
+```
+
+Circuit utilities find and replace subcircuits, and convert between
+numbered and symbolic qubit indices.
+
+```{r}
+tup(kmp_table(list("A", "B", "C", "D", "A", "B", "D")))
+find_subcircuit(XGate(0) * YGate(0) * XGate(0), YGate(0) * XGate(0))
+tup(replace_subcircuit(XGate(0) * YGate(0) * XGate(0), list(YGate(0))))
+tup(replace_subcircuit(XGate(0) * YGate(0) * XGate(0), list(YGate(0)),
+                       list(ZGate(0), ZGate(0))))
+tup(convert_to_symbolic_indices(list(XGate(0), YGate(1), CNOT(1, 0)))[[1]])
+symbolic <- convert_to_symbolic_indices(list(XGate(5), YGate(7)))
+tup(convert_to_real_indices(symbolic[[1]], symbolic[[2]]))
+```
+
+A gate identity is a circuit equal to a scalar multiple of the identity.
+`GateIdentity()` stores one together with its equivalent rearrangements,
+and the identity search functions look for identities among a set of
+gates. The rules and equivalent identities are sets, so only their sizes
+are shown here.
+
+```{r}
+gi <- GateIdentity(XGate(0), XGate(0))
+gi
+length(generate_gate_rules(list(XGate(0), YGate(0), ZGate(0))))
+length(generate_equivalent_ids(list(XGate(0), YGate(0), ZGate(0))))
+is_scalar_matrix(list(XGate(0), XGate(0)), 1, FALSE)
+is_scalar_sparse_matrix(list(XGate(0), XGate(0)), 1, FALSE)
+is_scalar_nonsparse_matrix(list(XGate(0), YGate(0)), 1, FALSE)
+is_reducible(list(XGate(0), YGate(0), ZGate(0)), 1, 0, 3)
+is_degenerate(list(GateIdentity(XGate(0), YGate(0), ZGate(0))),
+              GateIdentity(YGate(0), ZGate(0), XGate(0)))
+length(bfs_identity_search(list(XGate(0), YGate(0), ZGate(0)), 1, max_depth = 2))
+```
+
+The random circuit tools draw gates at random:
+
+```{r}
+set.seed(7)
+random_circuit(4, 2)
+tup(random_insert(list(XGate(0), YGate(0)), list(list(XGate(0), XGate(0))), seed = 1))
+tup(random_reduce(XGate(0) * YGate(0) * YGate(0),
+                  list(GateIdentity(YGate(0), YGate(0))), seed = 1))
+tup(random_identity_search(list(XGate(0), YGate(0), ZGate(0)), 2, 1))
+```
+
+## Second quantization
+
+`sympy.physics.secondquant` has bosonic (`B()`, `Bd()`) and fermionic
+(`sym_F()`, `Fd()`) annihilation and creation operators acting on
+occupation number states. Its `Dagger`, `Commutator` and `InnerProduct`
+are exported as `sq_Dagger()`, `sq_Commutator()` and `sq_InnerProduct()`.
+
+```{r}
+p <- Symbol("p"); q <- Symbol("q")
+B(0)
+Bd(0)
+sq_Dagger(B(0))
+BKet(list(1, 2))
+BBra(list(1, 2))
+apply_operators(Bd(0) * BKet(list(1, 2)))
+apply_operators(B(1) * BKet(list(1, 2)))
+sq_InnerProduct(BBra(list(1, 2)), BKet(list(1, 2)))
+sq_Commutator(B(0), Bd(0))
+sq_Commutator(sym_F(p), Fd(q))
+Fd(p) * sym_F(q)
+FKet(list(1, 2))
+FBra(list(1, 2))
+apply_operators(Fd(3) * FKet(list(1, 2)))
+apply_operators(sym_F(1) * FKet(list(1, 2)))
+```
+
+The underlying classes can also be called directly:
+
+```{r}
+AnnihilateBoson(0)
+CreateBoson(0)
+AnnihilateFermion(p)
+CreateFermion(p)
+FockStateBosonKet(list(1, 2))
+FockStateBosonBra(list(1, 2))
+FockStateFermionKet(list(1, 2))
+FockStateFermionBra(list(1, 2))
+SqOperator(0)
+BosonicOperator(0)
+FermionicOperator(p)
+FockState(list(1, 2))
+FockStateKet(list(1, 2))
+FockStateBra(list(1, 2))
+BosonState(list(1, 2))
+FermionState(list(1, 2))
+```
+
+Bosonic bases and matrix representations:
+
+```{r}
+VarBosonicBasis(3)
+FixedBosonicBasis(2, 2)
+matrix_rep(Bd(0) * B(0), VarBosonicBasis(3))
+matrix_rep(B(0), VarBosonicBasis(3))
+```
+
+Indices above and below the Fermi level are symbols with the
+`above_fermi` and `below_fermi` assumptions. `NO()` is the normal ordered
+product, `contraction()` the contraction of two operators, and `wicks()`
+applies Wick's theorem.
+
+```{r}
+i <- Symbol("i", below_fermi = TRUE); j <- Symbol("j", below_fermi = TRUE)
+ab <- Symbol("a", above_fermi = TRUE); bb <- Symbol("b", above_fermi = TRUE)
+FKet(list(i, ab), fermi_level = 1)
+NO(sym_F(i) * Fd(ab))
+NO(Fd(ab) * sym_F(i))
+contraction(Fd(i), sym_F(j))
+contraction(sym_F(ab), Fd(bb))
+contraction(sym_F(p), Fd(q))
+wicks(sym_F(p) * Fd(q))
+wicks(Fd(p) * sym_F(q))
+wicks(sym_F(i) * Fd(j) * sym_F(ab) * Fd(bb))
+evaluate_deltas(KroneckerDelta(i, j) * sym_F(j))
+evaluate_deltas(KroneckerDelta(p, q) * sym_F(q))
+```
+
+Antisymmetric tensors, index permutations and dummy substitution:
+
+```{r}
+AntiSymmetricTensor("v", list(ab, i), list(bb, j))
+AntiSymmetricTensor("v", list(i, ab), list(bb, j))
+PermutationOperator(p, q)
+qcall(PermutationOperator(p, q), "get_permuted", f(p, q))
+simplify_index_permutations(f(p) * g(q) - f(q) * g(p), list(PermutationOperator(p, q)))
+substitute_dummies(
+  AntiSymmetricTensor("t", list(Dummy("a", above_fermi = TRUE)), list(Dummy("i", below_fermi = TRUE))) -
+  AntiSymmetricTensor("t", list(Dummy("b", above_fermi = TRUE)), list(Dummy("j", below_fermi = TRUE))))
+```
+
+## Dirac gamma matrices
+
+`GammaMatrix()` is the Dirac gamma matrix with a Lorentz index
+(`LorentzIndex` is the index type). `kahane_simplify()` removes contracted
+gamma matrices, `gamma_trace()` takes traces, and `simplify_gpgp()`
+simplifies products of slashed momenta.
+
+```{r}
+i0 <- TensorIndex("i0", LorentzIndex); i1 <- TensorIndex("i1", LorentzIndex)
+i2 <- TensorIndex("i2", LorentzIndex); i3 <- TensorIndex("i3", LorentzIndex)
+kahane_simplify(GammaMatrix(i0) * GammaMatrix(i1) * GammaMatrix(-i0))
+kahane_simplify(GammaMatrix(i0) * GammaMatrix(-i0))
+kahane_simplify(GammaMatrix(i0) * GammaMatrix(i1) * GammaMatrix(i2) * GammaMatrix(-i0))
+gamma_trace(GammaMatrix(i0) * GammaMatrix(i1))
+gamma_trace(GammaMatrix(i0) * GammaMatrix(i1) * GammaMatrix(i2) * GammaMatrix(i3))
+gamma_trace(GammaMatrix(i0) * GammaMatrix(-i0))
+simplify_gamma_expression(GammaMatrix(i0) * GammaMatrix(-i0))
+pm <- TensorHead("p", list(LorentzIndex)); qm <- TensorHead("q", list(LorentzIndex))
+simplify_gpgp(pm(i0) * GammaMatrix(-i0) * pm(i1) * GammaMatrix(-i1))
+extract_type_tens(pm(i0) * GammaMatrix(-i0) * qm(i1), GammaMatrix)
+```
+
+## Solvable models
+
+The hydrogen atom (`sympy.physics.hydrogen`), the three dimensional
+isotropic harmonic oscillator (`sympy.physics.sho`), the one dimensional
+harmonic oscillator (`sympy.physics.qho_1d`) and the particle on a ring
+(`sympy.physics.pring`). The functions carry the module name as a prefix.
+
+```{r}
+r <- Symbol("r"); theta <- Symbol("theta"); phi <- Symbol("phi")
+hydrogen_R_nl(1, 0, r)
+hydrogen_R_nl(2, 1, r, 1)
+hydrogen_E_nl(2)
+hydrogen_E_nl_dirac(2, 0)
+hydrogen_E_nl_dirac(2, 0, Z = 1, c = 1)
+hydrogen_Psi_nlm(2, 1, 1, r, phi, theta)
+hydrogen_Y_lm(1, 0, theta, phi)
+hydrogen_Z_lm(1, 1, theta, phi)
+sho_R_nl(0, 0, 1, r)
+sho_E_nl(1, 2, Symbol("hw"))
+qho_psi_n(0, x, 1, 1)
+qho_psi_n(1, x, Symbol("m"), Symbol("omega"))
+qho_E_n(1, Symbol("omega"))
+qho_coherent_state(2, 0.5)
+pring_wavefunction(1, x)
+pring_energy(1, Symbol("m"), Symbol("r"))
+```
+
+## Wigner symbols and Gaunt coefficients
+
+`sympy.physics.wigner` evaluates the angular momentum coupling
+coefficients exactly.
+
+```{r}
+wigner_3j(2, 6, 4, 0, 0, 0)
+clebsch_gordan(Rational(3, 2), S_Half, 2, Rational(3, 2), S_Half, 2)
+wigner_6j(3, 3, 3, 3, 3, 3)
+wigner_9j(1, 1, 1, 1, 1, 1, 1, 1, 0)
+wigner_9j(1, 1, 1, 1, 1, 1, 1, 1, 0, prec = 20)
+racah(3, 3, 3, 3, 3, 3)
+gaunt(1, 0, 1, 1, 0, -1)
+real_gaunt(2, 2, 2, 0, 2, 2)
+doit(dot_rot_grad_Ynm(3, 2, 2, 0, theta, phi))
+wigner_d_small(S_Half, S_Pi / 2)
+wigner_d(S_Half, Symbol("a"), Symbol("b"), Symbol("c"))
+```
+
+## Physics matrices
+
+`sympy.physics.matrices` has the Pauli matrices, the Dirac gamma matrices,
+the Minkowski metric, the parallel axis theorem matrix, and the (deprecated)
+discrete Fourier transform matrix `mdft()`, which now points to `DFT()`.
+
+```{r}
+msigma(1)
+msigma(1) %*% msigma(2)
+mgamma(0)
+mgamma(5)
+mgamma(1, TRUE)
+minkowski_tensor
+pat_matrix(2, 1, 0, 0)
+suppressWarnings(mdft(2))
+```

@@ -404,3 +404,93 @@ linear_eq_to_matrix(list(x + 2 * y - 3, 3 * x - y + 1), list(x, y))
 casoratian(list(1, 2^k), k)
 symarray("a", c(2, 2))
 ```
+
+## Structured matrix expressions
+
+`CompanionMatrix()` is the companion matrix of a monic polynomial, and
+`DFT()` and `IDFT()` are the unitary discrete Fourier transform matrix and
+its inverse. `MatrixUnit(rows, cols, i, j)` has a single one in position
+`(i, j)`, with zero based indices as in SymPy.
+
+```{r}
+as_explicit(CompanionMatrix(Poly(x^3 + 2 * x + 5, x)))
+as_explicit(DFT(2))
+as_explicit(IDFT(2))
+as_explicit(MatrixUnit(2, 2, 0, 1))
+```
+
+The factors of a matrix factorization are matrix expressions of their own:
+`LofLU()` and `UofLU()`, `LofCholesky()` and `UofCholesky()`, `QofQR()` and
+`RofQR()`, `EigenValues()` and `EigenVectors()`, and `UofSVD()`,
+`SofSVD()` and `VofSVD()`. The functions `mat_lu()`, `mat_qr()`,
+`mat_eig()` and `mat_svd()` return all the factors at once.
+
+```{r}
+k <- Symbol("k")
+Xk <- MatrixSymbol("X", k, k)
+LofLU(Xk)
+mat_shape(UofLU(Xk))
+LofCholesky(Xk)
+UofCholesky(Xk)
+QofQR(Xk)
+RofQR(Xk)
+EigenValues(Xk)
+EigenVectors(Xk)
+UofSVD(Xk)
+SofSVD(Xk)
+VofSVD(Xk)
+do.call(Tuple, mat_lu(Xk))
+do.call(Tuple, mat_qr(Xk))
+do.call(Tuple, mat_eig(Xk))
+do.call(Tuple, mat_svd(Xk))
+```
+
+`GenericIdentity()` and `GenericZeroMatrix()` are an identity and a zero
+matrix of unspecified size. `hadamard_power()` is the elementwise power,
+`combine_kronecker()` combines sums and products of Kronecker products, and
+`ElementwiseApplyFunction()` applies a scalar function to every entry.
+
+```{r}
+Pk <- MatrixSymbol("P", k, k); Qk <- MatrixSymbol("Q", k, k)
+GenericIdentity()
+GenericZeroMatrix()
+Pk * GenericIdentity()
+hadamard_power(Pk, 2)
+combine_kronecker(kronecker_product(Pk, Qk) + kronecker_product(Qk, Qk))
+combine_kronecker(kronecker_product(Pk, Qk) * kronecker_product(Qk, Xk))
+ElementwiseApplyFunction(sin, Xk)
+as_explicit(ElementwiseApplyFunction(exp, MatrixSymbol("Y", 2, 2)))
+```
+
+`MatrixSet(n, m, set)` is the set of `n` by `m` matrices with entries in
+`set`; `matrix_set_contains()` tests membership.
+
+```{r}
+M22 <- MatrixSet(2, 2, Reals)
+M22
+matrix_set_contains(M22, Matrix(list(list(1, 2), list(3, 4))))
+matrix_set_contains(M22, Matrix(list(list(1, 2), list(3, sym_I))))
+```
+
+`dotprodsimp()` is the light simplification that matrix routines apply to
+the intermediate sums of products:
+
+```{r}
+dotprodsimp(x / (x - 1) - 1 / (x - 1))
+```
+
+## Derivatives of matrix expressions
+
+`diff()` differentiates a scalar or matrix valued matrix expression with
+respect to a matrix symbol. A scalar function such as a trace has a matrix
+derivative; a matrix valued function has a derivative of rank four, written
+as an array expression (see the arrays and tensors vignette).
+`matrix_derive()` does the same and converts the result back to matrix form
+where possible.
+
+```{r}
+diff(Trace(Xk^2), Xk)
+diff(Trace(Pk * Xk * Qk), Xk)
+matrix_derive(Trace(Pk * Xk), Xk)
+matrix_derive(t(Xk) * Pk * Xk, Xk)
+```

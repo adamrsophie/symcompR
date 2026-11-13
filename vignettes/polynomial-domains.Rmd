@@ -134,3 +134,82 @@ and flags.
 ```{r}
 Options(list(x, y), list(domain = "QQ"))
 ```
+
+## Domain matrices
+
+A `DomainMatrix` is a matrix whose entries are elements of a domain, the
+fast matrix type that SymPy uses internally. `DM()` builds one from a list
+of rows; the other constructors build it from flat lists, dictionaries,
+SymPy matrices or expressions, or as special matrices.
+
+```{r}
+A <- DM(list(list(1, 2), list(3, 4)), ZZ)
+A
+A$det()
+A$rank()
+A$rref()
+A$charpoly()
+A$transpose()
+A$convert_to(QQ)$inv()
+A * A
+A$to_Matrix()
+DomainMatrix(list(list(ZZ(1), ZZ(2)), list(ZZ(3), ZZ(4))), c(2, 2), ZZ)
+DomainMatrix_from_list(list(list(1, 2), list(3, 4)), ZZ)
+DomainMatrix_from_list_flat(list(ZZ(1), ZZ(2), ZZ(3), ZZ(4)), c(2, 2), ZZ)
+DomainMatrix_from_dod(list(`0` = list(`0` = ZZ(5)), `1` = list(`1` = ZZ(7))), c(2, 2), ZZ)
+DomainMatrix_from_dok(list(`0,1` = ZZ(3)), c(2, 2), ZZ)
+DomainMatrix_from_Matrix(Matrix(list(list(1, x), list(0, 2))))
+DomainMatrix_from_list_sympy(1, 2, list(list(Rational(1, 2), x)))
+DomainMatrix_from_dict_sympy(2, 2, list(`0` = list(`0` = x), `1` = list(`1` = Rational(1, 2))))
+DomainMatrix_diag(list(ZZ(1), ZZ(2)), ZZ)
+DomainMatrix_eye(2, QQ)
+DomainMatrix_ones(c(2, 3), ZZ)
+DomainMatrix_zeros(c(2, 2), ZZ)
+```
+
+The dense (`DDM`) and sparse (`SDM`) representations can be used
+directly, and `DomainMatrix_from_rep()` wraps one:
+
+```{r}
+D <- DDM(list(list(ZZ(1), ZZ(2)), list(ZZ(3), ZZ(4))), c(2, 2), ZZ)
+D
+D$det()
+D$charpoly()
+Sp <- SDM(list(`0` = list(`1` = ZZ(2))), c(2, 2), ZZ)
+Sp
+Sp$to_ddm()
+DomainMatrix_from_rep(Sp)
+```
+
+The Smith normal form of an integer matrix, with the unimodular matrices
+that produce it:
+
+```{r}
+smith_normal_decomp(DM(list(list(12, 6, 4), list(3, 9, 6), list(2, 16, 14)), ZZ))
+is_smith_normal_form(DM(list(list(1, 0), list(0, 2)), ZZ))
+is_smith_normal_form(DM(list(list(2, 0), list(0, 3)), ZZ))
+```
+
+A `DomainScalar` is a domain element that knows its domain, so that
+arithmetic unifies the domains:
+
+```{r}
+DomainScalar(ZZ(3), ZZ) + DomainScalar(QQ(1, 2), QQ)
+DomainScalar(ZZ(3), ZZ)$to_sympy()
+DomainScalar_from_sympy(Rational(3, 4))
+DomainScalar_from_sympy(Rational(3, 4))$domain
+```
+
+## Power series rings
+
+`PythonPowerSeriesRingZZ()` and `PythonPowerSeriesRingQQ()` are rings of
+truncated univariate power series with integer and rational coefficients:
+
+```{r}
+Rz <- PythonPowerSeriesRingZZ()
+Rz$pretty(Rz$pow_int(Rz(c(1, 2, 3)), 2))
+Rz$pretty(Rz$inverse(Rz(c(1, 1))))
+Rq <- PythonPowerSeriesRingQQ(4)
+Rq$pretty(Rq$exp(Rq$gen))
+Rq$pretty(Rq$log(Rq(c(1, 1))))
+```

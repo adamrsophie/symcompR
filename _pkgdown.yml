@@ -31,10 +31,12 @@ articles:
   contents:
   - calculus
   - integration
+  - quadrature-and-polytopes
   - series-and-sequences
   - holonomic
   - special-functions
   - solvers
+  - statistics
 - title: Discrete mathematics and algebra
   navbar: Discrete mathematics and algebra
   contents:
@@ -54,11 +56,15 @@ articles:
   - tensors
   - differential-geometry
   - physics-units
+  - mechanics
+  - quantum-mechanics
+  - physics-engineering
 - title: Input, output, and utilities
   navbar: Input, output, and utilities
   contents:
   - printing
   - code-printers
+  - code-generation
   - parsing
   - other-modules
   - aliases-and-conditions

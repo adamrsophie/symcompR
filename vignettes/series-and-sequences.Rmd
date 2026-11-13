@@ -215,3 +215,60 @@ residue(1 / (x^2 + 1), x, sym_I)
 residue(exp(z) / z^3, z, 0)
 residue(cot(sym_pi * z), z, 0)
 ```
+
+## Guessing and accelerating sequences
+
+The functions of `sympy.concrete.guess` find a formula, a linear
+recurrence or a generating function that fits the first terms of a
+sequence.
+
+```{r}
+fib <- c(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
+find_simple_recurrence_vector(fib)
+find_simple_recurrence(fib)
+guess(c(1, 2, 6, 24, 120))
+guess(c(1, 3, 6, 10, 15, 21))
+guess_generating_function_rational(c(5, 8, 13, 21, 34, 55, 89, 144))
+guess_generating_function(c(1, 2, 4, 8, 16, 32))$ogf
+rationalize(pi, maxcoeff = 250)
+```
+
+`richardson()` and `shanks()` accelerate the convergence of a sequence
+toward its limit:
+
+```{r}
+richardson((1 + 1 / k)^k, k, 10, 3)
+shanks(1 - 1 / k, k, 4)
+```
+
+`finite_diff()` is the forward difference of an expression and
+`finite_diff_kauers()` the difference of a sum with respect to its upper
+limit:
+
+```{r}
+m <- Symbol("m")
+finite_diff(x^2 + 2 * x + 1, x)
+finite_diff_kauers(Sum(x^2, list(x, 1, m)))
+```
+
+`pade_approximants_gcdex()` lists the Padé approximants of a truncated
+power series from the steps of the extended Euclidean algorithm, and
+`pade_approximant_gcdex()` picks the one with given degrees:
+
+```{r}
+f <- 1 + x + x^2 / 2 + x^3 / 6 + x^4 / 24
+lapply(pade_approximants_gcdex(Poly(f, x), 2), function(pq) lapply(pq, as_expr))
+lapply(pade_approximant_gcdex(Poly(f, x), 2), as_expr)
+lapply(pade_approximant_gcdex(Poly(f, x), 3, 1), as_expr)
+```
+
+`recurrence_memo()` and `assoc_recurrence_memo()` build memoized
+functions for sequences defined by recurrences, with one or two indices:
+
+```{r}
+fibm <- recurrence_memo(list(0, 1))(function(n, prev) prev[[n]] + prev[[n - 1]])
+fibm(30)
+binom <- assoc_recurrence_memo(function(i) 1)(
+  function(i, j, prev) prev[[i + 1]][[j]] * (i - j + 1) / j)
+binom(5, 2)
+```

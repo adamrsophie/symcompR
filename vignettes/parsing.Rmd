@@ -133,3 +133,15 @@ returns nested lists, with the head of each expression first.
 ```{r}
 parse_mathematica_to_fullformlist("x + Sin[y]")
 ```
+
+## SMT-LIB
+
+`parse_smtlib()` reads declarations and assertions in the SMT-LIB format.
+Declaring a constant of sort `Int` or `Real` adds the matching predicate
+to the assertions.
+
+```{r}
+r <- parse_smtlib("(declare-const x Int) (declare-const y Int) (assert (= (+ x y) 10))")
+r$symbols$x
+r$assertions
+```

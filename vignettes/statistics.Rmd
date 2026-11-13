@@ -1,0 +1,289 @@
+---
+title: "Statistics and random variables"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Statistics and random variables}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+`sympy.stats` computes with random variables symbolically: densities,
+probabilities, expectations, moments and conditional distributions, for
+continuous, discrete, finite, joint and matrix valued random variables,
+random matrices and stochastic processes. The vignette on other modules
+shows the most common distributions (`Normal()`, `Exponential()`,
+`Poisson()`, `Die()` and others); this one covers the rest.
+
+SymPy's `density()` returns a function. In R, `rv_density(X, z)` evaluates
+it at `z`, and `apply_lambda()` evaluates the function objects returned by
+`rv_density(X)`, `rv_quantile()`, `characteristic_function()` and the
+other functions of several arguments.
+
+```{r setup}
+library(symcompR)
+z <- Symbol("z"); x1 <- Symbol("x1"); x2 <- Symbol("x2")
+X <- Normal("X", 0, 1); Y <- Normal("Y", 0, 1)
+D6 <- Die("D", 6)
+```
+
+## Random variables and their probability spaces
+
+`random_symbols()` lists the random variables of an expression,
+`is_random()` tests for them, and `pspace()` returns the probability space.
+`given()` conditions on an event, and `where()` gives the domain on which
+a condition holds; `rv_attr()` reads the attributes of these objects.
+
+```{r}
+random_symbols(2 * X + Y)
+is_random(X^2)
+pspace(X)
+E(given(X, X > 0))
+rv_density(given(D6, D6 > 3))
+rv_attr(where(X^2 <= 1), "set")
+dependent(X, 2 * X)
+independent(X, Y)
+probability(X > 0)
+rs_swap(list(X, Y), list(Y, X))
+```
+
+`Density()` is the unevaluated density, and `characteristic_function()`,
+`moment_generating_function()` and `rv_quantile()` are the other functions
+that describe a distribution.
+
+```{r}
+Density(X)
+doit(Density(X))
+apply_lambda(characteristic_function(X), z)
+apply_lambda(moment_generating_function(X), z)
+apply_lambda(characteristic_function(D6), z)
+apply_lambda(rv_quantile(Exponential("T", 2)), z)
+apply_lambda(rv_quantile(D6), S(1) / 2)
+rv_median(D6)
+rv_median(Exponential("T", 2))
+```
+
+## Moments and other summaries
+
+```{r}
+standard_deviation(Exponential("T", 2))
+smoment(X, 4)
+factorial_moment(Poisson("Po", 2), 2)
+coskewness(X, X, X)
+entropy(Normal("N", 0, 2))
+```
+
+The capitalized functions are unevaluated, and evaluate with `doit()`:
+
+```{r}
+Expectation(X^2)
+doit(Expectation(X^2))
+doit(Variance(2 * X + 1))
+expand(Variance(X + Y))
+Covariance(X, Y)
+doit(Covariance(X, 2 * X))
+Probability(X > 0)
+doit(Probability(X > 0))
+doit(Moment(X, 3, 1))
+doit(CentralMoment(X, 4))
+rewrite(Variance(X), "Expectation")
+```
+
+`RandomSymbol()` wraps a symbol as a random variable without a
+distribution, and `variance_prop()` propagates the variances of
+independent variables through an expression.
+
+```{r}
+RandomSymbol(Symbol("x"))
+variance_prop(Symbol("x") * Symbol("y"))
+variance_prop(Symbol("x") + Symbol("y"), include_covar = TRUE)
+```
+
+## Continuous distributions
+
+Each distribution function takes a name and its parameters.
+
+```{r}
+rv_density(Arcsin("X", 0, 1), z)
+rv_density(Benini("X", 1, 2, 3), z)
+rv_density(BetaNoncentral("X", 1, 2, 3), z)
+rv_density(BetaPrime("X", 2, 3), z)
+rv_density(BoundedPareto("X", 2, 1, 4), z)
+rv_density(ChiRV("X", 3), z)
+rv_density(ChiNoncentral("X", 2, 3), z)
+rv_density(Dagum("X", 1, 2, 3), z)
+rv_density(Davis("X", 2, 3, 1), z)
+rv_density(Erlang("X", 2, 3), z)
+E(Erlang("X", 2, 3))
+rv_density(ExGaussian("X", 0, 1, 2), z)
+rv_density(ExponentialPower("X", 0, 1, 2), z)
+rv_density(FDistribution("X", 2, 4), z)
+rv_density(FisherZ("X", 2, 4), z)
+rv_density(Frechet("X", 2, 1, 0), z)
+rv_density(GammaInverse("X", 2, 3), z)
+rv_density(GaussianInverse("X", 1, 2), z)
+rv_density(Wald("X", 1, 2), z)
+rv_density(Gompertz("X", 1, 2), z)
+rv_density(Gumbel("X", 1, 0), z)
+rv_density(Kumaraswamy("X", 2, 3), z)
+rv_density(Levy("X", 0, 1), z)
+rv_density(LogCauchy("X", 0, 1), z)
+rv_density(LogLogistic("X", 1, 2), z)
+rv_density(Logistic("X", 0, 1), z)
+rv_density(LogitNormal("X", 0, 1), z)
+rv_density(Lomax("X", 2, 3), z)
+rv_density(Maxwell("X", 2), z)
+E(Maxwell("X", 2))
+rv_density(Moyal("X", 0, 1), z)
+rv_density(Nakagami("X", 1, 2), z)
+rv_density(PowerFunction("X", 2, 0, 1), z)
+rv_density(QuadraticU("X", 0, 2), z)
+rv_density(RaisedCosine("X", 0, 1), z)
+rv_density(Rayleigh("X", 2), z)
+E(Rayleigh("X", 2))
+rv_density(Reciprocal("X", 1, 4), z)
+rv_density(ShiftedGompertz("X", 1, 2), z)
+rv_density(SkewNormal("X", 0, 1, 2), z)
+rv_density(Trapezoidal("X", 0, 1, 2, 3), z)
+rv_density(Triangular("X", 0, 2, 1), z)
+E(Triangular("X", 0, 2, 1))
+rv_density(UniformSum("X", 2), z)
+rv_density(VonMises("X", 0, 1), z)
+rv_density(WignerSemicircle("X", 1), z)
+E(WignerSemicircle("X", 1))
+```
+
+`ContinuousRV()` builds a random variable from any density:
+
+```{r}
+s <- Symbol("x")
+Xc <- ContinuousRV(s, exp(-s), set = Interval(0, oo))
+rv_density(Xc, z)
+E(Xc)
+```
+
+## Discrete and finite distributions
+
+```{r}
+rv_density(FlorySchulz("X", S(1) / 2), z)
+rv_density(Hermite("X", 1, 2), z)
+E(Hermite("X", 1, 2))
+rv_density(Logarithmic("X", S(1) / 2), z)
+rv_density(NegativeBinomial("X", 5, S(1) / 3), z)
+E(NegativeBinomial("X", 5, S(1) / 3))
+rv_density(Skellam("X", 1, 2), z)
+E(Skellam("X", 1, 2))
+rv_density(YuleSimon("X", 3), z)
+rv_density(Zeta("X", 3), z)
+```
+
+`DiscreteRV()` builds a discrete random variable from a probability mass
+function on a set of integers:
+
+```{r}
+Xd <- DiscreteRV(s, S(1) / 2^s, set = Naturals)
+Xd
+```
+
+Finite distributions list their values and probabilities:
+
+```{r}
+rv_density(BetaBinomial("X", 2, 1, 1))
+rv_density(Coin("C"))
+rv_density(Coin("C", S(1) / 3))
+rv_density(DiscreteUniform("X", list(1, 2, 3)))
+Xf <- FiniteRV("X", list("1" = S(1) / 2, "2" = S(1) / 4, "3" = S(1) / 4))
+rv_density(Xf)
+E(Xf)
+rv_density(Hypergeometric("X", 10, 5, 3))
+rv_density(IdealSoliton("X", 3))
+rv_density(Rademacher("X"))
+rv_density(RobustSoliton("X", 3, S(1) / 2, S(1) / 10))
+```
+
+## Joint distributions
+
+Joint random variables have densities in several variables;
+`rv_getitem()` extracts a component (with SymPy's zero based index).
+
+```{r}
+M <- Multinomial("M", 3, S(1) / 2, S(1) / 2)
+apply_lambda(rv_density(M), 1, 2)
+rv_getitem(M, 0)
+apply_lambda(rv_density(Dirichlet("D", list(1, 2))), x1, x2)
+apply_lambda(rv_density(MultivariateBeta("B", 1, 2)), x1, x2)
+apply_lambda(rv_density(MultivariateLaplace("L", list(0, 0), list(list(1, 0), list(0, 1)))), x1, x2)
+apply_lambda(rv_density(MultivariateT("T", list(0, 0), list(list(1, 0), list(0, 1)), 2)), x1, x2)
+apply_lambda(rv_density(NegativeMultinomial("N", 2, S(1) / 4, S(1) / 4)), x1, x2)
+apply_lambda(rv_density(MultivariateEwens("E", 2, 1)), 1, 0)
+apply_lambda(rv_density(NormalGamma("G", 0, 1, 2, 3)), x1, x2)
+MN2 <- MultivariateNormal("A", list(1, 2), list(list(1, 0), list(0, 1)))
+apply_lambda(rv_density(MN2), 1, 2)
+expand(apply_lambda(rv_density(MN2), x1, x2))
+apply_lambda(rv_density(GeneralizedMultivariateLogGamma("G", S(1) / 2, 1, list(1, 1), list(1, 1))), x1, x2)
+omega <- Matrix(list(list(1, S(1) / 2), list(S(1) / 2, 1)))
+apply_lambda(rv_density(GeneralizedMultivariateLogGammaOmega("G", omega, 1, list(1, 1), list(1, 1))), x1, x2)
+```
+
+`JointRV()` builds a joint distribution from a density written with
+indexed symbols, and `marginal_distribution()` integrates out components.
+
+```{r}
+J <- JointRV("J", exp(-Indexed("J", 0) - Indexed("J", 1)),
+             ProductSet(Interval(0, oo), Interval(0, oo)))
+apply_lambda(rv_density(J), x1, x2)
+apply_lambda(marginal_distribution(M, 0), 1)
+```
+
+## Matrix distributions and random matrices
+
+Matrix valued random variables take values in a set of matrices:
+
+```{r}
+MG <- MatrixGamma("M", 1, 2, list(list(1, 0), list(0, 1)))
+apply_lambda(rv_density(MG), MatrixSymbol("Xm", 2, 2))
+rv_attr(rv_attr(rv_attr(MG, "pspace"), "distribution"), "set")
+W <- Wishart("W", 3, list(list(1, 0), list(0, 1)))
+apply_lambda(rv_density(W), MatrixSymbol("Xm", 2, 2))
+MN <- MatrixNormal("M", list(list(1, 2)), list(1), list(list(1, 0), list(0, 1)))
+rv_attr(rv_attr(rv_attr(MN, "pspace"), "distribution"), "set")
+MT <- MatrixStudentT("M", 2, list(list(1, 2)), list(list(1, 0), list(0, 1)), list(1))
+rv_attr(rv_attr(rv_attr(MT, "pspace"), "distribution"), "set")
+```
+
+The Gaussian and circular ensembles of random matrix theory, with their
+joint eigenvalue and level spacing distributions:
+
+```{r}
+GaussianEnsemble("U", 2)
+CircularEnsemble("C", 2)
+GaussianUnitaryEnsemble("U", 2)
+apply_lambda(level_spacing_distribution(GaussianUnitaryEnsemble("U", 2)), z)
+apply_lambda(level_spacing_distribution(GaussianOrthogonalEnsemble("U", 2)), z)
+apply_lambda(level_spacing_distribution(GaussianSymplecticEnsemble("U", 2)), z)
+joint_eigen_distribution(GaussianUnitaryEnsemble("U", 2))
+joint_eigen_distribution(CircularUnitaryEnsemble("C", 2))
+joint_eigen_distribution(CircularOrthogonalEnsemble("C", 2))
+joint_eigen_distribution(CircularSymplecticEnsemble("C", 2))
+JointEigenDistribution(Matrix(list(list(Normal("a", 0, 1), 0), list(0, Normal("b", 0, 1)))))
+RandomMatrixSymbol("R", 2, 2)
+```
+
+## Stochastic processes
+
+```{r}
+B <- BernoulliProcess("B", p = S(1) / 2)
+E(rv_getitem(B, 1) + rv_getitem(B, 2))
+P(rv_getitem(BernoulliProcess("B", p = S(1) / 3), 1) > 0)
+Xp <- PoissonProcess("X", 3)
+E(Xp(2))
+P(Eq(Xp(2), 1))
+E(WienerProcess("W")(3))
+variance(WienerProcess("W")(3))
+E(GammaProcess("G", 2, 3)(4))
+variance(GammaProcess("G", 2, 3)(4))
+RandomIndexedSymbol(Indexed("x", 1))
+```

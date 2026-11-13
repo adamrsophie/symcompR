@@ -420,6 +420,17 @@ expand_func(Ynm_c(1, 0, a, b))
 expand_func(Znm(1, 0, a, b))
 ```
 
+## Motzkin numbers and subfactorials
+
+`motzkin(n)` counts the ways to draw nonintersecting chords between `n`
+points on a circle, and `subfactorial(n)` counts the derangements of `n`
+objects.
+
+```{r}
+sapply(0:7, function(i) sstr(motzkin(i)))
+subfactorial(5)
+```
+
 ## Polar numbers and branches
 
 `exp_polar()` is an exponential that is not reduced modulo $2\pi i$, which

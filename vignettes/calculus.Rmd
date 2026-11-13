@@ -290,6 +290,23 @@ continuous_domain(1 / x, x, Reals)
 continuous_domain(log(x) + sqrt(1 - x), x, Reals)
 ```
 
+`function_range()` gives the range of a function on a domain,
+`monotonicity_helper()` tests the sign of the derivative on an interval,
+and `lcim()` is the least common multiple of numbers whose ratios are
+rational (`NULL` when there is none):
+
+```{r}
+function_range(sin(x), x, Interval(0, 2 * sym_pi))
+function_range(1 / x, x, Reals)
+function_range(exp(x), x, Interval(-1, 1))
+monotonicity_helper(x^3, function(d) Ge(d, 0))
+monotonicity_helper(x^2, function(d) Ge(d, 0))
+monotonicity_helper(x^2, function(d) Ge(d, 0), Interval(0, oo))
+lcim(list(Rational(1, 2), 2, 3))
+lcim(list(sym_pi, sym_pi / 2, sym_pi / 4))
+lcim(list(1, sym_pi))
+```
+
 `euler_equations()` derives the Euler-Lagrange equations of a functional.
 For the harmonic oscillator Lagrangian $L = \dot f^2/2 - f^2/2$:
 

@@ -135,6 +135,24 @@ show(ifwht(list(4, 2, 2, 0)))
 show(intersecting_product(c(1, 2, 3, 4), c(5, 6, 7, 8)))
 ```
 
+The specialized convolutions are also available: `convolution_fft()` by the
+fast Fourier transform, `convolution_ntt()` modulo a prime,
+`convolution_fwht()` (dyadic, by the Walsh-Hadamard transform),
+`convolution_subset()` (over subsets of bit positions) and
+`convolution_int()` for integer sequences. `linrec()` evaluates a linear
+recurrence with constant coefficients.
+
+```{r}
+show(convolution_fft(c(1, 2, 3), c(4, 5, 6)))
+show(convolution_ntt(c(2, 3), c(4, 5), prime = 19 * 2^10 + 1))
+show(convolution_fwht(c(1, 2, 3), c(4, 5, 6)))
+show(convolution_subset(c(1, 2, 3, 4), c(5, 6, 7, 8)))
+show(convolution_subset(list(Symbol("a"), Symbol("b")), list(Symbol("c"))))
+show(convolution_int(c(10, -5, 1, 3), c(-5, 6, 7)))
+linrec(c(1, 1), c(0, 1), 10)
+linrec(list(Symbol("p"), Symbol("q"), Symbol("r")), c(1, 1, 1), 4)
+```
+
 ## Cryptography
 
 The ciphers and key exchange protocols of `sympy.crypto` have their own
@@ -167,6 +185,12 @@ t <- Symbol("t"); y <- Symbol("y")
 plot_parametric(cos(3 * t), sin(2 * t), list(t, 0, 2 * sym_pi))
 plot_implicit(x^2 + y^2 - 1, list(x, -1.5, 1.5), list(y, -1.5, 1.5))
 plot3d(x * y, list(x, -1, 1), list(y, -1, 1))
+```
+
+`textplot()` draws a rough plot with text characters:
+
+```{r}
+textplot(x^2, -2, 2, W = 20, H = 6)
 ```
 
 ## Iteration utilities
@@ -237,11 +261,20 @@ xthreaded(function(e) e^2)(x + 1)
 names(timed(function() sum(1:10)))
 ```
 
+`default_sort_key()` gives the key that SymPy uses to order expressions
+canonically, as a string that sorts in the same order:
+
+```{r}
+l <- list(x^2, Symbol("y"), S(3), x)
+l[order(vapply(l, default_sort_key, ""), method = "radix")]
+```
+
 `init_printing()` chooses the default printer for the session (`"pretty"`
 for two dimensional output, `"latex"`, or `"str"`), and `init_session()`
 also creates the usual symbols `x`, `y`, `z`, `t`, the integer symbols `k`,
 `m`, `n`, and the functions `f`, `g`, `h`. `interactive_traversal()` walks
-an expression tree interactively, so it is not run here.
+an expression tree interactively; outside an interactive session it
+returns the expression unchanged.
 
 ```{r}
 old <- options(symcompR.print = NULL)
@@ -251,4 +284,8 @@ init_session(quiet = TRUE)
 f(k) + n
 options(old)
 x^2 / 2
+```
+
+```{r}
+interactive_traversal(x + 1)
 ```

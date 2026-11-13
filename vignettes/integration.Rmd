@@ -178,6 +178,16 @@ meijerint_inversion(1 / (s^2 + 1), s, t)
 singularityintegrate(SingularityFunction(x, b, 3), x)
 ```
 
+`log_to_atan()` and `log_to_real()` turn the complex logarithms of the
+logarithmic part into real arctangents and logarithms:
+
+```{r}
+log_to_atan(Poly(x, x, domain = "ZZ"), Poly(1, x, domain = "ZZ"))
+log_to_real(Poly(x + 3 * t / 2 + Rational(1, 2), x, domain = "QQ[t]"),
+            Poly(3 * t^2 + 1, t, domain = "ZZ"), x, t)
+log_to_real(Poly(x^2 - 1, x, domain = "ZZ"), Poly(-2 * t + 1, t, domain = "ZZ"), x, t)
+```
+
 ## Line integrals
 
 `line_integrate()` integrates along a parametric curve, given as

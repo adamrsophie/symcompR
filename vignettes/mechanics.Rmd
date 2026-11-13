@@ -1,0 +1,370 @@
+---
+title: "Classical mechanics"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Classical mechanics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+This vignette covers `sympy.physics.vector` (reference frames, vectors,
+dyadics and points), `sympy.physics.mechanics` (bodies, loads, joints,
+pathways, actuators and the equations of motion) and
+`sympy.physics.biomechanics` (muscle models). The classes keep their state
+and are used through `$`, as fields (`N$x`) and methods (`A$dcm(N)`).
+`Point`, `Vector` and `Dyadic` are exported as `PhysPoint()`,
+`PhysVector()` and `PhysDyadic()` to avoid clashes with the geometry and
+vector modules.
+
+```{r setup}
+library(symcompR)
+x <- Symbol("x"); m <- Symbol("m"); k <- Symbol("k")
+r <- Symbol("r"); cc <- Symbol("c")
+```
+
+## Reference frames and vectors
+
+`ReferenceFrame()` creates a frame with unit vectors `$x`, `$y` and `$z`.
+Indexing a frame gives its coordinate symbols (`CoordinateSym()`), with
+R's indices starting at 1. Vectors support `+`, scalar `*`, `&` (dot
+product), `^` (cross product) and `|` (outer product, giving a dyadic).
+
+```{r}
+N <- ReferenceFrame("N")
+N$x
+N$name
+ReferenceFrame("A")[1]
+CoordinateSym("A_x", ReferenceFrame("A"), 0)
+v <- x * N$x + 2 * N$y
+v
+v$magnitude()
+N$x ^ N$y
+(N$x + N$y) & N$y
+N$x | N$y
+(N$x | N$y) & N$y
+PhysVector(0)
+PhysDyadic(0)
+```
+
+`dynamicsymbols()` creates functions of time `t`, the generalized
+coordinates and speeds of mechanics.
+
+```{r}
+q <- dynamicsymbols("q"); u <- dynamicsymbols("u")
+qd <- dynamicsymbols("q", 1); ud <- dynamicsymbols("u", 1)
+qd
+dynamicsymbols("q1:4")
+(x * N$x + q * N$y)$diff(q, N)
+(q * N$x)$dt(N)
+```
+
+Frames are oriented relative to each other; the direction cosine matrix
+and the angular velocity follow.
+
+```{r}
+A <- N$orientnew("A", "Axis", list(q, N$z))
+A$dcm(N)
+A$ang_vel_in(N)
+time_derivative(N$orientnew("B", "Axis", list(q, N$x))$y, N)
+kinematic_equations(dynamicsymbols("u1 u2 u3"), dynamicsymbols("q1 q2 q3"), "body", "313")
+get_motion_params(N, position = Symbol("t")^2 * N$x)
+partial_velocity(list(dynamicsymbols("u1") * N$x + dynamicsymbols("u2") * N$y),
+                 dynamicsymbols("u1 u2"), N)
+```
+
+Points have positions and velocities relative to other points.
+
+```{r}
+O <- PhysPoint("O")
+P <- O$locatenew("P", q * N$x)
+O$set_vel(N, 0)
+P$vel(N)
+P$pos_from(O)
+```
+
+## Printing
+
+The vector printers write time derivatives with primes or dots and drop
+the `(t)`. `vsprint()` and `msprint()` return a string, `vsstrrepr()` its
+representation, `vlatex()` and `mlatex()` LaTeX, and `vprint()`,
+`mprint()`, `vpprint()` and `mpprint()` print directly.
+
+```{r}
+vsprint(qd * N$x)
+vsprint(qd)
+vsstrrepr(qd)
+msprint(qd)
+vlatex(dynamicsymbols("q", 2))
+mlatex(qd)
+VectorLatexPrinter()$doprint(qd)
+vprint(qd * N$x)
+mprint(qd)
+vpprint(qd * N$x)
+mpprint(qd^2)
+```
+
+`init_vprinting()` (also `mechanics_printing()`) makes this the default
+printing for the rest of the R session, so it is not run here:
+
+```{r, eval = FALSE}
+init_vprinting()
+mechanics_printing()
+```
+
+## Particles, rigid bodies and loads
+
+`inertia()` builds an inertia dyadic, and `Inertia()` pairs it with a
+reference point.
+
+```{r}
+inertia(N, 1, 2, 3)
+inertia_of_point_mass(m, x * N$x, N)
+Inertia(inertia(N, 1, 2, 3), PhysPoint("O"))
+Inertia_from_inertia_scalars(PhysPoint("O"), N, 1, 2, 3)
+```
+
+`Particle()` and `RigidBody()` carry mass; the energy and momentum
+functions accept any number of them.
+
+```{r}
+P3 <- PhysPoint("P")
+P3$set_vel(N, 3 * N$x)
+pa <- Particle("p", P3, 2)
+pa$linear_momentum(N)
+pa$kinetic_energy(N)
+linear_momentum(N, pa)
+kinetic_energy(N, pa)
+pa$potential_energy <- m * Symbol("g") * q
+potential_energy(pa)
+Lagrangian(N, pa)
+RigidBody("B")$central_inertia
+RigidBody("B")$mass
+O2 <- PhysPoint("O2")
+Pm <- O2$locatenew("Pm", r * N$x)
+Pm$set_vel(N, r * u * N$y)
+angular_momentum(O2, N, Particle("pm", Pm, m))
+Oc <- PhysPoint("Oc")
+pc1 <- Particle("pc1", Oc$locatenew("Pc1", N$x), 1)
+pc2 <- Particle("pc2", Oc$locatenew("Pc2", 3 * N$x), 1)
+center_of_mass(Oc, pc1, pc2)
+```
+
+Loads are forces at points and torques on frames:
+
+```{r}
+Force(P3, 3 * N$x)
+Torque(N, 2 * N$z)
+gravity(-9.81 * N$y, pa)
+```
+
+`find_dynamicsymbols()` lists the dynamic symbols of an expression, and
+`msubs()` substitutes into it.
+
+```{r}
+sapply(find_dynamicsymbols(q^2 + qd), sstr)
+msubs(q^2 + qd, list(list(q, 2)))
+```
+
+## Pathways and actuators
+
+A pathway connects attachment points: a straight line
+(`LinearPathway()`), a path through intermediate points
+(`ObstacleSetPathway()`), or a path wrapping around a geometry
+(`WrappingPathway()` with `WrappingCylinder()`, `WrappingSphere()` or
+`WrappingCone()`).
+
+```{r}
+pA <- PhysPoint("pA"); pB <- PhysPoint("pB")
+pB$set_pos(pA, q * N$x)
+path <- LinearPathway(pA, pB)
+path$length
+path$extension_velocity
+path$to_loads(Symbol("F"))
+O3 <- PhysPoint("O3"); p1 <- PhysPoint("p1"); p2 <- PhysPoint("p2")
+p1$set_pos(O3, r * N$x); p2$set_pos(O3, r * N$y)
+WrappingPathway(p1, p2, WrappingCylinder(r, O3, N$z))$length
+WrappingCylinder(r, PhysPoint("O"), N$x)
+WrappingSphere(r, PhysPoint("O"))
+WrappingCone(Symbol("alpha"), PhysPoint("O"), N$z)
+o1 <- PhysPoint("o1"); o2 <- PhysPoint("o2"); o3 <- PhysPoint("o3")
+o2$set_pos(o1, N$x); o3$set_pos(o2, N$y)
+ObstacleSetPathway(o1, o2, o3)$length
+```
+
+Actuators produce loads along a pathway: springs, dampers, friction, and
+general forces and torques.
+
+```{r}
+LinearSpring(k, path)$force
+LinearSpring(k, path)$to_loads()
+LinearDamper(cc, path)$force
+DuffingSpring(k, Symbol("beta"), path)$force
+CoulombKineticFriction(Symbol("mu_k"), Symbol("f_n"), path)$force
+ForceActuator(Symbol("F"), path)$to_loads()
+TorqueActuator(Symbol("T"), N$z, ReferenceFrame("A"), N)$to_loads()
+```
+
+## Joints
+
+Joints connect a parent and a child body and create the coordinates,
+speeds and kinematic equations of the connection.
+
+```{r}
+Pp <- RigidBody("P"); Cp <- RigidBody("C")
+J <- PinJoint("J", Pp, Cp)
+J$coordinates
+J$kdes
+Cp$frame$dcm(Pp$frame)
+TorqueActuator_at_pin_joint(Symbol("T"), J)$to_loads()
+PrismaticJoint("S", RigidBody("P2"), RigidBody("C2"))$coordinates
+CylindricalJoint("Y", RigidBody("P3"), RigidBody("C3"))$coordinates
+PlanarJoint("L", RigidBody("P4"), RigidBody("C4"))$coordinates
+SphericalJoint("Sp", RigidBody("P5"), RigidBody("C5"))$coordinates
+WeldJoint("W", RigidBody("P6"), RigidBody("C6"))$coordinates
+```
+
+`Joint()` is the abstract base class of the joints. The deprecated
+`Body()` and `JointsMethod()` still work, with a deprecation warning, but
+`RigidBody()`, `Particle()` and `System()` replace them.
+
+```{r}
+tryCatch(Joint("J0", Pp, Cp), error = conditionMessage)
+B <- suppressWarnings(Body("B"))
+B$apply_force(B$x)
+B$loads
+suppressWarnings(JointsMethod(Pp, J))$q
+```
+
+## Equations of motion
+
+Kane's method for a mass on a spring:
+
+```{r}
+Pk <- PhysPoint("Pk")
+Pk$set_vel(N, u * N$x)
+km <- KanesMethod(N, list(q), list(u), kd_eqs = list(qd - u))
+invisible(km$kanes_equations(list(Particle("p", Pk, m)), list(Force(Pk, -k * q * N$x))))
+km$mass_matrix
+km$forcing
+km$rhs()
+```
+
+Lagrange's method takes the Lagrangian:
+
+```{r}
+LagrangesMethod(m * qd^2 / 2 - k * q^2 / 2, list(q))$form_lagranges_equations()
+```
+
+`Linearizer()` linearizes the equations, either built from the parts or
+taken from a method object:
+
+```{r}
+km$to_linearizer()$linearize(A_and_B = TRUE)
+Linearizer(list(qd), list(-u), list(ud), list(k * q), list(0),
+           list(), list(), list(), list(q), list(u),
+           q_i = list(q), u_i = list(u))$linearize(A_and_B = TRUE)
+```
+
+`System()` collects the coordinates, speeds, bodies, loads and kinematic
+equations; `SymbolicSystem()` stores equations of motion already derived.
+
+```{r}
+sy <- System()
+sy$add_coordinates(q)
+sy$add_speeds(u)
+sy$add_kdes(u - qd)
+sy$q
+sy$kdes
+System_from_newtonian(RigidBody("Nb"))$frame
+ss <- SymbolicSystem(list(q, u), Matrix(list(u, -q)))
+ss$states
+ss$comb_explicit_rhs
+```
+
+Two ready made models:
+
+```{r}
+msd <- multi_mass_spring_damper(1)
+msd$mass_matrix
+msd$forcing
+cart <- n_link_pendulum_on_cart(1)
+cart$mass_matrix_full
+cart$forcing_full
+```
+
+## Biomechanics
+
+Activation dynamics turn an excitation into a muscle activation.
+
+```{r}
+act <- FirstOrderActivationDeGroote2016("bicep")
+act$x
+act$constants
+act$rhs()
+FirstOrderActivationDeGroote2016_with_defaults("bicep")$rhs()
+ZerothOrderActivation("bicep")$r
+ZerothOrderActivation_with_defaults("bicep")$order
+```
+
+The characteristic curves of De Groote et al. (2016) relate the tendon and
+fiber forces to their lengths and velocities. Each curve takes its
+constants as arguments, and the `_with_defaults` forms use the published
+values.
+
+```{r}
+lT <- Symbol("l_T_tilde")
+fT <- TendonForceLengthDeGroote2016_with_defaults(lT)
+fT
+doit(fT)
+diff(fT, lT)
+identical(inverse(fT), TendonForceLengthInverseDeGroote2016)
+doit(TendonForceLengthDeGroote2016(x, Symbol("c0"), Symbol("c1"), Symbol("c2"), Symbol("c3")))
+doit(TendonForceLengthInverseDeGroote2016_with_defaults(x))
+doit(TendonForceLengthInverseDeGroote2016(x, 1, 2, 3, 4))
+doit(FiberForceLengthPassiveDeGroote2016_with_defaults(x))
+doit(FiberForceLengthPassiveDeGroote2016(x, 1, 2))
+doit(FiberForceLengthPassiveInverseDeGroote2016_with_defaults(x))
+doit(FiberForceLengthPassiveInverseDeGroote2016(x, 1, 2))
+FiberForceLengthActiveDeGroote2016_with_defaults(x)
+FiberForceLengthActiveDeGroote2016(x, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+doit(FiberForceVelocityDeGroote2016_with_defaults(x))
+doit(FiberForceVelocityDeGroote2016(x, 1, 2, 3, 4))
+doit(FiberForceVelocityInverseDeGroote2016_with_defaults(x))
+doit(FiberForceVelocityInverseDeGroote2016(x, 1, 2, 3, 4))
+curves <- CharacteristicCurveCollection(
+  TendonForceLengthDeGroote2016, TendonForceLengthInverseDeGroote2016,
+  FiberForceLengthPassiveDeGroote2016, FiberForceLengthPassiveInverseDeGroote2016,
+  FiberForceLengthActiveDeGroote2016, FiberForceVelocityDeGroote2016,
+  FiberForceVelocityInverseDeGroote2016)
+curves$tendon_force_length(Symbol("l"), 1, 2, 3, 4)
+```
+
+A musculotendon model combines a pathway, activation dynamics and the
+curves; `MusculotendonFormulation()` selects its state variables.
+
+```{r}
+MusculotendonFormulation("RIGID_TENDON")
+MusculotendonFormulation(2) == 2
+Om <- PhysPoint("Om"); Im <- PhysPoint("Im")
+Im$set_pos(Om, q * N$x)
+muscle <- MusculotendonDeGroote2016("m", LinearPathway(Om, Im),
+                                    FirstOrderActivationDeGroote2016("m"))
+muscle$x
+muscle$r
+MusculotendonDeGroote2016_with_defaults("m", LinearPathway(Om, Im),
+                                        FirstOrderActivationDeGroote2016("m"))$constants
+```
+
+`ActivationBase()`, `CharacteristicCurveFunction()` and
+`MusculotendonBase()` are abstract base classes, which cannot be
+instantiated:
+
+```{r}
+tryCatch(ActivationBase("a"), error = conditionMessage)
+tryCatch(CharacteristicCurveFunction(), error = conditionMessage)
+tryCatch(MusculotendonBase("m"), error = conditionMessage)
+```

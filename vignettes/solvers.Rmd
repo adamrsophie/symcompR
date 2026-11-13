@@ -192,6 +192,49 @@ reduce_abs_inequality(abs(x - 2) - 3, "<", x)
 reduce_abs_inequalities(list(list(Abs(3 * x - 5) - 7, "<"),
                              list(Abs(x + 25) - 13, ">")), x)
 solve_rational_inequalities(list(list(list(list(Poly(-x + 1, x), Poly(1, x)), ">="))))
+solve_poly_inequalities(list(list(Poly(x^2 - 3), ">"), list(Poly(-x^2 + 1), ">")))
+```
+
+## Helpers of `solveset()`
+
+`solveset_real()` and `solveset_complex()` fix the domain;
+`invert_real()` and `invert_complex()` reduce `f(x) = y` to a simpler
+equation in `x`; `domain_check()` tests whether a point is in the domain
+of an expression; `solve_decomposition()` solves by decomposing the
+expression into simpler functions; and `solvify()` returns the solutions
+as a list, as `solve()` does. `unrad()` removes radicals from an equation,
+returning the new equation and any change of variables, and
+`linear_coeffs()` gives the coefficients of a linear expression.
+
+```{r}
+solveset_real(x^2 - 1, x)
+solveset_complex(exp(x) - 1, x)
+invert_real(exp(x), y, x)
+invert_complex(exp(x), y, x)
+domain_check(1 / x, x, 0)
+domain_check(x^2, x, 3)
+solve_decomposition(exp(2 * x) - 3 * exp(x) + 2, x, Reals)
+solvify(x^2 - 9, x, Reals)
+solvify(sin(x) + 1, x, Reals)
+unrad(sqrt(x) + sqrt(1 - x))
+unrad(x^Rational(5, 6) + 2)
+linear_coeffs(3 * x + 2 * y - 1, x, y)
+```
+
+## Linear programming
+
+`lpmax()` and `lpmin()` optimize a linear objective under linear
+constraints and return the optimum and the values of the symbols.
+`linprog()` takes the problem in matrix form, minimizing `c x` subject to
+`A x <= b` with `x >= 0` by default, and `show_linprog()` writes that
+problem with symbols.
+
+```{r}
+lpmax(x - y, list(Le(x, y + 2), Ge(x, 0), Ge(y, 0)))
+lpmin(x, list(Ge(y, 1), Ge(x, y)))
+linprog(c(-1, -2), list(c(1, 1), c(1, 3)), c(4, 6))
+linprog(c(1, -1), list(c(1, 1)), 2, bounds = list(`1` = list(NULL, NULL)))
+show_linprog(c(-1, -2), list(c(1, 1), c(1, 3)), c(4, 6))
 ```
 
 ## Numerical solutions
@@ -329,6 +372,37 @@ solution by substitution.
 ```{r}
 ode_order(diff(f(x), x, 3) + f(x), f(x))
 checkodesol(diff(f(x), x) - f(x), Eq(f(x), exp(x)), f(x))
+```
+
+### Lower level ODE tools
+
+`infinitesimals()` finds the infinitesimals of a Lie group of symmetries
+of a first order ODE, and `checkinfsol()` checks them.
+`classify_sysode()` describes a system of ODEs, `linear_ode_to_matrix()`
+writes a linear system as matrices, `canonical_odes()` solves the system
+for the highest derivatives, `matrix_exp_jordan_form()` computes the
+matrix exponential through the Jordan form, and `linodesolve()` solves a
+constant coefficient system $x' = A x$ with dummy symbols as the
+arbitrary constants. `constantsimp()` absorbs
+expressions into arbitrary constants, and `constant_renumber()` renumbers
+them.
+
+```{r}
+infinitesimals(Eq(Derivative(f(x), x), x^2 * f(x)), f(x))
+eq1 <- Derivative(f(x), x) - x^2
+checkinfsol(eq1, infinitesimals(eq1, f(x)), f(x))
+t <- Symbol("t")
+classify_sysode(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), -f(t))))
+linear_ode_to_matrix(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), f(t))),
+                     list(f(t), g(t)), t, 1)
+canonical_odes(list(Eq(Derivative(f(x), x), g(x)), Eq(Derivative(g(x), x) + f(x), 0)),
+               list(f(x), g(x)), x)
+matrix_exp_jordan_form(Matrix(list(list(1, 1), list(0, 1))), t)
+linodesolve(Matrix(list(list(1, 0), list(0, 2))), t)
+C1 <- Symbol("C1"); C2 <- Symbol("C2")
+constantsimp(2 * C1 * x, list(C1))
+constantsimp(C1 + C2 + x, list(C1, C2))
+constant_renumber(C2 * x + C1)
 ```
 
 ## Partial differential equations

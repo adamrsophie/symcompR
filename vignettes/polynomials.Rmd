@@ -343,6 +343,56 @@ numer((x + 1) / (x - 1))
 denom((x + 1) / (x - 1))
 ```
 
+## Square free parts, Appell sequences and interpolation
+
+`sqf_part()` is the square free part, the product of the distinct
+irreducible factors. `gcdex_steps()` lists the steps of the extended
+Euclidean algorithm as triples `(s, t, r)` with `s f + t g = r`.
+
+```{r}
+sqf_part(x^3 - 3 * x - 2)
+as_expr(sqf_part(Poly(x^3 - 3 * x - 2)))
+gcdex_steps(x^4 - 2 * x^3 - 6 * x^2 + 12 * x + 15, x^3 + x^2 - 4 * x - 4)
+```
+
+The Appell sequences of `sympy.polys.appellseqs`:
+
+```{r}
+bernoulli_poly(4, x)
+bernoulli_c_poly(4, x)
+genocchi_poly(5, x)
+euler_poly(3, x)
+andre_poly(4, x)
+```
+
+`rational_interpolate()` fits a rational function with a numerator of the
+given degree to data points:
+
+```{r}
+rational_interpolate(list(c(1, 2), c(2, 3), c(3, 5), c(4, 7)), 2)
+rational_interpolate(list(c(1, 2), c(2, 3), c(3, 5), c(4, 7)), 2, x = y)
+```
+
+`PurePoly()` is a polynomial that does not depend on the names of its
+generators, and `solve_poly_system()` solves a system of polynomial
+equations.
+
+```{r}
+PurePoly(x^2 + 1) == PurePoly(y^2 + 1)
+as_expr(PurePoly(x^2 + 1))
+degree(PurePoly(x^2 + 1, x))
+solve_poly_system(list(x * y - 2 * y, 2 * y^2 - x^2), x, y)
+```
+
+`PolyQuintic()` holds the resolvents used to solve a quintic in radicals,
+and `roots_quintic()` returns the roots, or an empty list when the quintic
+is not solvable in radicals.
+
+```{r}
+as_expr(PolyQuintic(x^5 - 5 * x + 12)$f20)
+roots_quintic(x^5 - x + 1)
+```
+
 Coefficient domains and rings are covered in
 `vignette("polynomial-domains", package = "symcompR")`, and Galois groups
 and algebraic number fields in

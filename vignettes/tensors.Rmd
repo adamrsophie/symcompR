@@ -252,3 +252,84 @@ dg <- dummy_sgs(0:5, 0, 6)
 double_coset_can_rep(list(0:5), list(0), c(0, 2), dg,
                      get_transversals(c(0, 2), dg), P(4, 1, 3, 0, 5, 2, 6, 7))
 ```
+
+## Array expressions
+
+The array expressions of `sympy.tensor.array.expressions` describe
+operations on arrays whose entries are not given. `ArraySymbol()` is an
+array of a given shape, `ArrayTensorProduct()` the tensor product,
+`ArrayContraction()` contracts pairs of axes, `ArrayDiagonal()` takes a
+diagonal over axes, `PermuteDims()` permutes the axes, and `ArrayAdd()`
+adds arrays. Axes are numbered from zero, as in SymPy. `get_shape()`
+returns the shape as an R list, shown here as a `Tuple()`.
+
+```{r}
+AA <- ArraySymbol("A", c(3, 3)); BB <- ArraySymbol("B", c(3, 3))
+tp <- ArrayTensorProduct(AA, BB)
+tp
+do.call(Tuple, get_shape(tp))
+get_rank(tp)
+get_ndim(tp)
+ArrayContraction(tp, c(1, 2))
+ArrayDiagonal(tp, c(1, 2))
+PermuteDims(AA, c(1, 0))
+ArrayAdd(AA, BB)
+nest_permutation(PermuteDims(tp, c(1, 0, 3, 2)))
+```
+
+`ArrayElement()` is a single entry, `ZeroArray()` and `OneArray()` are the
+arrays of zeros and ones, `Reshape()` changes the shape,
+`ArrayElementwiseApplyFunc()` applies a function to every entry, and
+`ArraySum()` is a sum of array expressions.
+
+```{r}
+ArrayElement(AA, c(0, 1))
+ZeroArray(2, 3)
+OneArray(2, 3)
+as_explicit(OneArray(2, 2))
+Reshape(AA, 9)
+do.call(Tuple, get_shape(Reshape(AA, 9)))
+ArrayElementwiseApplyFunc(sin, AA)
+i <- Symbol("i"); j <- Symbol("j"); d <- Symbol("d")
+ArraySum(i * AA, list(i, 1, 3))
+doit(ArraySum(i * AA, list(i, 1, 3)))
+```
+
+`ArrayComprehension()` builds an array from an expression in its index
+variables.
+
+```{r}
+ac <- ArrayComprehension(i * j, list(i, 1, 3), list(j, 2, 4))
+do.call(Tuple, get_shape(ac))
+doit(ac)
+```
+
+Matrix expressions convert to array expressions and back, and so do
+indexed sums. `collect_tensor_products()` collects sums of tensor products
+with a common factor.
+
+```{r}
+k <- Symbol("k")
+MP <- MatrixSymbol("P", k, k); MQ <- MatrixSymbol("Q", k, k)
+MX <- MatrixSymbol("X", k, k)
+cg <- convert_matrix_to_array(MP * t(MQ))
+cg
+convert_array_to_matrix(cg)
+convert_matrix_to_array(Trace(MP * MQ))
+convert_indexed_to_array(Sum(MatrixElement(MP, i, d) * MatrixElement(MQ, d, j),
+                             list(d, 0, k - 1)), list(i, j))
+convert_array_to_indexed(ArrayContraction(ArrayTensorProduct(MP, MQ), c(1, 2)), list(i, j))
+collect_tensor_products(ArrayAdd(ArrayTensorProduct(MP, MQ), ArrayTensorProduct(MP, MX)))
+```
+
+`array_derive()` differentiates an array expression with respect to a
+matrix or array symbol, and `ArrayDerivative()` is the unevaluated
+derivative of an array.
+
+```{r}
+array_derive(convert_matrix_to_array(MP * MX), MX)
+ArrayDerivative(MX, MX)
+ArrayDerivative(MX, MX, evaluate = TRUE)
+ArrayDerivative(Array(list(x^2, x * y)), x)
+doit(ArrayDerivative(Array(list(x^2, x * y)), x))
+```

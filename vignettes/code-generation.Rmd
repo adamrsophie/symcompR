@@ -1,0 +1,434 @@
+---
+title: "Code generation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Code generation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+The printing vignette shows `ccode()`, `fcode()`, `pycode()` and the other
+functions that print an expression as code. This vignette covers the rest
+of `sympy.codegen` and `sympy.utilities.codegen`: an abstract syntax tree
+for whole programs, nodes specific to C, C++, Fortran, NumPy and SciPy,
+special functions that map to fast library calls, rewriting
+optimizations, the printer objects themselves, and generators that write
+complete source files.
+
+```{r setup}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
+i <- Symbol("i", integer = TRUE); n <- Symbol("n", integer = TRUE)
+xr <- Symbol("x", real = TRUE)
+```
+
+## Statements and blocks
+
+Assignments, augmented assignments and code blocks:
+
+```{r}
+Assignment(x, y + 1)
+AddAugmentedAssignment(x, 1)
+SubAugmentedAssignment(x, 1)
+MulAugmentedAssignment(x, 2)
+DivAugmentedAssignment(x, 2)
+ModAugmentedAssignment(x, 2)
+aug_assign(x, "+", y)
+cat(ccode(CodeBlock(Assignment(x, 1), AddAugmentedAssignment(x, y))), "\n")
+ast_attr(CodeBlock(Assignment(x, 1), Assignment(y, x + 1)), "left_hand_sides")
+```
+
+`codeblock_topological_sort()` orders assignments so that every variable
+is assigned before it is used, and `codeblock_cse()` eliminates common
+subexpressions:
+
+```{r}
+cat(ccode(codeblock_topological_sort(list(Assignment(x, y + z), Assignment(z, 1),
+                                          Assignment(y, 2)))), "\n")
+cat(ccode(codeblock_cse(CodeBlock(Assignment(x, sin(y)^2 + sin(y)),
+                                  Assignment(z, sin(y))))), "\n")
+```
+
+Loops, with `break_` and `continue_`:
+
+```{r}
+cat(ccode(For(i, Range(0, 10), list(AddAugmentedAssignment(x, i)))), "\n")
+cat(ccode(While(x < 10, list(AddAugmentedAssignment(x, 1), break_, continue_))), "\n")
+cat(ccode(Scope(list(Assignment(x, 1)))), "\n")
+```
+
+## Variables, types and declarations
+
+`Variable()` and `Pointer()` carry a type and attributes such as
+`value_const` and `pointer_const`; `Declaration()` and `as_Declaration()`
+declare them.
+
+```{r}
+ccode(Declaration(Variable(x, type = real, value = 1.5)))
+ccode(as_Declaration(Variable(x, type = float32), value = 2))
+ccode(as_Declaration(Variable(x, type = int32, attrs = list(value_const)), value = 3))
+ccode(as_Declaration(Pointer(x, type = real)))
+ccode(Declaration(Pointer(x, type = real, attrs = list(pointer_const))))
+ccode(ast_getitem(Pointer(x, type = real), i))
+ccode(ast_getitem(Pointer(x, type = real), list(i, 2)))
+ccode(Element("x", "ij"))
+ccode(Element("x", list(i, 2)))
+```
+
+`variable_deduced()` and `pointer_deduced()` choose the type from the
+assumptions on the symbol, as does `type_from_expr()`:
+
+```{r}
+variable_deduced(xr)
+pointer_deduced(xr)
+type_from_expr(n)
+type_from_expr(xr)
+```
+
+The predefined types carry their limits, read with `ast_attr()`:
+
+```{r}
+ast_attr(float16, "dig")
+ast_attr(float32, "max")
+ast_attr(float64, "eps")
+ast_attr(float80, "nbits")
+ast_attr(float128, "nbits")
+ast_attr(float256, "nbits")
+ast_attr(int8, "min")
+ast_attr(int16, "max")
+ast_attr(int32, "max")
+ast_attr(int64, "min")
+ast_attr(uint8, "max")
+ast_attr(uint16, "max")
+ast_attr(uint32, "max")
+ast_attr(uint64, "max")
+ast_attr(complex128, "nbits")
+complex64
+bool_
+complex_
+intc
+intp
+sym_integer
+untyped
+type_cast_check(int8, 127)
+type_cast_nocheck(float32, S(1) / 3)
+```
+
+New types are built from the type classes:
+
+```{r}
+Type("float")
+FloatType("f32", nbits = 32, nmant = 23, nexp = 8)
+ComplexType("c64", nbits = 64, nmant = 23, nexp = 8)
+SignedIntType("i8", 8)
+UnsignedIntType("u8", 8)
+IntBaseType("int")
+FloatBaseType("float")
+ComplexBaseType("complex")
+```
+
+## Functions, strings and other nodes
+
+```{r}
+ccode(FunctionCall("foo", list(x, y)))
+ccode(FunctionPrototype(real, "f", list(Variable(x, type = real))))
+fdef <- FunctionDefinition(real, "f", list(Variable(x, type = real)), list(Return(x^2)))
+cat(ccode(fdef), "\n")
+ccode(from_FunctionDefinition(fdef))
+cat(ccode(from_FunctionPrototype(FunctionPrototype(real, "f", list(Variable(x, type = real))),
+                                 list(Return(x^2)))), "\n")
+ccode(Return(x + 1))
+ccode(Comment("hello"))
+String("foo")
+QuotedString("foo")
+ccode(QuotedString("foo"))
+pycode(Print(list(x, y), "x=%s y=%s"))
+pycode(Print(list(x), file = stderr_))
+stdout_
+Stream("stdout")
+pycode(Raise(RuntimeError_("boom")))
+pycode(KeywordFunctionCall("f", list(x), list(k = 1)))
+Attribute("volatile")
+Token()
+Node()
+NoneToken()
+none
+BreakToken()
+ContinueToken()
+```
+
+Nodes are inspected with `ast_attr()`, `ast_kwargs()`, `attr_params()` and
+`ast_func()` (which returns the constructor):
+
+```{r}
+v <- Variable(x, type = real)
+ast_attr(v, "type")
+ast_kwargs(v, exclude = "type")
+attr_params(Variable(x, type = real, attrs = list(value_const)), "value_const")
+ast_func(Assignment(x, 1))(y, 2)
+```
+
+## C and C++ nodes
+
+```{r}
+ccode(sizeof("unsigned int"))
+ccode(alignof("unsigned int"))
+ccode(CommaOperator(PreIncrement(x), 2 * x))
+ccode(PostIncrement(x))
+ccode(PreDecrement(x))
+ccode(PostDecrement(x))
+cat(ccode(Label("start", list(Assignment(x, 1)))), "\n")
+ccode(goto("start"))
+ccode(Declaration(Variable(x, type = real, attrs = list(volatile))))
+ccode(Declaration(Variable(x, type = real, attrs = list(static))))
+ccode(Declaration(Pointer(x, type = real, attrs = list(restrict))))
+cat(ccode(struct("pt", list(Variable(x, type = real), Variable(y, type = real)))), "\n")
+cat(ccode(c_union("u", list(Variable(x, type = real), Variable(y, type = int32)))), "\n")
+cxxcode(using("std::vector"))
+cxxcode(using("std::vector", "vec"))
+constexpr
+```
+
+## Fortran nodes
+
+```{r}
+fc <- function(e, ...) cat(fcode(e, source_format = "free", ...), "\n")
+fc(Do(list(AddAugmentedAssignment(x, i)), i, 1, n))
+fc(isign(1, x))
+fc(dsign(1, x))
+fc(cmplx(x, y))
+fc(kind(x))
+fc(literal_dp(0.5))
+fc(literal_sp(0.5))
+fc(fortran_merge(x, y, x > y), standard = 95)
+a <- Symbol("a")
+fc(size(a))
+fc(lbound(a, 1))
+fc(ubound(a, 1))
+fc(fortran_shape(a))
+fc(fortran_reshape(a, list(2, 3)))
+fc(allocated(a))
+fc(sum_(a))
+fc(product_(a))
+fc(fortran_use("signallib", only = list("snr")))
+fc(fortran_use("signallib", rename = list(list("thingy", "convolution2d"))))
+fc(use_rename("thingy", "convolution2d"))
+fc(Program("prog", list(Print(list(x)))))
+fc(Module("mod", list(), list(Declaration(Variable(x, type = real)))), standard = 2003)
+fc(Subroutine("sub", list(Variable(x, type = real, attrs = list(intent_inout))),
+              list(Assignment(x, 1))), standard = 2003)
+fc(SubroutineCall("sub", list(x)))
+fc(FortranReturn(x))
+fc(GoTo(list(10, 20), i))
+fc(ArrayConstructor(list(1, 2, 3)))
+fc(ArrayConstructor(list(ImpliedDoLoop(i^2, i, 1, 4))))
+```
+
+Arrays are declared with `fortran_array()`, or with the `intent_*`,
+`allocatable` and `fortran_dimension()` attributes; `assumed_extent`
+marks a dimension of unknown size and `Extent()` a range.
+
+```{r}
+fc(Declaration(fortran_array(a, list(4), "in", type = real)), standard = 2003)
+fc(Declaration(Variable(a, type = real, attrs = list(intent_in, fortran_dimension(3)))),
+   standard = 2003)
+fc(Declaration(Variable(a, type = real, attrs = list(intent_out, fortran_dimension(assumed_extent)))),
+   standard = 2003)
+fc(Declaration(Variable(a, type = real, attrs = list(allocatable, fortran_dimension(assumed_extent)))),
+   standard = 2003)
+Extent(1, 3)
+assumed_size
+intent_out
+fc(FunctionDefinition(real, "f", list(Variable(x, type = real, attrs = list(intent_in))),
+                      list(Return(x^2)), attrs = list(bind_C("f"), elemental, pure)),
+   standard = 2003)
+void
+```
+
+## Library functions
+
+`sympy.codegen.cfunctions` defines functions that C libraries compute
+accurately, with derivatives and rewrites:
+
+```{r}
+sym_expm1(x)
+diff(sym_expm1(x), x)
+rewrite(sym_expm1(x), "exp")
+diff(sym_log1p(x), x)
+expand(sym_log1p(x), func = TRUE)
+diff(exp2(x), x)
+expand(exp2(x), func = TRUE)
+expand(sym_log2(x), func = TRUE)
+expand(sym_log10(x), func = TRUE)
+expand(fma(x, y, z), func = TRUE)
+diff(fma(x, y, z), x)
+expand(Sqrt(x), func = TRUE)
+expand(Cbrt(x), func = TRUE)
+expand(hypot(x, y), func = TRUE)
+diff(hypot(x, 2), x)
+ccode(isnan(x))
+ccode(isinf(x))
+ccode(sym_expm1(x), standard = "C99")
+```
+
+NumPy and SciPy nodes, and the matrix solve node:
+
+```{r}
+diff(logaddexp(x, y), x)
+rewrite(logaddexp(x, y), "log")
+rewrite(logaddexp2(x, y), "log")
+rewrite(cosm1(x), "cos")
+rewrite(powm1(x, y), "Pow")
+printer_doprint(NumPyPrinter(), amax(a))
+printer_doprint(NumPyPrinter(), amin(a))
+printer_doprint(NumPyPrinter(), logaddexp(x, y))
+printer_doprint(SciPyPrinter(), cosm1(x))
+printer_doprint(SciPyPrinter(), powm1(x, y))
+A <- MatrixSymbol("A", 3, 3); b <- MatrixSymbol("b", 3, 1)
+printer_doprint(NumPyPrinter(), MatrixSolve(A, b))
+List(1, 2, 3)
+NumExprEvaluate(x + y)
+```
+
+## Printer objects
+
+Each language has a printer object; `printer_doprint()` prints an
+expression with it, optionally assigning the result.
+
+```{r}
+printer_doprint(C89CodePrinter(), x^2 + sqrt(x))
+printer_doprint(C99CodePrinter(), sym_expm1(x) + Max(x, y))
+printer_doprint(C99CodePrinter(), x^2, assign_to = y)
+printer_doprint(C11CodePrinter(), alignof("int"))
+printer_doprint(CXX98CodePrinter(), Max(x, y))
+printer_doprint(CXX11CodePrinter(), Max(x, y) + sym_log1p(x))
+printer_doprint(CXX17CodePrinter(), gamma(x))
+printer_doprint(FCodePrinter(list(source_format = "free")), x^2)
+printer_doprint(JavascriptCodePrinter(), Max(x, y) + sin(x))
+printer_doprint(JuliaCodePrinter(), x^2 + sin(x))
+printer_doprint(OctaveCodePrinter(), x^2 + sin(x))
+printer_doprint(PythonCodePrinter(), sin(x) + x^2)
+printer_doprint(MpmathPrinter(), sin(x) + Rational(1, 3))
+printer_doprint(NumPyPrinter(), sin(x) + x^2)
+printer_doprint(SciPyPrinter(), gamma(x))
+printer_doprint(LambdaPrinter(), And(x > 0, y > 0))
+printer_doprint(RCodePrinter(), x^2 + sin(x))
+printer_doprint(RustCodePrinter(), x^2 + sin(x))
+cgdict_get(get_math_macros(), exp(Integer(1)))
+cgdict_get(get_math_macros(), sqrt(Integer(2)))
+```
+
+## Rewriting optimizations
+
+`sym_optimize()` applies rewriting rules that make generated code faster
+or more accurate:
+
+```{r}
+sym_optimize(3 * exp(x) - 3, list(expm1_opt))
+sym_optimize(log(x + 1), list(log1p_opt))
+sym_optimize(2^x, list(exp2_opt))
+sym_optimize(log(x) / log(Integer(2)), list(log2_opt))
+sym_optimize(log(x) / log(Integer(2)), list(log2const_opt))
+sym_optimize(log(exp(x) + exp(y)), list(logaddexp_opt))
+sym_optimize(log(exp(x) + exp(y)), list(logsumexp_2terms_opt))
+sym_optimize(log(2^x + 2^y) / log(Integer(2)), list(logaddexp2_opt))
+sym_optimize(cos(x) - 1, list(cosm1_opt))
+sym_optimize(x^y - 1, list(powm1_opt))
+sym_optimize(sin(x) / x, list(sinc_opt1))
+sym_optimize(-sin(x) / x, list(sinc_opt2))
+sym_optimize(sin(x) / x, sinc_opts)
+sym_optimize(log(x) / log(Integer(2)) + log(x + 1), optims_c99)
+sym_optimize(log(exp(x) + exp(y)), optims_numpy)
+sym_optimize(cos(x) - 1, optims_scipy)
+sym_optimize(MatMul(Inverse(A), b), list(matinv_opt))
+ccode(sym_optimize(x^4 + x^2, list(create_expand_pow_optimization(4))))
+sym_optimize(exp(x) - 1 + log(1 + x), list(FuncMinusOneOptim(exp, sym_expm1)))
+w <- Wild("w")
+sym_optimize(log(x + 1) + log(y + 1), list(ReplaceOptim(log(w + 1), sym_log1p(w))))
+```
+
+`SumApprox()` drops terms that are small within given bounds, and
+`SeriesApprox()` replaces functions by truncated series:
+
+```{r}
+sa <- SumApprox(list(list(x, list(0, 0.001)), list(y, list(100, 1000))), reltol = 0.01)
+sym_optimize(x + y * z, list(sa))
+sym_optimize(sin(x), list(SeriesApprox(list(list(x, list(-0.1, 0.1))), reltol = 0.01)))
+```
+
+## Algorithms and rendering
+
+`newtons_method()` builds a loop for Newton's method, and
+`newtons_method_function()` a complete function:
+
+```{r}
+cat(ccode(newtons_method(cos(xr) - xr^3, xr)), "\n")
+cat(ccode(newtons_method_function(cos(xr) - xr^3, xr)), "\n")
+```
+
+The render functions write a complete source file or module:
+
+```{r}
+cat(render_as_source_file(Assignment(xr, sin(xr))), "\n")
+cat(py_render_as_module(Print(list(x), "%f")), "\n")
+cat(f_render_as_module(list(FunctionDefinition(real, "f",
+      list(Variable(x, type = real, attrs = list(intent_in))), list(Return(x^2)))), "mymod"), "\n")
+```
+
+`lambdastr()` writes the source of a Python lambda, and
+`implemented_function()` attaches a numerical implementation to a new
+function:
+
+```{r}
+lambdastr(x, x^2)
+lambdastr(list(x, list(y)), x + y)
+f <- implemented_function("f", Lambda(x, 2 * x))
+ccode(f(x))
+```
+
+## Routines and code generators
+
+`make_routine()` collects the arguments and results of an expression; the
+argument and result classes are read with `ast_attr()`.
+
+```{r}
+r <- make_routine("f", x^2 + y)
+lapply(ast_attr(r, "arguments"), ast_attr, "name")
+ast_attr(ast_attr(r, "results")[[1]], "expr")
+ast_attr(get_default_datatype(x), "cname")
+ast_attr(get_default_datatype(n), "cname")
+ast_attr(DataType("double", "REAL*8", "float", "", "", "f64"), "cname")
+ast_attr(InputArgument(x), "name")
+ast_attr(OutputArgument(y, y, x^2), "expr")
+ast_attr(InOutArgument(x, x, x + 1), "expr")
+ast_attr(Result(x^2), "expr")
+ast_attr(Routine("f", list(InputArgument(x)), list(Result(x^2, result_var = Symbol("r"))),
+                 list(), list()), "name")
+```
+
+`codegen()` writes source and header files for named expressions;
+the generator classes do the same step by step.
+
+```{r}
+res <- codegen(list("f", x * y), "C99", header = FALSE, empty = FALSE)
+cat(res[[1]][[2]])
+cat(res[[2]][[2]])
+cat(codegen(list("f", x * y), "F95", header = FALSE, empty = FALSE)[[1]][[2]])
+write_with <- function(g, prefix = "test") {
+  rt <- ast_attr(g, "routine")("f", x * y, NULL, NULL)
+  cat(ast_attr(g, "write")(list(rt), prefix, header = FALSE, empty = FALSE)[[1]][[2]])
+}
+write_with(CCodeGen())
+write_with(C89CodeGen())
+write_with(C99CodeGen())
+write_with(FCodeGen())
+write_with(JuliaCodeGen())
+write_with(OctaveCodeGen(), "f")
+write_with(RustCodeGen())
+unname(class(get_code_generator("C99"))[1])
+unname(class(get_code_generator("F95"))[1])
+```

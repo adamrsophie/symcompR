@@ -113,6 +113,82 @@ renaming of variables, and returns the renaming.
 bool_map(Or(And(p, q), Not(p)), Or(And(x, y), Not(x)))
 ```
 
+## Algebraic normal form and gates
+
+The algebraic normal form (ANF) writes a Boolean function as an exclusive
+or of conjunctions. `Xnor()` is the negated exclusive or and `Exclusive()`
+says that at most one argument is true.
+
+```{r}
+A <- Symbol("A"); B <- Symbol("B"); C <- Symbol("C")
+Xnor(A, B)
+Exclusive(A, B, C)
+distribute_and_over_or(Or(And(A, B), C))
+distribute_xor_over_and(And(A, Xor(B, C)))
+to_anf(Or(x, y))
+to_anf(Implies(x, y))
+is_anf(Xor(x, And(x, y)))
+is_anf(Or(x, y))
+anf_coeffs(c(1, 1, 1, 0))
+ANFform(list(x, y), c(1, 1, 1, 0))
+bool_minterm(3, list(x, y))
+bool_maxterm(3, list(x, y))
+bool_monomial(3, list(x, y))
+gateinputcount(Or(A, And(B, C)))
+```
+
+## Inference
+
+`pl_true()` evaluates a sentence in a partial model, `entails()` decides
+logical consequence and a `PropKB()` knowledge base answers queries about
+what it has been told. `KB()` is the base class.
+
+```{r}
+literal_symbol(Not(A))
+pl_true(Or(A, B), list(A = TRUE))
+pl_true(And(A, B), list(A = TRUE))
+entails(B, list(Implies(A, B), A))
+entails(A, list(Or(A, B)))
+kb <- PropKB()
+kb$tell(Implies(A, B)); kb$tell(A)
+kb$ask(B)
+kb$ask(C)
+kb$clauses()
+kb$retract(A)
+kb$ask(B)
+KB()$clauses()
+```
+
+The DPLL procedure decides satisfiability. Its steps work on clauses
+written with symbols, or with integers (`to_int_repr()`), where `-i` is
+the negation of the `i`th symbol.
+
+```{r}
+dpll_satisfiable(And(A, Not(A)))
+dpll(list(Or(A, B), Not(A)), list(A, B), list())
+find_pure_symbol(list(A, B), list(Or(A, Not(B)), Or(Not(B), A)))
+find_unit_clause(list(Or(A, B), A), list())
+unit_propagate(list(Or(A, B), Or(Not(A), B)), A)
+to_int_repr(list(Or(x, y), Not(x)), list(x, y))
+dpll_int_repr(list(c(1, 2), -1), c(1, 2), list())
+find_pure_symbol_int_repr(c(1, 2, 3), list(c(1, -2), c(-2, -3), c(3, 1)))
+find_unit_clause_int_repr(list(c(1, 2, 3), c(2, -3), c(1, -2)), list("1" = TRUE))
+unit_propagate_int_repr(list(c(1, 2), c(3, -2), 2), 2)
+pl_true_int_repr(c(1, 2), list("1" = FALSE))
+pl_true_int_repr(c(1, 2), list("1" = FALSE, "2" = FALSE))
+```
+
+`dimacs_load()` reads a formula in the DIMACS CNF format, and
+`dimacs_load_file()` reads it from a file:
+
+```{r}
+dimacs_load("1 2 \n 3")
+tf <- tempfile(fileext = ".cnf")
+writeLines(c("1 -2 0", "3 0"), tf)
+dimacs_load_file(tf)
+unlink(tf)
+```
+
 ## Assumptions
 
 The assumptions system, with `ask()` and `refine()`, has its own vignette,

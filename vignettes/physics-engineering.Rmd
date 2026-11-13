@@ -1,0 +1,341 @@
+---
+title: "Optics, control and continuum mechanics"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Optics, control and continuum mechanics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6, fig.height = 4)
+```
+
+This vignette covers three engineering modules of `sympy.physics`:
+`optics` (ray and Gaussian beam optics, media, waves and polarization),
+`control` (transfer functions, state space models and their responses)
+and `continuum_mechanics` (beams, columns, trusses, cables and arches).
+Objects are used through `$`, as fields and methods, like their SymPy
+counterparts.
+
+```{r setup}
+library(symcompR)
+a <- Symbol("a"); b <- Symbol("b"); d <- Symbol("d"); f <- Symbol("f")
+h <- Symbol("h"); s <- Symbol("s"); z <- Symbol("z"); x <- Symbol("x")
+```
+
+## Ray transfer matrices
+
+Paraxial optical elements are $2 \times 2$ ray transfer matrices; a ray is
+a column of its height and angle. Matrices compose with `%*%`.
+
+```{r}
+ThinLens(f) %*% FreeSpace(d)
+FreeSpace(d) %*% GeometricRay(h, Symbol("angle"))
+GeometricRay(h, Symbol("angle"))$height
+rtm <- RayTransferMatrix(1, 2, 3, 4)
+rtm
+rtm$A
+FlatRefraction(1, 2)
+CurvedRefraction(Symbol("R"), 1, 2)
+FlatMirror()
+CurvedMirror(Symbol("R"))
+```
+
+## Gaussian beams
+
+`BeamParameter(wavelen, z, w = ...)` is the complex beam parameter of a
+Gaussian beam.
+
+```{r}
+p <- BeamParameter(530e-9, 1, w = 1e-3)
+p$q
+p$z_r
+N(p$w_0)
+N(p$divergence)
+waist2rayleigh(Symbol("w"), Symbol("wavelen"))
+rayleigh2waist(Symbol("z_r"), Symbol("wavelen"))
+```
+
+Conjugation relations of geometric and Gaussian optics:
+
+```{r}
+geometric_conj_ab(a, b)
+geometric_conj_af(a, f)
+geometric_conj_bf(b, f)
+gaussian_conj(Symbol("s_in"), Symbol("z_r_in"), f)[[1]]
+conjugate_gauss_beams(Symbol("l"), Symbol("w_i"), Symbol("w_o"), f = f)[[1]]
+```
+
+## Media, waves and optics formulas
+
+```{r}
+Medium("vacuum")$refractive_index
+m2 <- Medium("m", n = 2)
+m2$refractive_index
+m2$speed
+w1 <- TWave(Symbol("A1"), f, Symbol("phi1"))
+w2 <- TWave(Symbol("A2"), f, Symbol("phi2"))
+(w1 + w2)$amplitude
+w1$rewrite("cos")
+w1$wavelength
+w1$angular_velocity
+```
+
+Refraction, reflection, lenses and mirrors:
+
+```{r}
+refraction_angle(0.5, 1, 2)
+refraction_angle(list(1, 1, 1), 1, 1, list(0, 0, 1))
+critical_angle(1.33, 1)
+brewster_angle(1, 1.33)
+fresnel_coefficients(0.3, 1, 2)
+deviation(0.3, 1, 2)
+lens_formula(focal_length = f, u = Symbol("u"))
+lens_makers_formula(1.33, 1, 10, -10)
+mirror_formula(u = oo, v = Symbol("v"))
+hyperfocal_distance(0.5, 8, 0.0015)
+transverse_magnification(30, 15)
+```
+
+## Polarization
+
+Jones vectors and matrices, Stokes vectors and Mueller matrices:
+
+```{r}
+jones_vector(0, 0)
+jones_vector(sym_pi / 4, sym_pi / 8)
+stokes_vector(0, 0)
+jones_2_stokes(jones_vector(0, sym_pi / 4))
+linear_polarizer(Symbol("theta"))
+mueller_matrix(linear_polarizer(0))
+half_wave_retarder(0)
+quarter_wave_retarder(0)
+phase_retarder(0, Symbol("delta"))
+transmissive_filter(Symbol("T"))
+reflective_filter(Symbol("R"))
+polarizing_beam_splitter()
+half_wave_retarder(sym_pi / 4) %*% jones_vector(0, 0)
+```
+
+## Transfer functions
+
+`TransferFunction(num, den, var)` is a single input, single output
+system. `create_transfer_function()` builds a continuous or (with a
+sampling time) discrete transfer function.
+
+```{r}
+G <- TransferFunction(s + 1, s^2 + 2, s)
+G
+G$poles()
+TransferFunction(s + 1, s^2 - 1, s)$zeros()
+G$is_stable()
+G$to_expr()
+TransferFunction(1, s + 1, s)$dc_gain()
+G * TransferFunction(1, s, s)
+TransferFunction$from_rational_expression((s + 1) / (s^2 - 1), s)
+TransferFunction(s + 1, s^2 - 1, s)$simplify()
+create_transfer_function(s + 1, s^2 + 2, s)
+create_transfer_function(z, z + 1, z, 0.1)
+DiscreteTransferFunction(z, z + 1, z, 0.1)
+```
+
+Interconnections and a PID controller:
+
+```{r}
+G1 <- TransferFunction(1, s + 1, s); G2 <- TransferFunction(s, s + 2, s)
+Series(G1, G2)
+Series(G1, G2)$doit()
+Parallel(G1, G2)$doit()
+Feedback(G1, G2)
+Feedback(G1, G2)$doit()
+PIDController(1, 2, 3, 0, s)$doit()
+```
+
+`TransferFunctionBase` is the abstract base class of the transfer functions
+and cannot be instantiated:
+
+```{r}
+trimws(tryCatch(TransferFunctionBase(1, s, s), error = conditionMessage))
+```
+
+Discretization by the generalized bilinear transform: `gbt()` with
+parameter `alpha`, and its special cases `bilinear()` (Tustin),
+`forward_diff()` and `backward_diff()`. Each returns the numerator and
+denominator coefficients.
+
+```{r}
+Ts <- Symbol("T")
+G0 <- TransferFunction(1, s + 1, s)
+gbt(G0, Ts, S(1) / 2)
+bilinear(G0, Ts)
+forward_diff(G0, Ts)
+backward_diff(G0, Ts)
+gain_margin(TransferFunction(1, s^3 + 2 * s^2 + 2 * s + 1, s))
+```
+
+The Routh Hurwitz table decides stability from the characteristic
+polynomial:
+
+```{r}
+RouthHurwitz(s^4 + s^3 + 3 * s^2 + 3 * s + 3, s)
+```
+
+Transfer function matrices describe systems with several inputs and
+outputs:
+
+```{r}
+M <- TransferFunctionMatrix(list(list(G1, G2), list(G2, G1)))
+M
+M$shape
+MIMOSeries(TransferFunctionMatrix(list(list(G1), list(G2))),
+           TransferFunctionMatrix(list(list(G1, G2))))$doit()
+MIMOParallel(TransferFunctionMatrix(list(list(G1, G2))),
+             TransferFunctionMatrix(list(list(G2, G1))))$doit()
+MIMOFeedback(M, M)
+```
+
+## State space models
+
+```{r}
+A <- Matrix(list(list(-1, 0), list(0, -2)))
+B <- Matrix(list(list(1), list(1)))
+C <- Matrix(list(list(1, 1)))
+D <- Matrix(list(list(0)))
+ss <- StateSpace(A, B, C, D)
+ss$num_states
+ss$is_controllable()
+ss$rewrite("TransferFunction")
+create_state_space(A, B, C, D)
+DiscreteStateSpace(Matrix(list(list(1, 0), list(0, 2))), B, C, D, 0.1)
+```
+
+## Responses and plots
+
+The numerical data functions sample the poles and zeros, the impulse,
+step and ramp responses and the Bode magnitude and phase.
+
+```{r}
+Gr <- TransferFunction(1, s^2 + s + 1, s)
+pole_zero_numerical_data(TransferFunction(s + 2, s^2 + s + 1, s))
+step_response_numerical_data(Gr, n = 5)
+impulse_response_numerical_data(G0, n = 3)
+ramp_response_numerical_data(G0, n = 3)
+bode_magnitude_numerical_data(G0, initial_exp = -1, final_exp = 1, n = 3)
+bode_phase_numerical_data(G0, initial_exp = -1, final_exp = 1, n = 3)
+nyquist_plot_expr(Gr)
+nichols_plot_expr(Gr)
+```
+
+The plotting functions draw the same data with base R graphics.
+
+```{r}
+pole_zero_plot(Gr)
+step_response_plot(Gr)
+impulse_response_plot(Gr)
+ramp_response_plot(Gr)
+bode_magnitude_plot(Gr)
+bode_phase_plot(Gr)
+```
+
+```{r, fig.height = 6}
+bode_plot(Gr)
+```
+
+```{r}
+nyquist_plot(Gr, n = 50)
+nichols_plot(Gr, n = 50)
+```
+
+## Beams
+
+`Beam(length, E, I)` is a beam with loads written as singularity
+functions. Supports create reaction loads, which
+`$solve_for_reaction_loads()` determines.
+
+```{r}
+E <- Symbol("E"); I2 <- Symbol("I")
+b1 <- Beam(30, E, I2)
+R1 <- b1$apply_support(10, "roller"); R2 <- b1$apply_support(30, "roller")
+b1$apply_load(-8, 0, -1)
+b1$load
+b1$solve_for_reaction_loads(R1, R2)
+b1$reaction_loads
+b1$shear_force()
+b1$bending_moment()
+b1$slope()
+b1$deflection()
+b1$max_shear_force()
+b1$max_bmoment()
+b1$boundary_conditions
+```
+
+Boundary conditions can also be set directly:
+
+```{r}
+b2 <- Beam(4, E, I2)
+Ra <- Symbol("R_a"); Rb <- Symbol("R_b")
+b2$apply_load(Ra, 0, -1)
+b2$apply_load(6, 2, 0)
+b2$apply_load(Rb, 4, -1)
+b2$bc_deflection <- list(list(0, 0), list(4, 0))
+b2$solve_for_reaction_loads(Ra, Rb)
+b2$load
+b2$deflection()
+```
+
+`Beam3D()` is loaded in three dimensions:
+
+```{r}
+b3 <- Beam3D(30, E, Symbol("G"), I2, Symbol("A"))
+b3$apply_load(-4, 0, 0, dir = "y")
+b3$apply_load(Symbol("R"), 30, -1, dir = "y")
+b3$load_vector
+b3$shear_force()
+```
+
+## Columns, trusses, cables and arches
+
+```{r}
+cl <- Column(10, E, Symbol("A"))
+cl$apply_support(0)
+cl$apply_load(-1, 5, -1)
+cl$solve_for_reaction_loads()
+cl$reaction_loads
+cl$axial_force()
+```
+
+A truss is a set of nodes and members with loads and supports:
+
+```{r}
+tr <- Truss()
+tr$add_node(list("A", 0, 0), list("B", 2, 2), list("C", 3, 0))
+tr$add_member(list("AB", "A", "B"), list("BC", "B", "C"), list("AC", "A", "C"))
+tr$apply_load(list("B", Symbol("P"), -90))
+tr$apply_support(list("A", "pinned"), list("C", "roller"))
+tr$solve()
+tr$reaction_loads
+tr$internal_forces
+```
+
+A cable hangs between two supports:
+
+```{r}
+cb <- Cable(list("A", 0, 10), list("B", 10, 10))
+cb$apply_load(-1, list("X", 5, 5, 10, 270))
+cb$solve()
+cb$reaction_loads
+cb$tension
+cb$length
+```
+
+A three hinged parabolic arch:
+
+```{r}
+ar <- Arch(list(0, 0), list(10, 0), crown_x = 5, crown_y = 5)
+ar$get_shape_eqn
+ar$apply_load(-1, "C", 3, 10, angle = 270)
+ar$solve()
+ar$reaction_force
+ar$bending_moment_at(4)
+```
