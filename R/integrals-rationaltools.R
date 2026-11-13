@@ -16,7 +16,7 @@
         common <- Reduce(function(a, b) .dom_lcm(ZZ, a, b), dens, S_One)
       } else {
         dens <- lapply(P$c, function(z) expand(.as_numer_denom(z)[[2L]]))
-        common <- Reduce(function(a, b) .mpoly_lcm(a, b, .dk_gens(K0)), dens, S_One)
+        common <- Reduce(function(a, b) .mpoly_lcm(a, b, .dk_dgens(K0)), dens, S_One)
       }
       list(common, .dp_convert(.dp_mul_ground(P, common), Kr))
     }
@@ -232,7 +232,7 @@ ratint_logpart <- function(f, g, x, t = NULL) {
     q <- .dp_primitive(qi[[1L]])[[2L]]; i <- qi[[2L]]
     if (.dp_deg(g) == i) { H[[length(H) + 1L]] <- list(g, q); next }
     h <- Rmap[[as.character(i)]]
-    hlc <- .dp_from(.dp_LC(h), t, field = TRUE)
+    hlc <- .dp_from(.gd_out(.dp_LC(h)), t, field = TRUE)
     hs <- .dp_sqf_list(hlc, all = TRUE)
     hs2 <- include_sign(hs[[1L]], hlc$K, hs[[2L]])
     qf <- .dp_to_field(.dp_convert(q, .dp_joint_domain(list(.dp_expr(q), .dp_expr(hlc)), t, field = TRUE)))

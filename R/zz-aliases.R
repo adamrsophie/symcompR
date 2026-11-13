@@ -351,13 +351,16 @@ false <- S_false
 
 #' Polynomial aliases and constructions
 #'
-#' `sym_poly()` is [Poly()], `PurePoly()` is [Poly()], `GroebnerBasis()` is
+#' `sym_poly()` is [Poly()], `PurePoly()` is a [Poly()] whose generators
+#' are the placeholders `_0`, `_1`, ... so that polynomials differing only in
+#' their generators compare equal, `GroebnerBasis()` is
 #' [groebner()], and `rootof()`, `RootOf()` and `ComplexRootOf()` are
 #' [CRootOf()]. `monic()` divides by the leading coefficient, `cofactors()`
 #' returns the gcd and both cofactors, `half_gcdex()` the Bezout coefficient
 #' and gcd, `pexquo()` exact pseudo division, `all_roots()` all roots with
-#' multiplicity including `CRootOf` ones. `cyclotomic_poly()`,
-#' `symmetric_poly()`, `interpolating_poly()`, `random_poly()`,
+#' multiplicity, solving linear and quadratic factors and binomials by
+#' radicals and giving `CRootOf` for the other factors. `cyclotomic_poly()`,
+#' `symmetric_poly()`, `interpolating_poly()` (in Lagrange form), `random_poly()`,
 #' `itermonomials()` and `viete()` build polynomials and formulas;
 #' `legendre_poly()`, `chebyshevt_poly()`, `chebyshevu_poly()`,
 #' `hermite_poly()`, `hermite_prob_poly()`, `laguerre_poly()` and
@@ -387,7 +390,7 @@ NULL
 poly <- function(x, ...) if (is_sym(x)) Poly(x, ...) else stats::poly(x, ...)
 #' @rdname poly-aliases
 #' @export
-PurePoly <- function(f, ...) Poly(f, ...)
+PurePoly <- function(f, ...) .purepoly(f, ...)
 #' @rdname poly-aliases
 #' @export
 GroebnerBasis <- function(f, ...) groebner(f, ...)
@@ -446,6 +449,7 @@ pexquo <- function(f, g, ...) {
 #' @export
 all_roots <- function(f, x = NULL) {
   if (inherits(f, "RootSystem")) return(.rs_all_roots(f))
+  if (!is.null(r <- .all_roots_rootof(f, x))) return(r)
   r <- roots(f, x, multiple = TRUE, rootof = TRUE)
   if (is.null(r)) list() else r
 }
@@ -482,7 +486,7 @@ interpolating_poly <- function(n, x, X = NULL, Y = NULL) {
   x <- as_sym(x)
   if (is.null(X)) X <- lapply(seq_len(n) - 1L, function(i) Symbol(paste0("x", i)))
   if (is.null(Y)) Y <- lapply(seq_len(n) - 1L, function(i) Symbol(paste0("y", i)))
-  interpolate(lapply(seq_len(n), function(i) list(X[[i]], Y[[i]])), x)
+  .lagrange_poly(n, x, lapply(X, as_sym), lapply(Y, as_sym))
 }
 
 #' @rdname poly-aliases

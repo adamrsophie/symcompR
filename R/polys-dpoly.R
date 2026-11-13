@@ -13,7 +13,7 @@
 
 # the domain of the coefficients of e in x (Poly(e, x) with field = TRUE when asked)
 .dp_domain <- function(coeffs, field = FALSE) {
-  K <- construct_domain(coeffs)[[1L]]
+  K <- construct_domain(lapply(coeffs, .gd_out))[[1L]]
   if (field && !.dk_field(K)) K <- .dom_get_field(K)
   K
 }
@@ -32,9 +32,9 @@
 .dn <- function(K, a) {
   switch(.dk(K),
     ZZ = , QQ = , ZZ_I = , QQ_I = a,
-    PolyRing = expand(a),
-    FracField = cancel(a),
-    .ex_simp(a))
+    PolyRing = expand(.gd_in(K, a)),
+    FracField = cancel(.gd_in(K, a)),
+    .ex_simp(.gd_out(a)))
 }
 
 .d_zero <- function(a) is_zero_num(a)
@@ -57,8 +57,8 @@
     ZZ = , QQ = is_number_type(a) && num_sign(a) < 0,
     # GaussianDomain.is_negative is False for every element
     ZZ_I = , QQ_I = FALSE,
-    PolyRing = { lc <- .lex_lc(a, .dk_gens(K)); is_number_type(lc) && num_sign(lc) < 0 },
-    FracField = { nd <- .as_numer_denom(a); lc <- .lex_lc(expand(nd[[1L]]), .dk_gens(K)); is_number_type(lc) && num_sign(lc) < 0 },
+    PolyRing = { lc <- .lex_lc(a, .dk_dgens(K)); is_number_type(lc) && num_sign(lc) < 0 },
+    FracField = { nd <- .as_numer_denom(a); lc <- .lex_lc(expand(nd[[1L]]), .dk_dgens(K)); is_number_type(lc) && num_sign(lc) < 0 },
     { cm <- as_coeff_mul_split(a)[[1L]]; is_number_type(cm) && num_sign(cm) < 0 })
 }
 
@@ -100,10 +100,10 @@
     p <- .zzi_gcd(expand(.mul(list(a, .zs(da)))), expand(.mul(list(b, .zs(db)))))
     return(.div(p, .zs(gmp::lcm.bigz(da, db))))
   }
-  if (k == "PolyRing") return(.mpoly_gcd(a, b, .dk_gens(K), .dk(.dk_ground(K)) == "QQ"))
+  if (k == "PolyRing") return(.mpoly_gcd(a, b, .dk_dgens(K), .dk(.dk_ground(K)) == "QQ"))
   if (k == "FracField") {
     na <- .as_numer_denom(a); nb <- .as_numer_denom(b)
-    gens <- .dk_gens(K)
+    gens <- .dk_dgens(K)
     p <- .mpoly_gcd(expand(na[[1L]]), expand(nb[[1L]]), gens, FALSE)
     q <- .mpoly_lcm(expand(na[[2L]]), expand(nb[[2L]]), gens)
     return(cancel(.div(p, q)))
@@ -164,7 +164,7 @@ dpoly <- function(c, x, K) structure(list(c = .dp_strip(c), x = x, K = K), class
 .dp_expr <- function(p) {
   n <- length(p$c)
   if (!n) return(S_Zero)
-  .add(lapply(seq_len(n), function(i) .mul(list(p$c[[i]], .pow(p$x, .int(n - i))))))
+  .add(lapply(seq_len(n), function(i) .mul(list(.gd_out(p$c[[i]]), .pow(p$x, .int(n - i))))))
 }
 .dp_deg <- function(p) if (length(p$c)) length(p$c) - 1L else -Inf
 .dp_LC <- function(p) if (length(p$c)) p$c[[1L]] else S_Zero
@@ -270,7 +270,7 @@ dpoly <- function(c, x, K) structure(list(c = .dp_strip(c), x = x, K = K), class
 .dom_divides <- function(K, a, b) {
   k <- .dk(K)
   if (k == "ZZ") return(gmp::mod.bigz(gmp::numerator(gmp::as.bigq(b$value)), gmp::numerator(gmp::as.bigq(a$value))) == 0)
-  if (k == "PolyRing") { q <- cancel(.div(b, a)); return(isTRUE(is_polynomial(q)) && !.has_den_syms(q, .dk_gens(K))) }
+  if (k == "PolyRing") { q <- cancel(.div(b, a)); return(isTRUE(is_polynomial(q)) && !.has_den_syms(q, .dk_dgens(K))) }
   TRUE
 }
 .has_den_syms <- function(q, gens) { d <- .as_numer_denom(q)[[2L]]; any(vapply(gens, function(g) .has1(d, g), NA)) }
@@ -426,7 +426,7 @@ dpoly <- function(c, x, K) structure(list(c = .dp_strip(c), x = x, K = K), class
   if (identical(.dk(R), .dk(K))) return(f)
   ok <- all(vapply(f$c, function(z) {
     if (.dk(R) == "ZZ") return(z$type == "Integer")
-    nd <- .as_numer_denom(z); !any(vapply(.dk_gens(K), function(g) .has1(nd[[2L]], g), NA)) && is_number_type(nd[[2L]]) && is_one_num(nd[[2L]])
+    nd <- .as_numer_denom(z); !any(vapply(.dk_dgens(K), function(g) .has1(nd[[2L]], g), NA)) && is_number_type(nd[[2L]]) && is_one_num(nd[[2L]])
   }, NA))
   if (ok) .dp_convert(f, R) else f
 }

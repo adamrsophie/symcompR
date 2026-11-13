@@ -457,7 +457,7 @@ format.sym_ring <- function(x, ...) x$name
 print.sym_ring <- function(x, ...) { cat(format(x), "\n", sep = ""); invisible(x) }
 #' @rdname rings
 #' @export
-format.sym_ring_element <- function(x, ...) .str(x$expr)
+format.sym_ring_element <- function(x, ...) .relem_str(x)
 #' @rdname rings
 #' @export
 print.sym_ring_element <- function(x, ...) { cat(format(x), "\n", sep = ""); invisible(x) }
@@ -469,8 +469,14 @@ Ops.sym_ring_element <- function(e1, e2) {
   if (missing(e2)) return(if (.Generic == "-") .relem(R, .neg(e1$expr)) else e1)
   a <- ex(e1); b <- ex(e2)
   if (.Generic %in% c("==", "!=")) { eq <- is_zero_num(expand(.sub(a, b))); return(if (.Generic == "==") eq else !eq) }
-  r <- switch(.Generic, `+` = .add(list(a, b)), `-` = .sub(a, b), `*` = .mul(list(a, b)), `^` = .pow(a, b),
+  r <- switch(.Generic, `+` = .add(list(a, b)), `-` = .sub(a, b), `*` = .mul(list(a, b)),
+              `^` = {
+                if (is_number_type(b) && isTRUE(num_sign(b) < 0) && is_zero_num(expand(a))) stop(.sympy_condition("ZeroDivisionError", ""))
+                .pow(a, b)
+              },
               `/` = {
+                q <- .relem_div(R, a, b)
+                if (!is.null(q)) return(.relem(R, q))
                 q <- .div(a, b)
                 if (R$kind == "ring") {
                   qc <- cancel(q)

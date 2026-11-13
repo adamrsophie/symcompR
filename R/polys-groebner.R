@@ -94,7 +94,7 @@ groebner <- function(F, ..., order = "lex") {
   })
   gens <- .gens_of(F, list(...))
   cv <- .to_qpolys(F, gens)
-  G <- .groebner_qp(cv$polys, order)
+  G <- .gb_sorted(.groebner_qp(cv$polys, order), order)
   out <- lapply(G, function(g) qpoly_to_expr(qp_primitive(g)$poly, cv$gens))
   structure(out, gens = cv$gens, order = order)
 }

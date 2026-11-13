@@ -110,13 +110,16 @@ sym_poly(x, ...)
 An expression, list or \code{Poly}.
 }
 \description{
-\code{sym_poly()} is \code{\link[=Poly]{Poly()}}, \code{PurePoly()} is \code{\link[=Poly]{Poly()}}, \code{GroebnerBasis()} is
+\code{sym_poly()} is \code{\link[=Poly]{Poly()}}, \code{PurePoly()} is a \code{\link[=Poly]{Poly()}} whose generators
+are the placeholders \verb{_0}, \verb{_1}, ... so that polynomials differing only in
+their generators compare equal, \code{GroebnerBasis()} is
 \code{\link[=groebner]{groebner()}}, and \code{rootof()}, \code{RootOf()} and \code{ComplexRootOf()} are
 \code{\link[=CRootOf]{CRootOf()}}. \code{monic()} divides by the leading coefficient, \code{cofactors()}
 returns the gcd and both cofactors, \code{half_gcdex()} the Bezout coefficient
 and gcd, \code{pexquo()} exact pseudo division, \code{all_roots()} all roots with
-multiplicity including \code{CRootOf} ones. \code{cyclotomic_poly()},
-\code{symmetric_poly()}, \code{interpolating_poly()}, \code{random_poly()},
+multiplicity, solving linear and quadratic factors and binomials by
+radicals and giving \code{CRootOf} for the other factors. \code{cyclotomic_poly()},
+\code{symmetric_poly()}, \code{interpolating_poly()} (in Lagrange form), \code{random_poly()},
 \code{itermonomials()} and \code{viete()} build polynomials and formulas;
 \code{legendre_poly()}, \code{chebyshevt_poly()}, \code{chebyshevu_poly()},
 \code{hermite_poly()}, \code{hermite_prob_poly()}, \code{laguerre_poly()} and

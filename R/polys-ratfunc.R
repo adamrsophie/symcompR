@@ -97,6 +97,8 @@ together <- function(e, deep = FALSE, fraction = TRUE) {
 #' cancel((x^2 - 1) / (x - 1))
 #' @export
 cancel <- function(e, ...) {
+  if (is.list(e) && !is_sym(e) && !inherits(e, c("symmatrix", "Poly"))) return(.cancel_tuple(e, .as_gens(Filter(Negate(is.logical), list(...))), list(...)$polys, list(...)))
+  if (is_sym(e) && !is.null(r <- .cancel_expr_opts(e, list(...)))) return(r)
   if (inherits(e, "symmatrix")) return(.mat_map(e, cancel))
   .cancel(as_sym(e), .as_gens(list(...)))
 }

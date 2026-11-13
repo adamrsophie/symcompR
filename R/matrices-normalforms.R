@@ -127,6 +127,7 @@
 #' smith_normal_form(Matrix(list(list(12, 6, 4), list(3, 9, 6), list(2, 16, 14))))
 #' @export
 hermite_normal_form <- function(A, D = NULL, check_rank = FALSE) {
+  if (inherits(A, "DomainMatrix")) return(.dm_hnf(A, D, check_rank))
   m <- .zm_from_sym(A)
   if (!is.null(D) && (!check_rank || rank(A) == A$nrow)) return(.zm_to_sym(.hnf_mod_D(m, A$ncol, D)))
   h <- .hnf(m, A$ncol)
@@ -198,6 +199,7 @@ hermite_normal_form <- function(A, D = NULL, check_rank = FALSE) {
 #' @rdname hermite_normal_form
 #' @export
 invariant_factors <- function(A) {
+  if (inherits(A, "DomainMatrix")) return(.dm_invariant_factors(A))
   r <- .snf_invariants(.zm_from_sym(A), A$nrow, A$ncol)
   do.call(Tuple, lapply(r, function(v) .int(as.character(v))))
 }
@@ -205,6 +207,7 @@ invariant_factors <- function(A) {
 #' @rdname hermite_normal_form
 #' @export
 smith_normal_form <- function(A) {
+  if (inherits(A, "DomainMatrix")) return(.dm_smith_normal_form(A))
   inv <- invariant_factors(A)$args
   nr <- A$nrow; nc <- A$ncol
   Matrix(lapply(seq_len(nr), function(i) lapply(seq_len(nc), function(j) if (i == j && i <= length(inv)) inv[[i]] else S_Zero)))

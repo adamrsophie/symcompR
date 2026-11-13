@@ -8,7 +8,11 @@
 
 .P <- function(e, x, domain = NULL, field = FALSE) {
   if (inherits(e, "dpoly")) {
-    if (identical(e$x$key, as_sym(x)$key) && is.null(domain) && !field) return(e)
+    # Poly._from_poly: the same generator keeps the representation
+    if (identical(e$x$key, as_sym(x)$key)) {
+      if (!is.null(domain)) return(.dp_convert(e, domain))
+      return(if (field) .dp_to_field(e) else e)
+    }
     e <- .dp_expr(e)
   }
   x <- as_sym(x)
@@ -28,19 +32,19 @@ P_or_null <- function(e, x, domain = NULL, field = FALSE) {
 
 P_expr <- function(p) .dp_expr(p)
 P_deg <- function(p) .dp_deg(p)
-P_LC <- function(p) .dp_LC(p)
-P_TC <- function(p) .dp_TC(p)
+P_LC <- function(p) .gd_out(.dp_LC(p))
+P_TC <- function(p) .gd_out(.dp_TC(p))
 P_is_zero <- function(p) .dp_zero(p)
 P_is_one <- function(p) length(p$c) == 1L && is_one_num(p$c[[1L]])
 P_is_ground <- function(p) length(p$c) <= 1L
 P_is_monomial <- function(p) sum(!vapply(p$c, is_zero_num, NA)) <= 1L
 P_has <- function(p, x) .has1(P_expr(p), as_sym(x))
 # Poly.nth(k): the coefficient of x^k
-P_nth <- function(p, k) { n <- P_deg(p); if (k > n || k < 0) S_Zero else p$c[[n - k + 1L]] }
+P_nth <- function(p, k) { n <- P_deg(p); if (k > n || k < 0) S_Zero else .gd_out(p$c[[n - k + 1L]]) }
 # Poly.coeffs(): the nonzero coefficients, leading first
-P_coeffs <- function(p) Filter(function(z) !is_zero_num(z), p$c)
+P_coeffs <- function(p) lapply(Filter(function(z) !is_zero_num(z), p$c), .gd_out)
 P_monoms <- function(p) { n <- P_deg(p); (n:0)[!vapply(p$c, is_zero_num, NA)] }
-P_all_coeffs <- function(p) if (length(p$c)) p$c else list(S_Zero)
+P_all_coeffs <- function(p) if (length(p$c)) lapply(p$c, .gd_out) else list(S_Zero)
 
 # common domain of two polys (Poly._unify); a plain expression becomes a
 # Poly in the same generator
@@ -60,7 +64,7 @@ P_quo_ground <- function(f, c) .dp_quo_ground(f, as_sym(c))
 P_exquo_ground <- function(f, c) .dp_quo_ground(f, as_sym(c))
 P_diff <- function(f) .dp_diff(f)
 P_to_field <- function(f) .dp_to_field(f)
-P_eval <- function(f, a) .dp_eval(f, as_sym(a))
+P_eval <- function(f, a) .gd_out(.dp_eval(f, as_sym(a)))
 
 # Poly.div with auto = True: rings go to their field, the results retract
 .P_auto <- function(f, g, op) {
@@ -118,7 +122,7 @@ P_cancel <- function(f, g, include = TRUE) {
 P_resultant <- function(f, g, includePRS = FALSE) {
   u <- .P_unify(f, g)
   r <- .dp_prs_resultant(u[[1L]], u[[2L]])
-  if (includePRS) list(r[[1L]], r[[2L]]) else r[[1L]]
+  if (includePRS) list(.gd_out(r[[1L]]), r[[2L]]) else .gd_out(r[[1L]])
 }
 
 # Poly.sqf_list and sqf_list_include

@@ -43,6 +43,7 @@ Poly <- function(expr, ...) {
   expr <- as_sym(expr)
   pa <- .split_poly_opts(list(...))
   if (length(pa$opts)) {
+    if (!is.null(P <- .poly_with_domain(expr, pa))) return(P)
     Fd <- .poly_field(pa$opts, list(expr))
     P <- do.call(Poly, c(list(expr), pa$gens))
     if (Fd$kind != "GF") return(P)
@@ -73,7 +74,7 @@ Poly <- function(expr, ...) {
   extra <- Filter(function(g) !(g$key %in% gk), all_gens)
   full <- c(gens, extra)
   rep <- expr_to_qpoly(expr, full, strict = FALSE)
-  structure(list(rep = rep, gens = full, ngens = length(gens)), class = "Poly")
+  .poly_frac_tag(structure(list(rep = rep, gens = full, ngens = length(gens)), class = "Poly"))
 }
 
 .poly_ngens <- function(p) if (is.null(p$ngens)) length(p$gens) else p$ngens
@@ -91,7 +92,7 @@ as_expr <- function(p, ...) {
 print.Poly <- function(x, ...) {
   ng <- .poly_ngens(x)
   gens <- vapply(x$gens[seq_len(ng)], .str, "")
-  dom <- if (ng < length(x$gens)) paste0(.domain_of(x$rep), "[", paste(vapply(x$gens[-seq_len(ng)], .str, ""),
+  dom <- if (!is.null(x$dom_str)) x$dom_str else if (ng < length(x$gens)) paste0(.domain_of(x$rep), "[", paste(vapply(x$gens[-seq_len(ng)], .str, ""),
                                                   collapse = ","), "]")
          else .domain_of(x$rep)
   tail <- if (!is.null(x$modulus)) paste0("modulus=", x$modulus) else paste0("domain='", dom, "'")
@@ -130,6 +131,15 @@ format.Poly <- function(x, ...) .str(as_expr(x))
 
 #' @export
 Ops.Poly <- function(e1, e2) {
+  # a generator that is not a symbol (exp(1/2)) stays independent: the
+  # representations are combined directly, as Poly arithmetic does in SymPy
+  if (!missing(e2) && inherits(e1, "Poly") && is.null(e1$modulus) && any(vapply(e1$gens, function(z) z$type != "Symbol", NA))) {
+    same <- inherits(e2, "Poly") && is.null(e2$modulus) && .poly_ngens(e1) == .poly_ngens(e2) &&
+      identical(vapply(e1$gens, .k, ""), vapply(e2$gens, .k, ""))
+    op <- if (same) switch(.Generic, `+` = qp_add, `-` = qp_sub, `*` = qp_mul)
+          else if (.Generic == "^" && is.numeric(e2) && length(e2) == 1L && e2 >= 0 && e2 == round(e2)) function(a, b) qp_pow(a, as.integer(e2))
+    if (!is.null(op)) { out <- unclass(e1); out$rep <- op(e1$rep, if (same) e2$rep); return(structure(out, class = "Poly")) }
+  }
   g <- if (inherits(e1, "Poly")) e1$gens else e2$gens
   a <- if (inherits(e1, "Poly")) as_expr(e1) else as_sym(e1)
   if (missing(e2)) return(Poly(get(.Generic)(a), g))
@@ -543,7 +553,7 @@ rem <- function(f, g, ...) div(f, g, ...)$r
 exquo <- function(f, g, ...) {
   d <- div(f, g, ...)
   r <- if (inherits(d$r, "Poly")) as_expr(d$r) else d$r
-  if (!is_zero_num(r)) stop("polynomial division is not exact")
+  if (!is_zero_num(r)) stop(ExactQuotientFailed(paste0(.str(as_expr(g)), " does not divide ", .str(as_expr(f)))))
   d$q
 }
 
@@ -624,6 +634,7 @@ gcd <- function(f, g, ...) {
   fs <- as_sym(if (inherits(f, "Poly")) as_expr(f) else f)
   gs <- as_sym(if (inherits(g, "Poly")) as_expr(g) else g)
   if (is_exact_number(fs) && is_exact_number(gs)) return(.num_gcd(fs, gs))
+  if (!is.null(P <- .poly_mod_gcd(f, g, list(...)))) return(P)
   pa <- .split_poly_opts(list(...))
   if (length(pa$opts)) {
     Fd <- .poly_field(pa$opts, list(fs, gs))
@@ -1139,6 +1150,7 @@ sqf <- function(f, ...) {
 #' @rdname sym_factor
 #' @export
 sqf_part <- function(f, ...) {
+  if (inherits(f, "Poly")) return(.sqf_part_poly(f, list(...)))
   fe <- as_sym(if (inherits(f, "Poly")) as_expr(f) else f)
   if (is_zero_num(fe)) return(S_Zero)
   pa <- .split_poly_opts(list(...))
@@ -1147,7 +1159,7 @@ sqf_part <- function(f, ...) {
     if (Fd$kind == "NF" && !identical(Fd$gauss, "ZZ_I")) return(.field_sqf_part(fe, Fd, pa$gens))
   }
   sl <- sqf_list(f, ...)
-  .mul(lapply(sl$factors, `[[`, 1L))
+  .sqf_part_expr(.mul(lapply(sl$factors, `[[`, 1L)), pa)
 }
 
 # ---------------------------------------------------------------------------
@@ -1303,7 +1315,7 @@ horner <- function(f, x = NULL) {
 #' @export
 interpolate <- function(points, x) {
   x <- as_sym(x)
-  if (!is.list(points)) points <- lapply(seq_along(points), function(i) c(i, points[[i]]))
+  if (!is.list(points) || !.interp_is_pairs(points)) points <- lapply(seq_along(points), function(i) list(i, points[[i]]))
   xs <- lapply(points, function(p) as_sym(p[[1L]]))
   ys <- lapply(points, function(p) as_sym(p[[2L]]))
   n <- length(xs)

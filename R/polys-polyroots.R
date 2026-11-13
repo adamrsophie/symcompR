@@ -17,8 +17,8 @@ expand_2arg <- function(e) .map_bottom_up(as_sym(e), function(z) {
   z
 })
 
-.pr_all_coeffs <- function(f) f$c
-.pr_nth <- function(f, k) { n <- .dp_deg(f); if (k > n) S_Zero else f$c[[n - k + 1L]] }
+.pr_all_coeffs <- function(f) lapply(f$c, .gd_out)
+.pr_nth <- function(f, k) { n <- .dp_deg(f); if (k > n) S_Zero else .gd_out(f$c[[n - k + 1L]]) }
 .pr_length <- function(f) sum(!vapply(f$c, is_zero_num, NA))
 
 .pr_dom_simplify <- function(f, r) {
@@ -453,7 +453,7 @@ roots_cyclotomic <- function(f, factor = FALSE) {
       common <- Reduce(function(a, b) .dom_lcm(ZZ, a, b), lapply(poly$c, den1), S_One)
       poly <- .dp_convert(.dp_mul_ground(poly, common), .dom_get_ring(K))
     } else if (.dk(K) == "FracField") {
-      common <- Reduce(function(a, b) .mpoly_lcm(a, b, .dk_gens(K)), lapply(poly$c, function(z) expand(.as_numer_denom(z)[[2L]])), S_One)
+      common <- Reduce(function(a, b) .mpoly_lcm(a, b, .dk_dgens(K)), lapply(poly$c, function(z) expand(.as_numer_denom(z)[[2L]])), S_One)
       poly <- .dp_convert(.dp_mul_ground(poly, common), .dom_get_ring(K))
     } else if (.dk(K) == "EX") {
       common <- Reduce(function(a, b) lcm(a, b), lapply(poly$c, function(z) .as_numer_denom(z)[[2L]]), S_One)
@@ -464,12 +464,13 @@ roots_cyclotomic <- function(f, factor = FALSE) {
   # retract
   poly <- .dp_from(.dp_expr(poly), poly$x, .dp_domain(poly$c))
   if (.dk(poly$K) == "PolyRing" && all(vapply(poly$c, function(c) is_zero_num(c) || .ri_is_term(c), NA))) {
-    gens <- .dk_gens(poly$K)
+    gens <- .dk_gens(poly$K); dgens <- .dk_dgens(poly$K)
     n <- .dp_deg(poly)
     nz <- which(!vapply(poly$c, is_zero_num, NA))
     base <- n - (nz - 1L)
-    for (gen in gens) {
-      strip <- vapply(poly$c[nz], function(c) degree(c, gen), 0)
+    for (gi in seq_along(gens)) {
+      gen <- gens[[gi]]; dgen <- dgens[[gi]]
+      strip <- vapply(poly$c[nz], function(c) degree(c, dgen), 0)
       bb <- base
       rev_ <- FALSE
       if (strip[1L] < strip[length(strip)]) { strip <- rev(strip); rev_ <- TRUE }
@@ -483,7 +484,7 @@ roots_cyclotomic <- function(f, factor = FALSE) {
       }
       if (ok && !is.null(ratio)) {
         if (rev_) ratio <- -ratio
-        poly <- .dp_from(subs(.dp_expr(poly), gen, S_One), poly$x)
+        poly <- .dp_from(.gd_out(subs(.dp_expr_raw(poly), dgen, S_One)), poly$x)
         coeff <- .mul(list(coeff, .pow(gen, .int(-ratio))))
       }
     }
@@ -590,6 +591,7 @@ roots_cyclotomic <- function(f, factor = FALSE) {
     if (.dp_is_cyclotomic(f)) return(c(result, roots_cyclotomic(f)))
     if (n == 3L && cubics) return(c(result, roots_cubic(f, trig = trig)))
     if (n == 4L && quartics) return(c(result, roots_quartic(f)))
+    if (n == 5L && quintics) return(c(result, roots_quintic(f)))
     result
   }
   try_decompose <- function(f) {

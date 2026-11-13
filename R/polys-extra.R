@@ -250,7 +250,7 @@ rational_interpolate <- function(data, degnum, x = Symbol("x")) {
   r <- ns[[1L]]$data
   num <- .add(lapply(0:degnum, function(j) .mul(list(r[[j + 1L]], .pow(x, .int(j))))))
   den <- .add(lapply(0:k, function(j) .mul(list(r[[degnum + 2L + j]], .pow(x, .int(j))))))
-  cancel(.div(num, den))
+  .div(num, den)
 }
 
 # ---------------------------------------------------------------------------

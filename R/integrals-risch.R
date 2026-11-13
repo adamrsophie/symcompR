@@ -468,8 +468,8 @@ canonical_representation <- function(a, d, DE) {
   qr <- P_div(a, d)
   sp <- splitfactor(d, DE)
   dn <- sp[[1L]]; ds <- sp[[2L]]
-  bc <- gcdex_diophantine(.P(P_expr(dn), DE$t), .P(P_expr(ds), DE$t), .P(P_expr(qr[[2L]]), DE$t))
-  list(qr[[1L]], list(.P(P_expr(bc[[1L]]), DE$t), ds), list(.P(P_expr(bc[[2L]]), DE$t), dn))
+  bc <- gcdex_diophantine(.P(dn, DE$t), .P(ds, DE$t), .P(qr[[2L]], DE$t))
+  list(qr[[1L]], list(.P(bc[[1L]], DE$t), ds), list(.P(bc[[2L]], DE$t), dn))
 }
 
 hermite_reduce <- function(a, d, DE) {
@@ -482,7 +482,7 @@ hermite_reduce <- function(a, d, DE) {
   a <- P_mul(a, l); d <- P_mul(d, l)
   ga <- .P(S_Zero, DE$t); gd <- .P(S_One, DE$t)
   dd <- derivation(d, DE)
-  dm <- .P(P_expr(P_gcd(P_to_field(d), P_to_field(dd))), DE$t)
+  dm <- .P(P_gcd(P_to_field(d), P_to_field(dd)), DE$t)
   ds <- P_div(d, dm)[[1L]]
   while (P_deg(dm) > 0) {
     ddm <- derivation(dm, DE)
@@ -490,11 +490,11 @@ hermite_reduce <- function(a, d, DE) {
     dms <- P_div(dm, dm2)[[1L]]
     ds_ddm <- P_mul(ds, ddm)
     ds_ddm_dm <- P_div(ds_ddm, dm)[[1L]]
-    bc <- gcdex_diophantine(.P(P_expr(P_neg(ds_ddm_dm)), DE$t), .P(P_expr(dms), DE$t), .P(P_expr(a), DE$t))
-    b <- .P(P_expr(bc[[1L]]), DE$t); c <- .P(P_expr(bc[[2L]]), DE$t)
-    db <- .P(P_expr(derivation(b, DE)), DE$t)
+    bc <- gcdex_diophantine(.P(P_neg(ds_ddm_dm), DE$t), .P(dms, DE$t), .P(a, DE$t))
+    b <- .P(bc[[1L]], DE$t); c <- .P(bc[[2L]], DE$t)
+    db <- .P(derivation(b, DE), DE$t)
     ds_dms <- P_div(ds, dms)[[1L]]
-    a <- P_sub(.P(P_expr(c), DE$t), .P(P_expr(P_mul(db, ds_dms)), DE$t))
+    a <- P_sub(.P(c, DE$t), .P(P_mul(db, ds_dms), DE$t))
     ga <- P_add(P_mul(ga, dm), P_mul(b, gd))
     gd <- P_mul(gd, dm)
     gg <- P_cancel(ga, gd, include = TRUE); ga <- gg[[1L]]; gd <- gg[[2L]]
@@ -565,14 +565,14 @@ residue_reduce <- function(a, d, DE, z = NULL, invert = TRUE) {
     } else {
       h <- Rmap[[as.character(i)]]
       if (is.null(h)) next
-      h_lc <- .P(P_LC(.P(P_expr(h), DE$t)), DE$t, field = TRUE)
+      h_lc <- .P(P_LC(.P(h, DE$t)), DE$t, field = TRUE)
       for (aj in P_sqf_list_include(h_lc, all = TRUE)) {
         g <- .ri_gens_gcd(P_expr(aj[[1L]]), P_expr(P_pow(s, aj[[2L]])), c(list(z), kkinv))
-        h <- P_exquo(.P(P_expr(h), DE$t, field = TRUE), .P(g, DE$t))
+        h <- P_exquo(.P(h, DE$t, field = TRUE), .P(g, DE$t))
       }
       s <- P_monic(.P(P_expr(s), z))
       if (invert) {
-        h_lc <- .P(P_LC(.P(P_expr(h), DE$t)), DE$t, field = TRUE)
+        h_lc <- .P(P_LC(.P(h, DE$t)), DE$t, field = TRUE)
         inv <- P_invert(.P(P_expr(h_lc), z, field = TRUE), s)
         coeffs <- list(S_One)
         for (cf in P_coeffs(h)[-1L]) {

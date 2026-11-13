@@ -338,7 +338,9 @@ register_neval("CRootOf", function(e, env) {
   }
   r <- complex(real = re, imaginary = im)
   real <- im == 0
-  o <- order(!real, re, abs(im), im)
+  # rounded keys: conjugates whose parts differ only by polishing noise sort
+  # with the negative imaginary part first, as SymPy orders CRootOf
+  o <- order(!real, signif(re, 12), signif(abs(im), 12), im)
   lapply(r[o], function(z) if (Im(z) == 0) Re(z) else z)
 }
 
