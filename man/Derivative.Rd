@@ -4,12 +4,14 @@
 \alias{Derivative}
 \title{Unevaluated derivative}
 \usage{
-Derivative(f, ...)
+Derivative(f, ..., evaluate = FALSE)
 }
 \arguments{
 \item{f}{Expression.}
 
 \item{...}{Variables and counts, as for \code{\link[=diff]{diff()}}.}
+
+\item{evaluate}{If \code{TRUE}, compute the derivative, as \code{\link[=diff]{diff()}} does.}
 }
 \value{
 A \code{sym} Derivative.

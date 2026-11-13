@@ -24,6 +24,10 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
          # PRECEDENCE_VALUES gives Mod the precedence of Mul
          Function = if (identical(e$name, "Mod")) PREC$Mul else PREC$Atom,
          UnevaluatedExpr = .prec(e$args[[1L]]) - 0.5,
+         # PRECEDENCE_VALUES and the class MRO for matrix expressions
+         MatAdd = PREC$Add, MatPow = , Inverse = , HadamardPower = PREC$Pow,
+         HadamardProduct = , KroneckerProduct = PREC$Mul,
+         MatMul = if (is_number_type(e$args[[1L]]) && could_extract_minus_sign(e$args[[1L]])) PREC$Add else PREC$Mul,
          PREC$Atom)
 }
 
@@ -179,6 +183,8 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
   if (any(is_o)) {
     # Expr.as_ordered_terms with Order terms: both groups sorted in reverse
     terms <- c(.add_print_order(e$args[!is_o], rev = TRUE), .add_print_order(e$args[is_o], rev = TRUE))
+  } else if (any(vapply(e$args, .me_has_nc_factor, NA))) {
+    terms <- .me_ordered_terms(e$args)
   } else {
     terms <- .add_print_order(e$args)
   }
@@ -204,7 +210,8 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
 }
 
 .str_add_term <- function(t) {
-  if (.prec(t) < PREC$Add) paste0("(", .str(t), ")") else .str(t)
+  # an Add term (a MatAdd inside Add) is parenthesized, as in StrPrinter._print_Add
+  if (.prec(t) < PREC$Add || t$type == "MatAdd") paste0("(", .str(t), ")") else .str(t)
 }
 
 # -e for a Mul with a negative leading number, without redistributing an
@@ -411,6 +418,7 @@ sstr <- function(e) {
     rows <- vapply(.mrows(e), function(r) paste0("[", paste(vapply(r, .str, ""), collapse = ", "), "]"), "")
     return(paste0("Matrix([", paste(rows, collapse = ", "), "])"))
   }
+  if (inherits(e, "SymArray")) return(.ae_str_ndarray(e$data, e$shape))
   .str_top(as_sym(e))
 }
 

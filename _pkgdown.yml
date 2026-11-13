@@ -300,6 +300,14 @@ reference:
   - PolyQuintic
 - title: Matrices and linear algebra
   contents:
+  - hadamard_product
+  - kronecker_product
+  - structured-matrices
+  - MatrixUnit
+  - GenericIdentity
+  - MatrixSet
+  - ElementwiseApplyFunction
+  - dotprodsimp
   - Matrix
   - matrix-builders
   - matrix-constructions
@@ -443,6 +451,14 @@ reference:
   - ParametricIntegral
 - title: Arrays and tensors
   contents:
+  - array-expressions
+  - ArrayComprehension
+  - array_derive
+  - collect_tensor_products
+  - convert_indexed_to_array
+  - convert_matrix_to_array
+  - get_shape
+  - nest_permutation
   - Array
   - TensorHead
   - tensor-indices

@@ -4,7 +4,10 @@
 .MATEXPR <- c("MatrixSymbol", "Identity", "ZeroMatrix", "OneMatrix", "MatAdd", "MatMul", "MatPow",
               "Transpose", "Inverse", "Adjoint", "HadamardProduct", "HadamardPower", "KroneckerProduct",
               "BlockMatrix", "BlockDiagMatrix", "FunctionMatrix", "DiagMatrix", "DiagonalOf",
-              "DiagonalMatrix", "PermutationMatrix", "MatrixPermute", "ImmutableMatrix", "MatrixSlice", "MatrixSolve")
+              "DiagonalMatrix", "PermutationMatrix", "MatrixPermute", "ImmutableMatrix", "MatrixSlice", "MatrixSolve",
+              "ElementwiseApplyFunction", "MatrixUnit", "GenericIdentity", "GenericZeroMatrix", "CompanionMatrix",
+              "DFT", "IDFT", "LofLU", "UofLU", "LofCholesky", "UofCholesky", "QofQR", "RofQR", "EigenVectors",
+              "EigenValues", "UofSVD", "SofSVD", "VofSVD")
 .is_matexpr <- function(e) is_sym(e) && e$type %in% .MATEXPR
 
 .mshape <- function(e) {
@@ -18,7 +21,7 @@
       if (is_one_num(s[[3L]])) d else fcall("ceiling", list(.div(d, s[[3L]])))
     }),
     Identity = , PermutationMatrix = list(a[[1L]], a[[1L]]),
-    MatAdd = , HadamardProduct = , MatPow = , HadamardPower = , DiagonalMatrix = , Inverse = ,
+    MatAdd = , HadamardProduct = , MatPow = , DiagonalMatrix = , Inverse = ,
     MatrixPermute = .mshape(a[[1L]]),
     MatrixSolve = .mshape(a[[2L]]),
     MatMul = {
@@ -44,7 +47,8 @@
     DiagonalOf = {
       s <- .mshape(a[[1L]])
       list(if (identical(s[[1L]]$key, s[[2L]]$key)) s[[1L]] else Min(s[[1L]], s[[2L]]), S_One)
-    })
+    },
+    { h <- .me_shape_hooks[[e$type]]; if (!is.null(h)) h(e) })
 }
 
 .dim_eq <- function(a, b) identical(a$key, b$key)
@@ -89,19 +93,28 @@ NULL
 #' @export
 MatrixSymbol <- function(name, n, m) {
   n <- .mdims(n); m <- .mdims(m)
+  .me_check_dim(m); .me_check_dim(n)
   new_sym("MatrixSymbol", list(n, m), name = name,
           key = paste0("MS", nchar(name), ":", name, ":", n$key, ":", m$key))
 }
 
 #' @rdname matrix-expressions
 #' @export
-Identity <- function(n) new_sym("Identity", list(.mdims(n)))
+Identity <- function(n) new_sym("Identity", list(.me_check_dim(.mdims(n))))
 #' @rdname matrix-expressions
 #' @export
-ZeroMatrix <- function(n, m) new_sym("ZeroMatrix", list(.mdims(n), .mdims(m)))
+ZeroMatrix <- function(n, m) {
+  n <- .mdims(n); m <- .mdims(m)
+  .me_check_dim(n); .me_check_dim(m)
+  new_sym("ZeroMatrix", list(n, m))
+}
 #' @rdname matrix-expressions
 #' @export
-OneMatrix <- function(n, m) new_sym("OneMatrix", list(.mdims(n), .mdims(m)))
+OneMatrix <- function(n, m) {
+  n <- .mdims(n); m <- .mdims(m)
+  .me_check_dim(n); .me_check_dim(m)
+  new_sym("OneMatrix", list(n, m))
+}
 
 #' @rdname matrix-expressions
 #' @export
@@ -128,8 +141,9 @@ as_matexpr <- function(e) if (inherits(e, "symmatrix") || .is_matexpr(e)) e else
 #'   given, as in SymPy. A `MatMul()` of scalars only is their product.
 #' @export
 MatMul <- function(..., evaluate = FALSE) {
+  if (!...length()) return(GenericIdentity())
   if (!isTRUE(evaluate)) {
-    args <- lapply(lapply(list(...), as_matexpr), .as_mexpr)
+    args <- Filter(function(a) !(is_sym(a) && a$type == "GenericIdentity"), lapply(lapply(list(...), as_matexpr), .as_mexpr))
     if (!any(vapply(args, .is_matexpr, NA))) return(.mul(args))
     return(new_sym("MatMul", args))
   }
@@ -179,14 +193,33 @@ MatMul <- function(..., evaluate = FALSE) {
   if (is_zero_num(coef) || any(vapply(mats, function(m) m$type == "ZeroMatrix", TRUE))) return(ZeroMatrix(shp[[1L]], shp[[2L]]))
   # merge equal neighbours into powers, X^-1 * X cancels
   out <- list()
-  for (m in Filter(function(m) m$type != "Identity", mats)) {
+  # remove_ids: identities, and ones matrices known to be 1x1
+  is_id <- function(m) m$type == "Identity" || (m$type == "OneMatrix" && is_one_num(m$args[[1L]]) && is_one_num(m$args[[2L]]))
+  for (m in Filter(Negate(is_id), mats)) {
     if (length(out)) {
-      be1 <- .mbase_exp(out[[length(out)]]); be2 <- .mbase_exp(m)
+      last <- out[[length(out)]]
+      # combine_one_matrices: OneMatrix(a, b)*OneMatrix(b, c) is b*OneMatrix(a, c)
+      if (last$type == "OneMatrix" && m$type == "OneMatrix") {
+        coef <- .mul(list(coef, last$args[[2L]]))
+        out[[length(out)]] <- OneMatrix(last$args[[1L]], m$args[[2L]])
+        next
+      }
+      be1 <- .mbase_exp(last); be2 <- .mbase_exp(m)
       if (identical(be1[[1L]]$key, be2[[1L]]$key)) {
         p <- .add(list(be1[[2L]], be2[[2L]]))
         out[[length(out)]] <- NULL
         if (!is_zero_num(p)) out[[length(out) + 1L]] <- MatPow(be1[[1L]], p)
         next
+      }
+      # combine_powers: B_base.inverse() == A_base cancels too
+      if (!.is_explicit(be2[[1L]])) {
+        inv <- tryCatch(.me_inverse(be2[[1L]]), error = function(err) NULL)
+        if (is_sym(inv) && identical(inv$key, be1[[1L]]$key)) {
+          p <- .sub(be1[[2L]], be2[[2L]])
+          out[[length(out)]] <- NULL
+          if (!is_zero_num(p)) out[[length(out) + 1L]] <- MatPow(be1[[1L]], p)
+          next
+        }
       }
     }
     out[[length(out) + 1L]] <- m
@@ -211,8 +244,9 @@ MatMul <- function(..., evaluate = FALSE) {
 #' @rdname matrix-expressions
 #' @export
 MatAdd <- function(..., evaluate = FALSE) {
+  if (!...length()) return(GenericZeroMatrix())
   if (!isTRUE(evaluate)) {
-    args <- lapply(lapply(list(...), as_matexpr), .as_mexpr)
+    args <- Filter(function(a) !(is_sym(a) && a$type == "GenericZeroMatrix"), lapply(lapply(list(...), as_matexpr), .as_mexpr))
     if (!all(vapply(args, .is_matexpr, TRUE))) stop(.sympy_condition("TypeError", "Mix of Matrix and Scalar symbols"))
     return(new_sym("MatAdd", args))
   }
@@ -258,12 +292,16 @@ MatPow <- function(A, k) {
     M <- if (.int_val(k) < 0) inverse(A) else A
     return(if (.int_val(k) == 0) eye(A$nrow) else Reduce(.matmul, rep(list(M), abs(.int_val(k)))))
   }
+  if (A$type == "GenericIdentity") return(A)
   s <- .mshape(A)
-  if (.dim_known_ne(s[[1L]], s[[2L]])) stop("NonSquareMatrixError: Power of non-square matrix ", .str(A), call. = FALSE)
+  if (.dim_known_ne(s[[1L]], s[[2L]])) .perr("NonSquareMatrixError", paste0("Power of non-square matrix ", .str(A)))
   if (is_zero_num(k)) return(Identity(s[[1L]]))
   if (identical(k$key, S_One$key)) return(A)
   if (A$type == "Identity") return(A)
   if (A$type == "ZeroMatrix" && isTRUE(.facts(k)[["positive"]])) return(A)
+  # ZeroMatrix._eval_inverse ends its message with a period, ZeroMatrix._eval_power does not
+  if (A$type == "ZeroMatrix" && isTRUE(.facts(k)[["negative"]]))
+    .perr("NonInvertibleMatrixError", paste0("Matrix det == 0; not invertible", if (identical(k$key, S_NegativeOne$key)) "."))
   if (A$type %in% c("MatPow", "Inverse") && k$type == "Integer") {
     be <- .mbase_exp(A)
     return(MatPow(be[[1L]], .mul(list(be[[2L]], k))))
@@ -281,7 +319,7 @@ Inverse <- function(A) {
   A <- as_matexpr(A)
   if (inherits(A, "symmatrix")) return(inverse(A))
   s <- .mshape(A)
-  if (.dim_known_ne(s[[1L]], s[[2L]])) stop("NonSquareMatrixError: Inverse of non-square matrix ", .str(A), call. = FALSE)
+  if (.dim_known_ne(s[[1L]], s[[2L]])) .perr("NonSquareMatrixError", paste0("Inverse of non-square matrix ", .str(A)))
   new_sym("Inverse", list(A))
 }
 #' @rdname matrix-expressions
@@ -303,7 +341,7 @@ Adjoint <- function(A) {
     Adjoint = .unwrap_explicit(e$args[[1L]]),
     MatAdd = do.call(.madd, lapply(e$args, function(a) .as_mexpr(.madjoint(a)))),
     MatMul = do.call(.mm, lapply(rev(e$args), function(a) .as_mexpr(.madjoint(a)))),
-    Adjoint(e))
+    { h <- .me_adjoint_hooks[[e$type]]; if (is.null(h)) Adjoint(e) else h(e) })
 }
 
 # Evaluating transpose, as SymPy's .T.
@@ -324,13 +362,12 @@ Adjoint <- function(A) {
     MatPow = MatPow(.mtranspose(e$args[[1L]]), e$args[[2L]]),
     Inverse = Inverse(.mtranspose(e$args[[1L]])),
     HadamardProduct = do.call(HadamardProduct, lapply(e$args, .mtranspose)),
-    KroneckerProduct = do.call(KroneckerProduct, lapply(e$args, .mtranspose)),
     BlockMatrix = {
       rows <- lapply(e$args[[1L]]$args, function(r) r$args)
       nr <- length(rows); nc <- length(rows[[1L]])
       BlockMatrix(lapply(seq_len(nc), function(j) lapply(seq_len(nr), function(i) .mtranspose(rows[[i]][[j]]))))
     },
-    Transpose(e))
+    { h <- .me_transpose_hooks[[e$type]]; if (is.null(h)) Transpose(e) else h(e) })
 }
 
 #' @export
@@ -344,7 +381,7 @@ t.sym <- function(x) {
 Trace <- function(A) {
   A <- .as_mexpr(as_matexpr(A))
   s <- .mshape(A)
-  if (.dim_known_ne(s[[1L]], s[[2L]])) stop("NonSquareMatrixError: Trace of a non-square matrix", call. = FALSE)
+  if (.dim_known_ne(s[[1L]], s[[2L]])) .perr("NonSquareMatrixError", "Trace of a non-square matrix")
   new_sym("Trace", list(A))
 }
 .trace_explicit <- function(M) .add(lapply(seq_len(min(M$nrow, M$ncol)), function(i) .mget(M, i, i)))
@@ -355,7 +392,7 @@ Determinant <- function(A) {
   A <- as_matexpr(A)
   if (inherits(A, "symmatrix")) return(det(A))
   s <- .mshape(A)
-  if (.dim_known_ne(s[[1L]], s[[2L]])) stop("NonSquareMatrixError: Det of a non-square matrix", call. = FALSE)
+  if (.dim_known_ne(s[[1L]], s[[2L]])) .perr("NonSquareMatrixError", "Det of a non-square matrix")
   new_sym("Determinant", list(A))
 }
 
@@ -377,6 +414,8 @@ Permanent <- function(A) {
     Identity = A$args[[1L]],
     ZeroMatrix = S_Zero,
     Transpose = .trace_doit(A$args[[1L]]),
+    KroneckerProduct = .mul(lapply(A$args, .trace_doit)),
+    MatPow = if (.is_explicit(A$args[[1L]])) .trace_explicit(as_explicit(A)) else Trace(A),
     {
       s <- .mshape(A)
       if (is_exact_number(s[[1L]]) && A$type != "MatrixSymbol") .trace_explicit(as_explicit(A)) else Trace(A)
@@ -389,7 +428,7 @@ Permanent <- function(A) {
     ZeroMatrix = S_Zero,
     Transpose = .det_doit(A$args[[1L]]),
     Inverse = .div(S_One, .det_doit(A$args[[1L]])),
-    MatPow = .pow(.det_doit(A$args[[1L]]), A$args[[2L]]),
+    MatPow = Determinant(A),
     MatMul = {
       sp <- .mterm_split(A)
       ms <- if (sp[[2L]]$type == "MatMul") sp[[2L]]$args else list(sp[[2L]])
@@ -398,7 +437,8 @@ Permanent <- function(A) {
       if (!all(vapply(ms, .is_square_expr, TRUE))) return(.mul(list(.pow(sp[[1L]], n), Determinant(sp[[2L]]))))
       .mul(c(list(.pow(sp[[1L]], n)), lapply(ms, .det_doit)))
     },
-    MatrixSymbol = Determinant(A),
+    MatrixSymbol = , MatAdd = Determinant(A),
+    KroneckerProduct = .me_kron_det(A),
     {
       s <- .mshape(A)
       if (is_exact_number(s[[1L]])) det(as_explicit(A)) else Determinant(A)
@@ -413,51 +453,35 @@ register_doit("Permanent", function(e) {
   permanent(as_explicit(e$args[[1L]]))
 })
 register_doit("Transpose", function(e) .mtranspose(doit(e$args[[1L]])))
-register_doit("Inverse", function(e) {
-  a <- doit(e$args[[1L]])
-  if (a$type == "Inverse") return(a$args[[1L]])
-  if (a$type == "MatMul") {
-    sp <- .mterm_split(a)
-    ms <- if (sp[[2L]]$type == "MatMul") sp[[2L]]$args else list(sp[[2L]])
-    if (!all(vapply(ms, .is_square_expr, TRUE))) return(.mm(.div(S_One, sp[[1L]]), Inverse(sp[[2L]])))
-    return(do.call(.mm, c(list(.div(S_One, sp[[1L]])), rev(lapply(ms, Inverse)))))
-  }
-  MatPow(a, S_NegativeOne)
-})
+# Inverse.doit: arg.inverse()
+register_doit("Inverse", function(e) .me_inverse(doit(e$args[[1L]])))
 
 #' @rdname matrix-expressions
 #' @export
-HadamardProduct <- function(...) {
-  args <- lapply(list(...), as_matexpr)
-  if (all(vapply(args, inherits, TRUE, "symmatrix")))
-    return(Reduce(function(X, Y) .new_mat(Map(function(u, v) .mul(list(u, v)), X$data, Y$data), X$nrow, X$ncol), args))
-  flat <- do.call(c, lapply(args, function(a) if (is_sym(a) && a$type == "HadamardProduct") a$args else list(a)))
-  s1 <- .mshape(flat[[1L]])
-  for (f in flat[-1L]) {
-    s <- .mshape(f)
-    if (.dim_known_ne(s[[1L]], s1[[1L]]) || .dim_known_ne(s[[2L]], s1[[2L]])) .shape_error("Matrices are not aligned")
-  }
-  if (length(flat) == 1L) return(flat[[1L]])
-  new_sym("HadamardProduct", flat)
-}
+HadamardProduct <- function(..., evaluate = FALSE) .me_hadamard_new(list(...), evaluate)
 #' @rdname matrix-expressions
 #' @export
-HadamardPower <- function(A, k) new_sym("HadamardPower", list(as_matexpr(A), as_sym(k)))
+HadamardPower <- function(A, k) .me_hadamard_power_new(A, k)
 #' @rdname matrix-expressions
 #' @export
-KroneckerProduct <- function(...) {
-  args <- lapply(list(...), as_matexpr)
-  if (all(vapply(args, inherits, TRUE, "symmatrix"))) return(Reduce(kronecker_product, args))
-  flat <- do.call(c, lapply(args, function(a) if (is_sym(a) && a$type == "KroneckerProduct") a$args else list(a)))
-  if (length(flat) == 1L) return(flat[[1L]])
-  new_sym("KroneckerProduct", flat)
-}
+KroneckerProduct <- function(...) .me_kronecker_new(list(...))
 
 #' @rdname matrix-expressions
 #' @export
 MatrixElement <- function(A, i, j) {
   A <- as_matexpr(A); i <- as_sym(i); j <- as_sym(j)
-  if (inherits(A, "symmatrix")) return(.mget(A, .int_val(i) + 1L, .int_val(j) + 1L))
+  if (.is_explicit(A)) {
+    # an explicit matrix gives its entry for integer indices (MatrixElement.__new__)
+    if (is_exact_number(i) && is_exact_number(j)) {
+      M <- as_explicit(A)
+      ix <- .me_a2idx(.int_val(i), M$nrow); jx <- .me_a2idx(.int_val(j), M$ncol)
+      return(.mget(M, ix + 1L, jx + 1L))
+    }
+    A <- .as_mexpr(A)
+  }
+  if ((is_exact_number(i) || is_exact_number(j)) && !.me_valid_index(A, i, j)) .perr("IndexError", "indices out of range")
+  h <- .me_entry_hooks[[A$type]]
+  if (!is.null(h)) return(h(A, i, j))
   # structured matrices give their entries without being materialized (_entry)
   if (A$type == "ZeroMatrix") return(S_Zero)
   if (A$type == "OneMatrix") return(S_One)
@@ -468,7 +492,9 @@ MatrixElement <- function(A, i, j) {
   if (A$type == "MatAdd") return(.add(lapply(A$args, function(B) MatrixElement(B, i, j))))
   if (A$type == "MatrixSymbol" || !is_exact_number(i) || !is_exact_number(j) || !is_exact_number(.mshape(A)[[1L]]))
     return(new_sym("MatrixElement", list(A, i, j)))
-  .mget(as_explicit(A), .int_val(i) + 1L, .int_val(j) + 1L)
+  M <- tryCatch(as_explicit(A), ValueError = function(err) NULL)
+  if (is.null(M)) return(new_sym("MatrixElement", list(A, i, j)))
+  .mget(M, .int_val(i) + 1L, .int_val(j) + 1L)
 }
 
 #' @rdname matrix-expressions
@@ -479,7 +505,7 @@ FunctionMatrix <- function(n, m, f) new_sym("FunctionMatrix", list(.mdims(n), .m
 DiagMatrix <- function(A) new_sym("DiagMatrix", list(as_matexpr(A)))
 #' @rdname matrix-expressions
 #' @export
-diagonalize_vector <- function(A) DiagMatrix(A)
+diagonalize_vector <- function(A) doit(DiagMatrix(A))
 #' @rdname matrix-expressions
 #' @export
 DiagonalOf <- function(A) new_sym("DiagonalOf", list(as_matexpr(A)))
@@ -502,10 +528,29 @@ MatrixPermute <- function(A, perm, axis = 0) {
 }
 #' @rdname matrix-expressions
 #' @export
-DotProduct <- function(A, B) new_sym("DotProduct", list(as_matexpr(A), as_matexpr(B)))
+DotProduct <- function(A, B) {
+  args <- list(as_matexpr(A), as_matexpr(B))
+  for (k in 1:2) {
+    if (!.me_is_matrix(args[[k]])) .perr("TypeError", paste0("Argument ", k, " of DotProduct is not a matrix"))
+    if (!any(vapply(.mshape(args[[k]]), is_one_num, NA))) .perr("TypeError", paste0("Argument ", k, " of DotProduct is not a vector"))
+  }
+  keys <- lapply(args, function(a) sort(unique(vapply(.mshape(a), .k, ""))))
+  if (!identical(keys[[1L]], keys[[2L]])) .perr("TypeError", "DotProduct arguments are not the same length")
+  new_sym("DotProduct", lapply(args, .as_block))
+}
 register_doit("DotProduct", function(e) {
-  a <- as_explicit(e$args[[1L]]); b <- as_explicit(e$args[[2L]])
-  .add(Map(function(u, v) .mul(list(u, v)), a$data, b$data))
+  # DotProduct.doit: the 1x1 product of the vectors, entry 0
+  a <- e$args[[1L]]; b <- e$args[[2L]]
+  sa <- .mshape(a); sb <- .mshape(b)
+  rowa <- is_one_num(sa[[1L]])
+  mul <- if (identical(vapply(sa, .k, ""), vapply(sb, .k, ""))) {
+    if (rowa) .mm(a, .mtranspose(b)) else .mm(.mtranspose(a), b)
+  } else {
+    if (rowa) .mm(a, b) else .mm(.mtranspose(a), .mtranspose(b))
+  }
+  if (inherits(mul, "symmatrix")) return(mul$data[[1L]])
+  if (.is_explicit(mul)) return(as_explicit(mul)$data[[1L]])
+  .me_getitem(mul, 0L, 0L)
 })
 
 # SymPy's slice normalize(): an index, c(start, stop) or c(start, stop,
@@ -654,6 +699,15 @@ block_collapse <- function(e) {
       do.call(.madd, lapply(Rs, function(B) B[[i]][[j]]))))))
   }
   if (e$type == "Transpose" && isb[[1L]]) return(.mtranspose(BlockMatrix(.block_rows(args[[1L]]))))
+  # bc_matmul: a positive integer power is the product of its copies
+  if (e$type == "MatPow" && isb[[1L]] && args[[2L]]$type == "Integer" && .int_val(args[[2L]]) > 0)
+    return(.block_collapse(do.call(MatMul, rep(args[1L], .int_val(args[[2L]])))))
+  # bc_inverse: expr.inverse() for a BlockDiagMatrix argument, blockinverse_1x1
+  if (e$type == "Inverse" && isb[[1L]]) {
+    if (args[[1L]]$type == "BlockDiagMatrix") return(.me_inverse(new_sym("Inverse", args)))
+    R <- .block_rows(args[[1L]])
+    if (length(R) == 1L && length(R[[1L]]) == 1L) return(BlockMatrix(list(list(.me_inverse(R[[1L]][[1L]])))))
+  }
   sym_rebuild(e, args)
 }
 
@@ -673,11 +727,14 @@ matrix_symbols <- function(e) {
 #' @rdname matrix-expressions
 #' @export
 as_explicit <- function(e) {
+  if (inherits(e, "SymArray") || .is_arrexpr(e) || (is_sym(e) && e$type == "ImmutableDenseNDimArray"))
+    return(.ae_explicit_arg(e))
+  if (is_sym(e) && e$type == "Trace") return(doit(Trace(as_explicit(e$args[[1L]]))))
   e <- as_matexpr(e)
   if (inherits(e, "symmatrix")) return(e)
   s <- .mshape(e)
   if (!is_exact_number(s[[1L]]) || !is_exact_number(s[[2L]]))
-    stop("as_explicit() needs an integer shape, got ", .str(s[[1L]]), " by ", .str(s[[2L]]), call. = FALSE)
+    .perr("ValueError", "Matrix with symbolic shape cannot be represented explicitly.")
   nr <- .int_val(s[[1L]]); nc <- .int_val(s[[2L]])
   build <- function(f) .new_mat(unlist(lapply(seq_len(nr), function(i) lapply(seq_len(nc), function(j) f(i, j))),
                                        recursive = FALSE), nr, nc)
@@ -716,7 +773,6 @@ as_explicit <- function(e) {
     Adjoint = .mat_map(t(as_explicit(a[[1L]])), function(z) fcall("conjugate", list(z))),
     HadamardProduct = Reduce(function(X, Y) .new_mat(Map(function(u, v) .mul(list(u, v)), X$data, Y$data), X$nrow, X$ncol),
                              lapply(a, as_explicit)),
-    HadamardPower = .mat_map(as_explicit(a[[1L]]), function(z) .pow(z, a[[2L]])),
     KroneckerProduct = Reduce(kronecker_product, lapply(a, as_explicit)),
     FunctionMatrix = build(function(i, j) apply_lambda(a[[3L]], .int(i - 1L), .int(j - 1L))),
     DiagMatrix = {
@@ -743,6 +799,13 @@ as_explicit <- function(e) {
     BlockMatrix = , BlockDiagMatrix = {
       R <- .block_rows(e)
       do.call(rbind, lapply(R, function(r) do.call(cbind, lapply(r, as_explicit))))
+    },
+    {
+      h <- .me_explicit_hooks[[e$type]]
+      if (!is.null(h)) return(h(e))
+      h <- .me_entry_hooks[[e$type]]
+      if (is.null(h)) stop("as_explicit() is not implemented for ", e$type, call. = FALSE)
+      build(function(i, j) h(e, .int(i - 1L), .int(j - 1L)))
     })
 }
 
@@ -757,7 +820,9 @@ as_explicit <- function(e) {
     "+" = doit(MatAdd(e1, e2)),
     "-" = doit(MatAdd(e1, MatMul(S_NegativeOne, e2))),
     "*" = doit(MatMul(e1, e2)),
-    "/" = if (.is_matexpr(e2)) stop("cannot divide by a matrix", call. = FALSE) else doit(MatMul(.div(S_One, as_sym(e2)), e1)),
+    "/" = if (!.is_matexpr(e2)) doit(MatMul(.div(S_One, as_sym(e2)), e1))
+          else if (.is_matexpr(e1)) doit(MatMul(e1, doit(Inverse(e2))))
+          else .perr("NotImplementedError", ""),
     "^" = MatPow(e1, e2),
     "==" = identical(e1$key, e2$key),
     "!=" = !identical(e1$key, e2$key),
@@ -771,7 +836,8 @@ as_explicit <- function(e) {
 .mpost <- function(a) {
   s <- .str(a)
   if (a$type %in% c("MatrixSymbol", "Identity", "ZeroMatrix", "OneMatrix", "Transpose", "FunctionMatrix",
-                    "HadamardProduct", "KroneckerProduct", "DiagMatrix", "DiagonalOf", "Adjoint", "ImmutableMatrix")) s else paste0("(", s, ")")
+                    "DiagMatrix", "DiagonalOf", "Adjoint", "ImmutableMatrix", "GenericIdentity", "GenericZeroMatrix",
+                    "ElementwiseApplyFunction", "MatrixUnit", "CompanionMatrix", "DFT", "IDFT", .me_factor_types)) s else paste0("(", s, ")")
 }
 
 register_str_printer("MatrixSymbol", function(e) e$name)
@@ -789,28 +855,24 @@ register_str_printer("ImmutableMatrix", function(e)
   .mat_format_str(.int_val(e$args[[1L]]), .int_val(e$args[[2L]]), e$args[[3L]]$args))
 register_str_printer("ZeroMatrix", function(e) "0")
 register_str_printer("OneMatrix", function(e) "1")
+# StrPrinter._print_MatMul: a negative number coefficient prints as a sign,
+# and each factor is parenthesized at the precedence of Mul
 register_str_printer("MatMul", function(e) {
-  sp <- .mterm_split(e)
-  ms <- if (sp[[2L]]$type == "MatMul") sp[[2L]]$args else list(sp[[2L]])
-  body <- paste(vapply(ms, .mparen, ""), collapse = "*")
-  c <- sp[[1L]]
-  if (identical(c$key, S_One$key)) return(body)
-  if (identical(c$key, S_NegativeOne$key)) return(paste0("-", body))
-  cs <- .str(c)
-  if (c$type == "Rational" || c$type == "Add") cs <- paste0("(", cs, ")")
-  paste0(cs, "*", body)
+  args <- e$args
+  isc <- !vapply(args, .is_matexpr, NA)
+  c <- .mul(args[isc])
+  sign <- ""
+  if (!length(.free_sym_list(c)) && could_extract_minus_sign(c)) {
+    sign <- "-"
+    c <- .neg(c)
+    args <- c(if (!is_one_num(c)) list(c), args[!isc])
+  }
+  paste0(sign, paste(vapply(args, .paren, "", PREC$Mul), collapse = "*"))
 })
 # Add.as_ordered_terms for matrix terms: by the sort keys of the matrix
 # factors (class name, then the factor), so explicit matrices come first.
-.matadd_print_order <- function(ts) {
-  cls <- function(f) if (f$type == "ImmutableMatrix") "ImmutableDenseMatrix" else f$type
-  key <- vapply(ts, function(t) {
-    m <- .mterm_split(t)[[2L]]
-    fs <- if (m$type == "MatMul") Filter(.is_matexpr, m$args) else list(m)
-    paste(vapply(fs, function(f) paste0(cls(f), "\001", .str(f)), ""), collapse = "\002")
-  }, "")
-  ts[order(key, method = "radix")]
-}
+# the printed order of the terms: Expr.as_ordered_terms
+.matadd_print_order <- function(ts) .me_ordered_terms(ts)
 register_str_printer("MatAdd", function(e) {
   parts <- vapply(.matadd_print_order(e$args), .str, "")
   out <- parts[1L]

@@ -19,7 +19,7 @@ test_that("collect_const and kroneckersimp", {
   expect_equal(latex(collect_const(2*x - 2*y - 2*a, -2)), "2 x - 2 \\left(a + y\\right)")
   i <- Symbol("i"); j <- Symbol("j")
   expect_equal(sstr(kroneckersimp(1 + KroneckerDelta(0, j)*KroneckerDelta(1, j))), "1")
-  expect_equal(sstr(kroneckersimp(KroneckerDelta(i, j)*KroneckerDelta(i, 0))), "KroneckerDelta(i, 0)*KroneckerDelta(i, j)")
+  expect_equal(sstr(kroneckersimp(KroneckerDelta(i, j)*KroneckerDelta(i, 0))), "KroneckerDelta(0, i)*KroneckerDelta(i, j)")
 })
 
 test_that("p12 review fixes for simplify extras and coeff", {

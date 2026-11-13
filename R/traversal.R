@@ -207,7 +207,8 @@ has <- function(e, ...) {
 # Substitution
 
 .subs_pairs <- function(...) {
-  args <- list(...)
+  # an explicit matrix is an ImmutableMatrix inside an expression
+  args <- lapply(list(...), function(z) if (inherits(z, "symmatrix")) .as_mexpr(z) else z)
   plain <- function(z) !is.list(z) || inherits(z, "sym")
   if (length(args) == 2L && plain(args[[1L]]) && plain(args[[2L]]))
     return(list(list(as_sym(args[[1L]]), as_sym(args[[2L]]))))

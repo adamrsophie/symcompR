@@ -119,6 +119,8 @@ quat_to_rotation_matrix <- function(q) {
 #' tensorcontraction(Array(list(1, 2, 3, 4), c(2, 2)), c(1, 2))
 #' @export
 Array <- function(data, shape = NULL) {
+  if (inherits(data, "SymArray")) return(if (is.null(shape)) data else Array(data$data, shape))
+  if (inherits(data, "symmatrix")) return(Array(data$data, if (is.null(shape)) c(data$nrow, data$ncol) else shape))
   if (is.null(shape)) {
     sh <- integer()
     z <- data
@@ -177,7 +179,7 @@ arr_get <- function(a, idx) a$data[[.arr_index(a$shape, idx)]]
 #' @rdname Array
 #' @export
 tensorproduct <- function(...) {
-  arrs <- list(...)
+  arrs <- lapply(list(...), function(a) if (inherits(a, "symmatrix")) Array(a) else a)
   Reduce(function(a, b) {
     if (!inherits(a, "SymArray")) a <- Array(list(a), integer())
     if (!inherits(b, "SymArray")) b <- Array(list(b), integer())
@@ -235,6 +237,8 @@ permutedims <- function(a, axes) {
 #' @rdname Array
 #' @export
 derive_by_array <- function(a, x) {
+  if (inherits(x, "symmatrix")) x <- Array(x)
+  if (inherits(a, "symmatrix")) a <- Array(a)
   if (!inherits(x, "SymArray") && !inherits(a, "SymArray") && (inherits(x, "sym") || !is.list(x)))
     return(.diff1(as_sym(a), as_sym(x)))
   vars <- if (inherits(x, "SymArray")) x$data else if (is.list(x) && !inherits(x, "sym")) lapply(x, as_sym) else list(as_sym(x))

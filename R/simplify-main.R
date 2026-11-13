@@ -188,6 +188,10 @@ simplify <- function(e, ratio = 1.7, measure = count_ops, rational = FALSE, inve
     r <- product_simplify(e, kw)
     return(if (isTRUE(kw$doit)) doit(r) else r)
   }
+  # MatrixExpr._eval_simplify: the function and the matrix are simplified, nothing is evaluated
+  if (t == "ElementwiseApplyFunction")
+    return(sym_rebuild(e, lapply(e$args, function(a) if (a$type == "ImmutableMatrix")
+      .as_block(.mat_map(as_explicit(a), sub)) else if (a$type == "Lambda") a else sub(a))))
   if (t == "FiniteSet") return(do.call(FiniteSet, lapply(e$args, sub)))
   if (t == "Tuple") return(sym_rebuild(e, lapply(e$args, sub)))
   if (is_relational(e)) return(.relational_simplify(e, kw))

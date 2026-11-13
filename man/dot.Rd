@@ -8,8 +8,6 @@
 \alias{is_square}
 \alias{is_symmetric}
 \alias{is_zero_matrix}
-\alias{hadamard_product}
-\alias{kronecker_product}
 \alias{vec}
 \alias{pinv}
 \title{Matrix utilities}
@@ -27,10 +25,6 @@ is_square(M)
 is_symmetric(M)
 
 is_zero_matrix(M)
-
-hadamard_product(a, b)
-
-kronecker_product(a, b)
 
 vec(M)
 

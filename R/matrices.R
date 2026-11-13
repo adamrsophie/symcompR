@@ -70,6 +70,7 @@ Matrix <- function(data, ncol = NULL, f = NULL) {
     return(.new_mat(lapply(data, as_sym), length(data), 1L))
   }
   if (is.atomic(data)) return(.new_mat(lapply(as.list(data), as_sym), length(data), 1L))
+  if (.is_matexpr(data)) return(as_explicit(data))
   if (inherits(data, "sym")) return(.new_mat(list(data), 1L, 1L))
   stop("cannot build a Matrix from ", class(data)[1])
 }
@@ -396,6 +397,7 @@ det <- function(x, ...) {
 inverse <- function(M, method = "GE") {
   # Function.inverse() of the characteristic curves
   if (is_sym(M) && M$type == "Function" && !is.null(.FUNS[[M$name]]$inverse)) return(.FUNS[[M$name]]$inverse())
+  if (.is_matexpr(M) && !.is_explicit(M)) return(.me_inverse(M))
   M <- Matrix(M)
   n <- M$nrow
   if (n != M$ncol) stop(NonSquareMatrixError("inverse needs a square matrix"))
@@ -855,7 +857,10 @@ norm_matrix <- function(M) {
 
 #' @rdname dot
 #' @export
-applyfunc <- function(M, f) .mat_map(Matrix(M), function(z) as_sym(f(z)))
+applyfunc <- function(M, f) {
+  if (.is_matexpr(M) && !.is_explicit(M)) return(ElementwiseApplyFunction(f, M))
+  .mat_map(Matrix(M), function(z) as_sym(if (is.function(f)) f(z) else apply_lambda(f, z)))
+}
 
 #' @rdname dot
 #' @export
@@ -881,28 +886,6 @@ is_symmetric <- function(M) {
 #' @rdname dot
 #' @export
 is_zero_matrix <- function(M) all(vapply(Matrix(M)$data, function(z) is_zero_num(simplify(z)), TRUE))
-
-#' @rdname dot
-#' @export
-hadamard_product <- function(a, b) {
-  if (.is_matexpr(a) || .is_matexpr(b)) return(HadamardProduct(a, b))
-  Matrix(a) * Matrix(b)
-}
-
-#' @rdname dot
-#' @export
-kronecker_product <- function(a, b) {
-  if (.is_matexpr(a) || .is_matexpr(b)) return(KroneckerProduct(a, b))
-  a <- Matrix(a)
-  b <- Matrix(b)
-  Matrix(a$nrow * b$nrow, a$ncol * b$ncol, function(i, j) {
-    ai <- (i - 1L) %/% b$nrow + 1L
-    bi <- (i - 1L) %% b$nrow + 1L
-    aj <- (j - 1L) %/% b$ncol + 1L
-    bj <- (j - 1L) %% b$ncol + 1L
-    .mul(list(.mget(a, ai, aj), .mget(b, bi, bj)))
-  })
-}
 
 #' @rdname dot
 #' @export
@@ -936,4 +919,7 @@ pinv <- function(M) {
 }
 
 #' @export
-diff.symmatrix <- function(x, ...) .mat_map(x, function(z) diff(z, ...))
+diff.symmatrix <- function(x, ...) {
+  if (.ae_derivative_applies(NULL, lapply(list(...), list))) return(.ae_derivative_eval(x, .ae_diff_spec(list(...))))
+  .mat_map(x, function(z) diff(z, ...))
+}

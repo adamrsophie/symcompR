@@ -89,7 +89,7 @@ Math.sym <- function(x, ...) {
   switch(.Generic,
          abs = fcall("Abs", list(x)),
          sign = fcall("sign", list(x)),
-         sqrt = .sqrt(x),
+         sqrt = if (.is_matexpr(x) && !.is_explicit(x)) MatPow(x, S_Half) else .sqrt(x),
          floor = fcall("floor", list(x)),
          ceiling = fcall("ceiling", list(x)),
          trunc = .mul(list(fcall("sign", list(x)), fcall("floor", list(fcall("Abs", list(x)))))),
@@ -168,6 +168,12 @@ c.sym <- function(...) lapply(list(...), as_sym)
     if (is.null(r)) return(NULL)
     if (type == "Unequality") return(if (.is_true(r)) S_false else if (.is_false(r)) S_true else NULL)
     return(r)
+  }
+  # _eval_is_eq(MatrixExpr, MatrixExpr)
+  if ((type == "Equality" || type == "Unequality") && .is_matexpr(a) && .is_matexpr(b)) {
+    r <- .me_is_eq(a, b)
+    if (is.null(r)) return(NULL)
+    return(if (xor(r, type == "Unequality")) S_true else S_false)
   }
   a0 <- a
   a <- .rel_float(a, b)
@@ -348,6 +354,8 @@ is_relational <- function(e) e$type %in% .REL_TYPES
 #' @param n Root index.
 #' @param k Branch index or derivative order.
 #' @param h0 Value of the Heaviside function at zero.
+#' @param delta_range For `KroneckerDelta()`, an optional range `(lower,
+#'   upper)` of the indices; an index outside it gives zero.
 #' @param ... Expressions.
 #' @return A `sym` expression.
 #' @name elementary-functions
@@ -402,13 +410,13 @@ sinc <- .w1("sinc")
 Abs <- .w1("Abs")
 #' @rdname elementary-functions
 #' @export
-re <- .w1("re")
+re <- function(x) if (inherits(x, "symmatrix") || .is_matexpr(x)) .me_real_imag(x)[[1L]] else fcall("re", list(as_sym(x)))
 #' @rdname elementary-functions
 #' @export
-im <- .w1("im")
+im <- function(x) if (inherits(x, "symmatrix") || .is_matexpr(x)) .me_real_imag(x)[[2L]] else fcall("im", list(as_sym(x)))
 #' @rdname elementary-functions
 #' @export
-conjugate <- .w1("conjugate")
+conjugate <- function(x) if (inherits(x, "symmatrix") || .is_matexpr(x)) .me_conjugate(x) else fcall("conjugate", list(as_sym(x)))
 #' @rdname elementary-functions
 #' @export
 arg <- .w1("arg")
@@ -429,7 +437,11 @@ DiracDelta <- function(x, k = 0) {
 }
 #' @rdname elementary-functions
 #' @export
-KroneckerDelta <- function(x, y) fcall("KroneckerDelta", list(as_sym(x), as_sym(y)))
+KroneckerDelta <- function(x, y, delta_range = NULL) {
+  if (is.null(delta_range)) return(fcall("KroneckerDelta", list(as_sym(x), as_sym(y))))
+  if (!is_sym(delta_range)) delta_range <- do.call(Tuple, lapply(delta_range, as_sym))
+  fcall("KroneckerDelta", list(as_sym(x), as_sym(y), delta_range))
+}
 #' @rdname elementary-functions
 #' @export
 LambertW <- function(x, k = 0) {

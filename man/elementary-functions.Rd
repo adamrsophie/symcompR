@@ -76,7 +76,7 @@ Heaviside(x, h0 = NULL)
 
 DiracDelta(x, k = 0)
 
-KroneckerDelta(x, y)
+KroneckerDelta(x, y, delta_range = NULL)
 
 LambertW(x, k = 0)
 
@@ -100,6 +100,8 @@ sym_Mod(x, y, ...)
 \item{h0}{Value of the Heaviside function at zero.}
 
 \item{k}{Branch index or derivative order.}
+
+\item{delta_range}{For \code{KroneckerDelta()}, an optional range \verb{(lower, upper)} of the indices; an index outside it gives zero.}
 
 \item{...}{Expressions.}
 

@@ -81,7 +81,7 @@ diff.sym <- function(x, ..., evaluate = TRUE) {
     if (length(fs) != 1L) stop("specify differentiation variables")
     vars <- list(fs[[1L]])
   }
-  spec <- .diff_spec(vars)
+  spec <- if (any(vapply(vars, inherits, NA, c("symmatrix", "SymArray")))) .ae_diff_spec(vars) else .diff_spec(vars)
   if (!evaluate) return(.derivative_node(f, spec, sort = FALSE))
   .diff_spec_eval(f, spec)
 }
@@ -89,6 +89,8 @@ diff.sym <- function(x, ..., evaluate = TRUE) {
 # Derivative(f, *spec, evaluate=True): differentiate pair by pair; a pair
 # with no closed form leaves it and the pairs after it unevaluated.
 .diff_spec_eval <- function(f, spec) {
+  # matrix and array derivatives go through ArrayDerivative
+  if (.ae_derivative_applies(f, spec)) return(.ae_derivative_eval(f, spec))
   nderivs <- 0
   for (i in seq_along(spec)) {
     r <- .diff_count(f, spec[[i]][[1L]], spec[[i]][[2L]])
@@ -169,11 +171,16 @@ diff.sym <- function(x, ..., evaluate = TRUE) {
 #'
 #' @param f Expression.
 #' @param ... Variables and counts, as for [diff()].
+#' @param evaluate If `TRUE`, compute the derivative, as [diff()] does.
 #' @return A `sym` Derivative.
 #' @export
-Derivative <- function(f, ...) {
-  f <- as_sym(f)
+Derivative <- function(f, ..., evaluate = FALSE) {
   vars <- list(...)
+  # matrix and array operands are routed to ArrayDerivative
+  arr <- function(z) inherits(z, c("symmatrix", "SymArray")) || .is_matexpr(z) || .is_arrexpr(z)
+  if (arr(f) || any(vapply(vars, arr, NA))) return(ArrayDerivative(f, ..., evaluate = evaluate))
+  if (isTRUE(evaluate)) return(diff(as_sym(f), ...))
+  f <- as_sym(f)
   if (!length(vars)) {
     # Derivative(expr): the single free symbol is the variable
     fs <- free_symbols(f)
@@ -202,7 +209,7 @@ register_bound_vars("Derivative", function(e) character())
   t <- e$type
   if (!length(e$args)) return(S_Zero)
   if (is_symbol_like(x) && is.null(.free_sym_list(e)[[x$key]])) return(S_Zero)
-  if (!is_symbol_like(x) && !.contains_key(e, x$key)) return(S_Zero)
+  if (!is_symbol_like(x) && x$type != "ArrayElement" && !.contains_key(e, x$key)) return(S_Zero)
   switch(t,
          Add = .add(lapply(e$args, .diff1, x)),
          Mul = {
@@ -345,7 +352,8 @@ doit <- function(e, deep = TRUE, ...) {
       list(if (identical(ne$key, e$key)) p[[1L]] else ne, doit(p[[2L]]))
     })))
   }
-  if (deep) {
+  # ArrayAdd.doit evaluates its own arguments: they may become scalars
+  if (deep && e$type != "ArrayAdd") {
     # an explicit matrix result stays an argument as an ImmutableMatrix node
     args <- lapply(e$args, function(a) { r <- doit(a, ...); if (inherits(r, "symmatrix")) .as_block(r) else r })
     if (!identical(vapply(args, .k, ""), vapply(e$args, .k, ""))) e <- sym_rebuild(e, args)

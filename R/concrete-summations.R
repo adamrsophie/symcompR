@@ -84,7 +84,7 @@
 
 .eval_sum <- function(f, i, a, b) {
   if (isTRUE(ask_fact(f, "zero"))) return(S_Zero)
-  if (!.has1(f, i)) return(.mul(list(f, .add(list(.sub(b, a), S_One)))))
+  if (!.has1(f, i)) return((if (.is_matexpr(f)) Mul else function(...) .mul(list(...)))(f, .add(list(.sub(b, a), S_One))))
   if (identical(a$key, b$key)) return(subs(f, i, a))
   if (.is_comparable(a) && .is_comparable(b) && isTRUE(ask_fact(.sub(a, b), "extended_positive")))
     return(.eval_sum(f, i, .add(list(b, S_One)), .sub(a, S_One)))
@@ -673,6 +673,12 @@ deltasummation <- function(f, limit, no_piecewise = FALSE) {
   g <- .expand_delta(f, x)
   if (g$type == "Add") return(piecewise_fold(.add(lapply(g$args, deltasummation, limit = limit, no_piecewise = no_piecewise))))
   de <- .extract_delta(g, x); delta <- de[[1L]]; expr <- de[[2L]]
+  # a delta_range covering the summation range needs no Piecewise
+  if (!is.null(delta) && length(delta$args) == 3L) {
+    dr <- delta$args[[3L]]$args
+    if (identical(Le(.sub(a, dr[[1L]]), S_Zero)$key, S_true$key) && identical(Ge(.sub(b, dr[[2L]]), S_Zero)$key, S_true$key))
+      no_piecewise <- TRUE
+  }
   if (is.null(delta)) return(summation(f, limit))
   solns <- solve(.sub(delta$args[[1L]], delta$args[[2L]]), x)
   if (!length(solns)) return(S_Zero)

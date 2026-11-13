@@ -162,6 +162,9 @@ EmptySet <- S_EmptySet
   if (t == "Add") return(list(3, 1, "Add"))
   if (t == "Mul") return(list(3, 0, "Mul"))
   if (t == "Pow") return(list(3, 2, "Pow"))
+  # MatMul and MatAdd subclass Mul and Add
+  if (t == "MatMul") return(list(3, 0, "MatMul"))
+  if (t == "MatAdd") return(list(3, 1, "MatAdd"))
   if (t == "Function" && e$name %in% .BASIC_KEY_FUNS) return(list(5, 0, e$name))
   if (t == "Function") {
     i <- .FUNC_CLASS_INDEX[e$name]

@@ -65,7 +65,7 @@ Determinant(A)
 
 Permanent(A)
 
-HadamardProduct(...)
+HadamardProduct(..., evaluate = FALSE)
 
 HadamardPower(A, k)
 

@@ -46,6 +46,7 @@ NULL
 #' @rdname core-helpers
 #' @export
 Add <- function(...) {
+  if (any(vapply(list(...), .me_is_matrix, NA))) return(.me_postprocess("Add", list(...)))
   a <- lapply(list(...), as_sym)
   bd <- Filter(.is_bd, a)
   if (length(bd)) return(.bd_add(a, .bd_fam(bd[[1L]])))
@@ -54,6 +55,7 @@ Add <- function(...) {
 #' @rdname core-helpers
 #' @export
 Mul <- function(...) {
+  if (any(vapply(list(...), .me_is_matrix, NA))) return(.me_postprocess("Mul", list(...)))
   a <- lapply(list(...), as_sym)
   bd <- Filter(.is_bd, a)
   if (length(bd)) {

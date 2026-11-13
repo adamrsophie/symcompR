@@ -22,7 +22,13 @@
     if (old$type %in% c("Symbol", "Dummy") && !.contains_key(e, old$key)) return(e)
   } else {
     ofs <- names(.free_sym_list(old))
-    if (length(ofs) && !all(ofs %in% names(.free_sym_list(e)))) return(e)
+    if (length(ofs)) {
+      fse <- .free_sym_list(e)
+      # a matrix symbol is free on its own, but its shape can hold symbols
+      if (!all(ofs %in% names(fse)) &&
+          !any(vapply(fse, function(s) s$type == "MatrixSymbol" && length(.free_sym_list(new_sym("Tuple", s$args))) > 0L, NA)))
+        return(e)
+    }
   }
   rv <- .eval_subs(e, old, new)
   if (is.null(rv)) rv <- .subs_fallback(e, old, new)

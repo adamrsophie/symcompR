@@ -1371,8 +1371,15 @@ def_function("DiracDelta", nargs = 1:2,
              facts = function(args, afs) c(commutative = TRUE, real = TRUE),
              latex = function(a) paste0("\\delta\\left(", a[1], "\\right)"))
 
-def_function("KroneckerDelta", nargs = 2L,
+def_function("KroneckerDelta", nargs = 2:3,
              eval = function(args) {
+               # an index outside delta_range gives zero
+               if (length(args) == 3L) {
+                 r <- args[[3L]]$args
+                 pos <- function(z) isTRUE(.facts(z)[["positive"]])
+                 if (pos(.sub(r[[1L]], args[[1L]])) || pos(.sub(r[[1L]], args[[2L]])) ||
+                     pos(.sub(args[[1L]], r[[2L]])) || pos(.sub(args[[2L]], r[[2L]]))) return(S_Zero)
+               }
                d <- .sub(args[[1L]], args[[2L]])
                if (is_zero_num(d)) return(S_One)
                fd <- .facts(d)
@@ -1380,8 +1387,9 @@ def_function("KroneckerDelta", nargs = 2L,
                if (isTRUE(fd[["zero"]])) return(S_One)
                if (isTRUE(ask_fact(args[[1L]], "integer")) && isTRUE(ask_fact(args[[2L]], "integer")) &&
                    identical(fd[["integer"]], TRUE) && is_number_type(d)) return(S_Zero)
-               k <- .sort_by_key(args)
-               if (!identical(k[[1L]]$key, args[[1L]]$key)) return(fnode("KroneckerDelta", k))
+               # canonical order: default_sort_key(j) < default_sort_key(i) swaps them
+               if (.key_cmp(.sort_key(args[[2L]]), .sort_key(args[[1L]])) < 0)
+                 return(fnode("KroneckerDelta", c(args[2:1], args[-(1:2)])))
                NULL
              },
              numeric = function(i, j) as.numeric(i == j),
