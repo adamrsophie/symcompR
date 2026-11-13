@@ -22,7 +22,8 @@ get_contraction_structure(e)
 format_contraction_structure(cs)
 }
 \arguments{
-\item{name}{The name.}
+\item{name}{The name, or a symbol to take it from (an integer symbol for
+\code{Idx()}).}
 
 \item{range}{An upper bound or a pair of bounds.}
 

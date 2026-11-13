@@ -31,7 +31,7 @@ Mul(...)
 
 Pow(a, b)
 
-Equality(a, b)
+Equality(a, b, evaluate = TRUE)
 
 Unequality(a, b)
 
@@ -71,6 +71,8 @@ sym_ordered(x, ...)
 \item{...}{Expressions, or assumption facts as \code{name = value}.}
 
 \item{a, b, e}{Expressions.}
+
+\item{evaluate}{If \code{FALSE}, \code{Equality()} keeps the relation unevaluated.}
 
 \item{op}{One of \code{"=="}, \code{"!="}, \code{"<"}, \code{"<="}, \code{">"}, \code{">="}.}
 

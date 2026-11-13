@@ -10,7 +10,9 @@
 #'
 #' @param ... Pairs `list(expr, condition)`.
 #' @param e An expression.
-#' @param evaluate Evaluate the folded `Piecewise`.
+#' @param evaluate Evaluate the `Piecewise`; with `FALSE`, `Piecewise()`
+#'   keeps its pairs as given. For `piecewise_fold()`, evaluate the folded
+#'   `Piecewise`.
 #' @return A `sym` expression.
 #' @examples
 #' x <- Symbol("x")
@@ -18,9 +20,10 @@
 #' subs(p, x, -3)
 #' diff(p, x)
 #' @export
-Piecewise <- function(...) {
+Piecewise <- function(..., evaluate = TRUE) {
   pairs <- list(...)
   pairs <- lapply(pairs, function(p) list(as_sym(p[[1L]]), .as_bool(p[[2L]])))
+  if (isFALSE(evaluate)) return(new_sym("Piecewise", lapply(pairs, function(p) new_sym("ExprCondPair", p))))
   .piecewise(pairs)
 }
 
@@ -377,6 +380,9 @@ rewrite <- function(e, target) {
   if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) rewrite(z, target)))
   e <- as_sym(e)
   rules <- .rewrite_rules[[target]]
+  # rules of the codegen functions (R/codegen-cfunctions.R)
+  extra <- .cg_rewrites[[target]]
+  if (!is.null(extra)) rules <- c(rules, extra[setdiff(names(extra), names(rules))])
   if (is.null(rules)) stop("unknown rewrite target: ", target)
   .map_bottom_up(e, function(z) {
     if (z$type == "Function" && !is.null(rules[[z$name]])) {

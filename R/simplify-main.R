@@ -171,6 +171,9 @@ simplify <- function(e, ratio = 1.7, measure = count_ops, rational = FALSE, inve
       r <- expand_log(r, deep = TRUE)
       return(if (measure(r) < measure(e)) r else e)
     }
+    # functions registered with an _eval_simplify method
+    hook <- .FUNS[[nm]]$simplify
+    if (!is.null(hook)) return(hook(e, sub))
     return(NULL)
   }
   if (t == "Piecewise") return(piecewise_simplify(e, kw = kw))

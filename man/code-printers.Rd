@@ -10,22 +10,25 @@
 \alias{pycode}
 \title{Code generation}
 \usage{
-ccode(e, assign_to = NULL)
+ccode(e, assign_to = NULL, ...)
 
-fcode(e, assign_to = NULL)
+fcode(e, assign_to = NULL, ...)
 
-jscode(e, assign_to = NULL)
+jscode(e, assign_to = NULL, ...)
 
-octave_code(e, assign_to = NULL)
+octave_code(e, assign_to = NULL, ...)
 
-rcode(e, assign_to = NULL)
+rcode(e, assign_to = NULL, ...)
 
-pycode(e, assign_to = NULL)
+pycode(e, assign_to = NULL, ...)
 }
 \arguments{
 \item{e}{A \code{sym} expression.}
 
 \item{assign_to}{Optional name of a variable to assign.}
+
+\item{...}{Printer settings, as in SymPy (for example \code{standard},
+\code{precision}, \code{human}, \code{contract} or \code{user_functions}).}
 }
 \value{
 A character scalar.

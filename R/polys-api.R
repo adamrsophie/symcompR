@@ -877,6 +877,8 @@ factor_sym <- function(f, ..., deep = FALSE) {
 .symbolic_factor <- function(expr, gens, Fd = NULL) {
   if (!.is_expr_node(expr)) return(sym_rebuild(expr, lapply(expr$args, .symbolic_factor, gens = gens, Fd = Fd)))
   r <- .symbolic_factor_list(together(expr), gens, Fd)
+  # a numerator expanding to zero is a factor 0 in SymPy (PolificationFailed)
+  if (is_zero_num(r$coef)) return(S_Zero)
   .keep_coeff(r$coef, .mul(lapply(r$factors, function(p) .pow(p[[1L]], p[[2L]]))))
 }
 

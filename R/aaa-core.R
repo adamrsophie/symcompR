@@ -657,9 +657,12 @@ sym_rebuild <- function(e, args) {
   if (t == "Add") return(.add(args))
   if (t == "Mul") return(.mul(args))
   if (t == "Pow") return(.pow(args[[1]], args[[2]]))
-  # an undefined function marked by dynamicsymbols() keeps its mark
-  if (t == "Function") return(if (isTRUE(e$extra$undefined)) .pv_undef(e$name, args, e$extra)
-                              else fcall(e$name, args))
+  # an undefined function marked by dynamicsymbols() keeps its mark; an
+  # implemented function keeps its implementation
+  if (t == "Function") {
+    if (isTRUE(e$extra$undefined)) return(.pv_undef(e$name, args, e$extra))
+    return(if (is.null(e$extra$imp)) fcall(e$name, args) else .cg_imp_call(e$name, e$extra$imp, args))
+  }
   f <- .rebuilders[[t]]
   if (!is.null(f)) return(f(e, args))
   if (!length(args)) return(e)

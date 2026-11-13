@@ -5,16 +5,18 @@
 \alias{piecewise_fold}
 \title{Piecewise defined functions}
 \usage{
-Piecewise(...)
+Piecewise(..., evaluate = TRUE)
 
 piecewise_fold(e, evaluate = TRUE)
 }
 \arguments{
 \item{...}{Pairs \code{list(expr, condition)}.}
 
-\item{e}{An expression.}
+\item{evaluate}{Evaluate the \code{Piecewise}; with \code{FALSE}, \code{Piecewise()}
+keeps its pairs as given. For \code{piecewise_fold()}, evaluate the folded
+\code{Piecewise}.}
 
-\item{evaluate}{Evaluate the folded \code{Piecewise}.}
+\item{e}{An expression.}
 }
 \value{
 A \code{sym} expression.

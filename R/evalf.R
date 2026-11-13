@@ -158,6 +158,8 @@ evalf <- N
       return(.mpc_sym(r, prec, zero_int = TRUE))
     }
     if (!length(z$args)) return(z)
+    # a function's own evaluator (SymPy's _eval_evalf)
+    if (z$type == "Function" && !is.null(.FUNS[[z$name]]$evalf)) return(rec(.FUNS[[z$name]]$evalf(z)))
     if (z$type == "Pow" && z$args[[2L]]$type == "Integer") return(.pow(rec(z$args[[1L]]), z$args[[2L]]))
     sym_rebuild(z, lapply(z$args, rec))
   }

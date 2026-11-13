@@ -332,6 +332,8 @@ latex <- function(e) {
 #'
 #' @param e A `sym` expression.
 #' @param assign_to Optional name of a variable to assign.
+#' @param ... Printer settings, as in SymPy (for example `standard`,
+#'   `precision`, `human`, `contract` or `user_functions`).
 #' @return A character scalar.
 #' @examples
 #' x <- Symbol("x")
@@ -342,7 +344,9 @@ NULL
 
 .mk_printer <- function(style, fmt) {
   force(style); force(fmt)
-  function(e, assign_to = NULL) {
+  function(e, assign_to = NULL, ...) {
+    eng <- .cg_engine(style)
+    if (!is.null(eng)) return(eng(e, assign_to, ...))
     e <- as_sym(e)
     st <- .code_styles[[style]]
     st$top <- e$type == "Float"
@@ -391,6 +395,7 @@ pycode <- .mk_printer("python", "%s = %s")
 lambdify <- function(args, e) {
   args <- .as_gens(list(args))
   nms <- vapply(args, function(s) s$name, "")
+  .cg_imp_namespace(e)
   body <- if (is.list(e) && !inherits(e, "sym")) as.call(c(list(as.name("list")), lapply(e, function(z) .to_call(as_sym(z)))))
           else .to_call(as_sym(e))
   fn <- function() NULL
@@ -418,6 +423,9 @@ lambdify <- function(args, e) {
          },
          Function = {
            nm <- e$name
+           imp <- e$extra$imp
+           if (is.function(imp)) return(as.call(c(list(imp), lapply(e$args, .to_call))))
+           if (!is.null(imp)) return(.to_call(.cg_apply_lambda(imp, e$args)))
            mapped <- .R_FUN_MAP[nm]
            if (!is.na(mapped)) return(as.call(c(list(as.name(mapped)), lapply(e$args, .to_call))))
            if (exists(nm, envir = baseenv(), mode = "function") && nm %in%
@@ -465,7 +473,7 @@ cse <- function(exprs, prefix = "x") {
   counts <- new.env(hash = TRUE)
   nodes <- list()
   walk <- function(z) {
-    if (!length(z$args) || nchar(z$key) > 9000L) return(invisible())
+    if (!length(z$args) || nchar(z$key) > 9000L || z$type %in% c("MatrixSymbol", "MatrixElement")) return(invisible())
     cur <- counts[[z$key]]
     assign(z$key, if (is.null(cur)) 1L else cur + 1L, envir = counts)
     if (is.null(cur)) {

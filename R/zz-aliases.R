@@ -33,6 +33,7 @@
 #' @param n Significant digits for `nfloat()`.
 #' @param exponent If `TRUE`, `nfloat()` also converts exponents.
 #' @param dkeys If `TRUE`, `nfloat()` also converts the names of a list.
+#' @param evaluate If `FALSE`, `Equality()` keeps the relation unevaluated.
 #' @return An expression, list, logical or string.
 #' @examples
 #' x <- Symbol("x")
@@ -70,7 +71,7 @@ Pow <- function(a, b) {
 }
 #' @rdname core-helpers
 #' @export
-Equality <- function(a, b) Eq(a, b)
+Equality <- function(a, b, evaluate = TRUE) Eq(a, b, evaluate)
 #' @rdname core-helpers
 #' @export
 Unequality <- function(a, b) Ne(a, b)
@@ -1516,6 +1517,7 @@ farthest_points <- function(...) .pair_search(list(...), 1)
 #'
 #' @param e An expression.
 #' @param assign_to Optional variable name.
+#' @param ... Printer settings, as in SymPy (for example `standard`).
 #' @return The string, invisibly for the `print_` functions.
 #' @examples
 #' x <- Symbol("x")
@@ -1586,6 +1588,13 @@ maple_code <- .mk_printer("maple", "%s := %s")
            if (is.na(nm)) nm <- paste0(toupper(substr(e$name, 1L, 1L)), substring(e$name, 2L))
            paste0(nm, "[", paste(vapply(e$args, .mma, ""), collapse = ", "), "]")
          },
+         Integral = {
+           lims <- e$args[-1L]
+           args <- if (length(lims) == 1L && length(lims[[1L]]$args) == 1L) list(e$args[[1L]], lims[[1L]]$args[[1L]]) else e$args
+           paste0("Hold[Integrate[", paste(vapply(args, .mma, ""), collapse = ", "), "]]")
+         },
+         Sum = paste0("Hold[Sum[", paste(vapply(e$args, .mma, ""), collapse = ", "), "]]"),
+         Tuple = paste0("{", paste(vapply(e$args, .mma, ""), collapse = ", "), "}"),
          stop("mathematica_code: unsupported ", t))
 }
 

@@ -113,6 +113,8 @@
 #'
 #' @param e An expression, or for `smtlib_code()` a list of them.
 #' @param assign_to Optional variable name.
+#' @param ... Printer settings of `rust_code()`, as in SymPy (for example
+#'   `user_functions` or `contract`).
 #' @param auto_declare Declare the symbols as reals.
 #' @param lhs,rhs Sides of the equation.
 #' @param terms_per_line Terms per line.
@@ -128,10 +130,7 @@ NULL
 
 #' @rdname more-code-printers
 #' @export
-rust_code <- function(e, assign_to = NULL) {
-  s <- .rust(as_sym(e))
-  if (is.null(assign_to)) s else paste0(assign_to, " = ", s, ";")
-}
+rust_code <- function(e, assign_to = NULL, ...) .cg_rust_code(e, assign_to, ...)
 
 #' @rdname more-code-printers
 #' @export

@@ -554,6 +554,8 @@
       .mpc_pow(b, xv, p, xq)
     },
     Function = {
+      h <- .FUNS[[e$name]]$evalf
+      if (!is.null(h)) return(.mpeval(h(e), p, env))
       if (length(e$args) != 1L) return(NULL)
       a <- .mpeval(e$args[[1L]], p, env)
       if (is.null(a)) return(NULL)

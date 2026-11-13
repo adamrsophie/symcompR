@@ -12,7 +12,7 @@
 \alias{multiline_latex}
 \title{More code printers}
 \usage{
-rust_code(e, assign_to = NULL)
+rust_code(e, assign_to = NULL, ...)
 
 glsl_code(e, assign_to = NULL)
 
@@ -32,6 +32,9 @@ multiline_latex(lhs, rhs, terms_per_line = 1, environment = "align*")
 \item{e}{An expression, or for \code{smtlib_code()} a list of them.}
 
 \item{assign_to}{Optional variable name.}
+
+\item{...}{Printer settings of \code{rust_code()}, as in SymPy (for example
+\code{user_functions} or \code{contract}).}
 
 \item{auto_declare}{Declare the symbols as reals.}
 

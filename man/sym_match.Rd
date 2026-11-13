@@ -12,8 +12,9 @@ sym_replace(e, pattern, value, exact = NULL)
 \arguments{
 \item{e}{An expression.}
 
-\item{pattern}{A pattern containing wild symbols, or a function class made
-by \code{\link[=Function]{Function()}}, which matches every application of that function.}
+\item{pattern}{A pattern containing wild symbols, a function class made
+by \code{\link[=Function]{Function()}}, which matches every application of that function, or
+for \code{sym_replace()} an R predicate of a node.}
 
 \item{old}{Use the old matching that skips the operation count check.}
 
@@ -32,7 +33,9 @@ A named list or \code{NULL}; \code{sym_replace()} returns an expression.
 products match up to commutativity, and a wild may take the identity.
 \code{sym_replace(e, pattern, value)} rewrites every subexpression that matches,
 bottom up; \code{value} is an expression in the same wild symbols or a function
-of the named bindings.
+of the named bindings. When \code{pattern} is an R predicate, \code{sym_replace()}
+replaces every node it accepts by \code{value} (an expression, or an R function
+of the node), as SymPy's \code{replace()} with a callable query.
 }
 \examples{
 x <- Symbol("x")

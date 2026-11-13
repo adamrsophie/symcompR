@@ -14,11 +14,11 @@
 \alias{print_tree}
 \title{Printing helpers}
 \usage{
-julia_code(e, assign_to = NULL)
+julia_code(e, assign_to = NULL, ...)
 
-cxxcode(e, assign_to = NULL)
+cxxcode(e, assign_to = NULL, ...)
 
-maple_code(e, assign_to = NULL)
+maple_code(e, assign_to = NULL, ...)
 
 mathematica_code(e)
 
@@ -38,6 +38,8 @@ print_tree(e)
 \item{e}{An expression.}
 
 \item{assign_to}{Optional variable name.}
+
+\item{...}{Printer settings, as in SymPy (for example \code{standard}).}
 }
 \value{
 The string, invisibly for the \code{print_} functions.

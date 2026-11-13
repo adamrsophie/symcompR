@@ -203,7 +203,7 @@ test_that("LaTeX and code printers match SymPy", {
   expect_equal(latex(exp(-x) * log(x)), "e^{- x} \\log{\\left(x \\right)}")
   expect_equal(latex(Rational(-3, 4) * x), "- \\frac{3 x}{4}")
   expect_equal(ccode(sqrt(x + 1), assign_to = "y"), "y = sqrt(x + 1);")
-  expect_equal(fcode(x^3 + Rational(1, 2)), "x**3 + 1.0d0/2.0d0")
+  expect_equal(fcode(x^3 + Rational(1, 2)), "      x**3 + 1.0d0/2.0d0")
   expect_equal(jscode(exp(x) * x^2), "Math.pow(x, 2)*Math.exp(x)")
   f <- lambdify(x, x^2 + sin(x))
   expect_equal(f(c(0, 1)), c(0, 1 + sin(1)))

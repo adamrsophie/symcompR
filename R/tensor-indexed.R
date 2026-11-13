@@ -14,7 +14,8 @@
 #' the terms summed over them, `NULL` for terms without summation, and
 #' nested structures for subexpressions, as SymPy's dictionary.
 #'
-#' @param name The name.
+#' @param name The name, or a symbol to take it from (an integer symbol for
+#'   `Idx()`).
 #' @param range An upper bound or a pair of bounds.
 #' @param shape Optional dimensions.
 #' @param base An `IndexedBase` function or a name.
@@ -36,6 +37,10 @@ NULL
 #' @rdname Indexed
 #' @export
 Idx <- function(name, range = NULL) {
+  if (is_sym(name) && name$type == "Symbol") {
+    if (!isTRUE(ask_fact(name, "integer"))) .cg_err("TypeError", "Idx object requires an integer label.")
+    name <- name$name
+  }
   s <- Symbol(name, integer = TRUE)
   lohi <- NULL
   if (!is.null(range)) {
@@ -49,6 +54,7 @@ Idx <- function(name, range = NULL) {
 #' @rdname Indexed
 #' @export
 IndexedBase <- function(name, shape = NULL) {
+  if (is_sym(name) && name$type == "Symbol") name <- name$name
   base <- new_sym("IndexedBase", list(Symbol(name)), extra = list(shape = if (is.null(shape)) NULL else lapply(as.list(shape), as_sym)))
   f <- function(...) new_sym("Indexed", c(list(base), lapply(list(...), as_sym)))
   attr(f, "base") <- base

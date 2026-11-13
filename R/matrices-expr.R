@@ -4,7 +4,7 @@
 .MATEXPR <- c("MatrixSymbol", "Identity", "ZeroMatrix", "OneMatrix", "MatAdd", "MatMul", "MatPow",
               "Transpose", "Inverse", "Adjoint", "HadamardProduct", "HadamardPower", "KroneckerProduct",
               "BlockMatrix", "BlockDiagMatrix", "FunctionMatrix", "DiagMatrix", "DiagonalOf",
-              "DiagonalMatrix", "PermutationMatrix", "MatrixPermute", "ImmutableMatrix", "MatrixSlice")
+              "DiagonalMatrix", "PermutationMatrix", "MatrixPermute", "ImmutableMatrix", "MatrixSlice", "MatrixSolve")
 .is_matexpr <- function(e) is_sym(e) && e$type %in% .MATEXPR
 
 .mshape <- function(e) {
@@ -20,6 +20,7 @@
     Identity = , PermutationMatrix = list(a[[1L]], a[[1L]]),
     MatAdd = , HadamardProduct = , MatPow = , HadamardPower = , DiagonalMatrix = , Inverse = ,
     MatrixPermute = .mshape(a[[1L]]),
+    MatrixSolve = .mshape(a[[2L]]),
     MatMul = {
       ms <- Filter(.is_matexpr, a)
       list(.mshape(ms[[1L]])[[1L]], .mshape(ms[[length(ms)]])[[2L]])

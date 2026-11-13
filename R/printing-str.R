@@ -421,6 +421,9 @@ sstr <- function(e) {
 srepr <- function(e) {
   e <- as_sym(e)
   t <- e$type
+  # codegen nodes print through their own repr (R/codegen-ast.R)
+  f <- .srepr_printers[[t]]
+  if (!is.null(f)) return(f(e))
   switch(t,
          Integer = paste0("Integer(", .str(e), ")"),
          Rational = paste0("Rational(", gmp::numerator(e$value), ", ",

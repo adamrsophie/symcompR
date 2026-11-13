@@ -273,8 +273,8 @@ c.sym <- function(...) lapply(list(...), as_sym)
 }
 
 .make_rel <- function(type, a, b, evaluate = TRUE) {
-  a <- as_sym(a)
-  b <- as_sym(b)
+  a <- if (inherits(a, "symmatrix")) .as_block(a) else as_sym(a)
+  b <- if (inherits(b, "symmatrix")) .as_block(b) else as_sym(b)
   if (evaluate) {
     r <- .rel_eval(type, a, b)
     if (!is.null(r)) return(r)

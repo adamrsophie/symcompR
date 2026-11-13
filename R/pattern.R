@@ -263,11 +263,14 @@
 #' products match up to commutativity, and a wild may take the identity.
 #' `sym_replace(e, pattern, value)` rewrites every subexpression that matches,
 #' bottom up; `value` is an expression in the same wild symbols or a function
-#' of the named bindings.
+#' of the named bindings. When `pattern` is an R predicate, `sym_replace()`
+#' replaces every node it accepts by `value` (an expression, or an R function
+#' of the node), as SymPy's `replace()` with a callable query.
 #'
 #' @param e An expression.
-#' @param pattern A pattern containing wild symbols, or a function class made
-#'   by [Function()], which matches every application of that function.
+#' @param pattern A pattern containing wild symbols, a function class made
+#'   by [Function()], which matches every application of that function, or
+#'   for `sym_replace()` an R predicate of a node.
 #' @param value The replacement; for a function class pattern, another
 #'   function class or an R function called with the application's arguments.
 #' @param old Use the old matching that skips the operation count check.
@@ -299,6 +302,8 @@ sym_replace <- function(e, pattern, value, exact = NULL) {
       if (z$type == "Function" && identical(z$name, nm)) as_sym(do.call(value, z$args)) else z
     }))
   }
+  # a predicate query: value(node) replaces each node it accepts
+  if (is.function(pattern)) return(.cg_replace(e, pattern, value))
   pattern <- as_sym(pattern)
   if (is.null(exact)) exact <- length(unique(vapply(atoms(pattern, "Wild"), .k, ""))) > 1L
   .map_bottom_up(as_sym(e), function(z) {
