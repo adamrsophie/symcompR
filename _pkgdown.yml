@@ -122,6 +122,13 @@ reference:
   - 'Q'
   - ask_fact
   - assumptions-context
+  - ask
+  - refine
+  - satask
+  - lra_satask
+  - Predicate
+  - register_predicate
+  - AssumptionsWrapper
 - title: Numerical evaluation
   contents:
   - 'N'
@@ -420,6 +427,49 @@ reference:
   - UnitSystem
   - set_quantity_dimension
   - convert_to
+- title: Physics vectors
+  desc: Reference frames, vectors, dyadics and points from sympy.physics.vector.
+  contents:
+  - ReferenceFrame
+  - CoordinateSym
+  - PhysVector
+  - PhysPoint
+  - dynamicsymbols
+  - time_derivative
+  - kinematic_equations
+  - get_motion_params
+  - partial_velocity
+  - vsprint
+- title: Mechanics
+  desc: Bodies, loads, joints, pathways, actuators and equations of motion from sympy.physics.mechanics.
+  contents:
+  - Particle
+  - Body
+  - inertia
+  - Force
+  - Joint
+  - LinearPathway
+  - WrappingSphere
+  - ForceActuator
+  - KanesMethod
+  - LagrangesMethod
+  - JointsMethod
+  - Linearizer
+  - System
+  - SymbolicSystem
+  - linear_momentum
+  - find_dynamicsymbols
+  - msubs
+  - multi_mass_spring_damper
+  - physics-attributes
+- title: Biomechanics
+  desc: Activation dynamics, characteristic curves and musculotendon models from sympy.physics.biomechanics.
+  contents:
+  - activation-dynamics
+  - characteristic-curves
+  - CharacteristicCurveCollection
+  - musculotendon
+  - MusculotendonFormulation
 - title: Statistics
   contents:
   - Normal
