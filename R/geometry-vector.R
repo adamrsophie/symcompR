@@ -380,14 +380,20 @@ intersection <- function(a, b) {
   eq <- .sub(.add(list(.sq(.sub(px, c$center$coords[[1L]])), .sq(.sub(py, c$center$coords[[2L]])))), .sq(c$radius))
   ts <- Filter(function(v) !identical(ask_fact(v, "real"), FALSE), roots(expand(eq), t))
   pts <- lapply(ts, function(v) Point(simplify(subs(px, t, v)), simplify(subs(py, t, v))))
-  Filter(function(pt) .on_segment(l, pt), pts)
+  .ordered_points(Filter(function(pt) .on_segment(l, pt), pts))
 }
 
 .isect_circles <- function(a, b) {
   x <- Dummy("x"); y <- Dummy("y")
   ea <- circle_equation(a, x, y); eb <- circle_equation(b, x, y)
   sols <- solve(list(ea, eb), list(x, y))
-  lapply(sols, function(s) Point(simplify(s[[x$name]]), simplify(s[[y$name]])))
+  .ordered_points(lapply(sols, function(s) Point(simplify(s[[x$name]]), simplify(s[[y$name]]))))
+}
+
+# list(ordered(points)) as Ellipse.intersection returns them: node count,
+# then default_sort_key of the coordinates
+.ordered_points <- function(pts) {
+  .key_sort(lapply(pts, function(p) list(1 + sum(vapply(p$coords, .nodes, 0)), lapply(p$coords, .sort_key))), pts)
 }
 
 # ---------------------------------------------------------------------------

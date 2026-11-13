@@ -283,16 +283,19 @@ def_function("factorial2",
 def_function("subfactorial",
   eval = function(args) {
     n <- args[[1L]]
+    # subfactorial._eval: z1, z2 = 1, 0; z1, z2 = z2, (i - 1)*(z2 + z1)
     if (n$type == "Integer" && n$value >= 0) {
       v <- .int_val(n)
-      a <- gmp::as.bigz(1); b <- gmp::as.bigz(0)
       if (v == 0) return(S_One)
-      for (k in seq_len(v)) {
+      a <- gmp::as.bigz(1); b <- gmp::as.bigz(0)
+      for (k in seq_len(v)[-1L]) {
         c <- (k - 1) * (a + b)
         a <- b; b <- c
       }
       return(make_rational(gmp::as.bigq(b)))
     }
+    if (is_const(n, "nan")) return(S_NaN)
+    if (is_const(n, "oo")) return(S_Infinity)
     NULL
   },
   numeric = function(n) round(gamma(Re(n) + 1) / exp(1)))
@@ -543,11 +546,17 @@ def_function("harmonic", nargs = 1:2, eval = function(args) {
 
 .seq_numbers("partition", function(n, args) make_rational(gmp::as.bigq(.npartitions(n))))
 
-.seq_numbers("motzkin", function(n, args) {
+# motzkin.eval: Integer(cls._motzkin(n - 1)) for an integer n >= 0, where
+# _motzkin(-1) reads the last entry of a fresh recurrence_memo cache [1, 1]
+def_function("motzkin", eval = function(args) {
+  n <- args[[1L]]
+  if (n$type != "Integer" || n$value < 0)
+    .op_value_error("The provided number must be a positive integer")
+  k <- .int_val(n) - 1L
   M <- list(gmp::as.bigz(1), gmp::as.bigz(1))
-  if (n < 2) return(S_One)
-  for (m in 2:n) M[[m + 1L]] <- ((2 * m + 1) * M[[m]] + (3 * m - 3) * M[[m - 1L]]) %/% (m + 2)
-  make_rational(gmp::as.bigq(M[[n + 1L]]))
+  if (k < 2L) return(S_One)
+  for (m in 2:k) M[[m + 1L]] <- ((2 * m + 1) * M[[m]] + (3 * m - 3) * M[[m - 1L]]) %/% (m + 2)
+  make_rational(gmp::as.bigq(M[[k + 1L]]))
 })
 
 # ---------------------------------------------------------------------------
@@ -928,6 +937,7 @@ def_function("lerchphi", nargs = 3L,
 # After sympy/functions/special/bessel.py: BesselBase with the constants
 # _a and _b of fdiff and _eval_expand_func, the eval rules of besselj,
 # bessely, besseli and besselk, and the spherical functions jn, yn, hn1, hn2.
+.BES_TEX <- c(besselj = "J", bessely = "Y", besseli = "I", besselk = "K", hankel1 = "H^{(1)}", hankel2 = "H^{(2)}")
 .BES_A <- c(besselj = 1, bessely = 1, besseli = -1, besselk = 1, hankel1 = 1, hankel2 = 1)
 .BES_B <- c(besselj = 1, bessely = 1, besseli = 1, besselk = -1, hankel1 = 1, hankel2 = 1)
 .fq <- function(z, nm) ask_fact(z, nm)
@@ -1037,6 +1047,8 @@ def_function("lerchphi", nargs = 3L,
       to <- switch(name, hankel1 = "hankel2", hankel2 = "hankel1", name)
       fcall(to, list(fcall("conjugate", list(args[[1L]])), fcall("conjugate", list(z))))
     },
+    # LatexPrinter._hprint_BesselBase
+    latex = function(a) paste0(.BES_TEX[[name]], "_{", a[1L], "}\\left(", a[2L], "\\right)"),
     numeric = rfun)
   .expand_hooks[[name]] <- function(e) {
     r <- .bessel_expand(name, e$args[[1L]], e$args[[2L]])
@@ -1159,12 +1171,22 @@ def_function("airybiprime",
 # ---------------------------------------------------------------------------
 # Elliptic integrals
 
+# m is one of the given constants, as SymPy's `m in (S.Infinity, ...)`
+.ell_in <- function(m, vals) m$key %in% vapply(vals, .k, "")
+.ell_infs <- function() list(S_Infinity, S_NegativeInfinity)
+
 def_function("elliptic_k",
+  # elliptic_k.eval
   eval = function(args) {
     m <- args[[1L]]
-    if (is_zero_num(m)) return(.mul(list(S_Half, S_Pi)))
+    if (isTRUE(ask_fact(m, "zero"))) return(.mul(list(S_Pi, S_Half)))
+    if (identical(m$key, S_Half$key))
+      return(.div(.mul(list(.int(8), .pow(S_Pi, .rat(3, 2)))), .sq(fcall("gamma", list(.rat(-1, 4))))))
     if (is_one_num(m)) return(S_ComplexInfinity)
-    if (identical(m$key, S_Half$key)) return(.div(.pow(.sq(fcall("gamma", list(.rat(1, 4)))), S_One), .mul(list(.int(4), .sqrt(S_Pi)))))
+    if (identical(m$key, S_NegativeOne$key))
+      return(.div(.sq(fcall("gamma", list(.rat(1, 4)))), .mul(list(.int(4), .sqrt(.mul(list(S_Two, S_Pi)))))))
+    if (.ell_in(m, list(S_Infinity, S_NegativeInfinity, .mul(list(S_I, S_Infinity)),
+                        .mul(list(S_I, S_NegativeInfinity)), S_ComplexInfinity))) return(S_Zero)
     NULL
   },
   diff = function(args, i) {
@@ -1175,12 +1197,24 @@ def_function("elliptic_k",
   numeric = function(m) { a <- 1; b <- sqrt(1 - Re(m)); for (i in 1:40) { t <- (a + b) / 2; b <- sqrt(a * b); a <- t }; pi / (2 * a) })
 
 def_function("elliptic_e", nargs = 1:2,
+  # elliptic_e.eval
   eval = function(args) {
-    if (length(args) == 1L) {
-      m <- args[[1L]]
-      if (is_zero_num(m)) return(.mul(list(S_Half, S_Pi)))
-      if (is_one_num(m)) return(S_One)
+    if (length(args) == 2L) {
+      z <- args[[1L]]; m <- args[[2L]]
+      k <- .div(.mul(list(S_Two, z)), S_Pi)
+      if (isTRUE(ask_fact(m, "zero"))) return(z)
+      if (isTRUE(ask_fact(z, "zero"))) return(S_Zero)
+      if (isTRUE(ask_fact(k, "integer"))) return(.mul(list(k, fcall("elliptic_e", list(m)))))
+      if (.ell_in(m, .ell_infs())) return(S_ComplexInfinity)
+      if (could_extract_minus_sign(z)) return(.neg(fcall("elliptic_e", list(.neg(z), m))))
+      return(NULL)
     }
+    m <- args[[1L]]
+    if (isTRUE(ask_fact(m, "zero"))) return(.div(S_Pi, S_Two))
+    if (is_one_num(m)) return(S_One)
+    if (is_const(m, "oo")) return(.mul(list(S_I, S_Infinity)))
+    if (is_const(m, "-oo")) return(S_Infinity)
+    if (is_const(m, "zoo")) return(S_ComplexInfinity)
     NULL
   },
   diff = function(args, i) {
@@ -1197,11 +1231,54 @@ def_function("elliptic_e", nargs = 1:2,
   })
 
 def_function("elliptic_f", nargs = 2L,
-  eval = function(args) if (is_zero_num(args[[1L]])) S_Zero else NULL,
+  # elliptic_f.eval
+  eval = function(args) {
+    z <- args[[1L]]; m <- args[[2L]]
+    if (isTRUE(ask_fact(z, "zero"))) return(S_Zero)
+    if (isTRUE(ask_fact(m, "zero"))) return(z)
+    k <- .div(.mul(list(S_Two, z)), S_Pi)
+    if (isTRUE(ask_fact(k, "integer"))) return(.mul(list(k, fcall("elliptic_k", list(m)))))
+    if (.ell_in(m, .ell_infs())) return(S_Zero)
+    if (could_extract_minus_sign(z)) return(.neg(fcall("elliptic_f", list(.neg(z), m))))
+    NULL
+  },
   diff = function(args, i) if (i == 1L) .inv(.sqrt(.sub(S_One, .mul(list(args[[2L]], .sq(fcall("sin", list(args[[1L]])))))))) else NULL,
   numeric = function(phi, m) stats::integrate(function(t) 1 / sqrt(1 - Re(m) * sin(t)^2), 0, Re(phi))$value)
 
 def_function("elliptic_pi", nargs = 2:3,
+  # elliptic_pi.eval
+  eval = function(args) {
+    n <- args[[1L]]
+    real_inf <- function(v) isTRUE(ask_fact(v, "extended_real")) && isTRUE(ask_fact(v, "infinite"))
+    if (length(args) == 3L) {
+      z <- args[[2L]]; m <- args[[3L]]
+      if (isTRUE(ask_fact(n, "zero"))) return(fcall("elliptic_f", list(z, m)))
+      if (is_one_num(n))
+        return(.add(list(fcall("elliptic_f", list(z, m)),
+                         .div(.sub(.mul(list(.sqrt(.sub(S_One, .mul(list(m, .sq(fcall("sin", list(z))))))), fcall("tan", list(z)))),
+                                   fcall("elliptic_e", list(z, m))), .sub(S_One, m)))))
+      k <- .div(.mul(list(S_Two, z)), S_Pi)
+      if (isTRUE(ask_fact(k, "integer"))) return(.mul(list(k, fcall("elliptic_pi", list(n, m)))))
+      if (isTRUE(ask_fact(m, "zero")))
+        return(.div(fcall("atanh", list(.mul(list(.sqrt(.sub(n, S_One)), fcall("tan", list(z)))))), .sqrt(.sub(n, S_One))))
+      if (identical(n$key, m$key))
+        return(.add(list(fcall("elliptic_f", list(z, n)), .neg(fcall("elliptic_pi", list(S_One, z, n))),
+                         .div(fcall("tan", list(z)), .sqrt(.sub(S_One, .mul(list(n, .sq(fcall("sin", list(z)))))))))))
+      if (.ell_in(n, .ell_infs()) || .ell_in(m, .ell_infs())) return(S_Zero)
+      if (could_extract_minus_sign(z)) return(.neg(fcall("elliptic_pi", list(n, .neg(z), m))))
+      if (real_inf(m) || real_inf(n)) return(S_Zero)
+      return(NULL)
+    }
+    m <- args[[2L]]
+    if (isTRUE(ask_fact(n, "zero"))) return(fcall("elliptic_k", list(m)))
+    if (is_one_num(n)) return(S_ComplexInfinity)
+    if (isTRUE(ask_fact(m, "zero"))) return(.div(S_Pi, .mul(list(S_Two, .sqrt(.sub(S_One, n))))))
+    if (is_one_num(m)) return(.div(S_NegativeInfinity, fcall("sign", list(.sub(n, S_One)))))
+    if (identical(n$key, m$key)) return(.div(fcall("elliptic_e", list(n)), .sub(S_One, n)))
+    if (.ell_in(n, .ell_infs()) || .ell_in(m, .ell_infs())) return(S_Zero)
+    if (real_inf(m) || real_inf(n)) return(S_Zero)
+    NULL
+  },
   numeric = function(n, a, m) {
     # elliptic_pi(n, m) is complete; elliptic_pi(n, phi, m) runs to phi
     phi <- if (missing(m)) pi / 2 else Re(a)
@@ -1210,111 +1287,352 @@ def_function("elliptic_pi", nargs = 2:3,
   })
 
 # ---------------------------------------------------------------------------
-# Orthogonal polynomials: explicit polynomials for integer degree.
+# Orthogonal polynomials, after sympy/functions/special/polynomials.py and
+# sympy/polys/orthopolys.py. Integer degrees build the dense coefficient list
+# of SymPy's dup_* recurrence over the smallest field holding the parameters
+# (elements kept canonical by cancel and expand), then Poly.as_expr().
 
-.orth_poly <- function(name, nargs, make, diffx = NULL, numeric = NULL) {
-  def_function(name, nargs = nargs,
-    eval = function(args) {
-      n <- args[[1L]]
-      if (n$type == "Integer" && n$value >= 0 && n$value <= 200) {
-        r <- make(.int_val(n), args)
-        if (!is.null(r)) return(r)
-      }
-      NULL
-    },
-    diff = diffx, numeric = numeric)
+.op_K <- function(e) if (is_exact_number(e)) e else expand(cancel(e))
+.op_add <- function(f, g) {
+  n <- max(length(f), length(g))
+  f <- c(rep(list(S_Zero), n - length(f)), f); g <- c(rep(list(S_Zero), n - length(g)), g)
+  Map(function(u, v) .op_K(.add(list(u, v))), f, g)
 }
-
-.recur3 <- function(n, p0, p1, step) {
-  if (n == 0) return(p0)
-  if (n == 1) return(p1)
-  a <- p0; b <- p1
-  for (k in 1:(n - 1)) {
-    c <- expand(step(k, a, b))
-    a <- b; b <- c
+.op_sub <- function(f, g) .op_add(f, lapply(g, .neg))
+.op_mulc <- function(f, c) lapply(f, function(u) .op_K(.mul(list(u, c))))
+.op_lshift <- function(f) c(f, list(S_Zero))
+.op_mul <- function(f, g) {
+  out <- rep(list(S_Zero), length(f) + length(g) - 1L)
+  for (i in seq_along(f)) for (j in seq_along(g))
+    out[[i + j - 1L]] <- .add(list(out[[i + j - 1L]], .mul(list(f[[i]], g[[j]]))))
+  lapply(out, .op_K)
+}
+# Poly.new(dup, x).as_expr()
+.op_expr <- function(f, x) {
+  d <- length(f)
+  terms <- list()
+  for (i in seq_len(d)) if (!is_zero_num(f[[i]]))
+    terms[[length(terms) + 1L]] <- .mul(list(f[[i]], .pow(x, .int(d - i))))
+  .add(terms)
+}
+.op_rec2 <- function(n, m2, m1, step) {
+  if (n < 1L) return(list(S_One))
+  for (i in seq_len(n)[-1L]) { nx <- step(i, m2, m1); m2 <- m1; m1 <- nx }
+  m1
+}
+.dup_jacobi <- function(n, a, b) {
+  ab <- .add(list(a, b))
+  .op_rec2(n, list(S_One), list(.op_K(.add(list(.div(ab, S_Two), S_One))), .op_K(.div(.sub(a, b), S_Two))),
+    function(i, m2, m1) {
+      I <- .int(i)
+      den <- .op_K(.mul(list(I, .add(list(ab, I)), .add(list(ab, .int(2 * i - 2))))))
+      f0 <- .op_K(.div(.mul(list(.add(list(ab, .int(2 * i - 1))), .sub(.mul(list(a, a)), .mul(list(b, b))))), .mul(list(S_Two, den))))
+      f1 <- .op_K(.div(.mul(list(.add(list(ab, .int(2 * i - 1))), .add(list(ab, .int(2 * i - 2))), .add(list(ab, .int(2 * i))))), .mul(list(S_Two, den))))
+      f2 <- .op_K(.div(.mul(list(.add(list(a, .int(i - 1))), .add(list(b, .int(i - 1))), .add(list(ab, .int(2 * i))))), den))
+      .op_sub(.op_add(.op_mulc(m1, f0), .op_mulc(.op_lshift(m1), f1)), .op_mulc(m2, f2))
+    })
+}
+.dup_gegenbauer <- function(n, a) {
+  .op_rec2(n, list(S_One), list(.op_K(.mul(list(S_Two, a))), S_Zero), function(i, m2, m1) {
+    q <- .op_K(.div(.mul(list(S_Two, .sub(a, S_One))), .int(i)))
+    .op_sub(.op_mulc(.op_lshift(m1), .op_K(.add(list(q, S_Two)))), .op_mulc(m2, .op_K(.add(list(q, S_One)))))
+  })
+}
+.dup_laguerre <- function(n, alpha) {
+  m2 <- list(S_Zero); m1 <- list(S_One)
+  for (i in seq_len(n)) {
+    q <- .op_K(.div(.sub(alpha, S_One), .int(i)))
+    a <- .op_mul(m1, list(.rat(-1, i), .op_K(.add(list(q, S_Two)))))
+    b <- .op_mulc(m2, .op_K(.add(list(q, S_One))))
+    m2 <- m1; m1 <- .op_sub(a, b)
   }
-  b
+  m1
+}
+.dup_chebyshevt <- function(n) .op_rec2(n, list(S_One), list(S_One, S_Zero),
+  function(i, m2, m1) .op_sub(.op_mulc(.op_lshift(m1), S_Two), m2))
+.dup_chebyshevu <- function(n) .op_rec2(n, list(S_One), list(S_Two, S_Zero),
+  function(i, m2, m1) .op_sub(.op_mulc(.op_lshift(m1), S_Two), m2))
+.dup_hermite <- function(n) .op_rec2(n, list(S_One), list(S_Two, S_Zero),
+  function(i, m2, m1) .op_mulc(.op_sub(.op_lshift(m1), .op_mulc(m2, .int(i - 1))), S_Two))
+.dup_hermite_prob <- function(n) .op_rec2(n, list(S_One), list(S_One, S_Zero),
+  function(i, m2, m1) .op_sub(.op_lshift(m1), .op_mulc(m2, .int(i - 1))))
+.dup_legendre <- function(n) .op_rec2(n, list(S_One), list(S_One, S_Zero),
+  function(i, m2, m1) .op_sub(.op_mulc(.op_lshift(m1), .rat(2 * i - 1, i)), .op_mulc(m2, .rat(i - 1, i))))
+
+# expr.is_Number, which holds for the infinities and nan too
+.is_Number <- function(e) is_number_type(e) || (e$type == "Constant" && e$name %in% c("oo", "-oo", "zoo", "nan"))
+# OrthogonalPolynomial._eval_at_order: the polynomial for a nonnegative integer n
+.op_at_order <- function(n, x, gen) {
+  if (n$type != "Integer" || n$value < 0) return(NULL)
+  .op_expr(gen(.int_val(n)), x)
+}
+.op_neg1n <- function(n) .pow(S_NegativeOne, n)
+.op_value_error <- function(msg) stop(structure(class = c("ValueError", "error", "condition"),
+                                               list(message = msg, call = NULL)))
+
+def_function("jacobi", nargs = 4L,
+  eval = function(args) {
+    n <- args[[1L]]; a <- args[[2L]]; b <- args[[3L]]; x <- args[[4L]]
+    if (identical(a$key, b$key)) {
+      if (identical(a$key, .rat(-1, 2)$key))
+        return(.mul(list(.div(fcall("RisingFactorial", list(S_Half, n)), fcall("factorial", list(n))), fcall("chebyshevt", list(n, x)))))
+      if (isTRUE(ask_fact(a, "zero"))) return(fcall("legendre", list(n, x)))
+      if (identical(a$key, S_Half$key))
+        return(.mul(list(.div(fcall("RisingFactorial", list(.rat(3, 2), n)), fcall("factorial", list(.add(list(n, S_One))))), fcall("chebyshevu", list(n, x)))))
+      return(.mul(list(.div(fcall("RisingFactorial", list(.add(list(a, S_One)), n)), fcall("RisingFactorial", list(.add(list(.mul(list(S_Two, a)), S_One)), n))),
+                       fcall("gegenbauer", list(n, .add(list(a, S_Half)), x)))))
+    }
+    if (identical(b$key, .neg(a)$key))
+      return(.mul(list(.div(fcall("gamma", list(.add(list(n, a, S_One)))), fcall("gamma", list(.add(list(n, S_One))))),
+                       .div(.pow(.add(list(S_One, x)), .div(a, S_Two)), .pow(.sub(S_One, x), .div(a, S_Two))),
+                       fcall("assoc_legendre", list(n, .neg(a), x)))))
+    if (!.is_Number(n)) {
+      if (could_extract_minus_sign(x)) return(.mul(list(.op_neg1n(n), fcall("jacobi", list(n, b, a, .neg(x))))))
+      if (isTRUE(ask_fact(x, "zero")))
+        return(.mul(list(.pow(S_Two, .neg(n)), fcall("gamma", list(.add(list(a, n, S_One)))),
+                         .inv(.mul(list(fcall("gamma", list(.add(list(a, S_One)))), fcall("factorial", list(n))))),
+                         fcall("hyper", list(fcall("Tuple", list(.sub(.neg(b), n), .neg(n))), fcall("Tuple", list(.add(list(a, S_One)))), S_NegativeOne)))))
+      if (is_one_num(x)) return(.div(fcall("RisingFactorial", list(.add(list(a, S_One)), n)), fcall("factorial", list(n))))
+      if (is_const(x, "oo") && isTRUE(ask_fact(n, "positive"))) {
+        if (isTRUE(ask_fact(.add(list(a, b, .mul(list(S_Two, n)))), "integer")))
+          .op_value_error("Error. a + b + 2*n should not be an integer.")
+        return(.mul(list(fcall("RisingFactorial", list(.add(list(a, b, n, S_One)), n)), S_Infinity)))
+      }
+      return(NULL)
+    }
+    if (n$type != "Integer") return(NULL)
+    if (n$value < 0) .op_value_error(paste0("Cannot generate Jacobi polynomial of index ", .str(n)))
+    .op_expr(.dup_jacobi(.int_val(n), a, b), x)
+  })
+
+def_function("gegenbauer", nargs = 3L,
+  eval = function(args) {
+    n <- args[[1L]]; a <- args[[2L]]; x <- args[[3L]]
+    if (isTRUE(ask_fact(n, "negative"))) return(S_Zero)
+    if (identical(a$key, S_Half$key)) return(fcall("legendre", list(n, x)))
+    if (is_one_num(a)) return(fcall("chebyshevu", list(n, x)))
+    if (identical(a$key, S_NegativeOne$key)) return(S_Zero)
+    if (!.is_Number(n)) {
+      if (identical(x$key, S_NegativeOne$key)) {
+        if (identical(Gt(fcall("re", list(a)), S_Half)$key, S_true$key)) return(S_ComplexInfinity)
+        return(.div(.mul(list(fcall("cos", list(.mul(list(S_Pi, .add(list(a, n)))))), fcall("sec", list(.mul(list(S_Pi, a)))),
+                              fcall("gamma", list(.add(list(.mul(list(S_Two, a)), n)))))),
+                    .mul(list(fcall("gamma", list(.mul(list(S_Two, a)))), fcall("gamma", list(.add(list(n, S_One))))))))
+      }
+      if (could_extract_minus_sign(x)) return(.mul(list(.op_neg1n(n), fcall("gegenbauer", list(n, a, .neg(x))))))
+      if (isTRUE(ask_fact(x, "zero"))) {
+        num <- .mul(list(.pow(S_Two, n), .sqrt(S_Pi), fcall("gamma", list(.add(list(a, .mul(list(S_Half, n))))))))
+        den <- .mul(list(fcall("gamma", list(.div(.sub(S_One, n), S_Two))), fcall("gamma", list(.add(list(n, S_One)))), fcall("gamma", list(a))))
+        return(.div(num, den))
+      }
+      if (is_one_num(x))
+        return(.div(fcall("gamma", list(.add(list(.mul(list(S_Two, a)), n)))),
+                    .mul(list(fcall("gamma", list(.mul(list(S_Two, a)))), fcall("gamma", list(.add(list(n, S_One))))))))
+      if (is_const(x, "oo") && isTRUE(ask_fact(n, "positive")))
+        return(.mul(list(fcall("RisingFactorial", list(a, n)), S_Infinity)))
+      return(NULL)
+    }
+    if (n$type != "Integer") return(NULL)
+    .op_expr(.dup_gegenbauer(.int_val(n), a), x)
+  })
+
+def_function("chebyshevt", nargs = 2L,
+  eval = function(args) {
+    n <- args[[1L]]; x <- args[[2L]]
+    if (!.is_Number(n)) {
+      if (could_extract_minus_sign(x)) return(.mul(list(.op_neg1n(n), fcall("chebyshevt", list(n, .neg(x))))))
+      if (could_extract_minus_sign(n)) return(fcall("chebyshevt", list(.neg(n), x)))
+      if (isTRUE(ask_fact(x, "zero"))) return(fcall("cos", list(.mul(list(S_Half, S_Pi, n)))))
+      if (is_one_num(x)) return(S_One)
+      if (is_const(x, "oo")) return(S_Infinity)
+      return(NULL)
+    }
+    if (isTRUE(ask_fact(n, "negative"))) n <- .neg(n)
+    .op_at_order(n, x, .dup_chebyshevt)
+  },
+  diff = function(args, i) if (i == 2L) .mul(list(args[[1L]], fcall("chebyshevu", list(.sub(args[[1L]], S_One), args[[2L]])))) else NULL)
+
+def_function("chebyshevu", nargs = 2L,
+  eval = function(args) {
+    n <- args[[1L]]; x <- args[[2L]]
+    if (!.is_Number(n)) {
+      if (could_extract_minus_sign(x)) return(.mul(list(.op_neg1n(n), fcall("chebyshevu", list(n, .neg(x))))))
+      if (could_extract_minus_sign(n)) {
+        if (identical(n$key, S_NegativeOne$key)) return(S_Zero)
+        if (!could_extract_minus_sign(.sub(.neg(n), S_Two))) return(.neg(fcall("chebyshevu", list(.sub(.neg(n), S_Two), x))))
+      }
+      if (isTRUE(ask_fact(x, "zero"))) return(fcall("cos", list(.mul(list(S_Half, S_Pi, n)))))
+      if (is_one_num(x)) return(.add(list(S_One, n)))
+      if (is_const(x, "oo")) return(S_Infinity)
+      return(NULL)
+    }
+    if (isTRUE(ask_fact(n, "negative"))) {
+      if (identical(n$key, S_NegativeOne$key)) return(S_Zero)
+      r <- .op_at_order(.sub(.neg(n), S_Two), x, .dup_chebyshevu)
+      return(if (is.null(r)) NULL else .neg(r))
+    }
+    .op_at_order(n, x, .dup_chebyshevu)
+  })
+
+def_function("legendre", nargs = 2L,
+  eval = function(args) {
+    n <- args[[1L]]; x <- args[[2L]]
+    if (!.is_Number(n)) {
+      if (could_extract_minus_sign(x)) return(.mul(list(.op_neg1n(n), fcall("legendre", list(n, .neg(x))))))
+      if (could_extract_minus_sign(n) && !could_extract_minus_sign(.sub(.neg(n), S_One)))
+        return(fcall("legendre", list(.sub(.neg(n), S_One), x)))
+      if (isTRUE(ask_fact(x, "zero")))
+        return(.div(.sqrt(S_Pi), .mul(list(fcall("gamma", list(.sub(S_Half, .div(n, S_Two)))), fcall("gamma", list(.add(list(S_One, .div(n, S_Two)))))))))
+      if (is_one_num(x)) return(S_One)
+      if (is_const(x, "oo")) return(S_Infinity)
+      return(NULL)
+    }
+    if (isTRUE(ask_fact(n, "negative"))) n <- .sub(.neg(n), S_One)
+    .op_at_order(n, x, .dup_legendre)
+  },
+  diff = function(args, i) {
+    if (i != 2L) return(NULL)
+    n <- args[[1L]]; x <- args[[2L]]
+    .div(.mul(list(n, .sub(.mul(list(x, fcall("legendre", args))), fcall("legendre", list(.sub(n, S_One), x))))), .sub(.sq(x), S_One))
+  })
+
+def_function("hermite", nargs = 2L,
+  eval = function(args) {
+    n <- args[[1L]]; x <- args[[2L]]
+    if (!.is_Number(n)) {
+      if (could_extract_minus_sign(x)) return(.mul(list(.op_neg1n(n), fcall("hermite", list(n, .neg(x))))))
+      if (isTRUE(ask_fact(x, "zero"))) return(.div(.mul(list(.pow(S_Two, n), .sqrt(S_Pi))), fcall("gamma", list(.div(.sub(S_One, n), S_Two)))))
+      if (is_const(x, "oo")) return(S_Infinity)
+      return(NULL)
+    }
+    if (isTRUE(ask_fact(n, "negative"))) .op_value_error(paste0("The index n must be nonnegative integer (got ", .str(n), ")"))
+    .op_at_order(n, x, .dup_hermite)
+  },
+  diff = function(args, i) if (i == 2L) .mul(list(S_Two, args[[1L]], fcall("hermite", list(.sub(args[[1L]], S_One), args[[2L]])))) else NULL)
+
+def_function("hermite_prob", nargs = 2L,
+  eval = function(args) {
+    n <- args[[1L]]; x <- args[[2L]]
+    if (!.is_Number(n)) {
+      if (could_extract_minus_sign(x)) return(.mul(list(.op_neg1n(n), fcall("hermite_prob", list(n, .neg(x))))))
+      if (isTRUE(ask_fact(x, "zero"))) return(.div(.sqrt(S_Pi), fcall("gamma", list(.div(.sub(S_One, n), S_Two)))))
+      if (is_const(x, "oo")) return(S_Infinity)
+      return(NULL)
+    }
+    if (isTRUE(ask_fact(n, "negative"))) return(NULL)
+    .op_at_order(n, x, .dup_hermite_prob)
+  })
+
+def_function("laguerre", nargs = 2L,
+  eval = function(args) {
+    n <- args[[1L]]; x <- args[[2L]]
+    if (isFALSE(ask_fact(n, "integer"))) .op_value_error("Error: n should be an integer.")
+    if (!.is_Number(n)) {
+      if (could_extract_minus_sign(n) && !could_extract_minus_sign(.sub(.neg(n), S_One)))
+        return(.mul(list(fcall("exp", list(x)), fcall("laguerre", list(.sub(.neg(n), S_One), .neg(x))))))
+      if (isTRUE(ask_fact(x, "zero"))) return(S_One)
+      if (is_const(x, "-oo")) return(S_Infinity)
+      if (is_const(x, "oo")) return(.mul(list(.op_neg1n(n), S_Infinity)))
+      return(NULL)
+    }
+    if (isTRUE(ask_fact(n, "negative")))
+      return(.mul(list(fcall("exp", list(x)), fcall("laguerre", list(.sub(.neg(n), S_One), .neg(x))))))
+    .op_at_order(n, x, function(k) .dup_laguerre(k, S_Zero))
+  },
+  diff = function(args, i) if (i == 2L) .neg(fcall("assoc_laguerre", list(.sub(args[[1L]], S_One), S_One, args[[2L]]))) else NULL)
+
+def_function("assoc_laguerre", nargs = 3L,
+  eval = function(args) {
+    n <- args[[1L]]; alpha <- args[[2L]]; x <- args[[3L]]
+    if (isTRUE(ask_fact(alpha, "zero"))) return(fcall("laguerre", list(n, x)))
+    if (!.is_Number(n)) {
+      if (isTRUE(ask_fact(x, "zero"))) return(fcall("binomial", list(.add(list(n, alpha)), alpha)))
+      if (is_const(x, "oo") && isTRUE(ask_fact(n, "positive"))) return(.mul(list(.op_neg1n(n), S_Infinity)))
+      if (is_const(x, "-oo") && isTRUE(ask_fact(n, "positive"))) return(S_Infinity)
+      return(NULL)
+    }
+    if (isTRUE(ask_fact(n, "negative"))) .op_value_error(paste0("The index n must be nonnegative integer (got ", .str(n), ")"))
+    if (n$type != "Integer") return(NULL)
+    .op_expr(.dup_laguerre(.int_val(n), alpha), x)
+  })
+
+.op_diff <- function(f) {
+  d <- length(f) - 1L
+  if (d < 1L) return(list(S_Zero))
+  lapply(seq_len(d), function(i) .op_K(.mul(list(f[[i]], .int(d - i + 1L)))))
 }
 
-.orth_poly("legendre", 2L, function(n, args) {
-  x <- args[[2L]]
-  .recur3(n, S_One, x, function(k, a, b) .div(.sub(.mul(list(.int(2 * k + 1), x, b)), .mul(list(.int(k), a))), .int(k + 1)))
-}, diffx = function(args, i) {
-  if (i != 2L) return(NULL)
-  n <- args[[1L]]; x <- args[[2L]]
-  .div(.mul(list(n, .sub(.mul(list(x, fcall("legendre", args))), fcall("legendre", list(.sub(n, S_One), x))))), .sub(.sq(x), S_One))
-})
-
-.orth_poly("chebyshevt", 2L, function(n, args) {
-  x <- args[[2L]]
-  .recur3(n, S_One, x, function(k, a, b) .sub(.mul(list(S_Two, x, b)), a))
-}, diffx = function(args, i) if (i == 2L) .mul(list(args[[1L]], fcall("chebyshevu", list(.sub(args[[1L]], S_One), args[[2L]])))) else NULL)
-
-.orth_poly("chebyshevu", 2L, function(n, args) {
-  x <- args[[2L]]
-  .recur3(n, S_One, .mul(list(S_Two, x)), function(k, a, b) .sub(.mul(list(S_Two, x, b)), a))
-})
-
-.orth_poly("hermite", 2L, function(n, args) {
-  x <- args[[2L]]
-  .recur3(n, S_One, .mul(list(S_Two, x)), function(k, a, b) .sub(.mul(list(S_Two, x, b)), .mul(list(.int(2 * k), a))))
-}, diffx = function(args, i) if (i == 2L) .mul(list(S_Two, args[[1L]], fcall("hermite", list(.sub(args[[1L]], S_One), args[[2L]])))) else NULL)
-
-.orth_poly("hermite_prob", 2L, function(n, args) {
-  x <- args[[2L]]
-  .recur3(n, S_One, x, function(k, a, b) .sub(.mul(list(x, b)), .mul(list(.int(k), a))))
-})
-
-.orth_poly("laguerre", 2L, function(n, args) {
-  x <- args[[2L]]
-  .recur3(n, S_One, .sub(S_One, x), function(k, a, b) .div(.sub(.mul(list(.sub(.int(2 * k + 1), x), b)), .mul(list(.int(k), a))), .int(k + 1)))
-}, diffx = function(args, i) if (i == 2L) .neg(fcall("assoc_laguerre", list(.sub(args[[1L]], S_One), S_One, args[[2L]]))) else NULL)
-
-.orth_poly("assoc_laguerre", 3L, function(n, args) {
-  a <- args[[2L]]; x <- args[[3L]]
-  .add(lapply(0:n, function(k) .mul(list(.int((-1)^k), fcall("binomial", list(.add(list(.int(n), a)), .int(n - k))),
-                                          .div(.pow(x, .int(k)), .int(as.character(gmp::factorialZ(k))))))))
-})
-
-.orth_poly("gegenbauer", 3L, function(n, args) {
-  a <- args[[2L]]; x <- args[[3L]]
-  .recur3(n, S_One, .mul(list(S_Two, a, x)), function(k, p, q)
-    .div(.sub(.mul(list(S_Two, .add(list(.int(k), a)), x, q)), .mul(list(.add(list(.int(k - 1), .mul(list(S_Two, a)))), p))), .int(k + 1)))
-})
-
-.orth_poly("jacobi", 4L, function(n, args) {
-  a <- args[[2L]]; b <- args[[3L]]; x <- args[[4L]]
-  expand(.add(lapply(0:n, function(s) .mul(list(fcall("binomial", list(.add(list(.int(n), a)), .int(n - s))),
-                                                  fcall("binomial", list(.add(list(.int(n), b)), .int(s))),
-                                                  .pow(.div(.sub(x, S_One), S_Two), .int(s)),
-                                                  .pow(.div(.add(list(x, S_One)), S_Two), .int(n - s)))))))
-})
-
-.orth_poly("assoc_legendre", 3L, function(n, args) {
-  m <- args[[2L]]; x <- args[[3L]]
-  if (m$type != "Integer") return(NULL)
-  mv <- .int_val(m)
-  if (abs(mv) > n) return(S_Zero)
-  if (mv < 0) return(NULL)
-  t <- Dummy("t")
-  d <- fcall("legendre", list(.int(n), t))
-  for (k in seq_len(mv)) d <- .diff1(d, t)
-  expand(.mul(list(.int((-1)^mv), .pow(.sub(S_One, .sq(x)), .rat(mv, 2)), subs(d, t, x))))
-})
-
-def_function("Ynm", nargs = 4L,
+def_function("assoc_legendre", nargs = 3L,
   eval = function(args) {
-    n <- args[[1L]]; m <- args[[2L]]; theta <- args[[3L]]; phi <- args[[4L]]
-    if (n$type == "Integer" && m$type == "Integer" && abs(.int_val(m)) <= .int_val(n)) {
-      nv <- .int_val(n); mv <- .int_val(m)
-      if (mv < 0) return(NULL)
-      norm <- .sqrt(.div(.mul(list(.int(2 * nv + 1), make_rational(gmp::as.bigq(gmp::factorialZ(nv - mv))))),
-                         .mul(list(.int(4), S_Pi, make_rational(gmp::as.bigq(gmp::factorialZ(nv + mv)))))))
-      P <- fcall("assoc_legendre", list(n, m, fcall("cos", list(theta))))
-      return(.mul(list(norm, P, fcall("exp", list(.mul(list(S_I, m, phi)))))))
+    n <- args[[1L]]; m <- args[[2L]]; x <- args[[3L]]
+    if (could_extract_minus_sign(m))
+      return(.mul(list(.pow(S_NegativeOne, .neg(m)),
+                       .div(fcall("factorial", list(.add(list(m, n)))), fcall("factorial", list(.sub(n, m)))),
+                       fcall("assoc_legendre", list(n, .neg(m), x)))))
+    if (is_zero_num(m)) return(fcall("legendre", list(n, x)))
+    if (is_zero_num(x))
+      return(.div(.mul(list(.pow(S_Two, m), .sqrt(S_Pi))),
+                  .mul(list(fcall("gamma", list(.div(.sub(.sub(S_One, m), n), S_Two))),
+                            fcall("gamma", list(.sub(S_One, .div(.sub(m, n), S_Two))))))))
+    if (.is_Number(n) && .is_Number(m) && isTRUE(ask_fact(n, "integer")) && isTRUE(ask_fact(m, "integer"))) {
+      if (isTRUE(ask_fact(n, "negative")))
+        .op_value_error(paste0("assoc_legendre : 1st index must be nonnegative integer (got ", .str(n), ")"))
+      nv <- .int_val(n); mv <- abs(.int_val(m))
+      if (mv > nv)
+        .op_value_error(paste0("assoc_legendre : abs('2nd index') must be <= '1st index' (got ", .str(n), ", ", .str(m), ")"))
+      P <- .dup_legendre(nv)
+      for (k in seq_len(mv)) P <- .op_diff(P)
+      return(.mul(list(.pow(S_NegativeOne, .int(mv)), .pow(.sub(S_One, .sq(x)), .rat(mv, 2)), .op_expr(P, x))))
     }
     NULL
   })
+
+def_function("Ynm", nargs = 4L,
+  # Ynm.eval: only the signs of m, theta and phi are normalized
+  eval = function(args) {
+    n <- args[[1L]]; m <- args[[2L]]; theta <- args[[3L]]; phi <- args[[4L]]
+    e2 <- function(m, phi) fcall("exp", list(.mul(list(.int(-2), S_I, m, phi))))
+    if (could_extract_minus_sign(m)) {
+      m <- .neg(m)
+      return(.mul(list(.pow(S_NegativeOne, m), e2(m, phi), fcall("Ynm", list(n, m, theta, phi)))))
+    }
+    if (could_extract_minus_sign(theta)) return(fcall("Ynm", list(n, m, .neg(theta), phi)))
+    if (could_extract_minus_sign(phi)) {
+      phi <- .neg(phi)
+      return(.mul(list(e2(m, phi), fcall("Ynm", list(n, m, theta, phi)))))
+    }
+    NULL
+  },
+  diff = function(args, i) {
+    n <- args[[1L]]; m <- args[[2L]]; theta <- args[[3L]]; phi <- args[[4L]]
+    if (i == 3L)
+      return(.add(list(.mul(list(m, fcall("cot", list(theta)), fcall("Ynm", args))),
+                       .mul(list(.sqrt(.mul(list(.sub(n, m), .add(list(n, m, S_One))))), fcall("exp", list(.mul(list(S_NegativeOne, S_I, phi)))),
+                                 fcall("Ynm", list(n, .add(list(m, S_One)), theta, phi)))))))
+    if (i == 4L) return(.mul(list(S_I, m, fcall("Ynm", args))))
+    NULL
+  },
+  conjugate = function(args) .mul(list(.pow(S_NegativeOne, args[[2L]]), fcall("Ynm", list(args[[1L]], .neg(args[[2L]]), args[[3L]], args[[4L]])))))
+
+# Ynm._eval_expand_func
+.expand_hooks$Ynm <- function(e) {
+  n <- e$args[[1L]]; m <- e$args[[2L]]; theta <- e$args[[3L]]; phi <- e$args[[4L]]
+  rv <- .mul(list(.sqrt(.mul(list(.div(.add(list(.mul(list(S_Two, n)), S_One)), .mul(list(.int(4), S_Pi))),
+                                  .div(fcall("factorial", list(.sub(n, m))), fcall("factorial", list(.add(list(n, m)))))))),
+                  fcall("exp", list(.mul(list(S_I, m, phi)))), fcall("assoc_legendre", list(n, m, fcall("cos", list(theta))))))
+  subs(rv, .sqrt(.add(list(.neg(.sq(fcall("cos", list(theta)))), S_One))), fcall("sin", list(theta)))
+}
+
+# Znm.eval
+def_function("Znm", nargs = 4L, eval = function(args) {
+  m <- args[[2L]]
+  y <- fcall("Ynm", args)
+  yc <- fcall("conjugate", list(fcall("Ynm", args)))
+  if (isTRUE(ask_fact(m, "positive"))) return(.div(.add(list(y, yc)), .sqrt(S_Two)))
+  if (isTRUE(ask_fact(m, "zero"))) return(y)
+  if (isTRUE(ask_fact(m, "negative"))) return(.div(.sub(y, yc), .mul(list(.sqrt(S_Two), S_I))))
+  NULL
+})
 
 # ---------------------------------------------------------------------------
 # Hypergeometric and Meijer G (representation and numerics).
@@ -1582,14 +1900,18 @@ Ynm <- .sf("Ynm")
   }
   NULL
 }
-# factorial has no _eval_expand_func in SymPy
+# factorial has no _eval_expand_func in SymPy; binomial._eval_expand_func
 .expand_hooks$binomial <- function(e) {
   n <- e$args[[1L]]; k <- e$args[[2L]]
-  if (k$type == "Integer" && k$value > 0 && k$value <= 50) {
-    kv <- .int_val(k)
-    return(.div(.mul(lapply(0:(kv - 1), function(j) .sub(n, .int(j)))), .int(as.character(gmp::factorialZ(kv)))))
-  }
-  NULL
+  if (.is_Number(n)) return(NULL)
+  if (.sub(n, k)$type == "Integer") k <- .sub(n, k)
+  if (k$type != "Integer") return(NULL)
+  if (k$value == 0) return(S_One)
+  if (k$value < 0) return(S_Zero)
+  kv <- .int_val(k)
+  res <- S_One
+  for (i in seq_len(kv)) res <- .mul(list(res, .add(list(.sub(n, k), .int(i)))))
+  .div(res, make_rational(gmp::as.bigq(gmp::factorialZ(kv))))
 }
 # harmonic._eval_expand_func
 .expand_hooks$harmonic <- function(e) {

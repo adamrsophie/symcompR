@@ -67,6 +67,162 @@
   .bx(out, b$base + 1L)
 }
 
+# stringPict.stack: pictures from top to bottom, each line centered; the
+# baseline is that of the second picture
+.bx_stack <- function(...) {
+  bs <- lapply(list(...), function(b) if (is.character(b)) .bx(b) else b)
+  w <- max(vapply(bs, function(b) b$w, 0L))
+  .bx(unlist(lapply(bs, function(b) .bx_center(b, w)$lines)), bs[[1L]]$h + bs[[2L]]$base)
+}
+# stringPict.below keeps the baseline of the top picture, above that of the
+# bottom one
+.bx_below <- function(b, ...) {
+  s <- .bx_stack(b, ...)
+  s$base <- b$base
+  s
+}
+.bx_above <- function(b, ...) {
+  s <- .bx_stack(..., b)
+  s$base <- s$h - b$h + b$base
+  s
+}
+
+# pretty_symbology.vobj for the bracket and integral signs (no middle piece)
+.vobj <- function(symb, n, u) {
+  v <- if (u) switch(symb, `[` = c("\u23a2", "\u23a1", "\u23a3", "["), `]` = c("\u23a5", "\u23a4", "\u23a6", "]"),
+                     int = c("\u23ae", "\u2320", "\u2321", "\u222b"))
+       else switch(symb, `[` = c("[", "[", "[", "["), `]` = c("]", "]", "]", "]"), int = c(" | ", "  /", "/  ", " | "))
+  if (n == 1L) return(v[4L])
+  c(v[2L], rep(v[1L], n - 2L), v[3L])
+}
+
+# PrettyPrinter._print_MatrixBase: the cells on a grid (columns two apart,
+# rows one apart), centered in their columns, inside square brackets
+.pp_matrix <- function(M, u) {
+  D <- .bx("")
+  if (M$nrow && M$ncol) {
+    cells <- lapply(seq_len(M$nrow), function(i) lapply(seq_len(M$ncol), function(j) .pp(.mget(M, i, j), u)))
+    maxw <- vapply(seq_len(M$ncol), function(j) max(vapply(cells, function(r) r[[j]]$w, 0L)), 0L)
+    D <- NULL
+    for (i in seq_len(M$nrow)) {
+      row <- NULL
+      for (j in seq_len(M$ncol)) {
+        cl <- cells[[i]][[j]]
+        d <- maxw[j] - cl$w
+        cl <- .bx_hcat(.bx(strrep(" ", d %/% 2L)), cl, .bx(strrep(" ", d - d %/% 2L)))
+        row <- if (is.null(row)) cl else .bx_hcat(row, .bx("  "), cl)
+      }
+      D <- if (is.null(D)) row else .bx_below(.bx_below(D, " "), row)
+    }
+  }
+  D$base <- D$h %/% 2L + 1L
+  .bx_hcat(.bx(.vobj("[", D$h, u), D$base), D, .bx(.vobj("]", D$h, u), D$base))
+}
+
+# PrettyPrinter._print_Integral
+.pp_integral <- function(e, u) {
+  f <- e$args[[1L]]
+  lims <- e$args[-1L]
+  arg <- .pp(f, u)
+  if (f$type == "Add") arg <- .bx_paren(arg, u)
+  for (l in lims) {
+    pa <- .pp(l$args[[1L]], u)
+    if (pa$w > 1L) pa <- .bx_paren(pa, u)
+    arg <- .bx_hcat(arg, .bx(" d"), pa)
+  }
+  s <- NULL
+  for (l in lims) {
+    h <- arg$h
+    H <- h + 2L + if (u) 0L else 2L
+    pform <- .bx(.vobj("int", H, u), arg$base + (H - h) %/% 2L)
+    la <- l$args
+    if (length(la) > 1L) {
+      if (length(la) == 2L) {
+        pA <- .bx("")
+        pB <- .pp(la[[2L]], u)
+      } else {
+        pA <- .pp(la[[2L]], u)
+        pB <- .pp(la[[3L]], u)
+      }
+      if (!u) {
+        pB <- .bx_hcat(.bx(strrep(" ", max(1L, 3L - pB$w))), pB)
+        pA <- .bx_hcat(pA, .bx(strrep(" ", max(1L, 4L - pA$w))))
+      }
+      pform <- .bx_below(.bx_above(pform, pB), pA)
+    }
+    if (u) pform <- .bx_hcat(pform, .bx(" "))
+    s <- if (is.null(s)) pform else .bx_hcat(pform, s)
+  }
+  .bx_hcat(s, arg)
+}
+
+# PrettyPrinter._print_Sum and its asum sign
+.pp_asum <- function(hreq, ascii) {
+  h <- max(hreq, 2L)
+  d <- h %/% 2L
+  w <- d + 1L
+  more <- hreq %% 2L
+  if (ascii) {
+    lines <- c(paste0(strrep("_", w), " "), paste0("\\", strrep(" ", w - 1L), "`"))
+    for (i in seq_len(d - 1L)) lines <- c(lines, paste0(strrep(" ", i), "\\", strrep(" ", w - i)))
+    if (more) lines <- c(lines, paste0(strrep(" ", d), ")", strrep(" ", w - d)))
+    for (i in rev(seq_len(d - 1L))) lines <- c(lines, paste0(strrep(" ", i), "/", strrep(" ", w - i)))
+    lines <- c(lines, paste0("/", strrep("_", w - 1L), ","))
+    return(list(d = d, h = h + more, lines = lines, more = more))
+  }
+  w <- w + more
+  d <- d + more
+  lines <- strrep("_", w)
+  for (i in 0:(d - 1L)) lines <- c(lines, paste0(strrep(" ", i), "\u2572", strrep(" ", w - i - 1L)))
+  for (i in (d - 1L):0) lines <- c(lines, paste0(strrep(" ", i), "\u2571", strrep(" ", w - i - 1L)))
+  list(d = d, h = h + 2L * more, lines = c(lines, strrep("\u203e", w)), more = more)
+}
+
+.pp_sum <- function(e, u) {
+  f <- e$args[[1L]]
+  pf <- .pp(f, u)
+  if (f$type == "Add") pf <- .bx_paren(pf, u)
+  H <- pf$h + 2L
+  first <- TRUE
+  max_upper <- 0L
+  sign_height <- 0L
+  more <- 0L
+  for (l in e$args[-1L]) {
+    la <- l$args
+    pU <- .pp(la[[3L]], u)
+    pL <- .bx_hcat(.pp(la[[1L]], u), .bx(" = "), .pp(la[[2L]], u))
+    max_upper <- max(max_upper, pU$h)
+    a <- .pp_asum(H, !u)
+    sg <- do.call(.bx_stack, as.list(a$lines))
+    if (first) sign_height <- sg$h
+    sg <- .bx_below(.bx_above(sg, pU), pL)
+    if (first) {
+      pf$base <- pf$base - (a$d - (pf$h %/% 2L - (pf$base - 1L)))
+      first <- FALSE
+    }
+    sg <- .bx_hcat(sg, do.call(.bx_stack, as.list(rep(" ", a$h))))
+    pf <- .bx_hcat(sg, pf)
+    more <- a$more
+  }
+  pf$base <- max_upper + sign_height %/% 2L + (if (!u && !more) 1L else 0L) + 1L
+  pf
+}
+
+# prettyForm.__pow__ wraps an exponent that is itself drawn as a power
+.pp_is_pow <- function(z) {
+  if (z$type == "Function") return(z$name == "exp" && length(z$args) == 1L)
+  if (z$type != "Pow") return(FALSE)
+  b <- z$args[[1L]]
+  x <- z$args[[2L]]
+  if (x$type == "Rational" && gmp::numerator(x$value) == 1) return(FALSE)
+  if (is_number_type(x) && num_sign(x) < 0) return(FALSE)
+  !(b$type == "Function" && length(b$args) && x$type == "Integer")
+}
+.pp_exp <- function(x, u) {
+  b <- .pp(x, u)
+  if (.pp_is_pow(x)) .bx_paren(b, u) else b
+}
+
 .pp <- function(e, u) {
   if (!is.null(.pp_env$hook) && !is.null(r <- .pp_env$hook(e, u))) return(r)
   txt <- function(s) .bx(s)
@@ -111,20 +267,22 @@
       if (x$type == "Rational" && gmp::numerator(x$value) == 1)
         return(.bx_root(.pp(b, u), as.character(gmp::denominator(x$value)), u))
       if (is_number_type(x) && num_sign(x) < 0) return(.bx_frac(txt("1"), .pp(.pow(b, .neg(x)), u), u))
-      if (is_const(b, "E")) return(.bx_sup(txt(if (u) "\u212f" else "e"), .pp(x, u)))
+      if (is_const(b, "E")) return(.bx_sup(txt(if (u) "\u212f" else "e"), .pp_exp(x, u)))
       if (b$type == "Function" && length(b$args) && is_exact_number(x) && x$type == "Integer") {
         nm <- .bx_sup(txt(b$name), .pp(x, u))
         args <- Reduce(function(a, c) .bx_hcat(a, txt(", "), c), lapply(b$args, .pp, u = u))
         return(.bx_hcat(nm, .bx_paren(args, u)))
       }
-      .bx_sup(par_if(b, PREC$Pow + 1), .pp(x, u))
+      .bx_sup(par_if(b, PREC$Pow + 1), .pp_exp(x, u))
     },
     Function = {
-      if (e$name == "exp" && length(e$args) == 1L) return(.bx_sup(txt(if (u) "\u212f" else "e"), .pp(e$args[[1L]], u)))
+      if (e$name == "exp" && length(e$args) == 1L) return(.bx_sup(txt(if (u) "\u212f" else "e"), .pp_exp(e$args[[1L]], u)))
       if (!length(e$args)) return(txt(paste0(e$name, "()")))
       args <- Reduce(function(a, c) .bx_hcat(a, txt(", "), c), lapply(e$args, .pp, u = u))
       .bx_hcat(txt(e$name), .bx_paren(args, u))
     },
+    Integral = .pp_integral(e, u),
+    Sum = .pp_sum(e, u),
     txt(.str(e)))
 }
 
@@ -165,8 +323,16 @@ pretty.sym <- function(x, use_unicode = NULL, ...) {
 
 #' @rdname pretty
 #' @export
+pretty.symmatrix <- function(x, use_unicode = NULL, ...) {
+  b <- .pp_matrix(x, .pp_unicode(use_unicode))
+  paste(b$lines, collapse = "\n")
+}
+
+#' @rdname pretty
+#' @export
 pprint <- function(e, use_unicode = NULL) {
-  cat(pretty(as_sym(e), use_unicode = use_unicode), "\n", sep = "")
+  e <- as_sym(e)
+  cat(if (inherits(e, "symmatrix")) pretty.symmatrix(e, use_unicode) else pretty.sym(e, use_unicode), "\n", sep = "")
   invisible(NULL)
 }
 

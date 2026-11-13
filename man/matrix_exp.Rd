@@ -13,6 +13,6 @@ matrix_exp(M)
 A \code{symmatrix}.
 }
 \description{
-\code{matrix_exp(M)} computes \code{exp(M)} for diagonalizable or nilpotent
-matrices.
+\code{matrix_exp(M)} computes \code{exp(M)} from the Jordan normal form, as SymPy's
+\code{Matrix.exp()}.
 }

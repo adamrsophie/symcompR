@@ -9,7 +9,7 @@ line_integrate(f, curve, vars)
 \arguments{
 \item{f}{An expression.}
 
-\item{curve}{A list \code{list(param, a, b, coord1, coord2, ...)}.}
+\item{curve}{A \code{\link[=Curve]{Curve()}}, or a list \code{list(param, a, b, coord1, coord2, ...)}.}
 
 \item{vars}{The coordinate variables.}
 }
@@ -17,10 +17,11 @@ line_integrate(f, curve, vars)
 An expression.
 }
 \description{
-\code{line_integrate(f, curve, vars)} integrates \code{f} along a parametric curve
-given as \code{list(param, a, b, x(param), y(param), ...)}.
+\code{line_integrate(f, curve, vars)} integrates \code{f} along a parametric curve,
+a \code{\link[=Curve]{Curve()}} or a list \code{list(param, a, b, x(param), y(param), ...)}.
 }
 \examples{
 t <- Symbol("t")
 line_integrate(1, list(t, 0, 1, t, t), list(Symbol("x"), Symbol("y")))
+line_integrate(Symbol("x"), Curve(list(t, t), list(t, 0, 1)), list(Symbol("x"), Symbol("y")))
 }

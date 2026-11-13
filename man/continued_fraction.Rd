@@ -38,8 +38,11 @@ convergents.
 \code{continued_fraction(a)} returns the terms of a rational or quadratic
 irrational number. A rational gives a vector of terms; a quadratic
 irrational gives a list whose last element is the repeating block, so
-\code{continued_fraction(sqrt(S(7)))} is \code{list(2, c(1, 1, 1, 4))}. Wherever
-terms are accepted, a list means that its last element repeats.
+\code{continued_fraction(sqrt(S(7)))} is \code{list(2, c(1, 1, 1, 4))} and
+\code{continued_fraction(sqrt(S(2)))} is \code{list(1, list(2))}. As in SymPy, the
+repeating block of a list of terms is its first element that is itself a
+list or a vector of several terms: \code{list(1, list(2))} is \code{sqrt(2)}, while
+\code{list(1, 2)} is \code{3/2}.
 \code{continued_fraction_periodic(p, q, d, s)} does the same for
 \code{(p + s * sqrt(d)) / q}. \code{continued_fraction_reduce(cf)} turns terms back
 into the number. \code{continued_fraction_iterator(x, n)} returns up to \code{n} terms
@@ -53,7 +56,7 @@ continued_fraction(Rational(415, 93))
 continued_fraction(sqrt(S(7)))
 continued_fraction_periodic(3, 2, 7)
 continued_fraction_reduce(list(1, 2))
-continued_fraction_reduce(list(1, c(2)))
+continued_fraction_reduce(list(1, list(2)))
 continued_fraction_iterator(sym_pi, 6)
 continued_fraction_convergents(c(0, 2, 1, 2))
 }

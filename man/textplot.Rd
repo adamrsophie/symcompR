@@ -4,12 +4,12 @@
 \alias{textplot}
 \title{Text plot}
 \usage{
-textplot(expr, a, b, W = 55, H = 18)
+textplot(expr, a, b, W = 55, H = 21)
 }
 \arguments{
 \item{expr}{An expression in one variable.}
 
-\item{a, b}{Range.}
+\item{a, b}{Range; numbers or numeric expressions such as \code{2*pi}.}
 
 \item{W, H}{Width and height in characters.}
 }
@@ -18,5 +18,8 @@ The character rows, invisibly.
 }
 \description{
 \code{textplot(expr, a, b, W, H)} prints an ASCII plot of a function of one
-variable on \verb{[a, b]}, like SymPy's \code{textplot()}.
+variable on \verb{[a, b]}, with the layout of SymPy's \code{textplot()}.
+}
+\examples{
+textplot(Symbol("x")^2, -2, 2, W = 20, H = 6)
 }

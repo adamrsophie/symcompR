@@ -91,11 +91,20 @@ eye <- function(n, m = n) {
 #' @export
 diag_matrix <- function(...) {
   d <- list(...)
-  if (length(d) == 1L && is.list(d[[1L]]) && !inherits(d[[1L]], "sym")) d <- d[[1L]]
-  d <- lapply(d, as_sym)
-  n <- length(d)
-  M <- zeros(n, n)
-  for (i in seq_len(n)) M$data[[(i - 1L) * n + i]] <- d[[i]]
+  if (length(d) == 1L && is.list(d[[1L]]) && !inherits(d[[1L]], c("sym", "symmatrix"))) d <- d[[1L]]
+  # Matrix.diag: a matrix argument is a block on the diagonal
+  d <- lapply(d, function(v) if (inherits(v, "symmatrix")) v else .new_mat(list(as_sym(v)), 1L, 1L))
+  nr <- sum(vapply(d, function(b) b$nrow, 0L))
+  nc <- sum(vapply(d, function(b) b$ncol, 0L))
+  M <- zeros(nr, nc)
+  r0 <- 0L
+  c0 <- 0L
+  for (b in d) {
+    for (i in seq_len(b$nrow)) for (j in seq_len(b$ncol))
+      M$data[[(r0 + i - 1L) * nc + c0 + j]] <- .mget(b, i, j)
+    r0 <- r0 + b$nrow
+    c0 <- c0 + b$ncol
+  }
   M
 }
 
@@ -599,7 +608,9 @@ eigenvals <- function(M) {
 eigenvects <- function(M) {
   M <- Matrix(M)
   ev <- eigenvals(M)
-  lapply(seq_along(ev), function(k) {
+  # sorted by the default_sort_key of the eigenvalue
+  ord <- unlist(.key_sort(lapply(ev, .sort_key), as.list(seq_along(ev))))
+  lapply(ord, function(k) {
     val <- ev[[k]]
     A <- M - .mat_map(eye(M$nrow), function(z) .mul(list(z, val)))
     ns <- nullspace(.mat_map(A, function(z) simplify(z)))
@@ -618,14 +629,19 @@ is_diagonalizable <- function(M) {
 #' @export
 diagonalize <- function(M) {
   M <- Matrix(M)
+  if (M$nrow != M$ncol) stop(NonSquareMatrixError(""))
   ev <- eigenvects(M)
   vecs <- list()
   vals <- list()
-  for (e in ev) for (v in e$vectors) {
-    vecs[[length(vecs) + 1L]] <- v
-    vals[[length(vals) + 1L]] <- e$value
+  for (e in ev) {
+    # eigenvects(simplify=True) divides each vector by the gcd of its entries
+    if (e$multiplicity != length(e$vectors)) stop(MatrixError("Matrix is not diagonalizable"))
+    for (v in e$vectors) {
+      g <- Reduce(gcd, v$data)
+      vecs[[length(vecs) + 1L]] <- .mat_map(v, function(z) simplify(.div(z, g)))
+    }
+    vals <- c(vals, rep(list(e$value), e$multiplicity))
   }
-  if (length(vecs) != M$nrow) stop("matrix is not diagonalizable")
   P <- do.call(cbind.symmatrix, vecs)
   list(P = P, D = diag_matrix(vals))
 }
@@ -640,30 +656,33 @@ diagonalize <- function(M) {
 
 #' Matrix exponential
 #'
-#' `matrix_exp(M)` computes `exp(M)` for diagonalizable or nilpotent
-#' matrices.
+#' `matrix_exp(M)` computes `exp(M)` from the Jordan normal form, as SymPy's
+#' `Matrix.exp()`.
 #'
 #' @param M A square `symmatrix`.
 #' @return A `symmatrix`.
 #' @export
 matrix_exp <- function(M) {
   M <- Matrix(M)
-  n <- M$nrow
-  # nilpotent check
-  P <- M
-  for (k in seq_len(n)) {
-    if (all(vapply(P$data, function(z) is_zero_num(expand(z)), TRUE))) {
-      res <- eye(n)
-      term <- eye(n)
-      for (j in seq_len(k - 1L)) {
-        term <- .mat_map(.matmul(term, M), function(z) .div(z, .int(j)))
-        res <- res + term
-      }
-      return(.mat_map(res, expand))
-    }
-    P <- .mat_map(.matmul(P, M), expand)
-  }
-  .matrix_function(M, function(l) fcall("exp", list(l)))
+  if (M$nrow != M$ncol) stop(NonSquareMatrixError("Exponentiation is valid only for square matrices"))
+  jf <- tryCatch(jordan_form(M), MatrixError = function(e)
+    stop(.sympy_condition("NotImplementedError", "Exponentiation is implemented only for matrices for which the Jordan normal form can be computed")))
+  J <- jf$J
+  n <- J$nrow
+  # the Jordan cells, and exp of each: exp(l)/i! on the i-th superdiagonal
+  starts <- c(1L, which(vapply(seq_len(n - 1L), function(i) is_zero_num(.mget(J, i, i + 1L)), TRUE)) + 1L)
+  sizes <- diff(c(starts, n + 1L))
+  blocks <- lapply(seq_along(starts), function(k) {
+    sz <- sizes[k]
+    exp_l <- fcall("exp", list(.mget(J, starts[k], starts[k])))
+    B <- zeros(sz, sz)
+    for (i in seq_len(sz)) for (j in i:sz) B$data[[(i - 1L) * sz + j]] <- .div(exp_l, factorial(.int(j - i)))
+    B
+  })
+  ret <- .matmul(.matmul(jf$P, do.call(diag_matrix, blocks)), inverse(jf$P))
+  vals <- Filter(function(z) !is_zero_num(z), M$data)
+  if (all(vapply(vals, function(z) isTRUE(ask_fact(z, "real")), TRUE))) ret <- .mat_map(ret, re)
+  ret
 }
 
 # ---------------------------------------------------------------------------
@@ -895,10 +914,25 @@ vec <- function(M) {
 #' @rdname dot
 #' @export
 pinv <- function(M) {
+  # _pinv_rank_decomposition of sympy/matrices/inverse.py
   M <- Matrix(M)
-  H <- t(.mat_map(M, function(z) fcall("conjugate", list(z))))
-  if (M$nrow >= M$ncol) return(.mat_map(.matmul(inverse(.matmul(H, M)), H), simplify))
-  .mat_map(.matmul(H, inverse(.matmul(M, H))), simplify)
+  H <- .mat_h(M)
+  if (all(vapply(M$data, is_zero_num, TRUE))) return(H)
+  if (M$nrow == 1L || M$ncol == 1L)
+    return(.mat_map(H, function(z) .div(z, .add(lapply(M$data, function(a) .mul(list(fcall("conjugate", list(a)), a)))))))
+  rd <- .rref(M)
+  rank <- length(rd$pivots)
+  B <- M[, rd$pivots, drop = FALSE]
+  C <- rd$M[seq_len(rank), , drop = FALSE]
+  .matmul(.pinv_full_rank(C), .pinv_full_rank(B))
+}
+
+.mat_h <- function(M) t(.mat_map(M, function(z) fcall("conjugate", list(z))))
+
+.pinv_full_rank <- function(M) {
+  H <- .mat_h(M)
+  if (all(vapply(M$data, is_zero_num, TRUE))) return(H)
+  if (M$nrow >= M$ncol) .matmul(inverse(.matmul(H, M)), H) else .matmul(H, inverse(.matmul(M, H)))
 }
 
 #' @export

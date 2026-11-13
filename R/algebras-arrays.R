@@ -19,7 +19,9 @@ Quaternion <- function(a = 0, b = 0, c = 0, d = 0) {
 
 #' @export
 format.Quaternion <- function(x, ...) {
-  paste0(.str(x$c[[1L]]), " + ", .str(x$c[[2L]]), "*i + ", .str(x$c[[3L]]), "*j + ", .str(x$c[[4L]]), "*k")
+  # StrPrinter._print_Quaternion: components below Mul precedence in parentheses
+  s <- vapply(x$c, function(z) if (.prec(z) < PREC$Mul) paste0("(", .str(z), ")") else .str(z), "")
+  paste0(s[1L], " + ", s[2L], "*i + ", s[3L], "*j + ", s[4L], "*k")
 }
 
 #' @export
@@ -69,7 +71,7 @@ quat_conjugate <- function(q) Quaternion(q$c[[1L]], .neg(q$c[[2L]]), .neg(q$c[[3
 
 #' @rdname Quaternion
 #' @export
-quat_norm <- function(q) .sqrt(.q_norm2(q))
+quat_norm <- function(q) .sqrt(trigsimp(.q_norm2(q)))
 
 #' @rdname Quaternion
 #' @export
@@ -82,14 +84,16 @@ quat_inverse <- function(q) {
 #' @rdname Quaternion
 #' @export
 quat_to_rotation_matrix <- function(q) {
-  n <- .q_norm2(q)
-  s <- .inv(n)
+  # Quaternion.to_rotation_matrix(homogeneous=True), entries not simplified
+  s <- .pow(quat_norm(q), .int(-2))
   a <- q$c[[1]]; b <- q$c[[2]]; c <- q$c[[3]]; d <- q$c[[4]]
-  m <- function(...) simplify(.mul(list(S_Two, s, .add(list(...)))))
+  m <- function(u, v) .mul(list(S_Two, s, .add(list(u, v))))
+  dg <- function(sb, sc, sd) .mul(list(s, .add(list(.sq(a), .mul(list(.int(sb), .sq(b))), .mul(list(.int(sc), .sq(c))),
+                                                     .mul(list(.int(sd), .sq(d)))))))
   Matrix(list(
-    list(simplify(.sub(S_One, m(.sq(c), .sq(d)))), m(.mul(list(b, c)), .neg(.mul(list(d, a)))), m(.mul(list(b, d)), .mul(list(c, a)))),
-    list(m(.mul(list(b, c)), .mul(list(d, a))), simplify(.sub(S_One, m(.sq(b), .sq(d)))), m(.mul(list(c, d)), .neg(.mul(list(b, a))))),
-    list(m(.mul(list(b, d)), .neg(.mul(list(c, a)))), m(.mul(list(c, d)), .mul(list(b, a))), simplify(.sub(S_One, m(.sq(b), .sq(c)))))))
+    list(dg(1, -1, -1), m(.mul(list(b, c)), .neg(.mul(list(d, a)))), m(.mul(list(b, d)), .mul(list(c, a)))),
+    list(m(.mul(list(b, c)), .mul(list(d, a))), dg(-1, 1, -1), m(.mul(list(c, d)), .neg(.mul(list(b, a))))),
+    list(m(.mul(list(b, d)), .neg(.mul(list(c, a)))), m(.mul(list(c, d)), .mul(list(b, a))), dg(-1, -1, 1))))
 }
 
 # ---------------------------------------------------------------------------
@@ -134,10 +138,21 @@ Array <- function(data, shape = NULL) {
 }
 
 #' @export
+format.SymArray <- function(x, ...) {
+  # NDimArray.__str__: nested lists, row-major
+  if (!length(x$shape)) return(.str(x$data[[1L]]))
+  f <- function(sh, left, i, j) {
+    if (length(left) == 1L) return(paste0("[", paste(vapply(x$data[seq_len(j - i) + i], .str, ""), collapse = ", "), "]"))
+    sh <- sh %/% left[1L]
+    paste0("[", paste(vapply(seq_len(left[1L]) - 1L, function(e) f(sh, left[-1L], i + e * sh, i + (e + 1L) * sh), ""),
+                      collapse = ", "), "]")
+  }
+  f(length(x$data), x$shape, 0L, length(x$data))
+}
+
+#' @export
 print.SymArray <- function(x, ...) {
-  cat("Array of shape (", paste(x$shape, collapse = ", "), "):\n", sep = "")
-  cat(vapply(x$data, .str, ""), sep = ", ")
-  cat("\n")
+  cat(format(x), "\n", sep = "")
   invisible(x)
 }
 

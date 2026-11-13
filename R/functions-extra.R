@@ -301,24 +301,35 @@ jacobi_normalized <- function(n, a, b, x) {
 
 #' @rdname special-functions-extra
 #' @export
-Ynm_c <- function(n, m, theta, phi) {
-  m <- as_sym(m)
-  .mul(list(.pow(S_NegativeOne, m), fcall("Ynm", list(as_sym(n), .neg(m), as_sym(theta), as_sym(phi)))))
-}
+Ynm_c <- function(n, m, theta, phi)
+  fcall("conjugate", list(fcall("Ynm", lapply(list(n, m, theta, phi), as_sym))))
 
 #' @rdname special-functions-extra
 #' @export
-Znm <- function(n, m, theta, phi) {
-  m <- as_sym(m)
-  y <- fcall("Ynm", list(as_sym(n), m, as_sym(theta), as_sym(phi)))
-  if (is_zero_num(m)) return(y)
-  yc <- Ynm_c(n, m, theta, phi)
-  if (isTRUE(ask_fact(m, "positive"))) return(.div(.add(list(y, yc)), .sqrt(S_Two)))
-  if (isTRUE(ask_fact(m, "negative"))) return(.div(.sub(y, yc), .mul(list(.sqrt(S_Two), S_I))))
-  fcall("Znm", list(as_sym(n), m, as_sym(theta), as_sym(phi)))
-}
+Znm <- function(n, m, theta, phi) fcall("Znm", lapply(list(n, m, theta, phi), as_sym))
 
-for (.mf in c("mathieus", "mathieuc", "mathieusprime", "mathieucprime")) def_function(.mf, nargs = 3L)
+# sympy/functions/special/mathieu_functions.py: eval and fdiff of each class
+.mathieu_def <- function(name, at0, sgn, dname, dmul) {
+  def_function(name, nargs = 3L,
+    eval = function(args) {
+      a <- args[[1L]]; q <- args[[2L]]; z <- args[[3L]]
+      if (is_number_type(q) && isTRUE(ask_fact(q, "zero"))) return(at0(a, z))
+      if (could_extract_minus_sign(z)) {
+        r <- fcall(name, list(a, q, .neg(z)))
+        return(if (sgn < 0) .neg(r) else r)
+      }
+      NULL
+    },
+    diff = function(args, i) {
+      if (i != 3L) return(NULL)
+      r <- fcall(dname, args)
+      if (dmul) .mul(list(.sub(.mul(list(S_Two, args[[2L]], fcall("cos", list(.mul(list(S_Two, args[[3L]])))))), args[[1L]]), r)) else r
+    })
+}
+.mathieu_def("mathieus", function(a, z) fcall("sin", list(.mul(list(.sqrt(a), z)))), -1, "mathieusprime", FALSE)
+.mathieu_def("mathieuc", function(a, z) fcall("cos", list(.mul(list(.sqrt(a), z)))), 1, "mathieucprime", FALSE)
+.mathieu_def("mathieusprime", function(a, z) .mul(list(.sqrt(a), fcall("cos", list(.mul(list(.sqrt(a), z)))))), 1, "mathieus", TRUE)
+.mathieu_def("mathieucprime", function(a, z) .neg(.mul(list(.sqrt(a), fcall("sin", list(.mul(list(.sqrt(a), z))))))), -1, "mathieuc", TRUE)
 #' @rdname special-functions-extra
 #' @export
 mathieus <- .fx("mathieus")

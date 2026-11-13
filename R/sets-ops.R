@@ -6,7 +6,7 @@
 
 .SET_TYPES <- c("Interval", "FiniteSet", "Union", "Intersection", "Complement",
                 "ProductSet", "ImageSet", "ConditionSet", "SpecialSet", "EmptySet",
-                "SymmetricDifference", "Range", "DisjointUnion",
+                "SymmetricDifference", "Range", "DisjointUnion", "PowerSet",
                 "CartesianComplexRegion", "PolarComplexRegion")
 
 # ---------------------------------------------------------------------------

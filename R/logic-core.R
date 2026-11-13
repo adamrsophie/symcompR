@@ -31,11 +31,9 @@
   if (!length(out)) return(if (type == "And") S_true else S_false)
   out <- out[!duplicated(vapply(out, .k, ""))]
   keys <- vapply(out, .k, "")
+  # And/Or._new_args_filter: only a relational and its negation collapse;
+  # p & ~p, p | ~p and Q.real(x) & ~Q.real(x) stay unevaluated as in SymPy
   for (a in out) {
-    # SymPy keeps a predicate next to its negation, as in Q.real(x) & ~Q.real(x)
-    if (a$type == "Not" && a$args[[1L]]$key %in% keys &&
-        !(a$args[[1L]]$type %in% c("AppliedPredicate", "AppliedBinaryRelation", "Predicate", "UndefinedPredicate")))
-      return(if (type == "And") S_false else S_true)
     if (is_relational(a)) {
       na <- .negate_rel(a)
       if (na$key %in% keys) return(if (type == "And") S_false else S_true)

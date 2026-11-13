@@ -209,6 +209,16 @@ register_rebuilder("Range", function(e, args) Range(args[[1L]], args[[2L]], args
 #' @export
 DisjointUnion <- function(...) new_sym("DisjointUnion", lapply(list(...), as_sym))
 register_str_printer("DisjointUnion", function(e) paste0("DisjointUnion(", paste(vapply(e$args, .str, ""), collapse = ", "), ")"))
+# DisjointUnion._eval_rewrite_as_Union: the union of each set times {index}
+.disjoint_union_union <- function(sets) {
+  dj <- S_EmptySet
+  index <- 0L
+  for (s in sets) if (is_set(s)) {
+    dj <- Union(dj, ProductSet(s, FiniteSet(.int(index))))
+    index <- index + 1L
+  }
+  dj
+}
 .disjoint_contains <- function(s, x) {
   if (!(x$type == "Tuple" && length(x$args) == 2L)) return(S_false)
   i <- x$args[[2L]]

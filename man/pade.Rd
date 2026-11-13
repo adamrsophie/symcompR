@@ -4,7 +4,7 @@
 \alias{pade}
 \title{Pade approximant}
 \usage{
-pade(e, x, m, n)
+pade(e, x, m, n = m, x0 = 0)
 }
 \arguments{
 \item{e}{An expression.}
@@ -12,10 +12,18 @@ pade(e, x, m, n)
 \item{x}{The variable.}
 
 \item{m, n}{Degrees of numerator and denominator.}
+
+\item{x0}{The expansion point.}
 }
 \value{
 A rational function.
 }
 \description{
-\code{pade(e, x, m, n)} returns the \verb{[m/n]} Pade approximant of \code{e} at zero.
+\code{pade(e, x, m, n)} returns the \verb{[m/n]} Pade approximant of \code{e} at \code{x0},
+computed from the extended Euclidean algorithm as in SymPy's
+\code{pade_approximant()}.
+}
+\examples{
+x <- Symbol("x")
+pade(exp(x), x, 2, 2)
 }

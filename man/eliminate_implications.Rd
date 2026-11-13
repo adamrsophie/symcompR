@@ -10,9 +10,9 @@
 \alias{is_dnf}
 \title{Eliminate implications and convert to normal forms}
 \usage{
-eliminate_implications(e)
+eliminate_implications(e, form = NULL)
 
-to_nnf(e)
+to_nnf(e, simplify = TRUE, form = NULL)
 
 to_cnf(e, simplify = FALSE)
 
@@ -27,7 +27,11 @@ is_dnf(e)
 \arguments{
 \item{e}{A boolean expression.}
 
-\item{simplify}{Minimize the result.}
+\item{form}{For \code{eliminate_implications()} and \code{to_nnf()}: \code{"dnf"} writes
+a \code{Xor} as a disjunction, otherwise as a conjunction.}
+
+\item{simplify}{For \code{to_cnf()} and \code{to_dnf()}, minimize the result; for
+\code{to_nnf()}, drop complementary arguments (the default).}
 }
 \value{
 A boolean expression or a logical value.

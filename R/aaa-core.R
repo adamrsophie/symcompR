@@ -86,7 +86,11 @@ sym_type <- function(e) as_sym(e)$type
 #' @param e A `sym` expression.
 #' @return A list of `sym` expressions.
 #' @export
-sym_args <- function(e) as_sym(e)$args
+sym_args <- function(e) .args_sympy(as_sym(e))
+
+# the args of a node as SymPy's .args gives them (Add and Mul sorted by
+# Basic.compare, see .sympy_args)
+.args_sympy <- function(e) if (e$type %in% c("Add", "Mul")) .sympy_args(e) else e$args
 
 #' Name of a symbol or function head
 #'

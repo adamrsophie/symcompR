@@ -13,9 +13,11 @@
 #' friends, and `Rel(a, b, op)` builds a relation from its operator string.
 #' `Subs()` is an unevaluated substitution (evaluate with [doit()]).
 #' `nfloat()` evaluates the numbers in an expression and keeps symbols.
-#' `bottom_up()` applies a function to every node, leaves first.
-#' `default_sort_key()` returns the canonical ordering key and `sym_ordered()`
-#' sorts expressions by it.
+#' `bottom_up()` applies a function to every node, leaves first; atoms are
+#' passed to the function only with `atoms = TRUE`.
+#' `default_sort_key()` returns SymPy's `default_sort_key` encoded as a
+#' string, so that `order()` of these strings is SymPy's sorted order, and
+#' `sym_ordered()` sorts expressions.
 #' `comp()` compares two numbers within a tolerance. `check_assumptions()`
 #' and `failing_assumptions()` test facts. `sstrrepr()` is [sstr()],
 #' `true` and `false` are the boolean atoms.
@@ -27,6 +29,7 @@
 #' @param f A function.
 #' @param x A list of expressions.
 #' @param tol Relative tolerance.
+#' @param atoms If `TRUE`, `bottom_up()` also applies `f` to atoms.
 #' @param n Significant digits for `nfloat()`.
 #' @param exponent If `TRUE`, `nfloat()` also converts exponents.
 #' @param dkeys If `TRUE`, `nfloat()` also converts the names of a list.
@@ -233,11 +236,56 @@ nfloat <- function(e, n = 15, exponent = FALSE, dkeys = FALSE) {
 
 #' @rdname core-helpers
 #' @export
-bottom_up <- function(e, f) .map_bottom_up(as_sym(e), function(z) as_sym(f(z)))
+bottom_up <- function(e, f, atoms = FALSE) {
+  # sympy.simplify.simplify.bottom_up: atoms are passed to f only on request
+  rec <- function(z) {
+    if (!length(z$args)) return(if (atoms) as_sym(f(z)) else z)
+    args <- lapply(z$args, rec)
+    if (!identical(vapply(args, .k, ""), vapply(z$args, .k, ""))) z <- sym_rebuild(z, args)
+    as_sym(f(z))
+  }
+  rec(as_sym(e))
+}
 
 #' @rdname core-helpers
 #' @export
-default_sort_key <- function(e) sym_key(as_sym(e))
+default_sort_key <- function(e) .sort_key_string(.sort_key(as_sym(e)))
+
+# SymPy's sort_key tuple as a string over [0-9a-z] whose order (in any
+# collation) is the tuple order: each item is tagged (1 number, 2 string,
+# 3 tuple) and strings and tuples end with a marker below every item.
+.sort_key_string <- function(k) {
+  if (is.list(k)) return(paste0("3", paste(vapply(k, .sort_key_string, ""), collapse = ""), "0"))
+  if (is.character(k)) {
+    cp <- utf8ToInt(k)
+    return(paste0("2", paste(vapply(cp, function(i) .base36(i, 4L), ""), collapse = ""), "0000"))
+  }
+  if (!inherits(k, "bigq") && is.infinite(k)) return(if (k > 0) "14" else "10")
+  q <- gmp::as.bigq(k)
+  if (q == 0) return("12")
+  if (q > 0) return(paste0("13", .sort_key_pos(q)))
+  d <- strsplit(.sort_key_pos(-q), "")[[1L]]
+  paste0("11", paste(9L - as.integer(d), collapse = ""))
+}
+
+# a positive rational as a fixed width decimal exponent and 30 digits
+.sort_key_pos <- function(q) {
+  e <- floor(log10(as.double(q)))
+  p10 <- function(n) if (n >= 0) gmp::as.bigq(gmp::as.bigz(10)^n) else 1 / gmp::as.bigq(gmp::as.bigz(10)^(-n))
+  while (p10(e) > q) e <- e - 1
+  while (p10(e + 1) <= q) e <- e + 1
+  m <- gmp::as.bigz(floor(q / p10(e - 29)))
+  paste0(formatC(e + 50000, width = 6, flag = "0", format = "d"), as.character(m))
+}
+
+.base36 <- function(i, width) {
+  d <- character(width)
+  for (j in width:1) {
+    d[j] <- c(0:9, letters)[i %% 36 + 1]
+    i <- i %/% 36
+  }
+  paste(d, collapse = "")
+}
 
 #' @noRd
 ordered <- function(x, ...) {
@@ -537,10 +585,45 @@ ln <- function(x) fcall("log", list(as_sym(x)))
 E1 <- function(z) fcall("expint", list(S_One, as_sym(z)))
 #' @rdname function-aliases
 #' @export
-Li <- function(x) .sub(fcall("li", list(as_sym(x))), fcall("li", list(S_Two)))
+Li <- function(x) fcall("Li", list(as_sym(x)))
 #' @rdname function-aliases
 #' @export
-erf2 <- function(x, y) .sub(fcall("erf", list(as_sym(y))), fcall("erf", list(as_sym(x))))
+erf2 <- function(x, y) fcall("erf2", list(as_sym(x), as_sym(y)))
+
+# Li.eval and Li.fdiff; values through li(z) - li(2)
+def_function("Li",
+  eval = function(args) {
+    z <- args[[1L]]
+    if (is_const(z, "oo")) return(S_Infinity)
+    if (identical(z$key, S_Two$key)) return(S_Zero)
+    NULL
+  },
+  diff = function(args, i) .inv(fcall("log", args)),
+  numeric = function(z) .FUNS$li$numeric(z) - .FUNS$li$numeric(2))
+
+# erf2.eval and erf2.fdiff
+def_function("erf2", nargs = 2L,
+  eval = function(args) {
+    x <- args[[1L]]; y <- args[[2L]]
+    d <- function() .sub(fcall("erf", list(y)), fcall("erf", list(x)))
+    if (is_nan(x) || is_nan(y)) return(S_NaN)
+    if (identical(x$key, y$key)) return(S_Zero)
+    chk <- c(S_Infinity$key, S_NegativeInfinity$key, S_Zero$key)
+    if (x$key %in% chk || y$key %in% chk) return(d())
+    if (y$type == "Function" && y$name == "erf2inv" && identical(y$args[[1L]]$key, x$key)) return(y$args[[2L]])
+    rinf <- function(v) isTRUE(ask_fact(v, "extended_real")) && isTRUE(ask_fact(v, "infinite"))
+    if (isTRUE(ask_fact(x, "zero")) || isTRUE(ask_fact(y, "zero")) || rinf(x) || rinf(y)) return(d())
+    sx <- could_extract_minus_sign(x); sy <- could_extract_minus_sign(y)
+    if (sx && sy) return(.neg(fcall("erf2", list(.neg(x), .neg(y)))))
+    if (sx || sy) return(d())
+    NULL
+  },
+  diff = function(args, i) {
+    v <- args[[i]]
+    .div(.mul(list(if (i == 1L) .int(-2) else S_Two, fcall("exp", list(.neg(.sq(v)))))), .sqrt(S_Pi))
+  },
+  numeric = function(x, y) .FUNS$erf$numeric(y) - .FUNS$erf$numeric(x))
+.expand_hooks$erf2 <- function(e) .sub(fcall("erf", list(e$args[[2L]])), fcall("erf", list(e$args[[1L]])))
 #' @rdname function-aliases
 #' @export
 Id <- function(x) as_sym(x)
@@ -724,6 +807,11 @@ stationary_points <- function(f, x, domain = Reals) solveset(.diff1(as_sym(f), a
   if (domain$type == "EmptySet") stop("empty domain")
   if (!(domain$type == "Interval" || identical(domain$key, Reals$key))) stop("unsupported domain for extrema")
   if (!.has1(f, x)) return(f)
+  # function_range: a periodic function is examined over one period
+  per <- periodicity(f, x)
+  if (!is.null(per) && !is_zero_num(per) && (identical(domain$key, Reals$key) ||
+      (domain$type == "Interval" && (is_inf_const(domain$args[[1L]]) || is_inf_const(domain$args[[2L]])))))
+    domain <- Interval(S_Zero, per)
   cands <- list()
   st <- stationary_points(f, x, domain)
   if (st$type == "FiniteSet") {
@@ -808,7 +896,24 @@ is_strictly_decreasing <- function(f, interval = Reals, x = NULL) {
 }
 #' @rdname calculus-utils
 #' @export
-is_monotonic <- function(f, interval = Reals, x = NULL) is_increasing(f, interval, x) || is_decreasing(f, interval, x)
+is_monotonic <- function(f, interval = Reals, x = NULL) {
+  # sympy.calculus.singularities.is_monotonic: no interior singularity and
+  # no turning point (a zero of the derivative) in the interval
+  f <- as_sym(f)
+  interval <- as_sym(interval)
+  fs <- free_symbols(f)
+  if (is.null(x) && length(fs) > 1L)
+    stop(.sympy_condition("NotImplementedError", "is_monotonic has not yet been implemented for all multivariate expressions."))
+  x <- if (!is.null(x)) as_sym(x) else if (length(fs)) fs[[1L]] else Symbol("x")
+  sings <- tryCatch(singularities(f, x, interval), error = function(e) NULL)
+  if (!is.null(sings) && isTRUE(is_subset(interval, Reals)) && interval$type %in% c("Interval", "SpecialSet")) {
+    iv <- .iv(interval)
+    inner <- if (interval$type == "Interval") Interval(iv$a, iv$b, TRUE, TRUE) else interval
+    if (!identical(Intersection(inner, sings)$key, S_EmptySet$key)) return(FALSE)
+  }
+  tp <- solveset(diff(f, x), x, interval)
+  identical(Intersection(interval, tp)$key, S_EmptySet$key)
+}
 #' @rdname calculus-utils
 #' @export
 is_convex <- function(f, x = NULL, domain = Reals) {
@@ -1278,8 +1383,16 @@ Contains <- function(x, s) {
 #' @export
 PowerSet <- function(s) {
   s <- as_sym(s)
+  # PowerSet.__new__ keeps the set unevaluated; rewrite(, "FiniteSet") lists it
+  if (!is_set(s)) stop(structure(class = c("ValueError", "error", "condition"),
+                                 list(message = paste0(.str(s), " must be a set."), call = NULL)))
+  new_sym("PowerSet", list(s))
+}
+register_str_printer("PowerSet", function(e) paste0("PowerSet(", .str(e$args[[1L]]), ")"))
+# PowerSet._eval_rewrite_as_FiniteSet: arg.powerset() of a finite set
+.powerset_finite <- function(s) {
   if (s$type == "EmptySet") return(FiniteSet(S_EmptySet))
-  if (s$type != "FiniteSet") stop("PowerSet() needs a finite set")
+  if (s$type != "FiniteSet") return(NULL)
   FiniteSet(lapply(subsets(s$args), function(sub) if (length(sub)) FiniteSet(sub) else S_EmptySet))
 }
 
@@ -1514,28 +1627,68 @@ print_tree <- function(e) {
 #' Text plot
 #'
 #' `textplot(expr, a, b, W, H)` prints an ASCII plot of a function of one
-#' variable on `[a, b]`, like SymPy's `textplot()`.
+#' variable on `[a, b]`, with the layout of SymPy's `textplot()`.
 #'
 #' @param expr An expression in one variable.
-#' @param a,b Range.
+#' @param a,b Range; numbers or numeric expressions such as `2*pi`.
 #' @param W,H Width and height in characters.
 #' @return The character rows, invisibly.
+#' @examples
+#' textplot(Symbol("x")^2, -2, 2, W = 20, H = 6)
 #' @export
-textplot <- function(expr, a, b, W = 55, H = 18) {
+textplot <- function(expr, a, b, W = 55, H = 21) {
+  # sympy.plotting.textplot.textplot_str
   e <- as_sym(expr)
-  v <- free_symbols(e)[[1L]]
-  xs <- seq(a, b, length.out = W)
-  ys <- .eval_grid(e, list(v), list(xs))
-  lo <- min(ys, na.rm = TRUE); hi <- max(ys, na.rm = TRUE)
-  if (hi == lo) hi <- lo + 1
-  rows <- matrix(" ", H, W)
-  for (j in seq_len(W)) if (!is.na(ys[j])) {
-    i <- H - round((ys[j] - lo) / (hi - lo) * (H - 1))
-    rows[i, j] <- "."
+  fs <- free_symbols(e)
+  if (length(fs) > 1L) stop(.sympy_condition("ValueError", sprintf("The expression must have a single variable. (Got {%s})",
+                                                                   paste(vapply(fs, .str, ""), collapse = ", "))))
+  W <- as.integer(W); H <- as.integer(H)
+  a <- as.numeric(N(as_sym(a))); b <- as.numeric(N(as_sym(b)))
+  xs <- vapply(0:(W - 1L), function(k) a + (b - a) * k / (W - 1L), 0)
+  ys <- if (length(fs)) .eval_grid(e, list(fs[[1L]]), list(xs)) else rep(as.numeric(N(e)), W)
+  ys <- suppressWarnings(as.numeric(ys))
+  ok <- is.finite(ys)
+  if (any(ok)) {
+    ma <- max(ys[ok]); mi <- min(ys[ok])
+    if (ma == mi) {
+      if (ma != 0) { r <- sort(c(0, 2 * ma)); mi <- r[1L]; ma <- r[2L] } else { mi <- -1; ma <- 1 }
+    }
+  } else {
+    mi <- -1; ma <- 1
   }
-  out <- apply(rows, 1L, paste, collapse = "")
-  out <- paste(formatC(c(hi, rep(NA, H - 2), lo), width = 9, format = "g"), "|", out)
-  out <- sub("^ *NA", "         ", out)
+  prec <- -(floor(log10(ma - mi)) - 1)
+  mi <- round(mi, prec); ma <- round(ma, prec)
+  norm <- ma - mi; off <- (ma + mi) / 2
+  yr <- rep(NA_integer_, W)
+  for (i in which(ok)) {
+    nv <- (ys[i] - off) / norm
+    # Float(v).round(): half to even on the 15 significant digit decimal value
+    if (is.finite(nv)) yr[i] <- as.integer(round(signif((nv * H + H / 2) * (H - 1L) / H, 15L)))
+  }
+  ybins <- vapply(0:(H - 1L), function(k) mi + (ma - mi) * k / (H - 1L), 0)
+  eqh <- function(i, h) !is.na(yr[i]) && yr[i] == h
+  margin <- 7L
+  out <- character()
+  for (h in (H - 1L):0L) {
+    s <- rep(" ", W)
+    for (i in seq_len(W)) {
+      if (eqh(i, h)) {
+        s[i] <- if ((i == 1L || eqh(i - 1L, h - 1L)) && (i == W || eqh(i + 1L, h + 1L))) "/"
+          else if ((i == 1L || eqh(i - 1L, h + 1L)) && (i == W || eqh(i + 1L, h - 1L))) "\\"
+          else "."
+      }
+    }
+    if (h == 0L) s <- rep("_", W)
+    prefix <- if (h %in% c(0L, H %/% 2L, H - 1L)) substr(sprintf("%7s", sprintf("%g", ybins[h + 1L])), 1L, margin) else strrep(" ", margin)
+    s <- paste(s, collapse = "")
+    if (h == H %/% 2L) s <- gsub(" ", "-", s, fixed = TRUE)
+    out <- c(out, paste0(prefix, " |", s))
+  }
+  half <- W %/% 2L
+  bottom <- paste0(strrep(" ", margin + 2L), sprintf("%-*s", half, sprintf("%g", xs[1L])),
+                   sprintf("%-*s", if (W %% 2L == 1L) half else half - 1L, sprintf("%g", xs[half + 1L])),
+                   sprintf("%g", xs[W]))
+  out <- c(out, bottom)
   cat(out, sep = "\n")
   invisible(out)
 }
@@ -1553,6 +1706,8 @@ textplot <- function(expr, a, b, W = 55, H = 18) {
 #' @param start First index.
 #' @param ... Lists to merge.
 #' @param vertices,edges A graph, with edges as pairs.
+#' @param key For `topological_sort()`, a function giving the sort key of a
+#'   vertex (the vertex itself by default).
 #' @param multiple For `group()`, return runs instead of value and count.
 #' @return A list or logical.
 #' @examples
@@ -1643,22 +1798,48 @@ dict_merge <- function(...) {
 }
 #' @rdname iterables
 #' @export
-topological_sort <- function(vertices, edges) {
-  v <- as.list(vertices)
-  key <- function(z) paste(z)
-  indeg <- stats::setNames(rep(0L, length(v)), vapply(v, key, ""))
-  for (e in edges) indeg[key(e[2])] <- indeg[key(e[2])] + 1L
-  out <- list()
-  ready <- v[indeg[vapply(v, key, "")] == 0L]
-  while (length(ready)) {
-    u <- ready[[1L]]
-    ready <- ready[-1L]
-    out[[length(out) + 1L]] <- u
-    for (e in edges) if (key(e[1]) == key(u)) {
-      indeg[key(e[2])] <- indeg[key(e[2])] - 1L
-      if (indeg[key(e[2])] == 0L) ready[[length(ready) + 1L]] <- v[[match(key(e[2]), vapply(v, key, ""))]]
+topological_sort <- function(vertices, edges, key = NULL) {
+  # sympy.utilities.iterables.topological_sort: S kept in descending key
+  # order and popped from its end, freed vertices inserted in place
+  if (is.null(key)) key <- function(z) z
+  gt <- function(a, b) {
+    a <- key(a); b <- key(b)
+    if (is.character(a) && is.character(b)) {
+      x <- utf8ToInt(a); y <- utf8ToInt(b); n <- min(length(x), length(y))
+      d <- which(x[seq_len(n)] != y[seq_len(n)])
+      return(if (length(d)) x[d[1L]] > y[d[1L]] else length(x) > length(y))
+    }
+    if (is_sym(a) || is_sym(b)) return(as.numeric(num_value_dbl(as_sym(a))) > as.numeric(num_value_dbl(as_sym(b))))
+    a > b
+  }
+  same <- function(a, b) identical(paste(a), paste(b))
+  E <- lapply(edges, function(e) as.list(e))
+  V <- as.list(vertices)
+  S <- list()
+  for (z in V) if (!any(vapply(E, function(e) same(e[[2L]], z), NA)) && !any(vapply(S, same, NA, z))) S[[length(S) + 1L]] <- z
+  # sorted(S, key=key, reverse=True): insertion keeps the sort stable
+  srt <- list()
+  for (z in S) {
+    i <- 1L
+    while (i <= length(srt) && !gt(z, srt[[i]])) i <- i + 1L
+    srt <- append(srt, list(z), after = i - 1L)
+  }
+  S <- srt
+  L <- list()
+  while (length(S)) {
+    node <- S[[length(S)]]
+    S <- S[-length(S)]
+    L[[length(L) + 1L]] <- node
+    for (e in E) {
+      if (!same(e[[1L]], node)) next
+      k <- which(vapply(E, function(f) same(f[[1L]], e[[1L]]) && same(f[[2L]], e[[2L]]), NA))[1L]
+      E <- E[-k]
+      v <- e[[2L]]
+      if (any(vapply(E, function(f) same(f[[2L]], v), NA))) next
+      pos <- which(vapply(S, function(s) gt(v, s), NA))
+      S <- if (length(pos)) append(S, list(v), after = pos[1L] - 1L) else c(S, list(v))
     }
   }
-  if (length(out) != length(v)) stop("cycle detected")
-  unlist(out)
+  if (length(E)) stop(structure(class = c("ValueError", "error", "condition"), list(message = "cycle detected", call = NULL)))
+  if (all(vapply(L, function(z) is.atomic(z) && length(z) == 1L, NA))) unlist(L) else L
 }

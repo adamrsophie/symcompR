@@ -3,11 +3,11 @@
 
 #' @rdname elementary-functions
 #' @export
-sym_atan2 <- atan2
+sym_atan2 <- function(y, x) fcall("atan2", list(as_sym(y), as_sym(x)))
 
 #' @rdname special-functions
 #' @export
-sym_beta <- beta
+sym_beta <- function(a, b = a) fcall("beta", list(as_sym(a), as_sym(b)))
 
 #' Determinant, inverse, trace and friends
 #'

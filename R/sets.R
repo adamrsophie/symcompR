@@ -388,7 +388,27 @@ register_str_printer("ImageSet", function(e) paste0("ImageSet(", .str(e$args[[1L
 #' @param condition A boolean condition.
 #' @export
 ConditionSet <- function(sym, condition, base = UniversalSet) {
-  new_sym("ConditionSet", list(as_sym(sym), as_sym(condition), as_sym(base)))
+  # ConditionSet.__new__
+  sym <- as_sym(sym); condition <- as_sym(condition); base <- as_sym(base)
+  if (identical(condition$key, S_true$key)) return(base)
+  if (identical(condition$key, S_false$key)) return(S_EmptySet)
+  if (base$type == "EmptySet") return(S_EmptySet)
+  know <- NULL
+  if (base$type == "FiniteSet") {
+    v <- vapply(base$args, function(el) .fb(subs(condition, sym, el)), NA)
+    if (!any(is.na(v))) return(FiniteSet(base$args[v]))
+    know <- FiniteSet(base$args[!is.na(v) & v])
+    base <- FiniteSet(base$args[is.na(v)])
+  }
+  # ponytail: a nested ConditionSet merges only when it uses the same symbol
+  if (base$type == "ConditionSet" && identical(base$args[[1L]]$key, sym$key)) {
+    condition <- And(condition, base$args[[2L]])
+    base <- base$args[[3L]]
+  }
+  if (condition$type == "Contains" && identical(condition$args[[1L]]$key, sym$key) && is_set(condition$args[[2L]]))
+    return(Intersection(condition$args[[2L]], base))
+  rv <- new_sym("ConditionSet", list(sym, condition, base))
+  if (is.null(know)) rv else Union(know, rv)
 }
 register_bound_vars("ConditionSet", function(e) e$args[[1L]]$key)
 register_str_printer("Contains", function(e) paste0("Contains(", .str(e$args[[1L]]), ", ", .str(e$args[[2L]]), ")"))

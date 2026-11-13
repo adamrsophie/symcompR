@@ -266,8 +266,10 @@
 #' of the named bindings.
 #'
 #' @param e An expression.
-#' @param pattern A pattern containing wild symbols.
-#' @param value The replacement.
+#' @param pattern A pattern containing wild symbols, or a function class made
+#'   by [Function()], which matches every application of that function.
+#' @param value The replacement; for a function class pattern, another
+#'   function class or an R function called with the application's arguments.
 #' @param old Use the old matching that skips the operation count check.
 #' @param exact `sym_replace()` replaces only when no wild matched zero; by
 #'   default when the pattern has more than one wild.
@@ -289,6 +291,14 @@ sym_match <- function(e, pattern, old = FALSE) {
 #' @rdname sym_match
 #' @export
 sym_replace <- function(e, pattern, value, exact = NULL) {
+  # a function class: replace every application, value(*expr.args)
+  if (inherits(pattern, "sym_function")) {
+    if (!is.function(value)) stop(.sympy_condition("TypeError", "given a type, replace() expects another type or a callable"))
+    nm <- attr(pattern, "sym_name")
+    return(.map_bottom_up(as_sym(e), function(z) {
+      if (z$type == "Function" && identical(z$name, nm)) as_sym(do.call(value, z$args)) else z
+    }))
+  }
   pattern <- as_sym(pattern)
   if (is.null(exact)) exact <- length(unique(vapply(atoms(pattern, "Wild"), .k, ""))) > 1L
   .map_bottom_up(as_sym(e), function(z) {

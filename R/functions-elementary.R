@@ -846,8 +846,9 @@ def_function("csch", eval = .hyp_eval("csch"),
       })
 .ahyp("asech", S_Infinity,
       function(args, i) {
-        x <- args[[1L]]
-        .neg(.inv(.mul(list(x, .sqrt(.sub(S_One, .sq(x)))))))
+        # asech.fdiff: -sqrt(1/(z + 1))/(z*sqrt(1 - z))
+        z <- args[[1L]]
+        .neg(.div(.sqrt(.inv(.add(list(z, S_One)))), .mul(list(z, .sqrt(.sub(S_One, z))))))
       },
       function(x) acosh(as.complex(1 / x)), odd = FALSE,
       extra = function(a) if (is_one_num(a)) S_Zero else NULL)
@@ -1357,8 +1358,8 @@ def_function("Heaviside", nargs = 1:2,
                a <- args[[1L]]
                h0 <- if (length(args) == 2L) args[[2L]] else S_Half
                fa <- .facts(a)
-               if (isTRUE(fa[["positive"]])) return(S_One)
-               if (isTRUE(fa[["negative"]])) return(S_Zero)
+               if (isTRUE(fa[["extended_negative"]])) return(S_Zero)
+               if (isTRUE(fa[["extended_positive"]])) return(S_One)
                if (isTRUE(fa[["zero"]])) return(h0)
                if (is_nan(a)) return(S_NaN)
                NULL

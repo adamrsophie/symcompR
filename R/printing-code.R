@@ -121,7 +121,7 @@
          Wild = if (isTRUE(e$extra$wildfunction)) paste0("\\operatorname{WildFunction}{\\left(", .latex_symbol(e$name), " \\right)}")
                 else .latex_symbol(e$name),
          Symbol = , Dummy = .latex_symbol(e$name),
-         Constant = switch(EXPR = e$name, pi = "\\pi", E = "e", I = "i", oo = "\\infty", `-oo` = "- \\infty",
+         Constant = switch(EXPR = e$name, pi = "\\pi", E = "e", I = "i", oo = "\\infty", `-oo` = "-\\infty",
                            zoo = "\\tilde{\\infty}", nan = "\\text{NaN}", EulerGamma = "\\gamma",
                            GoldenRatio = "\\phi", Catalan = "G", e$name),
          BooleanAtom = if (e$name == "true") "\\text{True}" else "\\text{False}",
@@ -170,10 +170,27 @@
            lim <- e$args[[2L]]
            paste0(op, "_{", .latex(lim$args[[1L]]), "=", .latex(lim$args[[2L]]), "}^{", .latex(lim$args[[3L]]), "} ", .latex(e$args[[1L]]))
          },
-         Limit = paste0("\\lim_{", .latex(e$args[[2L]]), " \\to ", .latex(e$args[[3L]]), "} ", .latex(e$args[[1L]])),
+         Limit = {
+           # LatexPrinter._print_Limit: the direction unless two sided or at
+           # infinity; an AssocOp body in parentheses
+           z0 <- e$args[[3L]]
+           dir <- e$args[[4L]]$name
+           tex <- paste0("\\lim_{", .latex(e$args[[2L]]), " \\to ", .latex(z0),
+                         if (dir != "+-" && !is_const(z0, "oo") && !is_const(z0, "-oo")) paste0("^", dir), "}")
+           b <- e$args[[1L]]
+           if (b$type %in% c("Add", "Mul", "And", "Or") || (b$type == "Function" && b$name %in% c("Max", "Min")))
+             paste0(tex, "\\left(", .latex(b), "\\right)") else paste0(tex, " ", .latex(b))
+         },
          Order = paste0("O\\left(", .latex(e$args[[1L]]), "\\right)"),
-         Piecewise = paste0("\\begin{cases} ", paste(vapply(.pw_pairs(e), function(p)
-           paste0(.latex(p[[1L]]), " & \\text{for}\\: ", .latex(p[[2L]])), ""), collapse = " \\\\ "), " \\end{cases}"),
+         Piecewise = {
+           pr <- .pw_pairs(e)
+           tx <- vapply(seq_along(pr), function(i) {
+             p <- pr[[i]]
+             if (i == length(pr) && .is_true(p[[2L]])) paste0(.latex(p[[1L]]), " & \\text{otherwise}")
+             else paste0(.latex(p[[1L]]), " & \\text{for}\\: ", .latex(p[[2L]]))
+           }, "")
+           paste0("\\begin{cases} ", paste(tx, collapse = " \\\\"), " \\end{cases}")
+         },
          {
            f <- .latex_printers[[t]]
            if (!is.null(f)) f(e) else paste0("\\text{", .str(e), "}")

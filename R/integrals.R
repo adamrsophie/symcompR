@@ -143,25 +143,35 @@ register_diff_hook("Integral", function(e, x) {
 
 #' Line integrals
 #'
-#' `line_integrate(f, curve, vars)` integrates `f` along a parametric curve
-#' given as `list(param, a, b, x(param), y(param), ...)`.
+#' `line_integrate(f, curve, vars)` integrates `f` along a parametric curve,
+#' a [Curve()] or a list `list(param, a, b, x(param), y(param), ...)`.
 #'
 #' @param f An expression.
-#' @param curve A list `list(param, a, b, coord1, coord2, ...)`.
+#' @param curve A [Curve()], or a list `list(param, a, b, coord1, coord2, ...)`.
 #' @param vars The coordinate variables.
 #' @return An expression.
 #' @examples
 #' t <- Symbol("t")
 #' line_integrate(1, list(t, 0, 1, t, t), list(Symbol("x"), Symbol("y")))
+#' line_integrate(Symbol("x"), Curve(list(t, t), list(t, 0, 1)), list(Symbol("x"), Symbol("y")))
 #' @export
 line_integrate <- function(f, curve, vars) {
   f <- as_sym(f)
-  p <- as_sym(curve[[1L]])
-  a <- curve[[2L]]; b <- curve[[3L]]
-  coords <- lapply(curve[-(1:3)], as_sym)
+  if (inherits(curve, "GeoCurve")) {
+    p <- curve$limits[[1L]]; a <- curve$limits[[2L]]; b <- curve$limits[[3L]]
+    coords <- curve$functions
+  } else {
+    p <- as_sym(curve[[1L]])
+    a <- curve[[2L]]; b <- curve[[3L]]
+    coords <- lapply(curve[-(1:3)], as_sym)
+  }
   vars <- lapply(vars, as_sym)
+  if (length(coords) != length(vars)) stop(.sympy_condition("ValueError", "Field variable size does not match curve dimension."))
+  if (p$key %in% vapply(vars, .k, "")) stop(.sympy_condition("ValueError", "Curve parameter clashes with field parameters."))
+  # sympy.integrals.integrals.line_integrate: F(r(t))*|r'(t)|
   ds <- .sqrt(.add(lapply(coords, function(cc) .sq(.diff1(cc, p)))))
-  g <- subs(f, lapply(seq_along(vars), function(i) list(vars[[i]], coords[[i]])))
+  g <- f
+  for (i in seq_along(vars)) g <- subs(g, vars[[i]], coords[[i]])
   integrate(.mul(list(g, ds)), list(p, a, b))
 }
 

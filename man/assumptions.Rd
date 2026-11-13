@@ -10,7 +10,9 @@ assumptions(x)
 \item{x}{A symbol.}
 }
 \value{
-A named logical vector of every known fact.
+A named logical vector of every known fact among those SymPy's
+\code{assumptions()} reports (the facts of its assumption rules and \code{polar};
+not \code{hermitian} or \code{antihermitian}).
 }
 \description{
 Assumptions attached to a symbol

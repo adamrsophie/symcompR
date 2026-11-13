@@ -194,6 +194,20 @@ piecewise_fold <- function(e, evaluate = TRUE) {
 # ---------------------------------------------------------------------------
 # rewrite
 
+# uniquely_named_symbol(name, exprs).name with the default numbering
+.unique_name <- function(nm, exprs) {
+  used <- unlist(lapply(exprs, function(e) vapply(free_symbols(e), function(s) s$name, "")))
+  if (!(nm %in% used)) return(nm)
+  i <- 0L
+  while (paste0(nm, i) %in% used) i <- i + 1L
+  paste0(nm, i)
+}
+# betainc._eval_rewrite_as_Integral; lo and hi default to the limits x1, x2
+.betainc_integral <- function(a, b, x1, x2, lo = x1, hi = x2) {
+  t <- Dummy(.unique_name("t", list(a, b, x1, x2)))
+  Integral(.mul(list(.pow(t, .sub(a, S_One)), .pow(.sub(S_One, t), .sub(b, S_One)))), list(t, lo, hi))
+}
+
 .rewrite_rules <- list(
   exp = list(
     sin = function(a) .div(.sub(fcall("exp", list(.mul(list(S_I, a)))), fcall("exp", list(.mul(list(.neg(S_I), a))))), .mul(list(S_Two, S_I))),
@@ -212,8 +226,9 @@ piecewise_fold <- function(e, evaluate = TRUE) {
                             .add(list(fcall("exp", list(a)), fcall("exp", list(.neg(a)))))),
     coth = function(a) .div(.add(list(fcall("exp", list(a)), fcall("exp", list(.neg(a))))),
                             .sub(fcall("exp", list(a)), fcall("exp", list(.neg(a))))),
-    sech = function(a) .div(S_Two, .add(list(fcall("exp", list(a)), fcall("exp", list(.neg(a)))))),
-    csch = function(a) .div(S_Two, .sub(fcall("exp", list(a)), fcall("exp", list(.neg(a))))),
+    # ReciprocalHyperbolicFunction._rewrite_reciprocal: 1/cosh(a).rewrite(exp), 1/sinh(a).rewrite(exp)
+    sech = function(a) .inv(.div(.add(list(fcall("exp", list(a)), fcall("exp", list(.neg(a))))), S_Two)),
+    csch = function(a) .inv(.div(.sub(fcall("exp", list(a)), fcall("exp", list(.neg(a)))), S_Two)),
     sec = function(a) .div(S_Two, .add(list(fcall("exp", list(.mul(list(S_I, a)))), fcall("exp", list(.mul(list(.neg(S_I), a))))))),
     csc = function(a) .div(.mul(list(S_Two, S_I)), .sub(fcall("exp", list(.mul(list(S_I, a)))), fcall("exp", list(.mul(list(.neg(S_I), a))))))
   ),
@@ -285,18 +300,55 @@ piecewise_fold <- function(e, evaluate = TRUE) {
   factorial = list(
     gamma = function(a) fcall("factorial", list(.sub(a, S_One)))
   ),
+  # the _eval_rewrite_as_sinh and _eval_rewrite_as_cosh methods of sympy/functions/elementary/hyperbolic.py
+  sinh = list(
+    cosh = function(a) .mul(list(.neg(S_I), fnode("sinh", list(.add(list(a, .mul(list(S_Pi, S_I, S_Half)))))))),
+    tanh = function(a) .div(.mul(list(S_I, fcall("sinh", list(a)))), fnode("sinh", list(.sub(.mul(list(S_Pi, S_I, S_Half)), a)))),
+    coth = function(a) .div(.mul(list(.neg(S_I), fnode("sinh", list(.sub(.mul(list(S_Pi, S_I, S_Half)), a))))), fcall("sinh", list(a))),
+    csch = function(a) .inv(fcall("sinh", list(a))),
+    sech = function(a) .div(S_I, fnode("sinh", list(.add(list(a, .mul(list(S_I, S_Pi, S_Half)))))))
+  ),
+  cosh = list(
+    sinh = function(a) .mul(list(.neg(S_I), fcall("cosh", list(.add(list(a, .mul(list(S_Pi, S_I, S_Half)))))))),
+    tanh = function(a) .div(.mul(list(S_I, fnode("cosh", list(.sub(.mul(list(S_Pi, S_I, S_Half)), a))))), fcall("cosh", list(a))),
+    coth = function(a) .div(.mul(list(.neg(S_I), fcall("cosh", list(a)))), fnode("cosh", list(.sub(.mul(list(S_Pi, S_I, S_Half)), a)))),
+    csch = function(a) .div(S_I, fnode("cosh", list(.add(list(a, .mul(list(S_I, S_Pi, S_Half))))))),
+    sech = function(a) .inv(fcall("cosh", list(a)))
+  ),
+  li = list(
+    Li = function(z) .sub(fcall("li", list(z)), fcall("li", list(S_Two)))
+  ),
+  Integral = list(
+    betainc = function(a, b, x1, x2) .betainc_integral(a, b, x1, x2),
+    betainc_regularized = function(a, b, x1, x2)
+      .div(.betainc_integral(a, b, x1, x2), .betainc_integral(a, b, x1, x2, S_Zero, S_One))
+  ),
+  FiniteSet = list(
+    PowerSet = function(s) .powerset_finite(s)
+  ),
+  Union = list(
+    DisjointUnion = function(...) .disjoint_union_union(list(...))
+  ),
   Piecewise = list(
-    Abs = function(a) Piecewise(list(a, Ge(a, 0)), list(.neg(a), TRUE)),
+    # Abs._eval_rewrite_as_Piecewise: real or imaginary arguments only
+    Abs = function(a) {
+      if (isTRUE(ask_fact(a, "extended_real"))) return(Piecewise(list(a, Ge(a, 0)), list(.neg(a), TRUE)))
+      if (isTRUE(ask_fact(a, "imaginary")))
+        return(Piecewise(list(.mul(list(S_I, a)), Ge(.mul(list(S_I, a)), 0)), list(.neg(.mul(list(S_I, a))), TRUE)))
+      NULL
+    },
     Heaviside = function(a, h0 = S_Half) {
       if (is_zero_num(h0)) return(Piecewise(list(S_Zero, Le(a, 0)), list(S_One, TRUE)))
       if (is_one_num(h0)) return(Piecewise(list(S_Zero, Lt(a, 0)), list(S_One, TRUE)))
       Piecewise(list(S_Zero, Lt(a, 0)), list(h0, Eq(a, 0)), list(S_One, TRUE))
     },
-    sign = function(a) Piecewise(list(S_One, Gt(a, 0)), list(S_NegativeOne, Lt(a, 0)), list(S_Zero, TRUE)),
+    sign = function(a) if (isTRUE(ask_fact(a, "extended_real")))
+      Piecewise(list(S_One, Gt(a, 0)), list(S_NegativeOne, Lt(a, 0)), list(S_Zero, TRUE)) else NULL,
     Max = function(a, b) Piecewise(list(a, Ge(a, b)), list(b, TRUE)),
     Min = function(a, b) Piecewise(list(a, Le(a, b)), list(b, TRUE))
   ),
   erf = list(
+    erf2 = function(x, y) .sub(fcall("erf", list(y)), fcall("erf", list(x))),
     erfc = function(a) .sub(S_One, fcall("erf", list(a))),
     erfi = function(a) .mul(list(.neg(S_I), fcall("erf", list(.mul(list(S_I, a))))))
   ),
@@ -329,6 +381,11 @@ rewrite <- function(e, target) {
   .map_bottom_up(e, function(z) {
     if (z$type == "Function" && !is.null(rules[[z$name]])) {
       r <- do.call(rules[[z$name]], z$args)
+      if (!is.null(r)) return(r)
+    }
+    # sets such as PowerSet and DisjointUnion rewrite by their type
+    if (z$type != "Function" && !is.null(rules[[z$type]])) {
+      r <- do.call(rules[[z$type]], z$args)
       if (!is.null(r)) return(r)
     }
     if (target == "exp" && z$type == "Pow" && !is_number_type(z$args[[2L]]) && !.has1(z$args[[1L]], S_E) &&

@@ -12,11 +12,13 @@ sym_replace(e, pattern, value, exact = NULL)
 \arguments{
 \item{e}{An expression.}
 
-\item{pattern}{A pattern containing wild symbols.}
+\item{pattern}{A pattern containing wild symbols, or a function class made
+by \code{\link[=Function]{Function()}}, which matches every application of that function.}
 
 \item{old}{Use the old matching that skips the operation count check.}
 
-\item{value}{The replacement.}
+\item{value}{The replacement; for a function class pattern, another
+function class or an R function called with the application's arguments.}
 
 \item{exact}{\code{sym_replace()} replaces only when no wild matched zero; by
 default when the pattern has more than one wild.}

@@ -89,12 +89,21 @@ diff.sym <- function(x, ..., evaluate = TRUE) {
 # Derivative(f, *spec, evaluate=True): differentiate pair by pair; a pair
 # with no closed form leaves it and the pairs after it unevaluated.
 .diff_spec_eval <- function(f, spec) {
+  nderivs <- 0
   for (i in seq_along(spec)) {
     r <- .diff_count(f, spec[[i]][[1L]], spec[[i]][[2L]])
-    if (is.null(r)) return(.derivative_node(f, spec[i:length(spec)]))
+    if (is.null(r)) {
+      f <- .derivative_node(f, spec[i:length(spec)])
+      break
+    }
     f <- r
     if (is_zero_num(f)) return(f)
+    cnt <- spec[[i]][[2L]]
+    nderivs <- if (is_sym(cnt) || is.na(nderivs)) NA else nderivs + cnt
   }
+  # Derivative.__new__: more than one derivative taken is tidied with
+  # factor_terms(signsimp(expr))
+  if (isTRUE(nderivs > 1)) f <- factor_terms(signsimp(f))
   f
 }
 
@@ -425,7 +434,7 @@ wronskian <- function(f, x) {
 #' function of `x`, like SymPy's `idiff()`.
 #'
 #' @param eq An expression equal to zero.
-#' @param y The dependent symbol.
+#' @param y The dependent symbol, or a list of symbols that depend on `x` (the first is differentiated).
 #' @param x The independent symbol.
 #' @param n Order of the derivative.
 #' @return A `sym` expression.
@@ -434,17 +443,29 @@ wronskian <- function(f, x) {
 #' idiff(x^2 + y^2 - 4, y, x)
 #' @export
 idiff <- function(eq, y, x, n = 1) {
+  # sympy.geometry.util.idiff
   eq <- as_sym(eq)
   if (is_relational(eq)) eq <- .sub(eq$args[[1L]], eq$args[[2L]])
-  y <- as_sym(y)
+  dep <- if (is.list(y) && !is_sym(y)) lapply(y, as_sym) else list(as_sym(y))
+  y <- dep[[1L]]
   x <- as_sym(x)
-  fy <- .diff1(eq, y)
-  fx <- .diff1(eq, x)
-  dydx <- .neg(.div(fx, fy))
-  if (n == 1) return(simplify(dydx))
-  cur <- dydx
-  for (k in seq_len(n - 1)) {
-    cur <- .add(list(.diff1(cur, x), .mul(list(.diff1(cur, y), dydx))))
+  dk <- vapply(dep, .k, "")
+  fs <- Filter(function(s) !identical(s$key, x$key) && s$key %in% dk, free_symbols(eq))
+  f <- lapply(fs, function(s) list(s, Function(s$name)(x)))
+  dydx <- diff(Function(y$name)(x), x)
+  if (length(f)) eq <- subs(eq, f)
+  derivs <- list()
+  for (i in seq_len(n)) {
+    # the equation is linear in dydx, a*dydx + b, so dydx = -b/a
+    deq <- diff(eq, x)
+    b <- xreplace(deq, list(list(dydx, S_Zero)))
+    a <- xreplace(.sub(deq, b), list(list(dydx, S_One)))
+    q <- .neg(.div(b, a))
+    if (length(derivs)) q <- subs(q, derivs)
+    yp <- factor_terms(expand_mul(cancel(q), deep = FALSE))
+    if (i == n) return(if (length(f)) subs(yp, lapply(f, function(p) list(p[[2L]], p[[1L]]))) else yp)
+    derivs[[length(derivs) + 1L]] <- list(dydx, yp)
+    eq <- .sub(dydx, yp)
+    dydx <- diff(dydx, x)
   }
-  simplify(cur)
 }

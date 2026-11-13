@@ -4016,8 +4016,11 @@ npartitions <- function(n) .nt_out(.npartitions(as.numeric(.nt_int(n))))
 #' `continued_fraction(a)` returns the terms of a rational or quadratic
 #' irrational number. A rational gives a vector of terms; a quadratic
 #' irrational gives a list whose last element is the repeating block, so
-#' `continued_fraction(sqrt(S(7)))` is `list(2, c(1, 1, 1, 4))`. Wherever
-#' terms are accepted, a list means that its last element repeats.
+#' `continued_fraction(sqrt(S(7)))` is `list(2, c(1, 1, 1, 4))` and
+#' `continued_fraction(sqrt(S(2)))` is `list(1, list(2))`. As in SymPy, the
+#' repeating block of a list of terms is its first element that is itself a
+#' list or a vector of several terms: `list(1, list(2))` is `sqrt(2)`, while
+#' `list(1, 2)` is `3/2`.
 #' `continued_fraction_periodic(p, q, d, s)` does the same for
 #' `(p + s * sqrt(d)) / q`. `continued_fraction_reduce(cf)` turns terms back
 #' into the number. `continued_fraction_iterator(x, n)` returns up to `n` terms
@@ -4039,7 +4042,7 @@ npartitions <- function(n) .nt_out(.npartitions(as.numeric(.nt_int(n))))
 #' continued_fraction(sqrt(S(7)))
 #' continued_fraction_periodic(3, 2, 7)
 #' continued_fraction_reduce(list(1, 2))
-#' continued_fraction_reduce(list(1, c(2)))
+#' continued_fraction_reduce(list(1, list(2)))
 #' continued_fraction_iterator(sym_pi, 6)
 #' continued_fraction_convergents(c(0, 2, 1, 2))
 #' @export
@@ -4134,7 +4137,8 @@ continued_fraction_periodic <- function(p, q, d = 0, s = 1) {
   i <- seen[[paste(as.character(p), as.character(q))]]
   pre <- terms[seq_len(i)]
   per <- .nt_out(.zc(terms[(i + 1):length(terms)]))
-  c(lapply(pre, .nt_out), list(per))
+  # a one term repeating block stays a list, as SymPy's [1, [2]]
+  c(lapply(pre, .nt_out), list(if (length(per) == 1L) list(per) else per))
 }
 
 # A partial quotient as an exact bigq: integers, rationals and exact doubles.
@@ -4145,12 +4149,24 @@ continued_fraction_periodic <- function(p, q, d = 0, s = 1) {
   if (is.null(q)) gmp::as.bigq(.nt_int(z)) else q
 }
 
+# SymPy marks the periodic part of a continued fraction as a nested list:
+# the first element that is a list (or a vector of several terms) starts it
+.cf_period_at <- function(cf) {
+  if (!is.list(cf)) return(0L)
+  k <- which(vapply(cf, function(z) (is.list(z) && !inherits(z, "sym")) || (is.atomic(z) && length(z) > 1L), NA))
+  if (length(k)) k[1L] else 0L
+}
+# The terms of a repeating block, a list or a vector (numeric or bigz)
+.cf_block <- function(z) if (is.list(z)) z else lapply(seq_along(z), function(i) z[i])
+
 #' @rdname continued_fraction
 #' @export
 continued_fraction_reduce <- function(cf) {
   if (!length(cf)) return(S_Zero)
-  is_period <- is.list(cf) && length(cf) > 0
-  last <- if (is_period) unlist(cf[[length(cf)]]) else NULL
+  k <- .cf_period_at(cf)
+  is_period <- k > 0L
+  if (is_period) cf <- cf[seq_len(k)]
+  last <- if (is_period) .cf_block(cf[[length(cf)]]) else NULL
   conv <- function(terms) {
     p2 <- S_Zero; q2 <- S_One; p1 <- S_One; q1 <- S_Zero
     for (a in terms) {
@@ -4166,8 +4182,7 @@ continued_fraction_reduce <- function(cf) {
     return(.div(r[[1L]], r[[2L]]))
   }
   pre <- lapply(cf[-length(cf)], function(z) make_rational(gmp::as.bigq(.nt_int(z))))
-  per <- .nt_ints(last)
-  per <- lapply(seq_along(per), function(i) make_rational(gmp::as.bigq(per[i])))
+  per <- lapply(last, function(z) make_rational(gmp::as.bigq(.nt_int(z))))
   # purely periodic y = [per..., y] solves Q y^2 + (Q1 - P) y - P1 = 0
   r <- conv(per)
   P <- r[[1L]]$value; Q <- r[[2L]]$value; P1 <- r[[3L]]$value; Q1 <- r[[4L]]$value
@@ -4205,7 +4220,8 @@ continued_fraction_iterator <- function(x, n = NULL) {
   cf <- tryCatch(continued_fraction(x), error = function(e) NULL)
   if (!is.null(cf)) {
     pre <- lapply(cf[-length(cf)], gmp::as.bigz)
-    per <- gmp::as.bigz(cf[[length(cf)]])
+    pl <- cf[[length(cf)]]
+    per <- gmp::as.bigz(if (is.list(pl)) pl[[1L]] else pl)
     need <- max(0, n - length(pre))
     terms <- .zc(c(pre, if (need) list(rep(per, length.out = need)) else list()))
     return(.nt_out(terms[seq_len(min(n, length(terms)))]))
@@ -4279,10 +4295,10 @@ continued_fraction_iterator <- function(x, n = NULL) {
 #' @rdname continued_fraction
 #' @export
 continued_fraction_convergents <- function(cf, n = NULL) {
-  if (is.list(cf)) {
+  if (is.list(cf) && .cf_period_at(cf) == length(cf)) {
     last <- cf[[length(cf)]]
     pre <- lapply(cf[-length(cf)], .cf_term)
-    per <- lapply(as.list(unlist(last)), .cf_term)
+    per <- lapply(.cf_block(last), .cf_term)
     if (is.null(n)) stop("n is needed for a periodic continued fraction", call. = FALSE)
     terms <- c(pre, rep_len(per, max(0, n - length(pre))))
   } else {
@@ -4985,7 +5001,8 @@ EllipticCurve <- function(a4, a6, a1 = 0, a2 = 0, a3 = 0, modulus = 0) {
   }
   e$order <- function() {
     if (modulus == 0) stop("Still not implemented", call. = FALSE)
-    nrow(e$points()) + 1
+    # EllipticCurve.order is len(self.points()): the affine points only
+    nrow(e$points())
   }
   e$rank <- function() {
     if (modulus != 0) return(0)

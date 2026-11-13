@@ -3,6 +3,7 @@
 \name{pretty}
 \alias{pretty}
 \alias{pretty.sym}
+\alias{pretty.symmatrix}
 \alias{pprint}
 \alias{pretty_print}
 \alias{pprint_use_unicode}
@@ -11,6 +12,8 @@
 \title{Pretty printing}
 \usage{
 \method{pretty}{sym}(x, use_unicode = NULL, ...)
+
+\method{pretty}{symmatrix}(x, use_unicode = NULL, ...)
 
 pprint(e, use_unicode = NULL)
 

@@ -366,11 +366,14 @@ ArrowStringDescription <- function(unit, curving, curving_amount, looping_start,
 }
 #' @export
 format.ArrowStringDescription <- function(x, ...) {
-  cs <- if (nzchar(x$curving)) sprintf("@/%s%d%s/", x$curving, as.integer(x$curving_amount), x$unit) else ""
-  ls <- if (nzchar(x$looping_start) && nzchar(x$looping_end)) sprintf("@(%s,%s)", x$looping_start, x$looping_end) else ""
-  ss <- if (nzchar(x$arrow_style)) paste0("@", x$arrow_style) else ""
-  sprintf("\\ar%s%s%s[%s%s]%s%s{%s}", cs, ls, ss, x$horizontal_direction, x$vertical_direction,
-          x$label_position, x$label_displacement, x$label)
+  # Python truthiness: None and "" are false; None prints as "None"
+  tr <- function(v) !is.null(v) && length(v) == 1L && !identical(v, "") && !identical(v, FALSE)
+  st <- function(v) if (is.null(v)) "None" else as.character(v)
+  cs <- if (tr(x$curving)) sprintf("@/%s%d%s/", x$curving, as.integer(x$curving_amount), st(x$unit)) else ""
+  ls <- if (tr(x$looping_start) && tr(x$looping_end)) sprintf("@(%s,%s)", x$looping_start, x$looping_end) else ""
+  ss <- if (tr(x$arrow_style)) paste0("@", x$arrow_style) else ""
+  sprintf("\\ar%s%s%s[%s%s]%s%s{%s}", cs, ls, ss, st(x$horizontal_direction), st(x$vertical_direction),
+          st(x$label_position), st(x$label_displacement), st(x$label))
 }
 
 #' @rdname diagram_drawing

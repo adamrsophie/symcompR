@@ -258,8 +258,81 @@ circumference <- function(e) {
 #' @rdname geometry-3d
 #' @export
 encloses_point <- function(e, pt) {
+  if (inherits(e, "GeoPolygon")) return(.polygon_encloses(e, pt))
   v <- simplify(equation(e, pt$coords[[1L]], pt$coords[[2L]]))
   .is_true(Lt(v, 0))
+}
+
+# Polygon.encloses_point: the orientation test for a convex polygon, else
+# the crossings of a ray from the point
+.polygon_encloses <- function(poly, p) {
+  v <- poly$vertices
+  n <- length(v)
+  side <- function(i) Segment(v[[i]], v[[i %% n + 1L]])
+  on_side <- function(sg) {
+    a <- sg$p1$coords; b <- sg$p2$coords; q <- p$coords
+    cr <- simplify(.sub(.mul(list(.sub(b[[1L]], a[[1L]]), .sub(q[[2L]], a[[2L]]))),
+                        .mul(list(.sub(b[[2L]], a[[2L]]), .sub(q[[1L]], a[[1L]])))))
+    is_zero_num(cr) && .on_segment(sg, p)
+  }
+  if (any(vapply(v, function(w) isTRUE(w == p), TRUE)) || any(vapply(seq_len(n), function(i) on_side(side(i)), TRUE)))
+    return(FALSE)
+  lit <- lapply(v, function(w) lapply(1:2, function(k) simplify(.sub(w$coords[[k]], p$coords[[k]]))))
+  if (any(vapply(lit, function(w) length(free_symbols(w[[1L]])) + length(free_symbols(w[[2L]])) > 0L, TRUE))) return(NA)
+  at <- function(i) lit[[i %% n + 1L]]
+  if (.polygon_is_convex(v)) {
+    orientation <- NULL
+    for (i in 0:n) {
+      a <- at(i); b <- at(i + 1L)
+      test <- ask_fact(.sub(.mul(list(.neg(a[[2L]]), .sub(b[[1L]], a[[1L]]))), .mul(list(.neg(a[[1L]]), .sub(b[[2L]], a[[2L]])))), "negative")
+      if (is.null(orientation)) orientation <- test
+      else if (!identical(test, orientation)) return(FALSE)
+    }
+    return(TRUE)
+  }
+  lt <- function(a, b) .is_true(Lt(a, b))
+  hit_odd <- FALSE
+  p1 <- at(0L)
+  for (i in 1:n) {
+    p2 <- at(i)
+    if (lt(Min(p1[[2L]], p2[[2L]]), S_Zero)) {
+      if (!lt(Max(p1[[2L]], p2[[2L]]), S_Zero) && !lt(Max(p1[[1L]], p2[[1L]]), S_Zero) &&
+          !identical(p1[[2L]]$key, p2[[2L]]$key)) {
+        xi <- .add(list(.div(.mul(list(.neg(p1[[2L]]), .sub(p2[[1L]], p1[[1L]]))), .sub(p2[[2L]], p1[[2L]])), p1[[1L]]))
+        if (identical(p1[[1L]]$key, p2[[1L]]$key) || !lt(xi, S_Zero)) hit_odd <- !hit_odd
+      }
+    }
+    p1 <- p2
+  }
+  hit_odd
+}
+
+# Polygon.is_convex: one orientation at every vertex and no crossing sides
+.polygon_is_convex <- function(v) {
+  n <- length(v)
+  at <- function(i) v[[i %% n + 1L]]
+  cw <- function(a, b, c) {
+    ba <- lapply(1:2, function(k) .sub(b$coords[[k]], a$coords[[k]]))
+    ca <- lapply(1:2, function(k) .sub(c$coords[[k]], a$coords[[k]]))
+    r <- ask_fact(simplify(.sub(.mul(list(ba[[1L]], ca[[2L]])), .mul(list(ca[[1L]], ba[[2L]])))), "nonpositive")
+    if (is.na(r)) stop(.sympy_condition("ValueError", "Can't determine orientation"))
+    r
+  }
+  c0 <- cw(at(-2L), at(-1L), at(0L))
+  for (i in seq_len(n - 1L)) if (xor(c0, cw(at(i - 2L), at(i - 1L), at(i)))) return(FALSE)
+  sides <- lapply(seq_len(n), function(i) Segment(at(i - 1L), at(i)))
+  same <- function(a, b) isTRUE(a == b)
+  for (i in seq_len(n)) {
+    si <- sides[[i]]
+    js <- seq_len(max(0L, i - 2L))
+    if (i == n) js <- js[-1L]
+    for (j in js) {
+      sj <- sides[[j]]
+      if (!any(vapply(list(si$p1, si$p2), function(q) same(sj$p1, q) || same(sj$p2, q), TRUE)) &&
+          length(intersection(si, sj))) return(FALSE)
+    }
+  }
+  TRUE
 }
 
 .isect_conic_line <- function(e, l) {
@@ -269,7 +342,7 @@ encloses_point <- function(e, pt) {
   eq <- fraction(together(expand(equation(e, px, py))))[[1L]]
   ts <- Filter(function(v) !identical(ask_fact(v, "real"), FALSE), roots(expand(eq), t))
   pts <- lapply(ts, function(v) Point(simplify(subs(px, t, v)), simplify(subs(py, t, v))))
-  Filter(function(pt) .on_segment(l, pt), pts)
+  .ordered_points(Filter(function(pt) .on_segment(l, pt), pts))
 }
 
 #' @rdname geometry-3d

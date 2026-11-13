@@ -143,7 +143,7 @@ numbered_symbols(prefix = "x", n = 10, start = 0)
 
 dict_merge(...)
 
-topological_sort(vertices, edges)
+topological_sort(vertices, edges, key = NULL)
 }
 \arguments{
 \item{seq, x, l, s, t}{A sequence (vector or list); for \code{take()} also a generator.}
@@ -160,7 +160,8 @@ topological_sort(vertices, edges)
 
 \item{G}{A graph \code{list(V, E)} with \code{E} a list of pairs.}
 
-\item{key}{A key function for comparisons.}
+\item{key}{For \code{topological_sort()}, a function giving the sort key of a
+vertex (the vertex itself by default).}
 
 \item{directed}{Directed rotation only.}
 

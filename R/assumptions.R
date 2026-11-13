@@ -870,10 +870,13 @@ is_transcendental <- function(e) ask_fact(e, "transcendental")
 #' Assumptions attached to a symbol
 #'
 #' @param x A symbol.
-#' @return A named logical vector of every known fact.
+#' @return A named logical vector of every known fact among those SymPy's
+#'   `assumptions()` reports (the facts of its assumption rules and `polar`;
+#'   not `hermitian` or `antihermitian`).
 #' @export
 assumptions <- function(x) {
   x <- as_sym(x)
   f <- .facts(x)
-  f[!is.na(f)]
+  f <- f[!is.na(f)]
+  f[names(f) %in% c(.FR_FACTS, "polar")]
 }

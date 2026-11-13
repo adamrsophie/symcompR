@@ -49,7 +49,7 @@ Subs(e, old, new)
 
 nfloat(e, n = 15, exponent = FALSE, dkeys = FALSE)
 
-bottom_up(e, f)
+bottom_up(e, f, atoms = FALSE)
 
 default_sort_key(e)
 
@@ -84,6 +84,8 @@ sym_ordered(x, ...)
 
 \item{f}{A function.}
 
+\item{atoms}{If \code{TRUE}, \code{bottom_up()} also applies \code{f} to atoms.}
+
 \item{tol}{Relative tolerance.}
 
 \item{x}{A list of expressions.}
@@ -98,9 +100,11 @@ An expression, list, logical or string.
 friends, and \code{Rel(a, b, op)} builds a relation from its operator string.
 \code{Subs()} is an unevaluated substitution (evaluate with \code{\link[=doit]{doit()}}).
 \code{nfloat()} evaluates the numbers in an expression and keeps symbols.
-\code{bottom_up()} applies a function to every node, leaves first.
-\code{default_sort_key()} returns the canonical ordering key and \code{sym_ordered()}
-sorts expressions by it.
+\code{bottom_up()} applies a function to every node, leaves first; atoms are
+passed to the function only with \code{atoms = TRUE}.
+\code{default_sort_key()} returns SymPy's \code{default_sort_key} encoded as a
+string, so that \code{order()} of these strings is SymPy's sorted order, and
+\code{sym_ordered()} sorts expressions.
 \code{comp()} compares two numbers within a tolerance. \code{check_assumptions()}
 and \code{failing_assumptions()} test facts. \code{sstrrepr()} is \code{\link[=sstr]{sstr()}},
 \code{true} and \code{false} are the boolean atoms.

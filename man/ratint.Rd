@@ -32,7 +32,7 @@ terms, \code{NULL} to decide from the atoms of \code{f}.}
 
 \item{t}{The variable of the roots.}
 
-\item{h, q}{Polynomials (dpolys) in \code{x} and \code{t}.}
+\item{h, q}{Polynomials in \code{x} and \code{t}: \code{\link[=Poly]{Poly()}} objects or dense polynomials.}
 }
 \value{
 The antiderivative.

@@ -68,12 +68,14 @@ mod_inverse <- function(a, m) {
 #' @rdname integer-helpers
 #' @export
 integer_nthroot <- function(y, n) {
+  big <- inherits(y, "bigz")
   y <- .nt_int(y)
   n <- as.numeric(.nt_int(n))
   if (y < 0) stop("y must be nonnegative", call. = FALSE)
   if (n < 1) stop("n must be positive", call. = FALSE)
   r <- .iroot(y, n)
-  list(root = .nt_out(r$root), exact = r$exact)
+  # a bigz argument keeps a bigz root, whatever its size
+  list(root = if (big) gmp::as.bigz(r$root) else .nt_out(r$root), exact = r$exact)
 }
 
 #' @rdname integer-helpers

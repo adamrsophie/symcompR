@@ -9,7 +9,7 @@ idiff(eq, y, x, n = 1)
 \arguments{
 \item{eq}{An expression equal to zero.}
 
-\item{y}{The dependent symbol.}
+\item{y}{The dependent symbol, or a list of symbols that depend on \code{x} (the first is differentiated).}
 
 \item{x}{The independent symbol.}
 

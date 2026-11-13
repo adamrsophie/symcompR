@@ -66,7 +66,7 @@ test_that("solver and matrix helpers", {
   expect_equal(vapply(intersecting_product(list(1, 2), list(3, 4)), s, ""), c("13", "8"))
   expect_equal(mathematica_code(sin(x)^2 + exp(x)), "Exp[x] + Sin[x]^2")
   expect_equal(julia_code(x^2 + Rational(1, 2)), "x .^ 2 + 1 // 2")
-  expect_equal(topological_sort(1:4, list(c(1, 2), c(2, 3), c(1, 4))), c(1L, 2L, 4L, 3L))
+  expect_equal(topological_sort(1:4, list(c(1, 2), c(2, 3), c(1, 4))), c(1L, 2L, 3L, 4L))
 })
 
 test_that("attaching the package masks no base R function", {

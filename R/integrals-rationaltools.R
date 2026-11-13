@@ -262,6 +262,7 @@ ratint_logpart <- function(f, g, x, t = NULL) {
 #' @rdname ratint
 #' @export
 log_to_atan <- function(f, g) {
+  f <- .as_dpoly(f); g <- .as_dpoly(g)
   if (!inherits(f, "dpoly")) stop("log_to_atan() takes dpolys")
   if (.dp_deg(f) < .dp_deg(g)) { tmp <- .dp_neg(g); g <- f; f <- tmp }
   f <- .dp_to_field(f); g <- .dp_to_field(g)
@@ -274,6 +275,9 @@ log_to_atan <- function(f, g) {
   u <- .dp_quo(.dp_add(.dp_mul(f, s), .dp_mul(g, t)), h)
   .add(list(.mul(list(S_Two, fcall("atan", list(.dp_expr(u))))), log_to_atan(s, t)))
 }
+
+# A Poly argument as a dense polynomial in its first generator
+.as_dpoly <- function(p) if (inherits(p, "Poly")) .dp_from(as_expr(p), p$gens[[1L]]) else p
 
 # _roots_real_complex
 .roots_real_complex <- function(q, t) {
@@ -300,9 +304,10 @@ log_to_atan <- function(f, g) {
 }
 
 #' @rdname ratint
-#' @param h,q Polynomials (dpolys) in `x` and `t`.
+#' @param h,q Polynomials in `x` and `t`: [Poly()] objects or dense polynomials.
 #' @export
 log_to_real <- function(h, q, x, t) {
+  h <- .as_dpoly(h); q <- .as_dpoly(q)
   rs <- .roots_real_complex(q, t)
   if (is.null(rs)) return(NULL)
   reals <- rs[[1L]]; complexes <- rs[[2L]]

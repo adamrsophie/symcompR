@@ -12,17 +12,20 @@ POSform(vars, minterms, dontcares = integer())
 \arguments{
 \item{vars}{A list of symbols.}
 
-\item{minterms}{Integer row indices where the function is true.}
+\item{minterms}{Rows where the function is true: an integer vector, or a
+list of integers, bit vectors and named lists.}
 
-\item{dontcares}{Rows whose value does not matter.}
+\item{dontcares}{Rows whose value does not matter, in the same forms.}
 }
 \value{
 A boolean expression.
 }
 \description{
 \code{SOPform(vars, minterms)} and \code{POSform(vars, minterms)} build minimal
-disjunctive and conjunctive forms from the rows (as integers, most
-significant variable first) where the function is true.
+disjunctive and conjunctive forms from the rows where the function is
+true, with SymPy's Quine-McCluskey reduction. A row is an integer (most
+significant variable first), a vector of bits, or a named list giving
+the values of some variables (the others take every value).
 }
 \examples{
 w <- Symbol("w"); x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")

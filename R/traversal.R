@@ -115,12 +115,21 @@ atoms <- function(e, types = NULL) {
   out <- list()
   walk <- function(x) {
     leaf <- !length(x$args)
-    if ((is.null(types) && leaf) || (!is.null(types) && x$type %in% types))
+    if ((is.null(types) && leaf) || (!is.null(types) && .is_instance_type(x, types)))
       out[[x$key]] <<- x
     for (a in x$args) walk(a)
   }
   walk(e)
   unname(out)
+}
+
+# isinstance for the SymPy number classes: Rational covers Integer, and
+# Number covers Integer, Rational, Float, the infinities and nan.
+.is_instance_type <- function(x, types) {
+  if (x$type %in% types) return(TRUE)
+  if ("Rational" %in% types && x$type == "Integer") return(TRUE)
+  "Number" %in% types && (x$type %in% c("Integer", "Rational", "Float") ||
+    (x$type == "Constant" && x$name %in% c("oo", "-oo", "nan")))
 }
 
 #' Preorder and postorder traversal
@@ -133,7 +142,7 @@ preorder_traversal <- function(e) {
   out <- list()
   walk <- function(x) {
     out[[length(out) + 1L]] <<- x
-    for (a in x$args) walk(a)
+    for (a in .args_sympy(x)) walk(a)
   }
   walk(e)
   out
@@ -145,7 +154,7 @@ postorder_traversal <- function(e) {
   e <- as_sym(e)
   out <- list()
   walk <- function(x) {
-    for (a in x$args) walk(a)
+    for (a in .args_sympy(x)) walk(a)
     out[[length(out) + 1L]] <<- x
   }
   walk(e)
