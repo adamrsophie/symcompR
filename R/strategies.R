@@ -109,9 +109,16 @@ strat_debug <- function(rule, file = NULL) {
   function(...) {
     expr <- list(...)[[1L]]
     result <- rule(...)
-    if (!.strat_eq(result, expr))
-      cat("Rule: ", nm, "\nIn:   ", format(expr), "\nOut:  ", format(result), "\n\n", sep = "",
-          file = if (is.null(file)) "" else file, append = TRUE)
+    if (!.strat_eq(result, expr)) {
+      msg <- paste0("Rule: ", nm, "\nIn:   ", format(expr), "\nOut:  ", format(result), "\n\n")
+      if (is.null(file)) cat(msg)
+      else {
+        # binary mode keeps "\n" line ends on Windows, as Python's file.write
+        con <- file(file, "ab")
+        on.exit(close(con))
+        writeChar(msg, con, eos = NULL)
+      }
+    }
     result
   }
 }
