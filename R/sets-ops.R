@@ -177,7 +177,7 @@ contains <- function(s, x) {
   if (inherits(s, "GeoEntity")) return(.geo_contains(s, x))
   if (.is_ab(s)) return(.ab_contains(s, x))
   s <- as_sym(s)
-  x <- as_sym(x)
+  x <- if (inherits(x, "symmatrix")) .as_block(x) else as_sym(x)
   .rel_to_r(.contains(s, x))
 }
 

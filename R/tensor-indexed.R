@@ -55,6 +55,7 @@ Idx <- function(name, range = NULL) {
 #' @export
 IndexedBase <- function(name, shape = NULL) {
   if (is_sym(name) && name$type == "Symbol") name <- name$name
+  if (is_sym(shape) && shape$type == "Tuple") shape <- shape$args
   base <- new_sym("IndexedBase", list(Symbol(name)), extra = list(shape = if (is.null(shape)) NULL else lapply(as.list(shape), as_sym)))
   f <- function(...) new_sym("Indexed", c(list(base), lapply(list(...), as_sym)))
   attr(f, "base") <- base

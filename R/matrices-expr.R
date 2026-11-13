@@ -280,8 +280,8 @@ MatAdd <- function(..., evaluate = FALSE) {
     else .mm(coefs[[k]], parts[[k]])
   if (!length(terms)) return(ZeroMatrix(s1[[1L]], s1[[2L]]))
   if (length(terms) == 1L) return(.unwrap_explicit(terms[[1L]]))
-  ord <- order(vapply(terms, function(t) .str(.mterm_split(t)[[2L]]), ""), method = "radix")
-  new_sym("MatAdd", terms[ord])
+  # canonicalize's last rule: sort(default_sort_key)
+  new_sym("MatAdd", .key_sort(lapply(terms, .sort_key), terms))
 }
 
 #' @rdname matrix-expressions

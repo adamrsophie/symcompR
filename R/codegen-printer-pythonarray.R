@@ -64,7 +64,7 @@
   indices <- list()
   for (r in subranks) {
     li <- integer()
-    for (k in seq_len(r)) {
+    for (k in seq_len(max(r, 0L))) {
       li <- c(li, if (counter %in% dkeys) dvals[match(counter, dkeys)] else counter)
       counter <- counter + 1L
     }

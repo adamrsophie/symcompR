@@ -245,6 +245,8 @@ degree_list <- function(f, ...) {
     if (!length(extra)) return(make_rational(sum(rep$c[w])))
     qpoly_to_expr(qp_norm(sub$e, sub$c), extra)
   })
+  # FracField.to_sympy: an element of ZZ(...) is its numerator over its denominator
+  if (!is.null(p$dom_str) && grepl("^(ZZ|QQ)\\(", p$dom_str)) coeffs <- lapply(coeffs, cancel)
   list(monoms = monoms, coeffs = coeffs)
 }
 

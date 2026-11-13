@@ -51,6 +51,8 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
 .add_print_order <- function(args, rev = FALSE) {
   n <- length(args)
   if (n < 2L) return(args)
+  # matrix factors are noncommutative and never numbers in SymPy's as_terms
+  if (!rev && any(vapply(args, .me_has_nc_factor, NA))) return(.me_ordered_terms(args))
   # SymPy as_ordered_terms special case: a positive number plus a negative
   # number times one factor prints as 5 - 2*x
   if (n == 2L && !rev) {
@@ -435,6 +437,8 @@ sstr <- function(e) {
     return(paste0("Matrix([", paste(rows, collapse = ", "), "])"))
   }
   if (inherits(e, "SymArray")) return(.ae_str_ndarray(e$data, e$shape))
+  # an ImmutableMatrix is a MatrixBase too
+  if (is_sym(e) && e$type == "ImmutableMatrix") return(sstr(as_explicit(e)))
   .str_top(as_sym(e))
 }
 

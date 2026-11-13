@@ -172,7 +172,8 @@ c.sym <- function(...) lapply(list(...), as_sym)
   # _eval_is_eq(MatrixExpr, MatrixExpr)
   if ((type == "Equality" || type == "Unequality") && .is_matexpr(a) && .is_matexpr(b)) {
     r <- .me_is_eq(a, b)
-    if (is.null(r)) return(NULL)
+    # is_eq: with no handler answer, equal structures are equal
+    if (is.null(r)) { if (!identical(a$key, b$key)) return(NULL); r <- TRUE }
     return(if (xor(r, type == "Unequality")) S_true else S_false)
   }
   a0 <- a

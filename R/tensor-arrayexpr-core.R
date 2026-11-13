@@ -34,6 +34,8 @@
   if (inherits(a, "symmatrix")) return(.as_block(a))
   if (inherits(a, "SymArray")) return(.ae_ndarray_sym(a))
   if (is_sym(a)) return(a)
+  # an IndexedBase is an R function carrying its node
+  if (is.function(a) && !is.null(attr(a, "base"))) return(attr(a, "base"))
   as_sym(a)
 }
 
@@ -109,6 +111,8 @@ get_ndim <- function(expr) {
   if (!is_sym(expr)) return(0L)
   if (expr$type == "MatrixElement") return(0L)
   if (expr$type == "Indexed") return(length(expr$args) - 1L)
+  # an IndexedBase without a shape has rank -1
+  if (expr$type == "IndexedBase" && is.null(expr$extra$shape)) return(-1L)
   length(.ae_shape(expr))
 }
 
@@ -123,10 +127,16 @@ get_rank <- function(expr) get_ndim(expr)
   if (e$type %in% c(.AE_TYPES, "ArrayComprehension", "ArrayComprehensionMap")) return(e$extra$shape)
   if (e$type == "ImmutableDenseNDimArray") return(lapply(e$extra$shape, .int))
   if (e$type == "MatrixSet") return(e$args[1:2])
+  # NULL is SymPy's shape None
+  if (e$type == "IndexedBase") return(e$extra$shape)
   if (.is_matexpr(e)) return(.mshape(e))
   if (e$type == "Derivative" && .ae_derivative_is_array(e)) return(.ae_derivative_shape(e))
   list()
 }
+
+# get_shape(e) is None: an IndexedBase without a shape, or an array
+# expression built on one
+.ae_shape_none <- function(e) is_sym(e) && e$type %in% c("IndexedBase", .AE_TYPES) && is.null(e$extra$shape)
 
 .ae_sub_ndim_list <- function(e) {
   if (is_sym(e) && !is.null(e$extra$sub)) return(e$extra$sub)
@@ -134,7 +144,7 @@ get_rank <- function(expr) get_ndim(expr)
 }
 .ae_sub_ndim <- function(e) sum(.ae_sub_ndim_list(e))
 
-.ae_is_plain_scalar <- function(a) !length(.ae_shape(a)) && !.is_arrexpr(a)
+.ae_is_plain_scalar <- function(a) !.ae_shape_none(a) && !length(.ae_shape(a)) && !.is_arrexpr(a)
 
 # ---------------------------------------------------------------------------
 # ArraySymbol, ArrayElement, ZeroArray, OneArray
@@ -330,7 +340,8 @@ ArrayTensorProduct <- function(..., canonicalize = FALSE) {
   }
   args <- norm
   ndims <- vapply(args, get_ndim, 0L)
-  shape <- do.call(c, c(list(list()), lapply(args, .ae_shape)))
+  shapes <- lapply(args, .ae_shape)
+  shape <- if (any(vapply(args, .ae_shape_none, NA))) NULL else do.call(c, c(list(list()), shapes))
   obj <- .ae_new("ArrayTensorProduct", args, shape, ndims)
   if (canonicalize) .ae_tp_canon(obj) else obj
 }
@@ -440,8 +451,9 @@ ArrayAdd <- function(..., canonicalize = FALSE) {
   if (any(vapply(args, .ae_is_plain_scalar, NA))) .perr("TypeError", "scalar arguments are not allowed in ArrayAdd")
   if (length(unique(vapply(args, get_ndim, 0L))) != 1L) .perr("ValueError", "summing arrays of different number of dims")
   shapes <- lapply(args, .ae_shape)
-  if (length(unique(vapply(shapes, .ae_skey, ""))) > 1L) .perr("ValueError", "mismatching shapes in addition")
-  obj <- .ae_new("ArrayAdd", args, shapes[[1L]], get_ndim(args[[1L]]))
+  none <- vapply(args, .ae_shape_none, NA)
+  if (length(unique(vapply(shapes[!none], .ae_skey, ""))) > 1L) .perr("ValueError", "mismatching shapes in addition")
+  obj <- .ae_new("ArrayAdd", args, if (any(none)) NULL else shapes[[1L]], get_ndim(args[[1L]]))
   if (canonicalize) .ae_add_canon(obj) else obj
 }
 
@@ -714,14 +726,16 @@ ArrayDiagonal <- function(expr, ..., canonicalize = FALSE, allow_trivial_diags =
   expr <- .ae_sympify(expr)
   diag <- lapply(list(...), function(g) sort(.ae_v(g)))
   shape <- .ae_shape(expr)
-  for (g in diag) {
+  # a shape of None skips the validation
+  shape_none <- .ae_shape_none(expr)
+  if (!shape_none) for (g in diag) {
     if (any(g >= length(shape))) .perr("ValueError", "index is larger than expression shape")
     if (length(unique(vapply(shape[g + 1L], .k, ""))) != 1L) .perr("ValueError", "diagonalizing indices of different dimensions")
     if (!allow_trivial_diags && length(g) <= 1L) .perr("ValueError", "need at least two axes to diagonalize")
     if (anyDuplicated(g)) .perr("ValueError", "axis index cannot be repeated")
   }
   if (!length(diag)) return(expr)
-  ps <- .ae_positions_shape(shape, diag)
+  ps <- if (shape_none) list(NULL, NULL) else .ae_positions_shape(shape, diag)
   obj <- .ae_new("ArrayDiagonal", c(list(expr), lapply(diag, .ae_t)), ps[[2L]], .ae_sub_ndim_list(expr))
   if (canonicalize) .ae_diag_canon(obj) else obj
 }
@@ -821,7 +835,8 @@ ArrayContraction <- function(expr, ..., canonicalize = FALSE) {
   ci <- .ae_sort_contr(lapply(list(...), .ae_v))
   expr <- .ae_sympify(expr)
   shape <- .ae_shape(expr)
-  for (g in ci) if (length(unique(vapply(shape[g + 1L], .k, ""))) != 1L) .perr("ValueError", "contracting indices of different dimensions")
+  if (!.ae_shape_none(expr))
+    for (g in ci) if (length(unique(vapply(shape[g + 1L], .k, ""))) != 1L) .perr("ValueError", "contracting indices of different dimensions")
   if (length(shape)) shape <- shape[!(seq_along(shape) - 1L) %in% unlist(ci)]
   obj <- .ae_new("ArrayContraction", c(list(expr), lapply(ci, .ae_t)), shape, .ae_sub_ndim_list(expr))
   if (canonicalize) .ae_contr_canon(obj) else obj
@@ -953,6 +968,7 @@ ArrayContraction <- function(expr, ..., canonicalize = FALSE) {
 }
 
 .ae_sort_fully_contracted_args <- function(expr, ci) {
+  if (.ae_shape_none(expr)) return(list(expr, ci))
   cum <- cumsum(c(0L, .ae_sub_ndim_list(expr)))
   n <- length(expr$args)
   blocks <- lapply(seq_len(n), function(i) seq_len(cum[i + 1L] - cum[i]) + cum[i] - 1L)

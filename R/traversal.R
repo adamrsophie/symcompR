@@ -7,6 +7,8 @@
 .free_sym_list <- function(e) {
   t <- e$type
   if (t == "Symbol" || t == "Dummy" || t == "MatrixSymbol") return(stats::setNames(list(e), e$key))
+  # RandomIndexedSymbol.free_symbols: the free symbols of its key and itself
+  if (t == "RandomIndexedSymbol") return(c(.free_sym_list(.ris_key(e)), stats::setNames(list(e), e$key)))
   if (!length(e$args)) return(list())
   cacheable <- nchar(e$key) < 9000L
   if (cacheable) {
@@ -95,7 +97,7 @@ free_symbols <- function(e) {
 
 .sort_syms <- function(lst) {
   if (length(lst) < 2L) return(lst)
-  nm <- vapply(lst, function(s) s$name, "")
+  nm <- vapply(lst, function(s) if (is.null(s$name)) .str(s) else s$name, "")
   lst[order(nm, vapply(lst, .k, ""), method = "radix")]
 }
 
@@ -400,6 +402,7 @@ count_ops <- function(e, visual = FALSE) {
     }
     if (t == "Pow" && identical(a$args[[2L]]$key, S_NegativeOne$key)) { add_op("DIV"); args[[length(args) + 1L]] <- a$args[[1L]]; next }
     if (is_const(a, "E")) { add_op("EXP"); next }
+    if (t == "Pow" && is_const(a$args[[1L]], "E")) { add_op("EXP"); args[[length(args) + 1L]] <- a$args[[2L]]; next }
     if (t == "Mul") add_op("MUL", length(a$args) - 1L)
     else if (t == "Function" && a$name %in% c("Min", "Max")) add_op(toupper(a$name), length(a$args) - 1L)
     else if (length(a$args) && t %in% c("Pow", "Function", "Derivative", "Integral", "Sum", "Product", "Piecewise")) {

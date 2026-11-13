@@ -889,6 +889,11 @@ rv_attr <- function(x, name, ...) {
   }
   # the pdf of a handmade distribution is its first argument, a Lambda
   if (is_sym(x) && name == "pdf" && !...length() && grepl("DistributionHandmade$", x$type)) return(x$args[[1L]])
+  # the set of a finite distribution is a set of its values
+  if (is_sym(x) && name == "set" && !...length() && .isa(x, "SingleFiniteDistribution")) {
+    s <- .callm(x, "set")
+    return(if (is_sym(s)) s else do.call(FiniteSet, s))
+  }
   f <- if (is_sym(x)) .findm(x, name) else NULL
   if (!is.null(f)) return(f(x, ...))
   if (is_sym(x) && name == "equals") return(.expr_equals(x, ...))

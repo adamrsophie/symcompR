@@ -1427,7 +1427,8 @@ imageset <- function(...) {
 #' @rdname imageset
 #' @export
 Contains <- function(x, s) {
-  x <- as_sym(x); s <- as_sym(s)
+  x <- if (inherits(x, "symmatrix")) .as_block(x) else as_sym(x)
+  s <- as_sym(s)
   # Contains.__new__: only a true or false _contains result evaluates
   r <- .set_contains_raw(s, x)
   if (!is.null(r) && r$type == "BooleanAtom") r else new_sym("Contains", list(x, s))
