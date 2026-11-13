@@ -244,6 +244,7 @@ reference:
 - title: Polynomials
   contents:
   - Poly
+  - '`$.Poly`'
   - poly-aliases
   - polys-extra
   - degree
@@ -272,6 +273,14 @@ reference:
   - AlgebraicNumber
   - primitive_element
   - round_two
+- title: Polynomial domains and DomainMatrix
+  desc: Fraction fields, power series rings, solvable quintics and the DomainMatrix layer.
+  contents:
+  - DomainMatrix
+  - DDM
+  - DomainScalar
+  - power_series_rings
+  - PolyQuintic
 - title: Matrices and linear algebra
   contents:
   - Matrix
@@ -283,6 +292,7 @@ reference:
   - jordan_form
   - LUdecomposition
   - hermite_normal_form
+  - smith_normal_decomp
   - matrix_exp
   - jacobian
   - matrix-expressions
@@ -470,9 +480,47 @@ reference:
   - CharacteristicCurveCollection
   - musculotendon
   - MusculotendonFormulation
+- title: Code generation
+  desc: The sympy.codegen AST, code printers, rewriting and optimization, and utilities.codegen routines.
+  contents:
+  - codegen-ast
+  - ast-attributes
+  - codegen-types
+  - codegen-datatypes
+  - codeblock-methods
+  - codegen-cnodes
+  - codegen-fnodes
+  - codegen-numpy-nodes
+  - cfunctions
+  - codegen-rewriting
+  - newtons_method
+  - SumApprox
+  - MatrixSolve
+  - code-printer-objects
+  - get_math_macros
+  - code-generators
+  - Routine
+  - render_as_source_file
+  - implemented_function
+  - lambdastr
 - title: Statistics
   contents:
   - Normal
+  - discrete_rv
+  - finite_rv
+  - random_symbols
+  - RandomSymbol
+  - RandomIndexedSymbol
+  - E
+  - given
+  - marginal_distribution
+  - rv_moments
+  - rv_sample
+  - rv_attr
+  - symbolic_probability
+  - matrix_distributions
+  - random_matrix
+  - variance_prop
 - title: Discrete transforms and cryptography
   contents:
   - convolution
