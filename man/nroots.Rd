@@ -18,7 +18,8 @@ count_roots(f, x = NULL, a = -Inf, b = Inf)
 \arguments{
 \item{f}{A polynomial.}
 
-\item{x}{The variable.}
+\item{x}{The variable; when \code{k} is missing, \code{x} is the index and the
+variable is the single free symbol of \code{f}.}
 
 \item{a, b}{Interval ends (default the whole line).}
 }

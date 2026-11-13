@@ -825,26 +825,50 @@
 }
 
 
+# the nd significant decimal digits of a (rounded half up) and the decimal
+# exponent of the first one. Exact through rationals while those stay
+# small; a huge or tiny exponent scales by a power of ten in binary
+# arithmetic with a guard of 64 bits.
+.mp_digits_exp <- function(a, nd) {
+  ex <- floor((.mp_mag(a) - 1) * log10(2))
+  exact <- abs(a$e) + .bitlen(a$m) < 20000 && abs(ex) < 6000
+  wp <- ceiling(nd * log2(10)) + .bitlen(gmp::as.bigz(abs(ex) + 1)) + 64
+  repeat {
+    k <- nd - 1 - ex
+    if (exact) {
+      sc <- abs(.mp_to_q(a)) * gmp::as.bigq(10)^k
+      n <- gmp::numerator(sc); d <- gmp::denominator(sc)
+      digits <- gmp::divq.bigz(2 * n + d, 2 * d)
+    } else {
+      t <- .mp_mul(list(m = abs(a$m), e = a$e), .mp_pow_int(.mpf(5, 1), k, wp), wp)
+      t <- .mp_add(t, .mpf(1, -1), wp)
+      digits <- if (t$e >= 0) t$m * .pow2(t$e) else gmp::divq.bigz(t$m, .pow2(-t$e))
+    }
+    ns <- nchar(as.character(digits))
+    if (ns > nd) { ex <- ex + 1; next }
+    if (ns < nd) { ex <- ex - 1; next }
+    break
+  }
+  list(digits = as.character(digits), ex = ex)
+}
+
 # decimal string with dps significant digits, after mpmath's to_str
 .mp_to_str <- function(a, dps, strip_zeros = TRUE, min_fixed = NULL, max_fixed = NULL) {
   # mpmath's to_str: zero is always 0.0
   if (a$m == 0) return("0.0")
+  # no digits (a Float of precision below 5): ".0" and the exponent,
+  # rounded up when the leading digit is 5 or more
+  if (dps == 0) {
+    r <- .mp_digits_exp(a, 3)
+    ex <- r$ex + (substr(r$digits, 1L, 1L) >= "5")
+    return(paste0(if (a$m < 0) "-" else "", ".0e", if (ex >= 0) "+" else "-", format(abs(ex), scientific = FALSE)))
+  }
   if (is.null(min_fixed)) min_fixed <- min(-(dps %/% 3), -5)
   if (is.null(max_fixed)) max_fixed <- dps
   neg <- a$m < 0
-  q <- abs(.mp_to_q(a))
-  # exponent estimate, corrected after rounding to dps digits
-  ex <- floor((.mp_mag(a) - 1) * log10(2))
-  repeat {
-    sc <- q * gmp::as.bigq(10)^(dps - 1 - ex)
-    n <- gmp::numerator(sc); d <- gmp::denominator(sc)
-    digits <- gmp::divq.bigz(2 * n + d, 2 * d)
-    nd <- nchar(as.character(digits))
-    if (nd > dps) { ex <- ex + 1; next }
-    if (nd < dps) { ex <- ex - 1; next }
-    break
-  }
-  ds <- as.character(digits)
+  r <- .mp_digits_exp(a, dps)
+  ex <- r$ex; digits <- r$digits
+  ds <- digits
   fixed <- min_fixed < ex && ex < max_fixed
   if (fixed) {
     if (ex >= 0) {
@@ -861,7 +885,7 @@
     fp <- substring(ds, 2L)
     if (strip_zeros) fp <- sub("0+$", "", fp)
     if (strip_zeros && !nzchar(fp)) fp <- "0"
-    s <- paste0(substr(ds, 1L, 1L), ".", fp, "e", if (ex >= 0) "+" else "-", abs(ex))
+    s <- paste0(substr(ds, 1L, 1L), ".", fp, "e", if (ex >= 0) "+" else "-", format(abs(ex), scientific = FALSE))
   }
   if (neg) paste0("-", s) else s
 }
@@ -1240,7 +1264,7 @@
   if (is.null(e$extra$mp) && is.infinite(v)) return(if (v > 0) "oo" else "-oo")
   prec <- .float_prec(e)
   dps <- if (prec < 5) 0 else .prec_to_dps(prec)
-  s <- .mp_to_str(.float_mp(e), max(dps, 1), strip_zeros = strip)
+  s <- .mp_to_str(.float_mp(e), dps, strip_zeros = strip)
   if (startsWith(s, "-.0")) s <- paste0("-0.", substring(s, 4L)) else if (startsWith(s, ".0")) s <- paste0("0.", substring(s, 3L))
   s
 }

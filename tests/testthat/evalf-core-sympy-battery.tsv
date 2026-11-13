@@ -1,0 +1,476 @@
+N(parse_expr("pi"), 15)	3.14159265358979
+N(parse_expr("2/3"), 15)	0.666666666666667
+N(parse_expr("355/113-pi"), 15)	2.66764189062422e-7
+N(parse_expr("16*atan(1/5)-4*atan(1/239)"), 15)	3.14159265358979
+N(parse_expr("pi"), 50)	3.1415926535897932384626433832795028841971693993751
+N(parse_expr("2/3"), 50)	0.66666666666666666666666666666666666666666666666667
+N(parse_expr("355/113-pi"), 50)	0.00000026676418906242231236893288649633380405195232780734
+N(parse_expr("16*atan(1/5)-4*atan(1/239)"), 50)	3.1415926535897932384626433832795028841971693993751
+N(parse_expr("2/3"), 10)	0.6666666667
+N(parse_expr("355/113-pi"), 6)	2.66764e-7
+N(parse_expr("Add(pi, 1/10**1000, -pi, evaluate=False)"), 15, maxn = 1200)	1.00000000000000e-1000
+N(parse_expr("Add(pi, 1/10**1000, -pi, evaluate=False)"), 15)	-0.e-124
+N(parse_expr("2**(1/10**50)"), 15)	1.00000000000000
+N(parse_expr("2**(1/10**50)-1"), 15)	6.93147180559945e-51
+N(parse_expr("2**(1/10**50)-1"), 40)	6.931471805599453094172321214581765680755e-51
+N(parse_expr("1335*y**6/4 + x**2*(11*x**2*y**2 - y**6 - 121*y**4 - 2) + 11*y**8/2 + x/(2*y)"), 15, subs = list(x = parse_expr("77617"), y = parse_expr("33096")))	-0.827396059946821
+N(parse_expr("1335*y**6/4 + x**2*(11*x**2*y**2 - y**6 - 121*y**4 - 2) + 11*y**8/2 + x/(2*y)"), 30, subs = list(x = parse_expr("77617"), y = parse_expr("33096")))	-0.827396059946821368141165095480
+N(parse_expr("2*sqrt(pi)*I"), 10)	3.544907702*I
+N(parse_expr("3+3*I"), 10)	3.0 + 3.0*I
+N(parse_expr("E+pi*I"), 10)	2.718281828 + 3.141592654*I
+N(parse_expr("pi * (3+4*I)"), 10)	9.424777961 + 12.56637061*I
+N(parse_expr("I*(2+I)"), 10)	-1.0 + 2.0*I
+N(parse_expr("2*sqrt(pi)*I"), 15)	3.54490770181103*I
+N(parse_expr("3+3*I"), 15)	3.0 + 3.0*I
+N(parse_expr("E+pi*I"), 15)	2.71828182845905 + 3.14159265358979*I
+N(parse_expr("pi * (3+4*I)"), 15)	9.42477796076938 + 12.5663706143592*I
+N(parse_expr("I*(2+I)"), 15)	-1.0 + 2.0*I
+N(parse_expr("2*sqrt(pi)*I"), 40)	3.544907701811032054596334966682290365595*I
+N(parse_expr("3+3*I"), 40)	3.0 + 3.0*I
+N(parse_expr("E+pi*I"), 40)	2.718281828459045235360287471352662497757 + 3.141592653589793238462643383279502884197*I
+N(parse_expr("pi * (3+4*I)"), 40)	9.424777960769379715387930149838508652592 + 12.56637061435917295385057353311801153679*I
+N(parse_expr("I*(2+I)"), 40)	-1.0 + 2.0*I
+N(parse_expr("Abs(1 + I, evaluate=False)"), 50)	1.4142135623730950488016887242096980785696718753769
+N(parse_expr("Abs(10**20 + I, evaluate=False)"), 50)	100000000000000000000.00000000000000000000500000000
+N(parse_expr("sqrt(10**40 + 1)"), 50)	100000000000000000000.00000000000000000000500000000
+N(parse_expr("(pi+E*I)*(E+pi*I)"), 15)	17.25866050002*I
+N(parse_expr("(pi + pi*I)**2"), 15, chop = TRUE)	19.7392088021787*I
+N(parse_expr("(pi + pi*I)**2"), 15)	-0.e-21 + 19.7392088021787*I
+N(parse_expr("(pi + 1/10**8 + pi*I)**2"), 15)	6.2831853e-8 + 19.7392088650106*I
+N(parse_expr("(pi + 1/10**12 + pi*I)**2"), 15)	6.283e-12 + 19.739208802185*I
+N(parse_expr("(pi + pi*I)**4"), 15, chop = TRUE)	-389.636364136010
+N(parse_expr("(pi + 1/10**8 + pi*I)**4"), 15)	-389.636366616512 + 2.4805021e-6*I
+N(parse_expr("(pi + 1/10**12 + pi*I)**4"), 15)	-389.636364136258 + 2.481e-10*I
+N(parse_expr("(10000*pi + 10000*pi*I)**4"), 15, chop = TRUE)	-3.89636364136010e+18
+N(parse_expr("(pi + pi*I)**4"), 15)	-389.636364136010
+N(parse_expr("sqrt(-pi)"), 15)	1.77245385090552*I
+N(parse_expr("Pow(pi*I, 1/2, evaluate=False)"), 15)	1.2533141373155 + 1.2533141373155*I
+N(parse_expr("pi**I"), 15)	0.413292116101594 + 0.910598499212615*I
+N(parse_expr("pi**(E + I/3)"), 15)	20.8438653991931 + 8.36343473930031*I
+N(parse_expr("(pi + I/3)**(E + I/3)"), 15)	17.244290609359 + 13.6839376767037*I
+N(parse_expr("exp(pi)"), 15)	23.1406926327793
+N(parse_expr("exp(pi + E*I)"), 15)	-21.0981542849657 + 9.50576358282422*I
+N(parse_expr("pi**pi"), 15)	36.4621596072079
+N(parse_expr("(-pi)**pi"), 15)	-32.9138577418939 - 15.6897116534332*I
+N(parse_expr("(-pi)**(-pi)"), 15)	-0.0247567717232697 + 0.0118013091280262*I
+N(parse_expr("sqrt(-pi)"), 30)	1.77245385090551602729816748334*I
+N(parse_expr("Pow(pi*I, 1/2, evaluate=False)"), 30)	1.25331413731550025120788264241 + 1.25331413731550025120788264241*I
+N(parse_expr("pi**I"), 30)	0.413292116101594336626628394277 + 0.910598499212614707060044514237*I
+N(parse_expr("pi**(E + I/3)"), 30)	20.8438653991931468173144884964 + 8.36343473930030975886154751386*I
+N(parse_expr("(pi + I/3)**(E + I/3)"), 30)	17.2442906093589879477477086776 + 13.6839376767037138282516215492*I
+N(parse_expr("exp(pi)"), 30)	23.1406926327792690057290863679
+N(parse_expr("exp(pi + E*I)"), 30)	-21.0981542849657250717358289025 + 9.50576358282421995179273723256*I
+N(parse_expr("pi**pi"), 30)	36.4621596072079117709908260227
+N(parse_expr("(-pi)**pi"), 30)	-32.9138577418938781782614637946 - 15.6897116534331706413921410189*I
+N(parse_expr("(-pi)**(-pi)"), 30)	-0.0247567717232696891558919037349 + 0.0118013091280262365885939985363*I
+N(parse_expr("(63287/100000 + 52498/100000*I)*(69301/100000 + 83542/100000*I)"), 6)	6.4471e-6 + 0.892529*I
+N(parse_expr("(63287/100000 + 52498/100000*I)*(69301/100000 + 83542/100000*I)"), 10)	6.4471e-6 + 0.8925286452*I
+N(parse_expr("(63287/100000 + 52498/100000*I)*(69301/100000 + 83542/100000*I) - 2231321613/2500000000*I"), 5)	6.4471e-6 + 0.e-14*I
+N(parse_expr("log(3+pi*I)"), 15)	1.46877619736226 + 0.808448792630022*I
+N(parse_expr("log(pi*I)"), 15)	1.1447298858494 + 1.5707963267949*I
+N(parse_expr("log(100, 10, evaluate=False)"), 15)	2.00000000000000
+N(parse_expr("-2*I*log(-(-1)**(S(1)/9))"), 15)	-5.58505360638185
+N(parse_expr("log(2)"), 15)	0.693147180559945
+N(parse_expr("log(10**100,10)"), 15)	100.000000000000
+N(parse_expr("log(3+pi*I)"), 30)	1.46877619736226298532818624882 + 0.808448792630022031313783161394*I
+N(parse_expr("log(pi*I)"), 30)	1.14472988584940017414342735135 + 1.57079632679489661923132169164*I
+N(parse_expr("log(100, 10, evaluate=False)"), 30)	2.00000000000000000000000000000
+N(parse_expr("-2*I*log(-(-1)**(S(1)/9))"), 30)	-5.58505360638185464615581045916
+N(parse_expr("log(2)"), 30)	0.693147180559945309417232121458
+N(parse_expr("log(10**100,10)"), 30)	100.000000000000000000000000000
+N(parse_expr("log(-1 + 0.00001)"), 2)	-1.0e-5 + 3.1*I
+N(parse_expr("log(10**100,10)"), 10)	100.0000000
+N(parse_expr("log(2)"), 10)	0.6931471806
+N(parse_expr("sin(1)"), 15)	0.841470984807897
+N(parse_expr("cos(1)"), 15)	0.540302305868140
+N(parse_expr("tan(1)"), 15)	1.55740772465490
+N(parse_expr("sin(10**-6)"), 15)	9.99999999999833e-7
+N(parse_expr("cos(10**-6)"), 15)	0.999999999999500
+N(parse_expr("tan(10**-6)"), 15)	1.00000000000033e-6
+N(parse_expr("sin(E*10**100)"), 15)	0.409160531722613
+N(parse_expr("tan(I)"), 15)	0.761594155955765*I
+N(parse_expr("tan(1000*I)"), 15)	1.0*I
+N(parse_expr("sin(exp(pi*sqrt(163))*pi)"), 15)	-2.35596641936785e-12
+N(parse_expr("sin(7/10**5, evaluate=False)"), 15)	6.99999999428333e-5
+N(parse_expr("sin(1)"), 30)	0.841470984807896506652502321630
+N(parse_expr("cos(1)"), 30)	0.540302305868139717400936607443
+N(parse_expr("tan(1)"), 30)	1.55740772465490223050697480746
+N(parse_expr("sin(10**-6)"), 30)	0.000000999999999999833333333333341667
+N(parse_expr("cos(10**-6)"), 30)	0.999999999999500000000000041667
+N(parse_expr("tan(10**-6)"), 30)	0.00000100000000000033333333333346667
+N(parse_expr("sin(E*10**100)"), 30)	0.409160531722612920272430596881
+N(parse_expr("tan(I)"), 30)	0.761594155955764888119458282605*I
+N(parse_expr("tan(1000*I)"), 30)	1.0*I
+N(parse_expr("sin(exp(pi*sqrt(163))*pi)"), 30)	-2.35596641936785356639723722772e-12
+N(parse_expr("sin(7/10**5, evaluate=False)"), 30)	0.0000699999999428333333473391666650
+N(parse_expr("sin(pi*10**100 + 7/10**5, evaluate=False)"), 15, maxn = 120)	6.99999999428333e-5
+N(parse_expr("sin(2017*2**(1/5))"), 15)	-1.00000000000000
+N(parse_expr("1+sin(2017*2**(1/5))"), 15)	2.14322287389390e-17
+N(parse_expr("45 - 613*E/37 + 35/991"), 15)	6.03764498766326e-11
+N(parse_expr("sin(2017*2**(1/5))"), 20)	-0.99999999999999997857
+N(parse_expr("1+sin(2017*2**(1/5))"), 20)	2.1432228738939016741e-17
+N(parse_expr("45 - 613*E/37 + 35/991"), 20)	6.0376449876632558984e-11
+N(parse_expr("exp(pi*sqrt(163)) - 640320**3 - 744"), 10)	-7.499274028e-13
+N(parse_expr("1 - 262537412640768744*exp(-pi*sqrt(163)) - 196884*exp(-2*pi*sqrt(163)) + 103378831900730205293632*exp(-3*pi*sqrt(163))"), 10)	1.613679005e-59
+N(parse_expr("sin(1) + exp(-10**10)"), 10)	0.8414709848
+N(parse_expr("exp(10**10)"), 10)	1.077750608e+4342944819
+N(parse_expr("expand_log(log(1+1/10**50))"), 20)	1.0000000000000000000e-50
+N(parse_expr("(sin(x)-x)/x**3"), 15, subs = list(x = parse_expr("1/10**50")))	-0.166666666666667
+N(parse_expr("sin(1) + I/10**100"), 15)	0.841470984807897 + 1.0e-100*I
+N(parse_expr("x"), 15)	x
+N(parse_expr("(1 + I)**2*I"), 6)	-2.00000
+N(parse_expr("(1 + I)**2*I"), 15)	-2.00000000000000
+N(parse_expr("(-1)**(S(2)/7)*(1 + (-1)**(S(4)/7)*(1 + (-1)**(S(6)/7)))"), 6)	0.346011 + 0.433884*I
+N(parse_expr("(-I - sqrt(2)*I)**2"), 15)	-5.82842712474619
+N(parse_expr("20 - 5008329267844*n**25 - 477638700*n**37 - 19*n"), 15, subs = list(n = parse_expr("0.01")))	19.8100000000000
+N(parse_expr("(x - 1)*(1 - x)**1000"), 15)	(1.0 - x)^1000*(x - 1.0)
+N(parse_expr("-x"), 15)	-x
+N(parse_expr("-2*x"), 15)	-2.0*x
+N(parse_expr("-2*x*y"), 15)	-2.0*x*y
+N(parse_expr("2*x**2.5"), 15)	2.0*x^2.5
+N(parse_expr("Mul(Max(0, y), x, evaluate=False)"), 15)	x*Max(0, y)
+N(parse_expr("2*x**2.5"), 5)	2.0*x^2.5
+N(parse_expr("cos(x)"), 15, subs = list(x = parse_expr("1+I")))	0.833730025131149 - 0.988897705762865*I
+N(parse_expr("cos(1+I)"), 15)	0.833730025131149 - 0.988897705762865*I
+N(parse_expr("0*E**(oo)"), 15)	nan
+N(parse_expr("0/E**(oo)"), 15)	0
+N(parse_expr("0+E**(oo)"), 15)	oo
+N(parse_expr("0-E**(oo)"), 15)	-oo
+N(parse_expr("5*E**(oo)"), 15)	oo
+N(parse_expr("5/E**(oo)"), 15)	0
+N(parse_expr("5+E**(oo)"), 15)	oo
+N(parse_expr("5-E**(oo)"), 15)	-oo
+N(parse_expr("oo*I"), 15)	oo*I
+N(parse_expr("oo+oo*I"), 15)	oo + oo*I
+N(parse_expr("floor(log(8)/log(2) - exp(-1000), evaluate=False)"), 15)	3.00000000000000
+N(parse_expr("floor(log(8)/log(2), evaluate=False)"), 15)	3.00000000000000
+N(parse_expr("floor(factorial(50)/E, evaluate=False)"), 70)	11188719610782480504630258070757734324011354208865721592720336800.00000
+N(parse_expr("ceiling(factorial(50)/E, evaluate=False)"), 70)	11188719610782480504630258070757734324011354208865721592720336801.00000
+N(parse_expr("floor((floor(1.5, evaluate=False)+1/9))"), 15)	1.00000000000000
+N(parse_expr("floor(1.5, evaluate=False)+1/9"), 15)	1.11111111111111
+N(parse_expr("floor(0.5, evaluate=False)+20"), 15)	20.0000000000000
+N(parse_expr("ceiling(sqrt(2)*10**20, evaluate=False)"), 30)	141421356237309504881.000000000
+N(parse_expr("floor(-sqrt(2)*10**20, evaluate=False)"), 30)	-141421356237309504881.000000000
+N(parse_expr("ceiling(10*(sin(1)**2 + cos(1)**2), evaluate=False)"), 15)	10.0000000000000
+N(parse_expr("ceiling(x)"), 15, subs = list(x = parse_expr("3")))	3.00000000000000
+N(parse_expr("ceiling(x)"), 15, subs = list(x = parse_expr("3*I")))	3.0*I
+N(parse_expr("ceiling(x)"), 15, subs = list(x = parse_expr("2 + 3*I")))	2.0 + 3.0*I
+N(parse_expr("ceiling(x)"), 15, subs = list(x = parse_expr("3.")))	3.00000000000000
+N(parse_expr("ceiling(x)"), 15, subs = list(x = parse_expr("3.*I")))	3.0*I
+N(parse_expr("ceiling(x)"), 15, subs = list(x = parse_expr("2. + 3*I")))	2.0 + 3.0*I
+N(parse_expr("floor(x)"), 15, subs = list(x = parse_expr("sqrt(2)")))	1.00000000000000
+N(parse_expr("sin(160*pi, evaluate=False)"), 15, maxn = 100)	-0.e-177
+N(parse_expr("sin(160*pi, evaluate=False)"), 15, chop = TRUE)	0
+N(parse_expr("sin(160*pi, evaluate=False)"), 15, strict = TRUE)	ERR PrecisionExhausted: Failed to distinguish the expression: \n\nsin(160*pi)\n\nfrom zero. Try simplifying the input, using chop=True, or providing a higher maxn for evalf
+N(parse_expr("Sum(n,(n,1,2))"), 15)	3.00000000000000
+N(parse_expr("Sum(1/n,(n,1,2))"), 15)	1.50000000000000
+N(parse_expr("Sum(E/factorial(n), (n, 0, oo))"), 15)	7.38905609893065
+N(parse_expr("Sum(2**n*n/factorial(n), (n, 0, oo))"), 15)	14.7781121978613
+N(parse_expr("Sum(1/x**2, (x, 100, oo))"), 15)	0.0100501666633336
+N(parse_expr("Sum(1/n**n, (n, 1, oo))"), 15)	1.29128599706266
+N(parse_expr("Sum((-1)**n/n, (n, 1, oo))"), 15)	-0.693147180559945
+N(parse_expr("Sum(1/(2**n), (n, 0, oo))"), 15)	2.00000000000000
+N(parse_expr("Product(n, (n, 1, 10))"), 15)	3628800.00000000
+N(parse_expr("Product(n, (n, -1, 3))"), 15)	0
+N(parse_expr("Sum(1/n**2, (n, 1, oo))"), 30)	1.64493406684822643647241516665
+N(parse_expr("Sum(n/(n**2 + 1), (n, 1, oo))"), 15)	ERR ValueError: Sum diverges like n^-1
+N(parse_expr("Sum(2**n, (n, 1, oo))"), 15)	ERR ValueError: Sum diverges like (2)^n
+N(parse_expr("Sum((-2)**n, (n, 1, oo))"), 15)	ERR ValueError: Sum diverges like (2)^n
+N(parse_expr("Sum((2*n + 3)/(3*n**2 + 4), (n, 0, oo))"), 15)	ERR ValueError: Sum diverges like n^-1
+N(parse_expr("Sum((0.5*n**3)/(n**4 + 1), (n, 0, oo))"), 15)	ERR ValueError: Sum diverges like n^-1
+N(parse_expr("x**2"), 15, subs = list(x = parse_expr("0")))	0
+N(parse_expr("sqrt(x)"), 15, subs = list(x = parse_expr("0")))	0
+N(parse_expr("x**(S(2)/3)"), 15, subs = list(x = parse_expr("0")))	0
+N(parse_expr("x**x"), 15, subs = list(x = parse_expr("0")))	1.00000000000000
+N(parse_expr("3**x"), 15, subs = list(x = parse_expr("0")))	1.00000000000000
+N(parse_expr("exp(x)"), 15, subs = list(x = parse_expr("0")))	1.00000000000000
+N(parse_expr("(2 + I)**x"), 15, subs = list(x = parse_expr("0")))	1.00000000000000
+N(parse_expr("0**x"), 15, subs = list(x = parse_expr("0")))	1.00000000000000
+N(parse_expr("1/x"), 15, subs = list(x = parse_expr("0")))	zoo
+N(parse_expr("-1/x"), 15, subs = list(x = parse_expr("0")))	zoo
+N(parse_expr("0**x"), 15, subs = list(x = parse_expr("-1")))	zoo
+N(parse_expr("0**x"), 15, subs = list(x = parse_expr("-1 + I")))	nan
+N(parse_expr("Mul(x, 1/x, evaluate=False)"), 15, subs = list(x = parse_expr("0")))	nan
+N(parse_expr("Mul(1/x, 1/x, evaluate=False)"), 15, subs = list(x = parse_expr("0")))	zoo
+N(parse_expr("Mul(1/x, Abs(1/x), evaluate=False)"), 15, subs = list(x = parse_expr("0")))	zoo
+N(parse_expr("x"), 15, subs = list(x = parse_expr("zoo")))	zoo
+N(parse_expr("H/x"), 15, subs = list(x = parse_expr("0")))	zoo*H
+N(parse_expr("H/0"), 15)	zoo*H
+N(parse_expr("Mul(2, Pow(0, -1, evaluate=False), evaluate=False)"), 15)	zoo
+N(parse_expr("Abs(zoo, evaluate=False)"), 15)	oo
+N(parse_expr("re(zoo, evaluate=False)"), 15)	nan
+N(parse_expr("im(zoo, evaluate=False)"), 15)	nan
+N(parse_expr("Add(zoo, zoo, evaluate=False)"), 15)	nan
+N(parse_expr("Add(oo, zoo, evaluate=False)"), 15)	nan
+N(parse_expr("Pow(zoo, -1, evaluate=False)"), 15)	0
+N(parse_expr("Pow(zoo, -1/3, evaluate=False)"), 15)	0
+N(parse_expr("Pow(zoo, 1/3, evaluate=False)"), 15)	zoo
+N(parse_expr("Pow(zoo, Rational(1, 2), evaluate=False)"), 15)	zoo
+N(parse_expr("Pow(zoo, 2, evaluate=False)"), 15)	zoo
+N(parse_expr("Pow(0, zoo, evaluate=False)"), 15)	nan
+N(parse_expr("log(zoo, evaluate=False)"), 15)	zoo
+N(parse_expr("zoo"), 15)	zoo
+N(parse_expr("oo"), 15)	oo
+N(parse_expr("-oo"), 15)	-oo
+N(parse_expr("nan"), 15)	nan
+N(parse_expr("zoo"), 15, chop = TRUE)	zoo
+N(parse_expr("oo"), 15, chop = TRUE)	oo
+N(parse_expr("-oo"), 15, chop = TRUE)	-oo
+N(parse_expr("besseli(-x, y) - besseli(x, y)"), 15, subs = list(x = parse_expr("3.5"), y = parse_expr("20.0")))	-4.92535585957223e-10
+N(parse_expr("Piecewise((x, x>0)) + Piecewise((1-x, x>0))"), 15, subs = list(x = parse_expr("0.1")))	1.00000000000000
+N(parse_expr("(E + pi*I)*(E - pi*I)"), 15)	17.2586605000200
+N(parse_expr("(E + pi*I)*(E - pi*I)"), 40)	17.25866050002000884606491846045115894849
+N(parse_expr("atan(0, evaluate=False)"), 15)	0
+N(parse_expr("Integral(atan(x)**2, (x, -1, 1))"), 15)	0.490562406933533
+N(parse_expr("Integral(sin(x), (x, -pi, pi + 1/1000000))"), 2)	-5.0e-13
+N(parse_expr("Integral(exp(-x**2), (x, -oo, oo))"), 15)	1.77245385090552
+N(parse_expr("Integral(sin(x), (x, 0, pi))"), 15)	2.00000000000000
+N(parse_expr("Integral(exp(-x**2), (x, -oo, oo))"), 30)	1.77245385090551602729816748334
+N(parse_expr("Mul(Mul(1 + I, 1.0 + 1e-150*I, evaluate=False), 1 + 1/10**100 + I, evaluate=False)"), 20)	1.0e-100 + 2.0*I
+N(parse_expr("Mul(1 + I, 1 + 1/10**100 + I, evaluate=False)"), 20)	1.0e-100 + 2.0*I
+N(parse_expr("Mul(1 + I, 1 - I, evaluate=False)"), 20)	2.0000000000000000000
+N(parse_expr("Mul(1 + I, 1 + I, evaluate=False)"), 20)	2.0*I
+N(parse_expr("Mul(-1, I, evaluate=False)"), 15)	-1.0*I
+N(parse_expr("2*10**(-6)"), 15, chop = 1e-06)	2.00000000000000e-6
+N(parse_expr("10**(-6)"), 15, chop = 1e-06)	0
+N(parse_expr("2*10**(-3)"), 15, chop = 0.001)	0.00200000000000000
+N(parse_expr("10**(-3)"), 15, chop = 0.001)	0
+N(parse_expr("2*10**(0)"), 15, chop = 1.0)	2.00000000000000
+N(parse_expr("10**(0)"), 15, chop = 1.0)	0
+N(parse_expr("2*10**(3)"), 15, chop = 1000.0)	2000.00000000000
+N(parse_expr("10**(3)"), 15, chop = 1000.0)	0
+N(parse_expr("2*10**(6)"), 15, chop = 1000000.0)	2000000.00000000
+N(parse_expr("10**(6)"), 15, chop = 1000000.0)	0
+N(parse_expr("0.0001"), 15, chop = TRUE)	0.000100000000000000
+N(parse_expr("0.0001"), 15, chop = 1e-05)	0.000100000000000000
+N(parse_expr("0.0001"), 15, chop = 0.0001)	0
+N(parse_expr("-100000*sqrt(2500000001) + 5000000001"), 15)	9.99999999800000e-11
+N(parse_expr("(-100000*sqrt(2500000001) + 5000000001)**2"), 15)	9.99999999600000e-21
+N(parse_expr("2**.5"), 30)	1.41421356237309514547462185874
+N(parse_expr("sqrt(2)"), 30)	1.41421356237309504880168872421
+N(parse_expr("x - x"), 30)	0
+N(parse_expr("pi*.1"), 22)	0.3141592653589793412856
+N(parse_expr("-8 + 3 * sqrt(3)"), 1)	-3.
+N(parse_expr("1/((x - 9)*(x - 8)*(x - 7)*(x - 4)**2*(x - 3)**3*(x - 2))"), 1, subs = list(x = parse_expr("1")))	-4.e-5
+N(parse_expr("1/((x - 9)*(x - 8)*(x - 7)*(x - 4)**2*(x - 3)**3*(x - 2))"), 2, subs = list(x = parse_expr("1")))	-4.1e-5
+N(parse_expr("1/((x - 9)*(x - 8)*(x - 7)*(x - 4)**2*(x - 3)**3*(x - 2))"), 11, subs = list(x = parse_expr("1")))	-4.1335978836e-5
+N(parse_expr("1/((x - 9)*(x - 8)*(x - 7)*(x - 4)**2*(x - 3)**3*(x - 2))"), 20, subs = list(x = parse_expr("1")))	-0.000041335978835978835979
+N(parse_expr("20 + log(1 + S(10)**-10)"), 15)	20.0000000001000
+N(parse_expr("20 + log(1 + S(10)**-9)"), 30)	20.0000000009999999995000000003
+N(parse_expr("5*x*y/2 - y*(35*(x**3)/2 - 15*x/2)"), 15, subs = list(x = parse_expr("0.0"), y = parse_expr("0.0")))	0
+N(parse_expr("x + x*(x**2 + x)"), 15, subs = list(x = parse_expr("0.0")))	0
+N(parse_expr("Eq(x/5, y/10)"), 15)	Eq(0.2*x, 0.1*y)
+N(parse_expr("Max(y, 4)"), 15)	Max(4.0, y)
+N(parse_expr("x*Max(0, y)"), 15)	x*Max(0, y)
+N(parse_expr("Sum(0, (x, 1, 2))/2"), 15)	0
+N(parse_expr("polar_lift(0)"), 15)	0
+N(parse_expr("cos(sqrt(0.5 + I))"), 15)	0.72064852226346 - 0.458022984838471*I
+N(parse_expr("re((1 + I)**2)"), 15)	0
+N(parse_expr("im((1 + I)**2)"), 15)	2.00000000000000
+N(parse_expr("sin(x)"), 15, subs = list(x = parse_expr("1")))	0.841470984807897
+N(parse_expr("x + y"), 15, subs = list(x = parse_expr("1"), y = parse_expr("2")))	3.00000000000000
+N(parse_expr("x + y - z"), 15, subs = list(x = parse_expr("1e16"), y = parse_expr("1"), z = parse_expr("1e16")))	1.00000000000000
+N(parse_expr("Abs(sin(1) + 2*I)"), 30)	2.16980953502227268498437307361
+N(parse_expr("re(exp(I))"), 30)	0.540302305868139717400936607443
+N(parse_expr("im(exp(I))"), 30)	0.841470984807896506652502321630
+N(parse_expr("atan(1/3)"), 40)	0.3217505543966421934014046143586613190208
+N(parse_expr("atan(10**30)"), 20)	1.5707963267948966192
+N(parse_expr("log(1 + 1/10**30)"), 20)	1.0000000000000000000e-30
+N(parse_expr("exp(-10**10)"), 15)	9.27858442032487e-4342944820
+N(parse_expr("exp(1/10**30) - 1"), 20)	1.0000000000000000000e-30
+N(parse_expr("cos(pi/2 + 1/10**40, evaluate=False)"), 15)	-1.00000000000000e-40
+N(parse_expr("E**(I*pi) + 1"), 15)	0
+N(parse_expr("ff(18, S(2)/3)"), 32)	6.9109401292234329956525265438451
+N(parse_expr("rf(18, S(2)/3)"), 32)	6.8261540131125511557924466355367
+N(parse_expr("bernoulli(0.0, 2.3)"), 10)	1.000000000
+N(parse_expr("bernoulli(1.0)"), 10)	0.5000000000
+N(parse_expr("bernoulli(1.2)"), 10)	0.4195995367
+N(parse_expr("bernoulli(1.2, 0.8)"), 10)	0.2144830348
+N(parse_expr("bernoulli(1.2, -0.8)"), 10)	-1.158865646 - 0.6745558744*I
+N(parse_expr("bernoulli(3.0, 1.0*I)"), 10)	1.5 - 0.5*I
+N(parse_expr("bernoulli(I)"), 10)	0.9268485643 - 0.5821580598*I
+N(parse_expr("bernoulli(I, I)"), 10)	0.1267792071 + 0.01947413152*I
+N(parse_expr("harmonic(1.5)"), 10)	1.280372306
+N(parse_expr("harmonic(1.5, 2)"), 10)	1.154576311
+N(parse_expr("harmonic(4.0, -3)"), 10)	100.0000000
+N(parse_expr("harmonic(7.0, 1.0)"), 10)	2.592857143
+N(parse_expr("harmonic(1, pi)"), 10)	1.000000000
+N(parse_expr("harmonic(2, pi)"), 10)	1.113314732
+N(parse_expr("harmonic(1000.0, pi)"), 10)	1.176241563
+N(parse_expr("harmonic(I)"), 10)	0.6718659855 + 1.076674047*I
+N(parse_expr("harmonic(I, I)"), 10)	-0.3970915266 + 1.9629689*I
+N(parse_expr("euler(I)"), 10)	1.248446443 - 0.7675445124*I
+N(parse_expr("genocchi(S(5)/4)"), 10)	-1.104286457
+N(parse_expr("genocchi(-2)"), 10)	3.606170709
+N(parse_expr("andre(10, evaluate=False)"), 10)	50521.00000
+N(parse_expr("andre(-2, evaluate=False)"), 10)	-1.831931188
+N(parse_expr("andre(-4, evaluate=False)"), 10)	1.977889103
+N(parse_expr("bernoulli(x)"), 15)	bernoulli(x)
+N(parse_expr("harmonic(n)"), 15)	harmonic(n)
+N(parse_expr("harmonic(-1.0, 1)"), 15)	nan
+N(parse_expr("harmonic(-2.0, 2.0)"), 15)	nan
+N(parse_expr("euler(-2)"), 15)	1.83193118835444
+N(parse_expr("euler(-3)"), 15)	1.93789229251874
+N(parse_expr("euler(20)"), 15)	370371188237525.
+N(parse_expr("euler(20, evaluate=False)"), 15)	370371188237525.
+N(parse_expr("catalan(x)"), 15)	catalan(x)
+N(parse_expr("catalan(Rational(1, 2))"), 15)	0.848826363156775
+N(parse_expr("catalan(-5.6)"), 15)	6.93334070531408e-5
+N(parse_expr("2*Catalan"), 15)	1.83193118835444
+N(parse_expr("pi**3/16"), 15)	1.93789229251874
+N(parse_expr("bell(5)"), 15)	52.0000000000000
+N(parse_expr("fibonacci(10)"), 15)	55.0000000000000
+N(parse_expr("GoldenRatio**10/sqrt(5)"), 15)	55.0036361232474
+N(parse_expr("TribonacciConstant"), 15)	1.83928675521416
+N(parse_expr("GoldenRatio"), 15)	1.61803398874989
+N(parse_expr("EulerGamma"), 15)	0.577215664901533
+N(parse_expr("Catalan"), 15)	0.915965594177219
+N(parse_expr("catalan(I)"), 3)	0.398 - 0.0209*I
+N(parse_expr("bernoulli(10**6, evaluate=False)"), 15)	-2.23799235765713e+4767529
+N(parse_expr("acosh(5*I)"), 6)	2.31244 + 1.5708*I
+N(parse_expr("acosh(-5*I)"), 6)	2.31244 - 1.5708*I
+N(parse_expr("asech(5*I)"), 6)	0.19869 - 1.5708*I
+N(parse_expr("asech(-5*I)"), 6)	0.19869 + 1.5708*I
+N(parse_expr("acsch(5*I+1)"), 6)	0.0391819 - 0.193363*I
+N(parse_expr("acsch(-5*I+1)"), 6)	0.0391819 + 0.193363*I
+N(parse_expr("log(3)/log(2) - 1"), 15)	0.584962500721156
+N(parse_expr("LambertW(2, -1)"), 15)	-0.83431036663111 - 4.53026599855501*I
+N(parse_expr("re(LambertW(2, -1))"), 15)	-0.834310366631110
+N(parse_expr("exp_polar(I*10)"), 15)	exp_polar(10*I)
+N(parse_expr("atan2(1, 2)"), 15)	0.463647609000806
+N(parse_expr("atan(-5*I)"), 15)	-1.5707963267949 - 0.202732554054082*I
+N(parse_expr("atan(5*I)"), 15)	1.5707963267949 + 0.202732554054082*I
+N(parse_expr("acot(-I/5)"), 15)	1.5707963267949 + 0.202732554054082*I
+N(parse_expr("acot(I/5)"), 15)	-1.5707963267949 - 0.202732554054082*I
+N(parse_expr("floor(log(8)/log(2))"), 15)	3.00000000000000
+N(parse_expr("ceiling(-log(8)/log(2))"), 15)	-3.00000000000000
+N(parse_expr("Piecewise((-1, x < -1), (x**2, x < 0), (log(x), True))"), 15)	Piecewise((-1.0, x < -1), (x^2, x < 0), (log(x), True))
+N(parse_expr("tan(pi*8/15)*cos(pi*8/15)/sin(pi*8/15) - 1"), 15)	0.e-125
+N(parse_expr("exp_polar(1.0*pi*I)"), 5)	-1.0 + 1.9842e-9*I
+N(parse_expr("atan2(1, 2)"), 5)	0.46365
+N(parse_expr("LambertW(sqrt(2))"), 30)	0.701338383413663009202120278965
+N(parse_expr("floor(log(8)/log(2))"), 15, chop = TRUE)	3.00000000000000
+N(parse_expr("ceiling(-log(8)/log(2))"), 15, chop = TRUE)	-3.00000000000000
+N(parse_expr("Piecewise((-1, x < -1), (x**2, x < 0), (log(x), True))"), 15, subs = list(x = parse_expr("-2")))	-1.00000000000000
+N(parse_expr("Piecewise((-1, x < -1), (x**2, x < 0), (log(x), True))"), 15, subs = list(x = parse_expr("-1")))	1.00000000000000
+N(parse_expr("Piecewise((-1, x < -1), (x**2, x < 0), (log(x), True))"), 15, subs = list(x = parse_expr("1")))	0
+N(parse_expr("cos(pi/257)"), 64)	0.9999252866697325552128053591455562406916298296429212011881377100
+N(parse_expr("sin(3)"), 15)	0.141120008059867
+N(parse_expr("cos(3)"), 15)	-0.989992496600445
+N(parse_expr("tan(3)"), 15)	-0.142546543074278
+N(parse_expr("cot(3)"), 15)	-7.01525255143453
+N(parse_expr("sinh(3)"), 15)	10.0178749274099
+N(parse_expr("cosh(3)"), 15)	10.0676619957778
+N(parse_expr("tanh(3)"), 15)	0.995054753686730
+N(parse_expr("coth(3)"), 15)	1.00496982331369
+N(parse_expr("sin(sinh(3))"), 15)	-0.558931746279103
+N(parse_expr("cos(tanh(3))"), 15)	0.544456963534949
+N(parse_expr("tan(cot(3))"), 15)	-0.898647288087903
+N(parse_expr("asin(2)"), 15)	1.5707963267949 - 1.31695789692482*I
+N(parse_expr("acos(2)"), 15)	1.31695789692482*I
+N(parse_expr("asinh(1/2)"), 15)	0.481211825059603
+N(parse_expr("atanh(1/2)"), 15)	0.549306144334055
+N(parse_expr("acoth(2)"), 15)	0.549306144334055
+N(parse_expr("sec(1)"), 15)	1.85081571768093
+N(parse_expr("csc(1)"), 15)	1.18839510577812
+N(parse_expr("asec(2)"), 15)	1.04719755119660
+N(parse_expr("acsc(2)"), 15)	0.523598775598299
+N(parse_expr("jn(2, 5.2+0.3*I)"), 10)	0.09941975672 - 0.05452508024*I
+N(parse_expr("yn(2, 5.2+0.3*I)"), 10)	0.185250342 + 0.01489557397*I
+N(parse_expr("Ei(cos(2))"), 10)	-0.6760647401
+N(parse_expr("polygamma(pi, 3)"), 10)	0.1169314564
+N(parse_expr("polygamma(2.3, 1.0)"), 10)	-3.003302909
+N(parse_expr("polygamma(-1, 1)"), 10)	-0.9189385332
+N(parse_expr("polygamma(I, 1)"), 10)	-3.109856569 + 1.89089016*I
+N(parse_expr("polygamma(1, I)"), 10)	-0.5369999034 - 0.7942335428*I
+N(parse_expr("polygamma(I, I)"), 10)	6.332362889 + 45.92828268*I
+N(parse_expr("dirichlet_eta(I)"), 10)	0.5325931818 + 0.2293848577*I
+N(parse_expr("erf(2.0)"), 15)	0.995322265018953
+N(parse_expr("erfi(1)"), 15)	1.65042575879754
+N(parse_expr("erfinv(0.5)"), 15)	0.476936276204470
+N(parse_expr("Li(2 + 1/10**20)"), 15)	1.44269504088896e-20
+N(parse_expr("owens_t(0, 1)"), 15)	0.125000000000000
+N(parse_expr("owens_t(1, 1)"), 15)	0.0667418821657010
+N(parse_expr("owens_t(1, Rational(1, 2))"), 15)	0.0430646911207854
+N(parse_expr("owens_t(3/10, 2)"), 15)	0.162604305932772
+N(parse_expr("owens_t(1, oo)"), 15)	0.0793276269657285
+N(parse_expr("lowergamma(S(77)/2, 6) - lowergamma(S(77)/2, 6, evaluate=False)"), 15)	0.e-99
+N(parse_expr("uppergamma(S(77)/2, 6) - uppergamma(S(77)/2, 6, evaluate=False)"), 15)	0.e-85
+N(parse_expr("uppergamma(S(3)/8, 2)"), 15)	0.0710567588109183
+N(parse_expr("lowergamma(S(3)/8, 2)"), 15)	2.29937942560568
+N(parse_expr("uppergamma(S(3)/8, x)"), 15)	uppergamma(3/8, x)
+N(parse_expr("stieltjes(0)"), 15)	0.577215664901533
+N(parse_expr("zeta(3)"), 15)	1.20205690315959
+N(parse_expr("zeta(1/2)"), 15)	-1.46035450880959
+N(parse_expr("polylog(2, 1/2)"), 15)	0.582240526465013
+N(parse_expr("polylog(2, 1/2, evaluate=False)"), 15)	0.582240526465013
+N(parse_expr("gamma(1/3)"), 15)	2.67893853470775
+N(parse_expr("loggamma(10)"), 15)	12.8018274800815
+N(parse_expr("beta(1/3, 1/2)"), 15)	4.20654631597636
+N(parse_expr("besselj(1, 2)"), 15)	0.576724807756873
+N(parse_expr("airyai(1)"), 15)	0.135292416312881
+N(parse_expr("elliptic_k(1/2)"), 15)	1.85407467730137
+N(parse_expr("expint(2, 3)"), 15)	0.0106419250852728
+N(parse_expr("Si(1)"), 15)	0.946083070367183
+N(parse_expr("Ci(1)"), 15)	0.337403922900968
+N(parse_expr("fresnels(1)"), 15)	0.438259147390355
+N(parse_expr("li(10)"), 15)	6.16559950478730
+N(parse_expr("hyper([1, 2], [3], 1/2)"), 15)	1.54517744447956
+N(parse_expr("meijerg([[1, 1], []], [[1], [0]], 1/2)"), 15)	0.405465108108164
+N(parse_expr("hyper([1, 2], [3], 1/2) + 1"), 15)	2.54517744447956
+N(parse_expr("hyper([1, 2], [3], 1/2)**2"), 15)	2.38757333492839
+N(parse_expr("2*hyper([1, 2], [3], 1/2)"), 15)	3.09035488895913
+N(parse_expr("meijerg([[1, 1], []], [[1], [0]], 1/2) - log(3/2)"), 15)	0.e-125
+N(parse_expr("exp(hyper([1, 2], [3], 1/2))"), 15)	4.68880355551595
+N(parse_expr("SingularityFunction(6.1, 4, 5)"), 5)	40.841
+N(parse_expr("zeta(3)"), 20)	1.2020569031595942854
+N(parse_expr("hyper([1, 2], [3], 1/2) + 1"), 30)	2.54517744447956247533785697167
+N(parse_expr("meijerg([[1, 1], []], [[1], [0]], 1/2) - log(3/2)"), 30)	0.e-166
+N(parse_expr("zeta(3) + 1"), 30)	2.20205690315959428539973816151
+N(parse_expr("gamma(1/3)*pi"), 30)	8.41613362005646530209851152282
+N(parse_expr("CRootOf(x**3 + x + 3, 0)"), 20)	-1.2134116627622296341
+N(parse_expr("CRootOf(x**3 + x + 3, 1)"), 20)	0.60670583138111481707 - 1.4506122491884415265*I
+N(parse_expr("CRootOf(x**3 + x + 3, 2)"), 20)	0.60670583138111481707 + 1.4506122491884415265*I
+N(parse_expr("CRootOf(x**5 - 5*x + 12, 0)"), 20)	-1.8420859661902543827
+N(parse_expr("CRootOf(x**5 - 5*x + 12, 1)"), 20)	-0.35185424082737199956 - 1.709561043370328882*I
+N(parse_expr("CRootOf(x**5 - 5*x + 12, 2)"), 20)	-0.35185424082737199956 + 1.709561043370328882*I
+N(parse_expr("CRootOf(x**5 - 5*x + 12, 3)"), 20)	1.2728972239224991909 - 0.71979868148386138668*I
+N(parse_expr("CRootOf(x**5 - 5*x + 12, 4)"), 20)	1.2728972239224991909 + 0.71979868148386138668*I
+N(parse_expr("CRootOf(35*x**4 - 30*x**2 + 3, 0)"), 17)	-0.86113631159405258
+N(parse_expr("CRootOf(35*x**4 - 30*x**2 + 3, 1)"), 17)	-0.33998104358485626
+N(parse_expr("CRootOf(35*x**4 - 30*x**2 + 3, 2)"), 17)	0.33998104358485626
+N(parse_expr("CRootOf(35*x**4 - 30*x**2 + 3, 3)"), 17)	0.86113631159405258
+N(parse_expr("CRootOf(x**5 + 2*x**4 + x**3 - 68719476736, 0)"), 3)	147.
+N(parse_expr("CRootOf(x**2 + 1, 0, radicals=False)"), 4)	-1.0*I
+N(parse_expr("CRootOf(x**2 + 1, 1, radicals=False)"), 4)	1.0*I
+N(parse_expr("CRootOf(4*x**5 + 16*x**3 + 12*x**2 + 7, 0)"), 3)	-0.976
+N(parse_expr("CRootOf(90720*x**6 - 4032*x**4 + 84*x**2 - 1, 0)"), 2)	-0.16
+N(parse_expr("CRootOf(x**16 + 32*x**14 + 508*x**12 + 5440*x**10 + 39510*x**8 + 204320*x**6 + 755548*x**4 + 1434496*x**2 + 877969, 10)"), 2)	-3.4*I
+N(parse_expr("CRootOf(x**4 + 10*x**2 + 1, 0)"), 2)	-0.32*I
+N(parse_expr("CRootOf(x**3 + x + 3, 0)"), 2)	-1.2
+N(parse_expr("CRootOf(x**3 + x + 3, 1)"), 2)	0.61 - 1.5*I
+N(parse_expr("CRootOf(x**3 + x + 3, 2)"), 2)	0.61 + 1.5*I
+N(parse_expr("RootSum(x**2 + 1, Lambda(x, exp(x)))"), 20, chop = TRUE)	1.0806046117362794348
+N(parse_expr("RootSum(x**2 + 1, Lambda(x, exp(x)))"), 15, chop = TRUE)	1.08060461173628
+N(parse_expr("RootSum(x**2 + a, Lambda(x, exp(x)), x)"), 15)	RootSum(a + w^2, Lambda(w, exp(w)))
+N(parse_expr("CRootOf(x**5 - x + 1, 0)"), 15)	-1.16730397826142
+N(parse_expr("CRootOf(x**5 - x + 1, 1)"), 15)	-0.181232444469875 - 1.08395410131771*I
+N(parse_expr("CRootOf(x**5 - x + 1, 2)"), 15)	-0.181232444469875 + 1.08395410131771*I
+N(parse_expr("CRootOf(x**5 - x + 1, 3)"), 15)	0.764884433600585 - 0.352471546031726*I
+N(parse_expr("CRootOf(x**5 - x + 1, 4)"), 15)	0.764884433600585 + 0.352471546031726*I
+N(parse_expr("CRootOf(x**5 - x + 1, 0)"), 30)	-1.16730397826141868425604589985
+N(parse_expr("CRootOf(x**5 - x + 1, 1)"), 30)	-0.181232444469875383901800237781 - 1.08395410131771066843034449298*I
+N(parse_expr("CRootOf(x**5 - x + 1, 2)"), 30)	-0.181232444469875383901800237781 + 1.08395410131771066843034449298*I
+N(parse_expr("CRootOf(x**5 - x + 1, 3)"), 30)	0.764884433600584726029823187709 - 0.352471546031726249317947091403*I
+N(parse_expr("CRootOf(x**5 - x + 1, 4)"), 30)	0.764884433600584726029823187709 + 0.352471546031726249317947091403*I
+N(parse_expr("CRootOf(x**5 - x + 1, 0)"), 50)	-1.1673039782614186842560458998548421807205603715255
+N(parse_expr("CRootOf(x**5 - x + 1, 1)"), 50)	-0.18123244446987538390180023778112063996871646618462 - 1.0839541013177106684303444929807665742736402431551*I
+N(parse_expr("CRootOf(x**5 - x + 1, 2)"), 50)	-0.18123244446987538390180023778112063996871646618462 + 1.0839541013177106684303444929807665742736402431551*I
+N(parse_expr("CRootOf(x**5 - x + 1, 3)"), 50)	0.76488443360058472602982318770854173032899665194737 - 0.35247154603172624931794709140258105439420648082425*I
+N(parse_expr("CRootOf(x**5 - x + 1, 4)"), 50)	0.76488443360058472602982318770854173032899665194737 + 0.35247154603172624931794709140258105439420648082425*I
+N(parse_expr("CRootOf(x**3 + 2*x + 2, 0)"), 15)	-0.770916997059248
+N(parse_expr("CRootOf(x**3 + 2*x + 2, 1)"), 15)	0.385458498529624 - 1.56388451052696*I
+N(parse_expr("CRootOf(x**3 + 2*x + 2, 2)"), 15)	0.385458498529624 + 1.56388451052696*I
+N(parse_expr("CRootOf(x**3 - x - 1, 0) + 1"), 30)	2.32471795724474602596090885448
+N(parse_expr("CRootOf(x**3 - x - 1, 0)**2"), 30)	1.75487766624669276004950889636
+N(parse_expr("Product(1 - Rational(1, 2)**2/n**2, (n, 1, oo))"), 15)	0.636619772367581

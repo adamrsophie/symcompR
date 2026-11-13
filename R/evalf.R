@@ -1,5 +1,6 @@
-# Numerical evaluation in double precision (sympy/core/evalf.py works at
-# arbitrary precision; here precision is limited to IEEE doubles).
+# Numerical evaluation: N() runs the port of sympy/core/evalf.py
+# (evalf-core.R, evalf-eval.R); .neval evaluates in IEEE doubles for the
+# functions that have no arbitrary precision evaluator.
 
 .CONST_VALUES <- c(pi = pi, E = exp(1), EulerGamma = 0.57721566490153286061,
                    Catalan = 0.91596559417721901505,
@@ -67,15 +68,22 @@
 #' Numerical evaluation
 #'
 #' `N()` (alias `evalf()`) evaluates an expression to a floating point
-#' number, optionally substituting values for symbols first. Evaluation is
-#' in arbitrary precision binary arithmetic on gmp integers, as SymPy's
-#' evalf (mpmath): the working precision grows until `digits` significant
-#' digits are certain. Functions without an arbitrary precision evaluator
-#' fall back to R double precision, capped at 15 digits.
+#' number, as SymPy's `evalf`: arbitrary precision binary arithmetic on gmp
+#' integers that tracks the accuracy of the real and imaginary parts and
+#' raises the working precision where terms cancel. Functions without an
+#' arbitrary precision evaluator fall back to R double precision, capped at
+#' 15 digits.
 #'
 #' @param e A `sym` expression.
 #' @param digits Significant digits.
 #' @param subs Named list of values for symbols.
+#' @param maxn Maximum working precision in digits.
+#' @param chop `TRUE` to replace tiny real or imaginary parts by exact
+#'   zeros, or a number giving the size of a tiny part.
+#' @param strict `TRUE` to raise an error when a part cannot be evaluated
+#'   to full accuracy within `maxn`.
+#' @param quad Quadrature method for integrals (`NULL` for tanh-sinh).
+#' @param verbose `TRUE` to print the intermediate results.
 #' @return A `sym` Float, a complex `a + b*I` with Float parts, or the
 #'   expression with numeric subexpressions evaluated when free symbols
 #'   remain.
@@ -84,47 +92,31 @@
 #' N(sqrt(S(2)), 5)
 #' x <- Symbol("x")
 #' N(sin(x), subs = list(x = 1))
+#' N(parse_expr("(pi + pi*I)**2"), chop = TRUE)
 #' @export
-N <- function(e, digits = 15, subs = list()) {
+N <- function(e, digits = 15, subs = list(), maxn = 100, chop = FALSE, strict = FALSE,
+              quad = NULL, verbose = FALSE) {
   if (inherits(e, "pyobj")) return(.pyobj_evalf(e, digits))
-  if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) N(z, digits, subs)))
-  if (is.list(e) && !inherits(e, "sym")) return(lapply(e, N, digits = digits, subs = subs))
+  if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) N(z, digits, subs, maxn, chop, strict, quad, verbose)))
+  if (is.list(e) && !inherits(e, "sym"))
+    return(lapply(e, N, digits = digits, subs = subs, maxn = maxn, chop = chop, strict = strict, quad = quad, verbose = verbose))
   e <- as_sym(e)
   if (.is_bd(e)) return(.bd_evalf(e, digits = digits, subs = subs))
   if (is_inf_const(e) || is_nan(e)) return(e)
   # physical quantities, dimensions and prefixes stay symbolic
   if (.has_type(e, c("Quantity", "Dimension", "Prefix"))) return(.units_evalf(e, digits, subs))
-  # symbolic substitutions first; only numbers stay in the environment
-  symb <- vapply(subs, function(v) is_sym(v) && length(free_symbols(v)) > 0L, TRUE)
-  if (any(symb)) {
-    e <- subs(e, lapply(names(subs)[symb], function(nm) list(Symbol(nm), subs[[nm]])))
-    subs <- subs[!symb]
-  }
-  env <- lapply(subs, function(v) if (is_sym(v)) v else v)
-  # arbitrary precision (evalf-mp.R) when every part has an evaluator
-  fs0 <- free_symbols(e)
-  # applied undefined functions stay as they are, arguments included
-  if (!.has_undef(e) && (!length(fs0) || all(vapply(fs0, function(s) !is.null(env[[s$name]]), TRUE)))) {
-    prec <- .dps_to_prec(digits)
-    r <- tryCatch(.mpeval_top(e, prec, lapply(env, as_sym)), error = .mp_error_handler)
-    if (is_sym(r)) return(r)
-    if (!is.null(r)) return(.mpc_sym(r, prec, zero_int = TRUE))
-  } else {
-    # free symbols remain: every numeric part at the requested precision
-    r <- tryCatch(.partial_evalf_mp(e, lapply(env, as_sym), .dps_to_prec(digits)), error = function(err) NULL)
-    if (!is.null(r)) return(r)
-  }
+  if (!is.null(subs) && !is.list(subs))
+    stop(.ev_condition("TypeError", "subs must be given as a dictionary"))
+  subs <- lapply(subs, as_sym)
+  r <- .ev_N(e, digits, if (length(subs)) subs else NULL, maxn, chop, strict, quad, verbose)
+  if (!inherits(r, "ev_unevaluated")) return(r)
+  # a number without an arbitrary precision evaluator: R doubles
+  v <- r[[1L]]
+  if (length(free_symbols(v)) || .has_undef(v)) return(v)
+  out <- tryCatch(.neval(v, list()), error = function(err) NULL)
+  if (is.null(out)) return(v)
   if (digits > 15) warning("N(): a part of the expression has no arbitrary precision evaluator; digits capped at 15")
-  digits <- min(digits, 15)
-  if (length(subs)) {
-    fs <- free_symbols(e)
-    left <- Filter(function(s) is.null(env[[s$name]]), fs)
-  } else {
-    left <- free_symbols(e)
-  }
-  if (length(left)) return(.partial_evalf(e, env, digits))
-  v <- .neval(e, env)
-  .round_sym(v, digits)
+  .round_sym(out, min(digits, 15))
 }
 
 #' @rdname N
@@ -144,61 +136,10 @@ evalf <- N
   Float(signif(v, digits))
 }
 
-# evalf of an expression with free symbols: numeric subexpressions become
-# Floats of prec bits; integer exponents stay exact. NULL when a numeric part
-# has no arbitrary precision evaluator.
-.partial_evalf_mp <- function(e, env, prec) {
-  fail <- FALSE
-  rec <- function(z) {
-    if (fail || .is_undefined_application(z)) return(z)
-    fs <- free_symbols(z)
-    if (!.has_undef(z) && (!length(fs) || all(vapply(fs, function(s) !is.null(env[[s$name]]), TRUE)))) {
-      if (z$type == "Constant" && z$name %in% c(.INF_NAMES, "nan")) return(z)
-      if (z$type == "Constant" && z$name == "I") return(z)
-      r <- .mpeval_adaptive(z, prec, env)
-      if (is.null(r)) { fail <<- TRUE; return(z) }
-      return(.mpc_sym(r, prec, zero_int = TRUE))
-    }
-    if (!length(z$args)) return(z)
-    # a function's own evaluator (SymPy's _eval_evalf)
-    if (z$type == "Function" && !is.null(.FUNS[[z$name]]$evalf)) return(rec(.FUNS[[z$name]]$evalf(z)))
-    if (z$type == "Pow" && z$args[[2L]]$type == "Integer") return(.pow(rec(z$args[[1L]]), z$args[[2L]]))
-    # Mul._eval_evalf: a -1 coefficient stays exact
-    if (z$type == "Mul") {
-      m1 <- vapply(z$args, function(a) identical(a$key, S_NegativeOne$key), TRUE)
-      if (any(m1)) return(.neg(rec(.mul(z$args[!m1]))))
-    }
-    sym_rebuild(z, lapply(z$args, rec))
-  }
-  r <- rec(e)
-  if (fail) NULL else r
-}
-
 .has_undef <- function(e) {
   if (.is_undefined_application(e)) return(TRUE)
   for (a in e$args) if (is_sym(a) && .has_undef(a)) return(TRUE)
   FALSE
-}
-
-.partial_evalf <- function(e, env, digits) {
-  if (.is_undefined_application(e)) return(e)
-  if (!length(e$args)) {
-    if (e$type %in% c("Symbol", "Dummy")) {
-      v <- env[[e$name]]
-      if (is.null(v)) return(e)
-      return(.round_sym(.neval(e, env), digits))
-    }
-    if (is_exact_number(e) || e$type == "Constant") {
-      if (e$type == "Constant" && e$name %in% c(.INF_NAMES, "nan", "I")) return(e)
-      return(.round_sym(.neval(e, env), digits))
-    }
-    return(e)
-  }
-  if (e$type == "Pow" && e$args[[2L]]$type == "Integer") {
-    return(.pow(.partial_evalf(e$args[[1L]], env, digits), e$args[[2L]]))
-  }
-  args <- lapply(e$args, .partial_evalf, env, digits)
-  sym_rebuild(e, args)
 }
 
 #' Convert a numeric expression to an R value

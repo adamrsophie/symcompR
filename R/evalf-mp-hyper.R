@@ -4,7 +4,14 @@
 # functions/hypergeometric.py. Values are the mpmath numbers of
 # evalf-mp-ctx.R, so integer and rational parameters stay exact as in mpmath.
 
-.hx_default_maxprec <- function(p) as.integer(floor(1000 * p^0.25 + 4 * p))
+# A working precision past the integer range (an asymptotic expansion at an
+# astronomically large argument) cannot be reached: an error, not an NA.
+.hx_default_maxprec <- function(p) {
+  v <- floor(1000 * p^0.25 + 4 * p)
+  if (!is.finite(v) || v > .Machine$integer.max)
+    stop("hypercomb: the working precision exceeds the integer range", call. = FALSE)
+  as.integer(v)
+}
 .hx_kw <- function(kw, name, default = NULL) if (is.null(kw[[name]])) default else kw[[name]]
 
 # ---------------------------------------------------------------------------
@@ -297,10 +304,10 @@
   list(perturb = perturb, recompute = recompute, extraprec = extraprec, discard = discard)
 }
 
-.hx_hypercomb_msg <- function(orig, prec) sprintf(paste0("\nhypercomb() failed to converge to the requested %d bits of accuracy\n",
-  "using a working precision of %d bits. The function value may be zero or\n",
+.hx_hypercomb_msg <- function(orig, prec) sprintf(paste0("\nhypercomb() failed to converge to the requested %.0f bits of accuracy\n",
+  "using a working precision of %.0f bits. The function value may be zero or\n",
   "infinite; try passing zeroprec=N or infprec=M to bound finite values between\n",
-  "2^(-N) and 2^M. Otherwise try a higher maxprec or maxterms.\n"), as.integer(orig), as.integer(prec))
+  "2^(-N) and 2^M. Otherwise try a higher maxprec or maxterms.\n"), as.numeric(orig), as.numeric(prec))
 
 # fn takes the parameters as separate arguments and returns a list of
 # terms made by .hx_term

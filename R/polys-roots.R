@@ -150,7 +150,8 @@
 #' appear as [CRootOf()] objects.
 #'
 #' @param f A polynomial expression or [Poly()].
-#' @param x The variable.
+#' @param x The variable; when `k` is missing, `x` is the index and the
+#'   variable is the single free symbol of `f`.
 #' @param multiple Repeat roots by multiplicity.
 #' @param rootof Include `CRootOf` roots for unsolvable factors.
 #' @param filter Keep only `"real"`, `"complex"`, `"rational"`, or all roots
@@ -277,13 +278,24 @@ roots <- function(f, x = NULL, multiple = FALSE, rootof = FALSE, filter = NULL, 
 #' with [N()].
 #'
 #' @param f A polynomial.
-#' @param x The variable.
+#' @param x The variable; when `k` is missing, `x` is the index and the
+#'   variable is the single free symbol of `f`.
 #' @param k Index of the root, from 0.
+#' @param radicals Accepted for SymPy compatibility; the root is always kept
+#'   as a CRootOf.
 #' @return A `sym` CRootOf object.
 #' @export
-CRootOf <- function(f, x, k) {
+CRootOf <- function(f, x, k, radicals = TRUE) {
   f <- as_sym(f)
+  # CRootOf(f, k) for a univariate f, as in SymPy
+  if (missing(k)) {
+    k <- x
+    fs <- free_symbols(f)
+    if (length(fs) != 1L) stop("CRootOf(f, k) needs a univariate polynomial", call. = FALSE)
+    x <- fs[[1L]]
+  }
   x <- as_sym(x)
+  if (is_sym(k)) k <- as.integer(as.character(k$value))
   xx <- Symbol("x")
   pe <- expand(subs(f, x, xx))
   new_sym("CRootOf", list(pe, .int(k)))
@@ -353,7 +365,8 @@ register_neval("CRootOf", function(e, env) {
 #' Sturm sequence.
 #'
 #' @param f A polynomial.
-#' @param x The variable.
+#' @param x The variable; when `k` is missing, `x` is the index and the
+#'   variable is the single free symbol of `f`.
 #' @param a,b Interval ends (default the whole line).
 #' @return A list of expressions, or an integer.
 #' @examples

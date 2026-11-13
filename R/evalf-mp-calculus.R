@@ -64,7 +64,7 @@
   m <- as.integer(m)
   p <- .MPX$prec
   if (z$k == "mpf") {
-    if (m == 0) return(.mv_mpf(.mp_psi0(z$re, p)))
+    if (m == 0) return(.mv_mpf(.zt_psi0(z$re, p)))
     r <- .mpc_psi(m, .mpc(z$re), p)
     return(.mv_mpf(r$re))
   }
@@ -72,55 +72,8 @@
   .mv_mpc(r$re, r$im)
 }
 .mp_to_int <- function(a) if (a$e >= 0) a$m * .pow2(a$e) else { q <- gmp::divq.bigz(abs(a$m), .pow2(-a$e)); if (a$m < 0) -q else q }
-.mp_psi0 <- function(x, prec) {
-  wp <- prec + 10
-  if (x$m == 0 || (x$e >= 0 && x$m < 0)) .hx_valueerror("polygamma pole")
-  mg <- .mp_mag(x)
-  if (mg < -5) {
-    v <- .mp_psi0(.mp_add(x, .mpf(1, 0), prec), prec)
-    return(.mp_sub(v, .mp_div(.mpf(1, 0), x, wp), prec))
-  }
-  if (x$m < 0 && mg > 3) {
-    cs <- .mp_cos_sin(x, wp, pi = TRUE)
-    q <- .mp_mul(.mp_div(cs$cos, cs$sin, wp), .mp_pi(wp), wp)
-    pp <- .mp_psi0(.mp_sub(.mpf(1, 0), x, wp), wp)
-    return(.mp_sub(pp, q, prec))
-  }
-  if (x$m > 0 && mg > wp) return(.mp_log(.mp_sub(x, .mpf(1, 0), wp), prec))
-  m <- .mp_to_int(x)
-  n <- as.integer(0.11 * wp) + 2
-  s <- gmp::as.bigz(0)
-  xf <- .hx_fix(x, wp)
-  one <- .pow2(wp)
-  if (m < n) {
-    k <- m
-    while (k < n) {
-      s <- s - gmp::divq.bigz(one * .pow2(wp), xf)
-      xf <- xf + one
-      k <- k + 1
-    }
-  }
-  xf <- xf - one
-  s <- s + .hx_fix(.mp_log(.mp_round(xf, -wp, wp), wp), wp)
-  s <- s + gmp::divq.bigz(one * .pow2(wp), 2 * xf)
-  x2 <- .hx_shr(xf * xf, wp)
-  t <- one
-  prev <- gmp::as.bigz(0)
-  k <- 1
-  repeat {
-    t <- .hx_shr(t * x2, wp)
-    bern <- .mp_from_q(.mp_bernoulli(2 * k), wp)
-    offset <- bern$e + 2 * wp
-    term <- gmp::divq.bigz(.hx_shr(bern$m, -offset), t * (2 * k))
-    if (k %% 2 == 1) s <- s - term else s <- s + term
-    if (k > 2 && term >= prev) break
-    prev <- term
-    k <- k + 1
-  }
-  .mp_round(s, -wp, prec)
-}
 .mpc_psi0 <- function(z, prec) {
-  if (z$im$m == 0) return(.mpc(.mp_psi0(z$re, prec)))
+  if (z$im$m == 0) return(.mpc(.zt_psi0(z$re, prec)))
   wp <- prec + 20
   re <- z$re
   if (re$m < 0 && .mp_mag(re) > 3) {

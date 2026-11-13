@@ -22,7 +22,11 @@
 #' @export
 Piecewise <- function(..., evaluate = TRUE) {
   pairs <- list(...)
-  pairs <- lapply(pairs, function(p) list(as_sym(p[[1L]]), .as_bool(p[[2L]])))
+  # a pair may come as a Tuple (parse_expr)
+  pairs <- lapply(pairs, function(p) {
+    if (is_sym(p) && p$type == "Tuple") p <- p$args
+    list(as_sym(p[[1L]]), .as_bool(p[[2L]]))
+  })
   if (isFALSE(evaluate)) return(new_sym("Piecewise", lapply(pairs, function(p) new_sym("ExprCondPair", p))))
   .piecewise(pairs)
 }

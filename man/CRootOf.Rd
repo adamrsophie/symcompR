@@ -4,14 +4,18 @@
 \alias{CRootOf}
 \title{Indexed complex roots of polynomials}
 \usage{
-CRootOf(f, x, k)
+CRootOf(f, x, k, radicals = TRUE)
 }
 \arguments{
 \item{f}{A polynomial.}
 
-\item{x}{The variable.}
+\item{x}{The variable; when \code{k} is missing, \code{x} is the index and the
+variable is the single free symbol of \code{f}.}
 
 \item{k}{Index of the root, from 0.}
+
+\item{radicals}{Accepted for SymPy compatibility; the root is always kept
+as a CRootOf.}
 }
 \value{
 A \code{sym} CRootOf object.

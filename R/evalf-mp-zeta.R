@@ -472,7 +472,8 @@
 # _hurwitz_em for derivative 0: the truncated L-series and the
 # Euler-Maclaurin tail
 .zt_hurwitz_em <- function(s, a, d, prec) {
-  if (d != 0) .mp_error("NotImplementedError", "derivatives of the Hurwitz zeta function")
+  # derivatives: the general recurrence (evalf-eval.R)
+  if (d != 0) return(.ev_hurwitz_em_d(s, a, d, prec))
   a <- .mv_convert(a)
   tol <- -prec
   M1 <- 0; M2 <- prec %/% 3; N <- M2

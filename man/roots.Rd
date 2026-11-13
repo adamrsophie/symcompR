@@ -22,7 +22,8 @@ roots(
 \arguments{
 \item{f}{A polynomial expression or \code{\link[=Poly]{Poly()}}.}
 
-\item{x}{The variable.}
+\item{x}{The variable; when \code{k} is missing, \code{x} is the index and the
+variable is the single free symbol of \code{f}.}
 
 \item{multiple}{Repeat roots by multiplicity.}
 

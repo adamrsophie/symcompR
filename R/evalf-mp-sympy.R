@@ -28,6 +28,11 @@
     part <- function(n) if (n$type == "Float") .float_mp(n) else .mp_from_q_down(n$value, p)
     return(.mv_mpc(part(pc[[1L]]), part(pc[[2L]])))
   }
+  # evalf(x, p) as in Expr._to_mpmath (evalf-core.R)
+  if (!length(env)) {
+    v <- .ev_to_mpmath(x, p)
+    if (!is.null(v)) return(v)
+  }
   r <- .mpeval_adaptive(x, p, env)
   if (is.null(r)) return(NULL)
   if (r$im$m == 0) .mv_mpf(r$re) else .mv_mpc(r$re, r$im)
@@ -191,24 +196,6 @@
   re <- .mp_round(v$re$m, v$re$e, prec)
   im <- if (v$k == "mpc") .mp_round(v$im$m, v$im$e, prec) else .mp_zero
   .mpc_sym(.mpc(re, im), prec, zero_int = TRUE)
-}
-
-# N() at the top level: a registry function is evaluated once at prec + 4
-# and rounded to prec; anything else adaptively
-.mpeval_top <- function(e, prec, env = list()) {
-  if (e$type == "Function" && !is.null(f <- .MP_SYMPY[[e$name]])) {
-    v <- f(e, prec + 4L, env)
-    if (is.null(v)) return(NULL)
-    v <- .mv(v)
-    if (!.mv_sp(v)) {
-      if (!.mv_isnum(v)) v <- .mv_convert(v)
-      v <- .mv_pos(v, prec + 4L)
-    }
-    return(.mp_value_sym(v, prec))
-  }
-  # a bare pi or E: mpf_pi(prec + 4), rounded down, then Float._new at prec
-  if (!is.null(r <- .mp_sympy_const(e, prec + 4L))) return(.mpc(.mp_round(r$re$m, r$re$e, prec)))
-  .mpeval_adaptive(e, prec, env)
 }
 
 # evalf_table: Pi and Exp1 evaluate to mpf_pi(prec) and mpf_e(prec), whose

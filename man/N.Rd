@@ -5,9 +5,27 @@
 \alias{evalf}
 \title{Numerical evaluation}
 \usage{
-N(e, digits = 15, subs = list())
+N(
+  e,
+  digits = 15,
+  subs = list(),
+  maxn = 100,
+  chop = FALSE,
+  strict = FALSE,
+  quad = NULL,
+  verbose = FALSE
+)
 
-evalf(e, digits = 15, subs = list())
+evalf(
+  e,
+  digits = 15,
+  subs = list(),
+  maxn = 100,
+  chop = FALSE,
+  strict = FALSE,
+  quad = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{e}{A \code{sym} expression.}
@@ -15,6 +33,18 @@ evalf(e, digits = 15, subs = list())
 \item{digits}{Significant digits.}
 
 \item{subs}{Named list of values for symbols.}
+
+\item{maxn}{Maximum working precision in digits.}
+
+\item{chop}{\code{TRUE} to replace tiny real or imaginary parts by exact
+zeros, or a number giving the size of a tiny part.}
+
+\item{strict}{\code{TRUE} to raise an error when a part cannot be evaluated
+to full accuracy within \code{maxn}.}
+
+\item{quad}{Quadrature method for integrals (\code{NULL} for tanh-sinh).}
+
+\item{verbose}{\code{TRUE} to print the intermediate results.}
 }
 \value{
 A \code{sym} Float, a complex \code{a + b*I} with Float parts, or the
@@ -23,15 +53,16 @@ remain.
 }
 \description{
 \code{N()} (alias \code{evalf()}) evaluates an expression to a floating point
-number, optionally substituting values for symbols first. Evaluation is
-in arbitrary precision binary arithmetic on gmp integers, as SymPy's
-evalf (mpmath): the working precision grows until \code{digits} significant
-digits are certain. Functions without an arbitrary precision evaluator
-fall back to R double precision, capped at 15 digits.
+number, as SymPy's \code{evalf}: arbitrary precision binary arithmetic on gmp
+integers that tracks the accuracy of the real and imaginary parts and
+raises the working precision where terms cancel. Functions without an
+arbitrary precision evaluator fall back to R double precision, capped at
+15 digits.
 }
 \examples{
 N(sym_pi)
 N(sqrt(S(2)), 5)
 x <- Symbol("x")
 N(sin(x), subs = list(x = 1))
+N(parse_expr("(pi + pi*I)**2"), chop = TRUE)
 }
