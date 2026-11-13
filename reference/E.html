@@ -133,7 +133,7 @@ random expression; <code>P(condition, given_condition)</code> (alias
 <span></span>
 <span><span class="fu">rv_density</span><span class="op">(</span><span class="va">expr</span>, condition <span class="op">=</span> <span class="cn">NULL</span>, evaluate <span class="op">=</span> <span class="cn">TRUE</span>, numsamples <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">Density</span><span class="op">(</span><span class="va">expr</span>, condition <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="fu">Density</span><span class="op">(</span><span class="va">expr</span>, condition <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">rv_cdf</span><span class="op">(</span><span class="va">expr</span>, condition <span class="op">=</span> <span class="cn">NULL</span>, evaluate <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
@@ -165,7 +165,8 @@ random expression; <code>P(condition, given_condition)</code> (alias
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Ignored.</p></dd>
+<dd><p>Ignored, except by <code>Density()</code>: further <code>list(state, probability)</code>
+pairs of a quantum density operator (<a href="density-operators.html">density-operators</a>).</p></dd>
 
 
 <dt id="arg-given-condition">given_condition<a class="anchor" aria-label="anchor" href="#arg-given-condition"></a></dt>

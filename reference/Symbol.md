@@ -15,7 +15,7 @@ Symbol(name, ...)
 
 sym_var(names, ..., envir = parent.frame())
 
-sym_symbols(names, ...)
+sym_symbols(names, ..., cls = NULL)
 ```
 
 ## Arguments
@@ -31,7 +31,9 @@ sym_symbols(names, ...)
   `noninteger`, `even`, `odd`, `prime`, `composite`, `positive`,
   `negative`, `zero`, `nonzero`, `nonnegative`, `nonpositive`, `finite`,
   `infinite`, `imaginary`, `algebraic`, `transcendental`,
-  `extended_real`, `hermitian`, `antihermitian` and `polar`.
+  `extended_real`, `hermitian`, `antihermitian` and `polar`, and the
+  Fermi level assumptions `above_fermi` and `below_fermi` used by
+  [`wicks()`](https://adamrsophie.github.io/symcompR/reference/secondquant-wicks.md).
 
 - names:
 
@@ -40,6 +42,11 @@ sym_symbols(names, ...)
 - envir:
 
   Environment in which `sym_var()` assigns.
+
+- cls:
+
+  For `sym_symbols()`, the constructor to use instead of `Symbol()`,
+  such as `Dummy` or `"Dummy"`.
 
 ## Value
 

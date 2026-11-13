@@ -9,7 +9,9 @@ number field such as QQ&amp;lt;sqrt(2)&amp;gt;; CyclotomicField(n) is QQ&amp;lt;
 Calling a domain converts its arguments to an element: ZZ(3) is a
 bigz, QQ(1, 2) a bigq, GF(7)(10) the residue 3 mod 7, and
 ZZ[x](x^2 + 1) a Poly(). to_sympy() and from_sympy() convert
-between elements and expressions, and Domain(K) tests for a domain.
+between elements and expressions (with one argument, to_sympy(m) is the
+quantum matrix helper of matrix_tensor_product()), and Domain(K)
+tests for a domain.
 The names IntegerRing(), RationalField(), RealField(),
 ComplexField(), ExpressionDomain(), FiniteField() and the Python
 and GMPY variants of SymPy (ZZ_python, QQ_gmpy, FF_python, ...)
@@ -23,7 +25,9 @@ number field such as QQ&amp;lt;sqrt(2)&amp;gt;; CyclotomicField(n) is QQ&amp;lt;
 Calling a domain converts its arguments to an element: ZZ(3) is a
 bigz, QQ(1, 2) a bigq, GF(7)(10) the residue 3 mod 7, and
 ZZ[x](x^2 + 1) a Poly(). to_sympy() and from_sympy() convert
-between elements and expressions, and Domain(K) tests for a domain.
+between elements and expressions (with one argument, to_sympy(m) is the
+quantum matrix helper of matrix_tensor_product()), and Domain(K)
+tests for a domain.
 The names IntegerRing(), RationalField(), RealField(),
 ComplexField(), ExpressionDomain(), FiniteField() and the Python
 and GMPY variants of SymPy (ZZ_python, QQ_gmpy, FF_python, ...)
@@ -123,7 +127,9 @@ number field such as <code>QQ&lt;sqrt(2)&gt;</code>; <code>CyclotomicField(n)</c
 Calling a domain converts its arguments to an element: <code>ZZ(3)</code> is a
 <code>bigz</code>, <code>QQ(1, 2)</code> a <code>bigq</code>, <code>GF(7)(10)</code> the residue <code>3 mod 7</code>, and
 <code>ZZ[x](x^2 + 1)</code> a <code><a href="Poly.html">Poly()</a></code>. <code>to_sympy()</code> and <code>from_sympy()</code> convert
-between elements and expressions, and <code>Domain(K)</code> tests for a domain.
+between elements and expressions (with one argument, <code>to_sympy(m)</code> is the
+quantum matrix helper of <code><a href="quantum-matrixutils.html">matrix_tensor_product()</a></code>), and <code>Domain(K)</code>
+tests for a domain.
 The names <code>IntegerRing()</code>, <code>RationalField()</code>, <code>RealField()</code>,
 <code>ComplexField()</code>, <code>ExpressionDomain()</code>, <code>FiniteField()</code> and the Python
 and GMPY variants of SymPy (<code>ZZ_python</code>, <code>QQ_gmpy</code>, <code>FF_python</code>, ...)

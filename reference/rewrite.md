@@ -11,7 +11,7 @@ functions; `"factorial"` does the reverse; `"Piecewise"` rewrites `Abs`,
 ## Usage
 
 ``` r
-rewrite(e, target)
+rewrite(e, target, ...)
 ```
 
 ## Arguments
@@ -23,6 +23,10 @@ rewrite(e, target)
 - target:
 
   The target family as a string.
+
+- ...:
+
+  Options for the rewrite methods of quantum objects.
 
 ## Value
 

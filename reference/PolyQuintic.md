@@ -55,6 +55,9 @@ x <- Symbol("x")
 q <- PolyQuintic(x^5 - 5 * x + 12)
 q$f20
 #> Poly(x^6 - 40*x^5 + 1000*x^4 - 20000*x^3 + 250000*x^2 - 66400000*x + 976000000, x, domain='ZZ')
+# \donttest{
+# solving the quintic in radicals takes about 30 seconds
 length(roots_quintic(x^5 - 5 * x + 12))
 #> [1] 5
+# }
 ```

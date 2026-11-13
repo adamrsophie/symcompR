@@ -11,9 +11,11 @@ algebraic number field such as `QQ<sqrt(2)>`; `CyclotomicField(n)` is
 `ZZ(3)` is a `bigz`, `QQ(1, 2)` a `bigq`, `GF(7)(10)` the residue
 `3 mod 7`, and `ZZ[x](x^2 + 1)` a
 [`Poly()`](https://adamrsophie.github.io/symcompR/reference/Poly.md).
-`to_sympy()` and `from_sympy()` convert between elements and
-expressions, and `Domain(K)` tests for a domain. The names
-`IntegerRing()`, `RationalField()`, `RealField()`, `ComplexField()`,
+`to_sympy()` and `from_sympy()` convert between elements and expressions
+(with one argument, `to_sympy(m)` is the quantum matrix helper of
+[`matrix_tensor_product()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)),
+and `Domain(K)` tests for a domain. The names `IntegerRing()`,
+`RationalField()`, `RealField()`, `ComplexField()`,
 `ExpressionDomain()`, `FiniteField()` and the Python and GMPY variants
 of SymPy (`ZZ_python`, `QQ_gmpy`, `FF_python`, ...) return the same
 domains.

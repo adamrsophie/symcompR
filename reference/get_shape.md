@@ -29,10 +29,10 @@ get_rank(expr)
 ## Examples
 
 ``` r
-A <- ArraySymbol("A", c(2, 3, 4))
+A <- ArraySymbol("A", c(3, 3, 4))
 get_shape(A)
 #> [[1]]
-#> 2
+#> 3
 #> 
 #> [[2]]
 #> 3
@@ -41,5 +41,5 @@ get_shape(A)
 #> 4
 #> 
 get_ndim(ArrayContraction(A, c(0, 1)))
-#> Error: contracting indices of different dimensions
+#> [1] 1
 ```

@@ -36,7 +36,7 @@ probability(
 
 rv_density(expr, condition = NULL, evaluate = TRUE, numsamples = NULL, ...)
 
-Density(expr, condition = NULL)
+Density(expr, condition = NULL, ...)
 
 rv_cdf(expr, condition = NULL, evaluate = TRUE, ...)
 
@@ -67,7 +67,9 @@ rv_quantile(expr, evaluate = TRUE, ...)
 
 - ...:
 
-  Ignored.
+  Ignored, except by `Density()`: further `list(state, probability)`
+  pairs of a quantum density operator
+  ([density-operators](https://adamrsophie.github.io/symcompR/reference/density-operators.md)).
 
 - given_condition:
 

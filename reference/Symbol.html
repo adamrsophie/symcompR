@@ -109,7 +109,7 @@ SymPy. Symbols with the same name and different assumptions are distinct.</p>
 <span></span>
 <span><span class="fu">sym_var</span><span class="op">(</span><span class="va">names</span>, <span class="va">...</span>, envir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sys.parent.html" class="external-link">parent.frame</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">sym_symbols</span><span class="op">(</span><span class="va">names</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">sym_symbols</span><span class="op">(</span><span class="va">names</span>, <span class="va">...</span>, cls <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -126,7 +126,9 @@ names are <code>commutative</code>, <code>complex</code>, <code>real</code>, <co
 <code>integer</code>, <code>noninteger</code>, <code>even</code>, <code>odd</code>, <code>prime</code>, <code>composite</code>,
 <code>positive</code>, <code>negative</code>, <code>zero</code>, <code>nonzero</code>, <code>nonnegative</code>, <code>nonpositive</code>,
 <code>finite</code>, <code>infinite</code>, <code>imaginary</code>, <code>algebraic</code>, <code>transcendental</code>,
-<code>extended_real</code>, <code>hermitian</code>, <code>antihermitian</code> and <code>polar</code>.</p></dd>
+<code>extended_real</code>, <code>hermitian</code>, <code>antihermitian</code> and <code>polar</code>, and the
+Fermi level assumptions <code>above_fermi</code> and <code>below_fermi</code> used by
+<code><a href="secondquant-wicks.html">wicks()</a></code>.</p></dd>
 
 
 <dt id="arg-names">names<a class="anchor" aria-label="anchor" href="#arg-names"></a></dt>
@@ -135,6 +137,11 @@ names are <code>commutative</code>, <code>complex</code>, <code>real</code>, <co
 
 <dt id="arg-envir">envir<a class="anchor" aria-label="anchor" href="#arg-envir"></a></dt>
 <dd><p>Environment in which <code>sym_var()</code> assigns.</p></dd>
+
+
+<dt id="arg-cls">cls<a class="anchor" aria-label="anchor" href="#arg-cls"></a></dt>
+<dd><p>For <code>sym_symbols()</code>, the constructor to use instead of
+<code>Symbol()</code>, such as <code>Dummy</code> or <code>"Dummy"</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

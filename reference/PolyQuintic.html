@@ -160,8 +160,11 @@ uses it.</p>
 <span class="r-in"><span><span class="va">q</span> <span class="op">&lt;-</span> <span class="fu">PolyQuintic</span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">-</span> <span class="fl">5</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">12</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">q</span><span class="op">$</span><span class="va">f20</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Poly(x^6 - 40*x^5 + 1000*x^4 - 20000*x^3 + 250000*x^2 - 66400000*x + 976000000, x, domain='ZZ')</span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co"># solving the quintic in radicals takes about 30 seconds</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu">roots_quintic</span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">-</span> <span class="fl">5</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

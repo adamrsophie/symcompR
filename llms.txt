@@ -3025,6 +3025,471 @@ sympy.physics.biomechanics.
   [`print(`*`<MusculotendonFormulation>`*`)`](https://adamrsophie.github.io/symcompR/reference/MusculotendonFormulation.md)
   : Musculotendon formulations
 
+## Optics
+
+sympy.physics.optics: Gaussian beams, ray transfer matrices, media,
+polarization and waves.
+
+- [`BeamParameter()`](https://adamrsophie.github.io/symcompR/reference/BeamParameter.md)
+  [`waist2rayleigh()`](https://adamrsophie.github.io/symcompR/reference/BeamParameter.md)
+  [`rayleigh2waist()`](https://adamrsophie.github.io/symcompR/reference/BeamParameter.md)
+  : The parameter of a Gaussian beam
+- [`RayTransferMatrix()`](https://adamrsophie.github.io/symcompR/reference/RayTransferMatrix.md)
+  [`FreeSpace()`](https://adamrsophie.github.io/symcompR/reference/RayTransferMatrix.md)
+  [`FlatRefraction()`](https://adamrsophie.github.io/symcompR/reference/RayTransferMatrix.md)
+  [`CurvedRefraction()`](https://adamrsophie.github.io/symcompR/reference/RayTransferMatrix.md)
+  [`FlatMirror()`](https://adamrsophie.github.io/symcompR/reference/RayTransferMatrix.md)
+  [`CurvedMirror()`](https://adamrsophie.github.io/symcompR/reference/RayTransferMatrix.md)
+  [`ThinLens()`](https://adamrsophie.github.io/symcompR/reference/RayTransferMatrix.md)
+  [`GeometricRay()`](https://adamrsophie.github.io/symcompR/reference/RayTransferMatrix.md)
+  : Ray transfer matrices of Gaussian optics
+- [`Medium()`](https://adamrsophie.github.io/symcompR/reference/Medium.md)
+  : An optical medium
+- [`TWave()`](https://adamrsophie.github.io/symcompR/reference/TWave.md)
+  : A transverse wave
+- [`jones_vector()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`stokes_vector()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`jones_2_stokes()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`linear_polarizer()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`phase_retarder()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`half_wave_retarder()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`quarter_wave_retarder()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`transmissive_filter()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`reflective_filter()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`mueller_matrix()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  [`polarizing_beam_splitter()`](https://adamrsophie.github.io/symcompR/reference/jones_vector.md)
+  : Jones and Stokes vectors and polarization optics
+- [`lens_makers_formula()`](https://adamrsophie.github.io/symcompR/reference/lens_makers_formula.md)
+  [`mirror_formula()`](https://adamrsophie.github.io/symcompR/reference/lens_makers_formula.md)
+  [`lens_formula()`](https://adamrsophie.github.io/symcompR/reference/lens_makers_formula.md)
+  [`hyperfocal_distance()`](https://adamrsophie.github.io/symcompR/reference/lens_makers_formula.md)
+  [`transverse_magnification()`](https://adamrsophie.github.io/symcompR/reference/lens_makers_formula.md)
+  : Lens and mirror formulas
+- [`refraction_angle()`](https://adamrsophie.github.io/symcompR/reference/refraction_angle.md)
+  [`fresnel_coefficients()`](https://adamrsophie.github.io/symcompR/reference/refraction_angle.md)
+  [`deviation()`](https://adamrsophie.github.io/symcompR/reference/refraction_angle.md)
+  [`brewster_angle()`](https://adamrsophie.github.io/symcompR/reference/refraction_angle.md)
+  [`critical_angle()`](https://adamrsophie.github.io/symcompR/reference/refraction_angle.md)
+  : Refraction and reflection at an interface
+- [`geometric_conj_ab()`](https://adamrsophie.github.io/symcompR/reference/geometric_conj_ab.md)
+  [`geometric_conj_af()`](https://adamrsophie.github.io/symcompR/reference/geometric_conj_ab.md)
+  [`geometric_conj_bf()`](https://adamrsophie.github.io/symcompR/reference/geometric_conj_ab.md)
+  [`gaussian_conj()`](https://adamrsophie.github.io/symcompR/reference/geometric_conj_ab.md)
+  [`conjugate_gauss_beams()`](https://adamrsophie.github.io/symcompR/reference/geometric_conj_ab.md)
+  : Conjugation relations of geometric and Gaussian optics
+
+## Control systems
+
+sympy.physics.control: transfer functions, state space models,
+interconnections, Routh-Hurwitz and response data.
+
+- [`TransferFunction()`](https://adamrsophie.github.io/symcompR/reference/TransferFunction.md)
+  [`DiscreteTransferFunction()`](https://adamrsophie.github.io/symcompR/reference/TransferFunction.md)
+  [`TransferFunctionBase`](https://adamrsophie.github.io/symcompR/reference/TransferFunction.md)
+  [`PIDController()`](https://adamrsophie.github.io/symcompR/reference/TransferFunction.md)
+  : Transfer functions
+- [`TransferFunctionMatrix()`](https://adamrsophie.github.io/symcompR/reference/TransferFunctionMatrix.md)
+  [`` `[`( ``*`<TransferFunctionMatrix>`*`)`](https://adamrsophie.github.io/symcompR/reference/TransferFunctionMatrix.md)
+  [`MIMOSeries()`](https://adamrsophie.github.io/symcompR/reference/TransferFunctionMatrix.md)
+  [`MIMOParallel()`](https://adamrsophie.github.io/symcompR/reference/TransferFunctionMatrix.md)
+  [`MIMOFeedback()`](https://adamrsophie.github.io/symcompR/reference/TransferFunctionMatrix.md)
+  : Transfer function matrices and MIMO interconnections
+- [`StateSpace()`](https://adamrsophie.github.io/symcompR/reference/StateSpace.md)
+  [`DiscreteStateSpace()`](https://adamrsophie.github.io/symcompR/reference/StateSpace.md)
+  : State space models
+- [`Series()`](https://adamrsophie.github.io/symcompR/reference/control-interconnections.md)
+  [`Parallel()`](https://adamrsophie.github.io/symcompR/reference/control-interconnections.md)
+  [`Feedback()`](https://adamrsophie.github.io/symcompR/reference/control-interconnections.md)
+  : Series, parallel and feedback interconnections
+- [`RouthHurwitz()`](https://adamrsophie.github.io/symcompR/reference/RouthHurwitz.md)
+  : Routh-Hurwitz table
+- [`create_transfer_function()`](https://adamrsophie.github.io/symcompR/reference/create_transfer_function.md)
+  [`create_state_space()`](https://adamrsophie.github.io/symcompR/reference/create_transfer_function.md)
+  : Create a transfer function
+- [`gbt()`](https://adamrsophie.github.io/symcompR/reference/gbt.md)
+  [`bilinear()`](https://adamrsophie.github.io/symcompR/reference/gbt.md)
+  [`forward_diff()`](https://adamrsophie.github.io/symcompR/reference/gbt.md)
+  [`backward_diff()`](https://adamrsophie.github.io/symcompR/reference/gbt.md)
+  [`phase_margin()`](https://adamrsophie.github.io/symcompR/reference/gbt.md)
+  [`gain_margin()`](https://adamrsophie.github.io/symcompR/reference/gbt.md)
+  : Discretization and stability margins
+- [`pole_zero_numerical_data()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`impulse_response_numerical_data()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`step_response_numerical_data()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`ramp_response_numerical_data()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`bode_magnitude_numerical_data()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`bode_phase_numerical_data()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`nyquist_plot_expr()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`nichols_plot_expr()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`pole_zero_plot()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`step_response_plot()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`impulse_response_plot()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`ramp_response_plot()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`bode_magnitude_plot()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`bode_phase_plot()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`bode_plot()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`nyquist_plot()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  [`nichols_plot()`](https://adamrsophie.github.io/symcompR/reference/pole_zero_numerical_data.md)
+  : Numerical data and plots of SISO systems
+
+## Continuum mechanics
+
+sympy.physics.continuum_mechanics: beams, columns, trusses, cables and
+arches.
+
+- [`Beam()`](https://adamrsophie.github.io/symcompR/reference/Beam.md)
+  [`Beam3D()`](https://adamrsophie.github.io/symcompR/reference/Beam.md)
+  : Beams
+- [`Column()`](https://adamrsophie.github.io/symcompR/reference/Column.md)
+  : Columns under axial loads
+- [`Truss()`](https://adamrsophie.github.io/symcompR/reference/Truss.md)
+  : Trusses
+- [`Cable()`](https://adamrsophie.github.io/symcompR/reference/Cable.md)
+  : Cables
+- [`Arch()`](https://adamrsophie.github.io/symcompR/reference/Arch.md) :
+  Arches
+
+## Other physics
+
+Hydrogen atom, harmonic oscillators, particle on a ring, Wigner symbols
+and physics matrices.
+
+- [`hydrogen_R_nl()`](https://adamrsophie.github.io/symcompR/reference/hydrogen_R_nl.md)
+  [`hydrogen_Y_lm()`](https://adamrsophie.github.io/symcompR/reference/hydrogen_R_nl.md)
+  [`hydrogen_Z_lm()`](https://adamrsophie.github.io/symcompR/reference/hydrogen_R_nl.md)
+  [`hydrogen_Psi_nlm()`](https://adamrsophie.github.io/symcompR/reference/hydrogen_R_nl.md)
+  [`hydrogen_E_nl()`](https://adamrsophie.github.io/symcompR/reference/hydrogen_R_nl.md)
+  [`hydrogen_E_nl_dirac()`](https://adamrsophie.github.io/symcompR/reference/hydrogen_R_nl.md)
+  : The hydrogen atom
+- [`sho_R_nl()`](https://adamrsophie.github.io/symcompR/reference/sho_R_nl.md)
+  [`sho_E_nl()`](https://adamrsophie.github.io/symcompR/reference/sho_R_nl.md)
+  : The isotropic harmonic oscillator
+- [`qho_psi_n()`](https://adamrsophie.github.io/symcompR/reference/qho_psi_n.md)
+  [`qho_E_n()`](https://adamrsophie.github.io/symcompR/reference/qho_psi_n.md)
+  [`qho_coherent_state()`](https://adamrsophie.github.io/symcompR/reference/qho_psi_n.md)
+  : The one dimensional quantum harmonic oscillator
+- [`pring_wavefunction()`](https://adamrsophie.github.io/symcompR/reference/pring_wavefunction.md)
+  [`pring_energy()`](https://adamrsophie.github.io/symcompR/reference/pring_wavefunction.md)
+  : The particle on a ring
+- [`wigner_d_small()`](https://adamrsophie.github.io/symcompR/reference/wigner_d_small.md)
+  [`wigner_d()`](https://adamrsophie.github.io/symcompR/reference/wigner_d_small.md)
+  : Wigner small d and D matrices
+- [`dot_rot_grad_Ynm()`](https://adamrsophie.github.io/symcompR/reference/dot_rot_grad_Ynm.md)
+  : Dot product of rotational gradients of spherical harmonics
+- [`msigma()`](https://adamrsophie.github.io/symcompR/reference/msigma.md)
+  [`pat_matrix()`](https://adamrsophie.github.io/symcompR/reference/msigma.md)
+  [`mgamma()`](https://adamrsophie.github.io/symcompR/reference/msigma.md)
+  [`minkowski_tensor`](https://adamrsophie.github.io/symcompR/reference/msigma.md)
+  [`mdft()`](https://adamrsophie.github.io/symcompR/reference/msigma.md)
+  : Matrices of physics
+
+## Quantum mechanics
+
+sympy.physics.quantum, secondquant, paulialgebra and hep.gamma_matrices.
+
+- [`AntiCommutator()`](https://adamrsophie.github.io/symcompR/reference/AntiCommutator.md)
+  : Anticommutators
+- [`Dagger()`](https://adamrsophie.github.io/symcompR/reference/Dagger.md)
+  : Hermitian conjugate
+- [`HBar()`](https://adamrsophie.github.io/symcompR/reference/HBar.md)
+  [`hbar`](https://adamrsophie.github.io/symcompR/reference/HBar.md) :
+  Reduced Planck constant
+- [`InnerProduct()`](https://adamrsophie.github.io/symcompR/reference/InnerProduct.md)
+  : Inner products
+- [`Tr()`](https://adamrsophie.github.io/symcompR/reference/Tr.md) :
+  Trace of a quantum expression
+- [`Wavefunction()`](https://adamrsophie.github.io/symcompR/reference/Wavefunction.md)
+  : Wavefunctions
+- [`BosonOp()`](https://adamrsophie.github.io/symcompR/reference/boson.md)
+  [`BosonFockKet()`](https://adamrsophie.github.io/symcompR/reference/boson.md)
+  [`BosonFockBra()`](https://adamrsophie.github.io/symcompR/reference/boson.md)
+  [`BosonCoherentKet()`](https://adamrsophie.github.io/symcompR/reference/boson.md)
+  [`BosonCoherentBra()`](https://adamrsophie.github.io/symcompR/reference/boson.md)
+  : Bosonic operators and states
+- [`XOp()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`YOp()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`ZOp()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`PxOp()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`XKet()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`XBra()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`PositionState3D()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`PositionKet3D()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`PositionBra3D()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`PxKet()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`PxBra()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  : Cartesian position and momentum
+- [`Wigner3j()`](https://adamrsophie.github.io/symcompR/reference/cg-coefficients.md)
+  [`CG()`](https://adamrsophie.github.io/symcompR/reference/cg-coefficients.md)
+  [`Wigner6j()`](https://adamrsophie.github.io/symcompR/reference/cg-coefficients.md)
+  [`Wigner9j()`](https://adamrsophie.github.io/symcompR/reference/cg-coefficients.md)
+  [`cg_simp()`](https://adamrsophie.github.io/symcompR/reference/cg-coefficients.md)
+  : Clebsch-Gordan coefficients and Wigner symbols as expressions
+- [`Mz()`](https://adamrsophie.github.io/symcompR/reference/circuit-gates.md)
+  [`Mx()`](https://adamrsophie.github.io/symcompR/reference/circuit-gates.md)
+  [`CreateOneQubitGate()`](https://adamrsophie.github.io/symcompR/reference/circuit-gates.md)
+  [`CreateCGate()`](https://adamrsophie.github.io/symcompR/reference/circuit-gates.md)
+  [`labeller()`](https://adamrsophie.github.io/symcompR/reference/circuit-gates.md)
+  : Measurement gates and gate factories
+- [`kmp_table()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
+  [`find_subcircuit()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
+  [`replace_subcircuit()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
+  [`convert_to_symbolic_indices()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
+  [`convert_to_real_indices()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
+  [`random_reduce()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
+  [`random_insert()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
+  : Circuit utilities
+- [`combined_tensor_printing()`](https://adamrsophie.github.io/symcompR/reference/combined_tensor_printing.md)
+  [`tensor_product_simp()`](https://adamrsophie.github.io/symcompR/reference/combined_tensor_printing.md)
+  : Combined printing of tensor products
+- [`fidelity()`](https://adamrsophie.github.io/symcompR/reference/density-operators.md)
+  : Density operators, entropy and fidelity
+- [`FermionOp()`](https://adamrsophie.github.io/symcompR/reference/fermion.md)
+  [`FermionFockKet()`](https://adamrsophie.github.io/symcompR/reference/fermion.md)
+  [`FermionFockBra()`](https://adamrsophie.github.io/symcompR/reference/fermion.md)
+  : Fermionic operators and states
+- [`LorentzIndex`](https://adamrsophie.github.io/symcompR/reference/gamma-matrices.md)
+  [`GammaMatrix()`](https://adamrsophie.github.io/symcompR/reference/gamma-matrices.md)
+  [`extract_type_tens()`](https://adamrsophie.github.io/symcompR/reference/gamma-matrices.md)
+  [`simplify_gamma_expression()`](https://adamrsophie.github.io/symcompR/reference/gamma-matrices.md)
+  [`simplify_gpgp()`](https://adamrsophie.github.io/symcompR/reference/gamma-matrices.md)
+  [`gamma_trace()`](https://adamrsophie.github.io/symcompR/reference/gamma-matrices.md)
+  [`kahane_simplify()`](https://adamrsophie.github.io/symcompR/reference/gamma-matrices.md)
+  : Gamma matrices
+- [`superposition_basis()`](https://adamrsophie.github.io/symcompR/reference/grover.md)
+  [`OracleGate()`](https://adamrsophie.github.io/symcompR/reference/grover.md)
+  [`WGate()`](https://adamrsophie.github.io/symcompR/reference/grover.md)
+  [`grover_iteration()`](https://adamrsophie.github.io/symcompR/reference/grover.md)
+  [`apply_grover()`](https://adamrsophie.github.io/symcompR/reference/grover.md)
+  : Grover's search
+- [`HilbertSpace()`](https://adamrsophie.github.io/symcompR/reference/hilbert-spaces.md)
+  [`ComplexSpace()`](https://adamrsophie.github.io/symcompR/reference/hilbert-spaces.md)
+  [`L2()`](https://adamrsophie.github.io/symcompR/reference/hilbert-spaces.md)
+  [`FockSpace()`](https://adamrsophie.github.io/symcompR/reference/hilbert-spaces.md)
+  [`TensorProductHilbertSpace()`](https://adamrsophie.github.io/symcompR/reference/hilbert-spaces.md)
+  [`DirectSumHilbertSpace()`](https://adamrsophie.github.io/symcompR/reference/hilbert-spaces.md)
+  [`TensorPowerHilbertSpace()`](https://adamrsophie.github.io/symcompR/reference/hilbert-spaces.md)
+  [`hs_contains()`](https://adamrsophie.github.io/symcompR/reference/hilbert-spaces.md)
+  : Hilbert spaces
+- [`is_scalar_nonsparse_matrix()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  [`is_scalar_sparse_matrix()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  [`is_scalar_matrix()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  [`generate_gate_rules()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  [`generate_equivalent_ids()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  [`GateIdentity()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  [`is_degenerate()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  [`is_reducible()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  [`bfs_identity_search()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  [`random_identity_search()`](https://adamrsophie.github.io/symcompR/reference/identitysearch.md)
+  : Gate identities
+- [`m_values()`](https://adamrsophie.github.io/symcompR/reference/m_values.md)
+  : Spin quantum numbers
+- [`normalized()`](https://adamrsophie.github.io/symcompR/reference/normalized.md)
+  : Use normalized Hadamard gates
+- [`normal_ordered_form()`](https://adamrsophie.github.io/symcompR/reference/operator-ordering.md)
+  [`normal_order()`](https://adamrsophie.github.io/symcompR/reference/operator-ordering.md)
+  : Normal ordering of bosonic and fermionic operators
+- [`operators_to_state()`](https://adamrsophie.github.io/symcompR/reference/operators_to_state.md)
+  [`state_to_operators()`](https://adamrsophie.github.io/symcompR/reference/operators_to_state.md)
+  : Operators and their eigenstates
+- [`Pauli()`](https://adamrsophie.github.io/symcompR/reference/pauli-algebra.md)
+  [`evaluate_pauli_product()`](https://adamrsophie.github.io/symcompR/reference/pauli-algebra.md)
+  : Pauli algebra
+- [`SigmaX()`](https://adamrsophie.github.io/symcompR/reference/pauli.md)
+  [`SigmaY()`](https://adamrsophie.github.io/symcompR/reference/pauli.md)
+  [`SigmaZ()`](https://adamrsophie.github.io/symcompR/reference/pauli.md)
+  [`SigmaMinus()`](https://adamrsophie.github.io/symcompR/reference/pauli.md)
+  [`SigmaPlus()`](https://adamrsophie.github.io/symcompR/reference/pauli.md)
+  [`SigmaZKet()`](https://adamrsophie.github.io/symcompR/reference/pauli.md)
+  [`SigmaZBra()`](https://adamrsophie.github.io/symcompR/reference/pauli.md)
+  [`qsimplify_pauli()`](https://adamrsophie.github.io/symcompR/reference/pauli.md)
+  : Pauli operators
+- [`PIABHamiltonian()`](https://adamrsophie.github.io/symcompR/reference/piab.md)
+  [`PIABKet()`](https://adamrsophie.github.io/symcompR/reference/piab.md)
+  [`PIABBra()`](https://adamrsophie.github.io/symcompR/reference/piab.md)
+  : Particle in a box
+- [`qapply()`](https://adamrsophie.github.io/symcompR/reference/qapply.md)
+  : Apply operators to states
+- [`Qasm()`](https://adamrsophie.github.io/symcompR/reference/qasm.md)
+  [`read_qasm()`](https://adamrsophie.github.io/symcompR/reference/qasm.md)
+  [`read_qasm_file()`](https://adamrsophie.github.io/symcompR/reference/qasm.md)
+  : QASM circuits
+- [`QFT()`](https://adamrsophie.github.io/symcompR/reference/qft.md)
+  [`IQFT()`](https://adamrsophie.github.io/symcompR/reference/qft.md)
+  [`RkGate()`](https://adamrsophie.github.io/symcompR/reference/qft.md)
+  [`Rk()`](https://adamrsophie.github.io/symcompR/reference/qft.md) :
+  Quantum Fourier transform
+- [`qattr()`](https://adamrsophie.github.io/symcompR/reference/quantum-attributes.md)
+  [`qcall()`](https://adamrsophie.github.io/symcompR/reference/quantum-attributes.md)
+  [`qisinstance()`](https://adamrsophie.github.io/symcompR/reference/quantum-attributes.md)
+  [`qclass()`](https://adamrsophie.github.io/symcompR/reference/quantum-attributes.md)
+  : Attributes and methods of quantum objects
+- [`Gate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`CGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`CGateS()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`UGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`OneQubitGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`TwoQubitGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`IdentityGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`HadamardGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`XGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`YGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`ZGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`PhaseGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`TGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`CNotGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`CNOT()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`SwapGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`SWAP()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`CPHASE()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`represent_zbasis()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`gate_simp()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`gate_sort()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`random_circuit()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  : Quantum gates
+- [`matrix_tensor_product()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
+  [`matrix_eye()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
+  [`matrix_zeros()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
+  [`matrix_dagger()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
+  [`matrix_to_zero()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
+  : Matrix utilities of the quantum module
+- [`Operator()`](https://adamrsophie.github.io/symcompR/reference/quantum-operators.md)
+  [`HermitianOperator()`](https://adamrsophie.github.io/symcompR/reference/quantum-operators.md)
+  [`UnitaryOperator()`](https://adamrsophie.github.io/symcompR/reference/quantum-operators.md)
+  [`IdentityOperator()`](https://adamrsophie.github.io/symcompR/reference/quantum-operators.md)
+  [`OuterProduct()`](https://adamrsophie.github.io/symcompR/reference/quantum-operators.md)
+  [`DifferentialOperator()`](https://adamrsophie.github.io/symcompR/reference/quantum-operators.md)
+  : Quantum operators
+- [`QubitState()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`Qubit()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`QubitBra()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`IntQubit()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`IntQubitBra()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`matrix_to_qubit()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`matrix_to_density()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`qubit_to_matrix()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`measure_all()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`measure_partial()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`measure_partial_oneshot()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  [`measure_all_oneshot()`](https://adamrsophie.github.io/symcompR/reference/quantum-qubits.md)
+  : Qubits
+- [`QExpr()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`StateBase()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`KetBase()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`BraBase()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`State()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`Ket()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`Bra()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`TimeDepState()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`TimeDepKet()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`TimeDepBra()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`OrthogonalState()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`OrthogonalKet()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  [`OrthogonalBra()`](https://adamrsophie.github.io/symcompR/reference/quantum-states.md)
+  : Quantum states
+- [`represent()`](https://adamrsophie.github.io/symcompR/reference/represent.md)
+  [`rep_innerproduct()`](https://adamrsophie.github.io/symcompR/reference/represent.md)
+  [`rep_expectation()`](https://adamrsophie.github.io/symcompR/reference/represent.md)
+  [`integrate_result()`](https://adamrsophie.github.io/symcompR/reference/represent.md)
+  [`get_basis()`](https://adamrsophie.github.io/symcompR/reference/represent.md)
+  [`enumerate_states()`](https://adamrsophie.github.io/symcompR/reference/represent.md)
+  : Matrix representations
+- [`NO()`](https://adamrsophie.github.io/symcompR/reference/secondquant-wicks.md)
+  [`contraction()`](https://adamrsophie.github.io/symcompR/reference/secondquant-wicks.md)
+  [`evaluate_deltas()`](https://adamrsophie.github.io/symcompR/reference/secondquant-wicks.md)
+  [`substitute_dummies()`](https://adamrsophie.github.io/symcompR/reference/secondquant-wicks.md)
+  [`wicks()`](https://adamrsophie.github.io/symcompR/reference/secondquant-wicks.md)
+  [`PermutationOperator()`](https://adamrsophie.github.io/symcompR/reference/secondquant-wicks.md)
+  [`simplify_index_permutations()`](https://adamrsophie.github.io/symcompR/reference/secondquant-wicks.md)
+  : Normal ordering, contractions and Wick's theorem
+- [`sq_Dagger()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`AntiSymmetricTensor()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`SqOperator()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`BosonicOperator()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`AnnihilateBoson()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`CreateBoson()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`B()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`Bd()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FermionicOperator()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`AnnihilateFermion()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`CreateFermion()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`sym_F()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`Fd()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FockState()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`BosonState()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FermionState()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FockStateKet()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FockStateBra()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FockStateBosonKet()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FockStateBosonBra()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FockStateFermionKet()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FockStateFermionBra()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`BKet()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`BBra()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FKet()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FBra()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`apply_operators()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`sq_InnerProduct()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`matrix_rep()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`VarBosonicBasis()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`FixedBosonicBasis()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  [`sq_Commutator()`](https://adamrsophie.github.io/symcompR/reference/secondquant.md)
+  : Second quantization
+- [`RaisingOp()`](https://adamrsophie.github.io/symcompR/reference/sho1d.md)
+  [`LoweringOp()`](https://adamrsophie.github.io/symcompR/reference/sho1d.md)
+  [`NumberOp()`](https://adamrsophie.github.io/symcompR/reference/sho1d.md)
+  [`Hamiltonian()`](https://adamrsophie.github.io/symcompR/reference/sho1d.md)
+  [`SHOKet()`](https://adamrsophie.github.io/symcompR/reference/sho1d.md)
+  [`SHOBra()`](https://adamrsophie.github.io/symcompR/reference/sho1d.md)
+  : One-dimensional harmonic oscillator
+- [`CMod()`](https://adamrsophie.github.io/symcompR/reference/shor.md)
+  [`shor()`](https://adamrsophie.github.io/symcompR/reference/shor.md)
+  [`getr()`](https://adamrsophie.github.io/symcompR/reference/shor.md)
+  [`ratioize()`](https://adamrsophie.github.io/symcompR/reference/shor.md)
+  [`period_find()`](https://adamrsophie.github.io/symcompR/reference/shor.md)
+  : Shor's algorithm
+- [`JxOp()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`JyOp()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`JzOp()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`J2Op()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`JplusOp()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`JminusOp()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`Jx`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`Jy`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`Jz`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`J2`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`Jplus`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`Jminus`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`Rotation()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`Rotation_D()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`Rotation_d()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  [`WignerD()`](https://adamrsophie.github.io/symcompR/reference/spin-operators.md)
+  : Spin operators, rotations and Wigner D functions
+- [`SpinState()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JxKet()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JxBra()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JyKet()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JyBra()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JzKet()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JzBra()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`CoupledSpinState()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JxKetCoupled()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JxBraCoupled()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JyKetCoupled()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JyBraCoupled()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JzKetCoupled()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`JzBraCoupled()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`couple()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  [`uncouple()`](https://adamrsophie.github.io/symcompR/reference/spin-states.md)
+  : Spin states
+- [`wigner_3j()`](https://adamrsophie.github.io/symcompR/reference/wigner_3j.md)
+  [`clebsch_gordan()`](https://adamrsophie.github.io/symcompR/reference/wigner_3j.md)
+  [`wigner_6j()`](https://adamrsophie.github.io/symcompR/reference/wigner_3j.md)
+  [`racah()`](https://adamrsophie.github.io/symcompR/reference/wigner_3j.md)
+  [`wigner_9j()`](https://adamrsophie.github.io/symcompR/reference/wigner_3j.md)
+  [`gaunt()`](https://adamrsophie.github.io/symcompR/reference/wigner_3j.md)
+  [`real_gaunt()`](https://adamrsophie.github.io/symcompR/reference/wigner_3j.md)
+  : Wigner 3j, 6j and 9j symbols and related coefficients
+
 ## Code generation
 
 The sympy.codegen AST, code printers, rewriting and optimization, and

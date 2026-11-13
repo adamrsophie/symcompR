@@ -10,7 +10,10 @@
 `base_oneform()` and `base_oneforms()` are SymPy's methods.
 `Differential()`, `TensorProduct()`, `WedgeProduct()`, `Commutator()`,
 `LieDerivative()`, `BaseCovarDerivativeOp()` and `CovarDerivativeOp()`
-build fields and operators, applied with `rcall(field, ...)`.
+build fields and operators, applied with `rcall(field, ...)`. When no
+argument holds a field, `TensorProduct()` and `Commutator()` are those
+of `sympy.physics.quantum` (see
+[`Operator()`](https://adamrsophie.github.io/symcompR/reference/quantum-operators.md)).
 `contravariant_order()`, `covariant_order()`, `vectors_in_basis()`,
 `twoform_to_matrix()`, `metric_to_Christoffel_1st()`,
 `metric_to_Christoffel_2nd()`, `metric_to_Riemann_components()`,
