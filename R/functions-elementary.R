@@ -202,6 +202,11 @@ def_function(
     }
     if (is_exact_number(args[[1L]]) && args[[1L]]$value > 0 &&
         !is_one_num(args[[1L]])) out["transcendental"] <- TRUE
+    # log._eval_is_finite: False at zero, else the finiteness of the argument
+    if (length(args) == 1L && is.na(out["finite"] %||% NA)) {
+      if (isTRUE(f[["zero"]])) out["finite"] <- FALSE
+      else if (!is.na(f[["finite"]] %||% NA)) out["finite"] <- f[["finite"]]
+    }
     out
   },
   latex = function(a) if (length(a) == 2L) paste0("\\log_{", a[2], "}{\\left(", a[1], " \\right)}")
@@ -736,24 +741,7 @@ def_function("acsc",
              numeric = function(x) asin(as.complex(1 / x)))
 
 def_function("atan2", nargs = 2L,
-             eval = function(args) {
-               y <- args[[1L]]
-               x <- args[[2L]]
-               if (is_zero_num(y) && is_zero_num(x)) return(S_NaN)
-               if (isTRUE(ask_fact(x, "positive")) && isTRUE(ask_fact(y, "real")))
-                 return(fcall("atan", list(.div(y, x))))
-               if (is_zero_num(x)) {
-                 if (isTRUE(ask_fact(y, "positive"))) return(.mul(list(S_Half, S_Pi)))
-                 if (isTRUE(ask_fact(y, "negative"))) return(.mul(list(.rat(-1, 2), S_Pi)))
-               }
-               if (isTRUE(ask_fact(x, "negative"))) {
-                 if (isTRUE(ask_fact(y, "nonnegative")))
-                   return(.add(list(fcall("atan", list(.div(y, x))), S_Pi)))
-                 if (isTRUE(ask_fact(y, "negative")))
-                   return(.sub(fcall("atan", list(.div(y, x))), S_Pi))
-               }
-               NULL
-             },
+             eval = function(args) .coremm_atan2_eval(args[[1L]], args[[2L]]),
              diff = function(args, i) {
                y <- args[[1L]]
                x <- args[[2L]]
@@ -1076,6 +1064,7 @@ def_function("sign",
     if (a$name == "exp_polar") return(fcall("exp", list(fcall("re", a$args))))
   }
   # signsimp(arg, evaluate = False)
+  a <- signsimp(a); t <- a$type
   if (t == "Add" && could_extract_minus_sign(a)) return(fcall("Abs", list(.neg(a))))
   nd <- .as_numer_denom(a)
   if (length(free_symbols(nd[[2L]])) && !length(free_symbols(nd[[1L]])))
@@ -1256,6 +1245,7 @@ def_function("conjugate",
                if (is_const(a, "I")) return(.neg(S_I))
                if (t == "Function" && a$name == "conjugate") return(a$args[[1L]])
                if (!is.null(.qnode_def(t))) return(.eval_conjugate(a))
+               if (t == "Pow") return(.coremm_pow_conjugate(a))
                if (isTRUE(ask_fact(a, "imaginary"))) return(.neg(a))
                if (t == "Add") return(.add(lapply(a$args, function(z) fcall("conjugate", list(z)))))
                if (t == "Mul" && all(vapply(a$args, .is_comm, TRUE)))
@@ -1282,18 +1272,7 @@ def_function("conjugate",
              latex = function(a) paste0("\\overline{", a[1], "}"))
 
 def_function("arg",
-             eval = function(args) {
-               a <- args[[1L]]
-               fa <- .facts(a)
-               if (isTRUE(fa[["positive"]])) return(S_Zero)
-               if (isTRUE(fa[["negative"]])) return(S_Pi)
-               if (is_const(a, "I")) return(.mul(list(S_Half, S_Pi)))
-               if (length(free_symbols(a)) == 0L) {
-                 ri <- .re_im(a)
-                 if (is.null(.unevaluated_re_im(ri))) return(fcall("atan2", list(ri[[2L]], ri[[1L]])))
-               }
-               NULL
-             },
+             eval = function(args) .coremm_arg_eval(args[[1L]]),
              numeric = Arg,
              facts = function(args, afs) c(commutative = TRUE, real = TRUE, finite = TRUE))
 

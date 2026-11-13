@@ -418,7 +418,9 @@
                 factors = lapply(fs, function(fk) list(.gf_to_expr(fk[[1L]], x, p, Fd$symmetric), .int(fk[[2L]])))))
   }
   K <- .kd_field(Fd$exts)
-  gs <- .kd_gens(e, gens)
+  # over ZZ_I or QQ_I the radicals of the expression are generators, as in
+  # SymPy's construct_domain; only an extension field absorbs them
+  gs <- if (!is.null(Fd$gauss)) Filter(function(g) !is_const(g, "I"), .gens_of(list(e), gens)) else .kd_gens(e, gens)
   if (!length(gs)) return(list(coeff = e, factors = list()))
   if (method == "sqf") {
     if (length(gs) > 1L) stop("multivariate square-free decomposition over algebraic fields is not supported", call. = FALSE)

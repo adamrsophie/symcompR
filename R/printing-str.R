@@ -89,7 +89,13 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
     if (length(v) != 1L) NA_complex_ else v
   }, 0i)
   re <- Re(cv); im <- Im(cv)
-  ord <- do.call(order, c(cols, list(.nc_rank(lapply(info, `[[`, "nc")), im != 0, im, re, coefstr), list(method = "radix", decreasing = rev)))
+  ncr <- .nc_rank(lapply(info, `[[`, "nc"))
+  # sorted() is stable: tied terms keep their order in Add.args
+  tied <- anyDuplicated(do.call(paste, c(cols, list(ncr, im, re))))
+  pos <- if (tied) match(vapply(args, `[[`, "", "key"), vapply(.sympy_args(new_sym("Add", args)), `[[`, "", "key"))
+         else integer(n)
+  if (rev) pos <- -pos
+  ord <- do.call(order, c(cols, list(ncr, im != 0, im, re, pos, coefstr), list(method = "radix", decreasing = rev)))
   args[ord]
 }
 

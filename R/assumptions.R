@@ -750,6 +750,7 @@ ask_fact <- function(e, fact) {
   set("extended_positive", .pow_ext_positive(b, x, fb, fx))
   set("extended_negative", .pow_ext_negative(b, x, fb, fx))
   set("extended_real", .pow_ext_real(b, x, fb, fx))
+  set("imaginary", .coremm_pow_imaginary(b, x, fb, fx))
   out
 }
 

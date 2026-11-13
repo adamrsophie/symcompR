@@ -37,8 +37,9 @@
     .ex_simp(.gd_out(a)))
 }
 
-.d_zero <- function(a) is_zero_num(a)
-.d_one <- function(a) is_one_num(a)
+# a Float 0.0 is the zero of RR and RR[...], as in SymPy
+.d_zero <- function(a) is_zero_num(a) || (a$type == "Float" && isTRUE(as.numeric(a$value) == 0))
+.d_one <- function(a) is_one_num(a) || (a$type == "Float" && isTRUE(as.numeric(a$value) == 1))
 
 # lex leading coefficient of a polynomial expression in gens
 .lex_lc <- function(a, gens) {

@@ -435,16 +435,11 @@ solve.symmatrix <- function(a, b, ...) {
   r <- 1L
   for (c in seq_len(nc)) {
     if (r > nr) break
-    pr <- NA
-    for (i in r:nr) {
-      v <- simplify_fn(A[[i]][[c]])
-      A[[i]][[c]] <- v
-      if (!is_zero_num(v)) {
-        pr <- i
-        break
-      }
-    }
-    if (is.na(pr)) next
+    for (i in r:nr) A[[i]][[c]] <- simplify_fn(A[[i]][[c]])
+    fp <- .coremm_find_pivot(lapply(r:nr, function(i) A[[i]][[c]]))
+    for (nd in fp[[3L]]) A[[r + nd[[1L]] - 1L]][[c]] <- nd[[2L]]
+    if (is.na(fp[[1L]])) next
+    pr <- r + fp[[1L]] - 1L
     if (pr != r) {
       tmp <- A[[r]]; A[[r]] <- A[[pr]]; A[[pr]] <- tmp
     }

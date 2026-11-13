@@ -807,7 +807,8 @@ Intersection <- function(...) {
   base <- self$args[[2L]]
   f <- lam$args[[2L]]; n <- vs[[1L]]
   if (!is_polynomial(f, n)) return(NULL)
-  cl <- .coeff_list(f, n)
+  # p = f.as_poly(n); a, b = p.all_coeffs() in the domain of p
+  cl <- .coremm_all_coeffs(f, n)
   if (length(cl) != 2L) return(NULL)
   a <- cl[[1L]]; b <- cl[[2L]]
   I <- .iv(other)

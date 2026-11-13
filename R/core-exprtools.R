@@ -25,7 +25,13 @@
     if (!clear && coeff$type == "Rational") {
       args <- lapply(factors$args, function(i) { sp <- as_coeff_mul_split(i); list(.keep_coeff(sp[[1L]], coeff), sp[[2L]]) })
       if (any(vapply(args, function(a) a[[1L]]$type == "Integer", TRUE)))
-        return(.add(lapply(args, function(a) if (is_one_num(a[[1L]])) a[[2L]] else .mul(list(a[[1L]], a[[2L]])))))
+        return(.add(lapply(args, function(a) {
+          # Mul._from_args((c, m)): a product m stays nested, (x/y)/2
+          if (is_one_num(a[[2L]])) a[[1L]]
+          else if (is_one_num(a[[1L]])) a[[2L]]
+          else if (a[[2L]]$type == "Mul") new_sym("Mul", list(a[[1L]], a[[2L]]))
+          else .mul(list(a[[1L]], a[[2L]]))
+        })))
     }
     return(new_sym("Mul", list(coeff, factors)))
   }
@@ -402,6 +408,12 @@ list2 <- function(z) stats::setNames(list(z), z$key)
   if (!.is_comm(term)) stop("commutative expression expected")
   sp <- as_coeff_mul_split(term); coeff <- sp[[1L]]
   fs <- if (is_one_num(sp[[2L]]) && sp[[2L]]$type == "Integer") list() else .margs(sp[[2L]])
+  # as_coeff_mul(rational=True): a Float coefficient is a factor
+  if (coeff$type == "Float") {
+    neg <- num_sign(coeff) < 0
+    fs <- c(list(if (neg) num_neg(coeff) else coeff), fs)
+    coeff <- if (neg) S_NegativeOne else S_One
+  }
   nb <- list(); ne <- list(); db <- list(); de <- list()
   for (fct in fs) {
     dp <- .decompose_power(fct); base <- dp[[1L]]; ex <- dp[[2L]]

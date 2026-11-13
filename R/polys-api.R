@@ -954,8 +954,14 @@ factor_sym <- function(f, ..., deep = FALSE) {
   }
   # dmp_factor_list over RR: factor exactly over QQ, then each factor is
   # divided by its max norm and converted back
-  if (.has_type(e, "Float")) {
-    ex <- .map_bottom_up(e, function(z) if (z$type == "Float") make_rational(gmp::as.bigq(z$value)) else z)
+  # generators keep their Floats (log(x - 68.5) stays a generator); the
+  # domain is RR only for Float coefficients
+  fg <- if (.has_type(e, "Float")) Filter(function(g) !is_number_type(g) && .has_type(g, "Float"), gens2) else list()
+  fd <- lapply(fg, function(g) Dummy())
+  back <- function(z) if (length(fg)) xreplace(z, lapply(seq_along(fg), function(k) list(fd[[k]], fg[[k]]))) else z
+  e0 <- if (length(fg)) xreplace(e, lapply(seq_along(fg), function(k) list(fg[[k]], fd[[k]]))) else e
+  if (.has_type(e0, "Float")) {
+    ex <- .map_bottom_up(e0, function(z) if (z$type == "Float") make_rational(gmp::as.bigq(z$value)) else z)
     gx <- Filter(function(g) !is_number_type(g), .gens_of(list(ex), gens))
     q <- tryCatch(expr_to_qpoly(ex, gx, strict = TRUE), error = function(err) NULL)
     if (!is.null(q) && length(gx)) {
@@ -965,7 +971,7 @@ factor_sym <- function(f, ..., deep = FALSE) {
         mn <- max(abs(pr[[1L]]$c))
         fe <- .add(lapply(seq_along(pr[[1L]]$c), function(i)
           .mul(list(Float(as.double(pr[[1L]]$c[i] / mn)), .monomial_vec_expr(pr[[1L]]$e[i, ], gx)))))
-        fs[[length(fs) + 1L]] <- list(fe, .int(pr[[2L]]))
+        fs[[length(fs) + 1L]] <- list(back(fe), .int(pr[[2L]]))
         coef <- coef * mn^pr[[2L]]
       }
       return(list(coef = Float(as.double(coef)), factors = fs))

@@ -1009,7 +1009,9 @@
       if (length(add_args) == 1L) {
         gen <- add_args[[1L]]
         spart <- .as_base_exp(.sp_indep(gen, list(symbol))[[2L]])[[1L]]
-        if (identical(spart$key, symbol$key)) poly_gen <- list(spart)
+        # Poly(f_num, spart) raises PolynomialError unless f_num is a
+        # polynomial in spart, and the generator is then not used
+        if (identical(spart$key, symbol$key) && isTRUE(is_polynomial(f_num, spart))) poly_gen <- list(spart)
       }
     }
     pgens <- if (!is.null(poly_gen)) poly_gen else .sp_poly_gens(f_num)

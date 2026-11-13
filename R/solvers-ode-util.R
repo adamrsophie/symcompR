@@ -116,9 +116,11 @@
   }
   gens <- .find_gens(list(f))
   if (!length(gens)) return(orig)
+  if (any(vapply(gens, is_const, NA, "I"))) return(.coremm_terms_gcd_zzi(f, gens, clear, orig))
   p <- .sp_as_poly_noexpand(f, gens)
   if (is.null(p) || !length(p$terms)) return(orig)
-  if (!all(vapply(p$terms, function(t) is_exact_number(t$coeff), TRUE))) return(orig)
+  if (!all(vapply(p$terms, function(t) is_exact_number(t$coeff), TRUE)))
+    return(.coremm_terms_gcd_rr(p, gens, orig))
   J <- Reduce(pmin, lapply(p$terms, `[[`, "monom"))
   vals <- lapply(p$terms, function(t) gmp::as.bigq(t$coeff$value))
   den <- Reduce(function(a, b) gmp::lcm.bigz(a, b), lapply(vals, gmp::denominator))

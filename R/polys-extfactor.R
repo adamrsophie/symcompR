@@ -603,6 +603,15 @@
   nonsym <- which(!vapply(gens, function(g) g$type %in% c("Symbol", "Dummy"), TRUE))
   if (length(nonsym)) {
     ds <- lapply(nonsym, function(i) Dummy())
+    # a power of a generator, 2^(2/3) for the generator 2^(1/3), is that
+    # dummy raised to the power (decompose_power)
+    gk <- vapply(gens[nonsym], `[[`, "", "key")
+    e <- .map_bottom_up(e, function(z) {
+      if (z$type != "Pow") return(z)
+      d <- .decompose_power(z)
+      j <- match(d[[1L]]$key, gk)
+      if (is.na(j) || d[[2L]] <= 1) z else .pow(ds[[j]], .int(d[[2L]]))
+    })
     e <- xreplace(e, lapply(seq_along(nonsym), function(k) list(gens[[nonsym[k]]], ds[[k]])))
     gens[nonsym] <- ds
   }

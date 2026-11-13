@@ -190,6 +190,12 @@ c.sym <- function(...) lapply(list(...), as_sym)
       else if (a$type != "Symbol" && b$type != "Symbol" && xor(boolish(a), boolish(b))) FALSE
       else NA
     } else {
+      # is_eq: an infinite side is decided by sign, reality or arg
+      ie <- .coremm_is_eq_inf(a, b)
+      if (!is.null(ie)) {
+        if (is.na(ie)) return(NULL)
+        return(if (xor(ie, type == "Unequality")) S_true else S_false)
+      }
       # is_eq: no difference that would cancel a term not known to be finite
       if (.cancels_nonfinite(a, b)) return(NULL)
       d <- .sub(a, b)
