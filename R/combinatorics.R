@@ -165,6 +165,7 @@ stirling <- function(n, k, kind = 2, signed = FALSE) {
 prufer_from_tree <- function(edges, n) {
   adj <- lapply(seq_len(n), function(i) integer())
   for (e in edges) {
+    e <- as.integer(e)
     adj[[e[1] + 1L]] <- c(adj[[e[1] + 1L]], e[2])
     adj[[e[2] + 1L]] <- c(adj[[e[2] + 1L]], e[1])
   }
@@ -185,6 +186,7 @@ prufer_from_tree <- function(edges, n) {
 #' @rdname prufer_from_tree
 #' @export
 tree_from_prufer <- function(seq) {
+  seq <- as.integer(seq)
   n <- length(seq) + 2L
   deg <- rep(1L, n)
   for (v in seq) deg[v + 1L] <- deg[v + 1L] + 1L

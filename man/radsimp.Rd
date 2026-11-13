@@ -2,7 +2,6 @@
 % Please edit documentation in R/simplify-radsimp.R, R/simplify.R
 \name{radsimp}
 \alias{radsimp}
-\alias{rationalize}
 \alias{rad_rationalize}
 \alias{split_surds}
 \alias{collect_sqrt}
@@ -10,8 +9,6 @@
 \title{Rationalize denominators and denest square roots}
 \usage{
 radsimp(e, symbolic = TRUE, max_terms = 4L)
-
-rationalize(e, symbolic = TRUE, max_terms = 4L)
 
 rad_rationalize(num, den)
 
@@ -44,7 +41,7 @@ An expression, or a list.
 numerator and denominator. \code{collect_sqrt()} collects terms with common
 square roots. \code{split_surds()} splits a sum of surds by their gcd.
 \code{sqrtdenest()} rewrites \code{sqrt(a + b*sqrt(c))} as a sum of square roots
-when possible. \code{rationalize()} is an alias of \code{radsimp()}.
+when possible.
 }
 \examples{
 radsimp(1 / (1 + sqrt(S(2))))

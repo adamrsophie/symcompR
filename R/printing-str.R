@@ -193,6 +193,8 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
       out[i] <- if (nt$type == "Pow" && .is_neg_exp(nt$args[[2L]]) && .is_comm(nt))
         paste0(" - 1/", .paren(.pow(nt$args[[1L]], .neg(nt$args[[2L]])), PREC$Mul, strict = TRUE))
       else if (nt$type == "Add") paste0(" - (", .str(nt), ")")
+      # the negative term is printed at the precedence of Add, as SymPy does
+      else if (nt$type == "Mul") paste0(" - ", .str_mul(nt, level = PREC$Add))
       else paste0(" - ", .str_add_term(nt))
     } else {
       out[i] <- paste0(" + ", .str_add_term(t))
@@ -266,7 +268,9 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
   ns
 }
 
-.str_mul <- function(e, pow_paren = TRUE) {
+# level: the precedence the factors are parenthesized against, that of the
+# printed product (a negative product has the precedence of Add)
+.str_mul <- function(e, pow_paren = TRUE, level = PREC$Mul) {
   s <- .str_mul_uneval(e)
   if (!is.null(s)) return(s)
   if (could_extract_minus_sign(e)) {
@@ -274,7 +278,7 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
     # -x^(-2*a) prints as -1/x^(2*a), as SymPy's Mul printer does
     if (ne$type == "Pow" && .is_neg_exp(ne$args[[2L]]) && .is_comm(ne))
       return(paste0("-1/", .paren(.pow(ne$args[[1L]], .neg(ne$args[[2L]])), PREC$Mul, strict = TRUE)))
-    s <- if (ne$type == "Mul") .str_mul(ne, pow_paren = FALSE) else .str(ne)
+    s <- if (ne$type == "Mul") .str_mul(ne, pow_paren = FALSE, level = PREC$Add) else .str(ne)
     if (.prec(ne) < PREC$Mul) s <- paste0("(", s, ")")
     return(paste0("-", s))
   }
@@ -306,12 +310,12 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
   }
   num <- .mul_print_order(num)
   den <- .mul_print_order(den)
-  nstr <- vapply(num, function(f) .paren(f, PREC$Mul, strict = FALSE), "")
+  nstr <- vapply(num, function(f) .paren(f, level, strict = FALSE), "")
   if (!is.null(coef_num)) nstr <- c(coef_num, nstr)
   if (!is.null(lead)) nstr <- c(lead, nstr)
   if (!length(nstr)) nstr <- "1"
   s <- paste(nstr, collapse = "*")
-  dstr <- vapply(den, function(f) { p <- .paren(f, PREC$Mul, strict = FALSE)
+  dstr <- vapply(den, function(f) { p <- .paren(f, level, strict = FALSE)
     if (f$key %in% paren_keys) paste0("(", p, ")") else p }, "")
   if (!is.null(coef_den)) dstr <- c(coef_den, dstr)
   if (!length(dstr)) return(s)

@@ -18,7 +18,7 @@ Or(...)
 
 Not(a)
 
-Xor(...)
+Xor(..., remove_true = TRUE)
 
 Nand(...)
 
@@ -34,6 +34,9 @@ ITE(a, b, c)
 \item{...}{Boolean expressions.}
 
 \item{a, b, c}{Boolean expressions.}
+
+\item{remove_true}{For \code{Xor()}: with \code{FALSE} a true argument is kept as
+an argument instead of negating the result, as SymPy's \code{remove_true}.}
 }
 \value{
 A boolean \code{sym} expression.

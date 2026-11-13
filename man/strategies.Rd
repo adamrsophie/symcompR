@@ -100,7 +100,7 @@ brute(tree, objective = strat_identity, leaf = branch$yieldify)
 
 \item{cond}{A predicate.}
 
-\item{file}{Ignored; debugging output goes to the console.}
+\item{file}{\code{NULL} to print to the console, or a file name or connection to append the log to.}
 
 \item{exception}{Ignored (all errors are caught).}
 

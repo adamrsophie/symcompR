@@ -669,7 +669,7 @@ adjoint <- function(M) {
 
 #' Series and summation helpers
 #'
-#' `pade_approximant()` is [pade()], `limit_seq(e, n)` the limit as `n`
+#' `limit_seq(e, n)` the limit as `n`
 #' tends to infinity, `difference_delta(e, n, step)` the forward
 #' difference, and `residue(e, x, x0)` the residue at a pole (the
 #' coefficient of `1/(x - x0)` in the Laurent series). `hypersimp(f, k)`
@@ -680,7 +680,6 @@ adjoint <- function(M) {
 #' @param x,n,k Variables.
 #' @param x0 Point.
 #' @param step Step size.
-#' @param m Pade numerator degree.
 #' @return An expression, `NULL` or a logical.
 #' @examples
 #' x <- Symbol("x")
@@ -689,9 +688,6 @@ adjoint <- function(M) {
 #' @name series-helpers
 NULL
 
-#' @rdname series-helpers
-#' @export
-pade_approximant <- function(f, x, m, n) pade(f, x, m, n)
 #' @rdname series-helpers
 #' @export
 difference_delta <- function(e, n = NULL, step = 1) {
@@ -1390,6 +1386,8 @@ ifwht <- function(seq) walsh_hadamard_transform(seq, inverse = TRUE)
 #' @rdname discrete-aliases
 #' @export
 covering_product <- function(a, b) {
+  if (!length(a) || !length(b)) return(list())
+  a <- .dc_seq(a); b <- .dc_seq(b)
   n <- max(length(a), length(b))
   A <- mobius_transform(c(as.list(a), rep(list(0), n - length(a))))
   B <- mobius_transform(c(as.list(b), rep(list(0), n - length(b))))
@@ -1398,6 +1396,8 @@ covering_product <- function(a, b) {
 #' @rdname discrete-aliases
 #' @export
 intersecting_product <- function(a, b) {
+  if (!length(a) || !length(b)) return(list())
+  a <- .dc_seq(a); b <- .dc_seq(b)
   n <- max(length(a), length(b))
   A <- mobius_transform(c(as.list(a), rep(list(0), n - length(a))), subset = FALSE)
   B <- mobius_transform(c(as.list(b), rep(list(0), n - length(b))), subset = FALSE)

@@ -148,6 +148,7 @@ reference:
   - textplot
 - title: Parsing
   contents:
+  - parse_smtlib
   - parse_expr
   - parse_expr_transformations
   - parser_T
@@ -186,6 +187,10 @@ reference:
   - simplify-helpers
 - title: Calculus
   contents:
+  - finite_diff
+  - function_range
+  - lcim
+  - monotonicity_helper
   - diff.sym
   - Derivative
   - idiff
@@ -202,6 +207,8 @@ reference:
   - AccumBounds
 - title: Integration and integral transforms
   contents:
+  - gauss_legendre
+  - polytope_integrate
   - sym_integrate
   - ratint
   - heurisch
@@ -216,6 +223,10 @@ reference:
   - transform-helpers
 - title: Sequences and series objects
   contents:
+  - find_simple_recurrence_vector
+  - pade_approximants_gcdex
+  - richardson
+  - recurrence_memo
   - sequences
   - limit_seq
   - fourier_series
@@ -225,6 +236,7 @@ reference:
   - approximants
 - title: Solvers
   contents:
+  - lpmin
   - solve.sym
   - solveset
   - linsolve
@@ -246,6 +258,8 @@ reference:
   - diophantine
 - title: Polynomials
   contents:
+  - bernoulli_poly
+  - gcdex_steps
   - Poly
   - '`$.Poly`'
   - poly-aliases
@@ -301,6 +315,7 @@ reference:
   - matrix-expressions
 - title: Number theory
   contents:
+  - egypt_harmonic
   - isprime
   - prime
   - Sieve
@@ -332,6 +347,14 @@ reference:
   - EllipticCurve
 - title: Combinatorics and permutation groups
   contents:
+  - GrayCode
+  - IntegerPartition
+  - Partition
+  - Prufer
+  - RGS_generalized
+  - Subset
+  - character_table
+  - symmetric
   - Permutation
   - Cycle
   - PermutationGroup
@@ -366,6 +389,15 @@ reference:
   - GroupHomomorphism
 - title: Logic
   contents:
+  - Xnor
+  - dimacs_load
+  - distribute_and_over_or
+  - dpll_satisfiable
+  - entails
+  - gateinputcount
+  - literal_symbol
+  - pl_true
+  - to_anf
   - And
   - eliminate_implications
   - simplify_logic
@@ -526,6 +558,7 @@ reference:
   - variance_prop
 - title: Discrete transforms and cryptography
   contents:
+  - linrec
   - convolution
   - discrete-aliases
   - ntt

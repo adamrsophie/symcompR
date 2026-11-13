@@ -36,7 +36,7 @@
 #' @param join A named list with functions for `list` and `seq` nodes.
 #' @param leaf A function applied to the rules at the leaves.
 #' @param fns Traversal functions (`op`, `new`, `children`, `leaf`).
-#' @param file Ignored; debugging output goes to the console.
+#' @param file `NULL` to print to the console, or a file name or connection to append the log to.
 #' @param x An expression (`strat_identity()` returns it unchanged).
 #' @param isid For `rm_id()`: a predicate for identity elements.
 #' @param new A constructor `new(op, ...)` for rebuilt expressions.
@@ -110,7 +110,8 @@ strat_debug <- function(rule, file = NULL) {
     expr <- list(...)[[1L]]
     result <- rule(...)
     if (!.strat_eq(result, expr))
-      cat("Rule: ", nm, "\nIn:   ", format(expr), "\nOut:  ", format(result), "\n\n", sep = "")
+      cat("Rule: ", nm, "\nIn:   ", format(expr), "\nOut:  ", format(result), "\n\n", sep = "",
+          file = if (is.null(file)) "" else file, append = TRUE)
     result
   }
 }

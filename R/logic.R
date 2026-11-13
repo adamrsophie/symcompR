@@ -457,21 +457,42 @@ simplify_logic <- function(e, form = NULL, max_vars = 10) {
 
 #' Satisfiability
 #'
-#' `satisfiable(e)` returns a model (a named logical list) making `e` true,
-#' or `FALSE`; with `all_models = TRUE` it returns every model. It uses the
-#' DPLL algorithm on the CNF form, as SymPy does. `valid()` tests whether
-#' `e` is a tautology.
+#' `satisfiable(e)` returns a model (a named list of logical values) making
+#' `e` true, or `FALSE`, as SymPy's `satisfiable()`. `algorithm` picks the
+#' method: `"dpll2"` (the default; `"pycosat"`, `"minisat22"` and `"z3"`
+#' fall back to it as in SymPy when those libraries are absent, except that
+#' an explicit `"pycosat"` is an `ImportError`) or `"dpll"` (see
+#' [dpll_satisfiable()]). With `all_models = TRUE` the result is the list
+#' of all models, or `list(FALSE)`. A tautology without symbols has the
+#' model `list(True = TRUE)`. `valid()` tests whether `e` is a tautology.
 #'
 #' @param e A boolean expression.
+#' @param algorithm `NULL` or the name of an algorithm.
 #' @param all_models Return all models.
+#' @param minimal Ask for minimal models (used only by `"minisat22"`).
+#' @param use_lra_theory Use the theory of linear real arithmetic, which is
+#'   not available here.
 #' @return A named list, a list of them, or `FALSE`.
 #' @examples
 #' a <- Symbol("a"); b <- Symbol("b")
 #' satisfiable(And(a, Not(b)))
 #' satisfiable(And(a, Not(a)))
+#' satisfiable(Equivalent(a, b), all_models = TRUE)
 #' @export
-satisfiable <- function(e, all_models = FALSE) {
-  e <- as_sym(e)
+satisfiable <- function(e, algorithm = NULL, all_models = FALSE, minimal = FALSE, use_lra_theory = FALSE) {
+  if (use_lra_theory) {
+    if (!is.null(algorithm) && algorithm != "dpll2")
+      stop(.sympy_condition("ValueError", sprintf("Currently only dpll2 can handle using lra theory. %s is not handled.", algorithm)))
+    stop(.sympy_condition("NotImplementedError", "the theory of linear real arithmetic is not available"))
+  }
+  if (is.null(algorithm)) algorithm <- "dpll2"
+  else if (algorithm == "pycosat") stop(.sympy_condition("ImportError", "pycosat module is not present"))
+  if (algorithm %in% c("minisat22", "z3")) algorithm <- "dpll2"
+  if (algorithm == "dpll") return(dpll_satisfiable(e))
+  if (algorithm != "dpll2") stop(.sympy_condition("NotImplementedError", ""))
+  e <- .as_bool(e)
+  if (.is_false(e)) return(if (all_models) list(FALSE) else FALSE)
+  if (.is_true(e)) return(if (all_models) list(list(True = TRUE)) else list(True = TRUE))
   atoms_ <- .bool_atoms(e)
   keymap <- stats::setNames(atoms_, vapply(atoms_, .k, ""))
   pretty <- function(m) {
@@ -481,11 +502,12 @@ satisfiable <- function(e, all_models = FALSE) {
   }
   clauses <- .cnf_clauses(e)
   if (!length(clauses)) return(if (all_models) list(pretty(list())) else pretty(list()))
-  if (any(vapply(clauses, length, 0L) == 0L)) return(FALSE)
+  if (any(vapply(clauses, length, 0L) == 0L)) return(if (all_models) list(FALSE) else FALSE)
   keys <- names(keymap)[names(keymap) %in% unlist(lapply(clauses, names))]
   ints <- lapply(clauses, function(cl) as.integer(cl * match(names(cl), keys)))
   models <- .dpll2_models(ints, length(keys), all_models)
-  if (!length(models)) return(FALSE)
+  # an unsatisfiable formula has the single model False, as SymPy's generator
+  if (!length(models)) return(if (all_models) list(FALSE) else FALSE)
   models <- lapply(models, function(m) {
     m <- unique(m)
     out <- lapply(seq_along(keys), function(v) v %in% m)

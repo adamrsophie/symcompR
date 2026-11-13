@@ -261,31 +261,14 @@ derive_by_array <- function(a, x) {
 #' @param a,b Sequences.
 #' @param cycle Length of a cyclic convolution (0 for linear).
 #' @param inverse Compute the inverse transform.
-#' @param subset Sum over subsets (`TRUE`) or supersets.
+#' @param subset For the Mobius transforms, sum over subsets (`TRUE`) or
+#'   supersets; for `convolution()`, `TRUE` asks for subset convolution.
 #' @return A list of expressions.
 #' @examples
 #' convolution(1:3, 4:5)
 #' sym_fft(list(1, 2, 3, 4))
-#' @export
-convolution <- function(a, b, cycle = 0) {
-  a <- lapply(as.list(a), as_sym)
-  b <- lapply(as.list(b), as_sym)
-  n <- length(a) + length(b) - 1L
-  out <- rep(list(S_Zero), n)
-  for (i in seq_along(a)) for (j in seq_along(b)) {
-    k <- i + j - 1L
-    out[[k]] <- .add(list(out[[k]], .mul(list(a[[i]], b[[j]]))))
-  }
-  if (cycle > 0L) {
-    res <- rep(list(S_Zero), cycle)
-    for (k in seq_along(out)) {
-      m <- (k - 1L) %% cycle + 1L
-      res[[m]] <- .add(list(res[[m]], out[[k]]))
-    }
-    out <- res
-  }
-  out
-}
+#' @name convolution
+NULL
 
 .pad2 <- function(seq) {
   seq <- lapply(as.list(seq), as_sym)

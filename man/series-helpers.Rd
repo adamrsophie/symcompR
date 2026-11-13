@@ -2,15 +2,12 @@
 % Please edit documentation in R/zz-aliases.R
 \name{series-helpers}
 \alias{series-helpers}
-\alias{pade_approximant}
 \alias{difference_delta}
 \alias{residue}
 \alias{hypersimp}
 \alias{hypersimilar}
 \title{Series and summation helpers}
 \usage{
-pade_approximant(f, x, m, n)
-
 difference_delta(e, n = NULL, step = 1)
 
 residue(e, x, x0 = 0)
@@ -20,13 +17,11 @@ hypersimp(f, k)
 hypersimilar(f, g, k)
 }
 \arguments{
-\item{x, n, k}{Variables.}
-
-\item{m}{Pade numerator degree.}
-
 \item{e, f, g}{Expressions.}
 
 \item{step}{Step size.}
+
+\item{x, n, k}{Variables.}
 
 \item{x0}{Point.}
 }
@@ -34,7 +29,7 @@ hypersimilar(f, g, k)
 An expression, \code{NULL} or a logical.
 }
 \description{
-\code{pade_approximant()} is \code{\link[=pade]{pade()}}, \code{limit_seq(e, n)} the limit as \code{n}
+\code{limit_seq(e, n)} the limit as \code{n}
 tends to infinity, \code{difference_delta(e, n, step)} the forward
 difference, and \code{residue(e, x, x0)} the residue at a pole (the
 coefficient of \code{1/(x - x0)} in the Laurent series). \code{hypersimp(f, k)}

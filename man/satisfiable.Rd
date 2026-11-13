@@ -5,26 +5,44 @@
 \alias{valid}
 \title{Satisfiability}
 \usage{
-satisfiable(e, all_models = FALSE)
+satisfiable(
+  e,
+  algorithm = NULL,
+  all_models = FALSE,
+  minimal = FALSE,
+  use_lra_theory = FALSE
+)
 
 valid(e)
 }
 \arguments{
 \item{e}{A boolean expression.}
 
+\item{algorithm}{\code{NULL} or the name of an algorithm.}
+
 \item{all_models}{Return all models.}
+
+\item{minimal}{Ask for minimal models (used only by \code{"minisat22"}).}
+
+\item{use_lra_theory}{Use the theory of linear real arithmetic, which is
+not available here.}
 }
 \value{
 A named list, a list of them, or \code{FALSE}.
 }
 \description{
-\code{satisfiable(e)} returns a model (a named logical list) making \code{e} true,
-or \code{FALSE}; with \code{all_models = TRUE} it returns every model. It uses the
-DPLL algorithm on the CNF form, as SymPy does. \code{valid()} tests whether
-\code{e} is a tautology.
+\code{satisfiable(e)} returns a model (a named list of logical values) making
+\code{e} true, or \code{FALSE}, as SymPy's \code{satisfiable()}. \code{algorithm} picks the
+method: \code{"dpll2"} (the default; \code{"pycosat"}, \code{"minisat22"} and \code{"z3"}
+fall back to it as in SymPy when those libraries are absent, except that
+an explicit \code{"pycosat"} is an \code{ImportError}) or \code{"dpll"} (see
+\code{\link[=dpll_satisfiable]{dpll_satisfiable()}}). With \code{all_models = TRUE} the result is the list
+of all models, or \code{list(FALSE)}. A tautology without symbols has the
+model \code{list(True = TRUE)}. \code{valid()} tests whether \code{e} is a tautology.
 }
 \examples{
 a <- Symbol("a"); b <- Symbol("b")
 satisfiable(And(a, Not(b)))
 satisfiable(And(a, Not(a)))
+satisfiable(Equivalent(a, b), all_models = TRUE)
 }

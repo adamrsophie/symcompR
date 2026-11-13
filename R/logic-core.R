@@ -50,6 +50,8 @@
 #' boolean variables, and `&`, `|` and `!` work on `sym` objects.
 #'
 #' @param ... Boolean expressions.
+#' @param remove_true For `Xor()`: with `FALSE` a true argument is kept as
+#'   an argument instead of negating the result, as SymPy's `remove_true`.
 #' @param a,b,c Boolean expressions.
 #' @return A boolean `sym` expression.
 #' @examples
@@ -73,7 +75,7 @@ Not <- function(a) {
 }
 #' @rdname And
 #' @export
-Xor <- function(...) {
+Xor <- function(..., remove_true = TRUE) {
   args <- lapply(list(...), .as_bool)
   flat <- list()
   for (a in args) if (a$type == "Xor") flat <- c(flat, a$args) else flat[[length(flat) + 1L]] <- a
@@ -90,6 +92,8 @@ Xor <- function(...) {
     rest <- rest[match(keepk, k)]
   }
   if (!length(rest)) return(if (ntrue %% 2L == 1L) S_true else S_false)
+  # remove_true = FALSE keeps True as an argument, as SymPy's Xor does
+  if (!remove_true && ntrue %% 2L == 1L) return(new_sym("Xor", .sort_by_key(c(rest, list(S_true)))))
   base <- if (length(rest) == 1L) rest[[1L]] else new_sym("Xor", .sort_by_key(rest))
   if (ntrue %% 2L == 1L) Not(base) else base
 }
@@ -167,7 +171,11 @@ register_str_printer("And", function(e) {
 })
 register_str_printer("Or", function(e)
   paste(vapply(.bool_args(e), function(a) .paren(a, PREC$BitwiseOr), ""), collapse = " | "))
-register_str_printer("Not", function(e) paste0("~", .paren(e$args[[1L]], PREC$Not)))
+# a function application has the precedence of Func, below that of Not
+register_str_printer("Not", function(e) {
+  a <- e$args[[1L]]
+  paste0("~", if (a$type == "Function" && !identical(a$name, "Mod")) paste0("(", .str(a), ")") else .paren(a, PREC$Not))
+})
 
 register_neval("And", function(e, env) as.numeric(all(vapply(e$args, function(a) .neval(a, env) != 0, TRUE))))
 register_neval("Or", function(e, env) as.numeric(any(vapply(e$args, function(a) .neval(a, env) != 0, TRUE))))

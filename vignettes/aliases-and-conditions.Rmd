@@ -32,7 +32,6 @@ them so that code translated from Python works unchanged.
 | `ImmutableDenseMatrix()`, `MutableMatrix()`, `MutableDenseMatrix()` | `ImmutableMatrix()`, which calls `Matrix()` |
 | `DenseNDimArray()`, `ImmutableDenseNDimArray()`, `ImmutableSparseNDimArray()`, `MutableDenseNDimArray()`, `MutableSparseNDimArray()`, `SparseNDimArray()` | `NDimArray()` |
 | `GroebnerBasis()` | `groebner()` |
-| `rationalize()` | `radsimp()` |
 | `true`, `false` | `S_true`, `S_false` |
 | `lex`, `grlex`, `grevlex` | the strings `"lex"`, `"grlex"`, and `"grevlex"`, monomial order names |
 | `deg()`, `rad()` | conversion between radians and degrees |
@@ -51,8 +50,6 @@ vapply(list(DenseNDimArray, ImmutableDenseNDimArray, ImmutableSparseNDimArray,
        identical, NA, NDimArray)
 vapply(GroebnerBasis(list(x * y - 2 * y, 2 * y^2 - x^2), x, y, order = "lex"),
        sstr, "")
-identical(rationalize, radsimp)
-rationalize(1 / (1 + sqrt(S(2))))
 true
 false
 c(lex, grlex, grevlex)

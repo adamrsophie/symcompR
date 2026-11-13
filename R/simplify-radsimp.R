@@ -32,7 +32,7 @@
 #' numerator and denominator. `collect_sqrt()` collects terms with common
 #' square roots. `split_surds()` splits a sum of surds by their gcd.
 #' `sqrtdenest()` rewrites `sqrt(a + b*sqrt(c))` as a sum of square roots
-#' when possible. `rationalize()` is an alias of `radsimp()`.
+#' when possible.
 #'
 #' @param e,expr An expression.
 #' @param symbolic Also handle denominators with symbols.
@@ -49,10 +49,6 @@ radsimp <- function(e, symbolic = TRUE, max_terms = 4L) {
   if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) radsimp(z, symbolic, max_terms)))
   .radsimp(as_sym(e), symbolic, max_terms)
 }
-
-#' @rdname radsimp
-#' @export
-rationalize <- radsimp
 
 .ispow2 <- function(d, symbolic, log2 = FALSE) {
   if (d$type != "Pow") return(FALSE)

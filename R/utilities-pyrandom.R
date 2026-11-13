@@ -131,9 +131,9 @@
   seq <- as.list(seed)
   function(a, b = NULL) {
     if (is.null(b)) { b <- a; a <- 0 }
-    if (b - a < 1) stop("_randrange got empty range", call. = FALSE)
+    if (b - a < 1) stop(.sympy_condition("ValueError", "_randrange got empty range"))
     repeat {
-      if (!length(seq)) stop("_randrange sequence was too short", call. = FALSE)
+      if (!length(seq)) stop(.sympy_condition("ValueError", "_randrange sequence was too short"))
       x <- seq[[1L]]; seq <<- seq[-1L]
       if (a <= x && x < b) return(x)
     }
@@ -147,9 +147,9 @@
     return(function(a, b) rr(a, b + 1))
   seq <- as.list(seed)
   function(a, b) {
-    if (b - a < 0) stop("_randint got empty range", call. = FALSE)
+    if (b - a < 0) stop(.sympy_condition("ValueError", "_randint got empty range"))
     repeat {
-      if (!length(seq)) stop("_randint sequence was too short", call. = FALSE)
+      if (!length(seq)) stop(.sympy_condition("ValueError", "_randint sequence was too short"))
       x <- seq[[1L]]; seq <<- seq[-1L]
       if (a <= x && x <= b) return(x)
     }
