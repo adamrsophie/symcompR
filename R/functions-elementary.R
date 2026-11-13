@@ -1138,6 +1138,7 @@ def_function("conjugate",
                if (isTRUE(ask_fact(a, "real"))) return(a)
                if (is_const(a, "I")) return(.neg(S_I))
                if (t == "Function" && a$name == "conjugate") return(a$args[[1L]])
+               if (!is.null(.qnode_def(t))) return(.eval_conjugate(a))
                if (isTRUE(ask_fact(a, "imaginary"))) return(.neg(a))
                if (t == "Add") return(.add(lapply(a$args, function(z) fcall("conjugate", list(z)))))
                if (t == "Mul" && all(vapply(a$args, .is_comm, TRUE)))
@@ -1377,7 +1378,9 @@ def_function("DiracDelta", nargs = 1:2,
                if (isTRUE(fa[["nonzero"]])) return(S_Zero)
                if (is_nan(a)) return(S_NaN)
                if (length(args) == 2L && is_zero_num(args[[2L]])) return(fcall("DiracDelta", list(a)))
-               if (length(args) == 1L && could_extract_minus_sign(a))
+               # a product led by a negative number (args_cnc()[0] is -1)
+               if (length(args) == 1L && a$type == "Mul" && is_number_type(.sympy_args(a)[[1L]]) &&
+                   num_sign(.sympy_args(a)[[1L]]) < 0)
                  return(fcall("DiracDelta", list(.neg(a))))
                NULL
              },
@@ -1405,6 +1408,10 @@ def_function("KroneckerDelta", nargs = 2:3,
                if (isTRUE(fd[["zero"]])) return(S_One)
                if (isTRUE(ask_fact(args[[1L]], "integer")) && isTRUE(ask_fact(args[[2L]], "integer")) &&
                    identical(fd[["integer"]], TRUE) && is_number_type(d)) return(S_Zero)
+               # indices on opposite sides of the Fermi level
+               fl <- function(e, nm) isTRUE(e$extra$other[nm][[1L]])
+               if ((fl(args[[1L]], "below_fermi") && fl(args[[2L]], "above_fermi")) ||
+                   (fl(args[[2L]], "below_fermi") && fl(args[[1L]], "above_fermi"))) return(S_Zero)
                # canonical order: default_sort_key(j) < default_sort_key(i) swaps them
                if (.key_cmp(.sort_key(args[[2L]]), .sort_key(args[[1L]])) < 0)
                  return(fnode("KroneckerDelta", c(args[2:1], args[-(1:2)])))

@@ -353,6 +353,8 @@ std <- standard_deviation
 #' @param b Logarithm base for the entropy.
 #' @export
 entropy <- function(X, condition = NULL, b = NULL, ...) {
+  # sympy.physics.quantum.entropy of a density operator or a matrix
+  if (inherits(X, "symmatrix") || (is_sym(X) && .qisa(X, "QDensity"))) return(.qentropy(X))
   pdf <- rv_density(X, condition, ...)
   base <- if (is.null(b)) exp(S_One) else as_sym(b)
   lg <- function(v) if (identical(base$key, S_E$key)) log(v) else log(v) / log(base)

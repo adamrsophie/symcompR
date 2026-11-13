@@ -488,7 +488,11 @@ S_EmptySet <- S_EmptySet
 #'   `integer`, `noninteger`, `even`, `odd`, `prime`, `composite`,
 #'   `positive`, `negative`, `zero`, `nonzero`, `nonnegative`, `nonpositive`,
 #'   `finite`, `infinite`, `imaginary`, `algebraic`, `transcendental`,
-#'   `extended_real`, `hermitian`, `antihermitian` and `polar`.
+#'   `extended_real`, `hermitian`, `antihermitian` and `polar`, and the
+#'   Fermi level assumptions `above_fermi` and `below_fermi` used by
+#'   [wicks()].
+#' @param cls For `sym_symbols()`, the constructor to use instead of
+#'   `Symbol()`, such as `Dummy` or `"Dummy"`.
 #' @param envir Environment in which `sym_var()` assigns.
 #' @return A `sym` symbol, or a list of symbols.
 #' @examples
@@ -497,11 +501,33 @@ S_EmptySet <- S_EmptySet
 #' n <- Symbol("n", integer = TRUE, positive = TRUE)
 #' @export
 Symbol <- function(name, ...) {
-  given <- .normalize_facts(list(...))
+  sp <- .split_other_facts(list(...))
+  given <- .normalize_facts(sp$rest)
   facts <- .symbol_facts(given)
   if (identical(facts[["commutative"]], FALSE)) .nc_state$any <- TRUE
-  new_sym("Symbol", name = name, extra = list(facts = facts, given = given),
-          key = paste0("S", nchar(name), ":", name, .assumption_suffix(facts)))
+  extra <- list(facts = facts, given = given)
+  if (length(sp$other)) extra$other <- sp$other
+  new_sym("Symbol", name = name, extra = extra,
+          key = paste0("S", nchar(name), ":", name, .assumption_suffix(facts),
+                       .other_facts_suffix(sp$other)))
+}
+
+# Assumptions outside the fact system, such as the Fermi level ones of
+# sympy.physics.secondquant (or any other name: Symbol does not check them),
+# are kept as given (assumptions0) and are part of the identity of the symbol
+.split_other_facts <- function(a) {
+  is_o <- !(names(a) %in% .ASSUMPTION_NAMES)
+  o <- a[is_o]
+  if (length(o)) {
+    o <- vapply(o, function(z) isTRUE(as.logical(z)), TRUE)
+    o <- o[order(names(o), method = "radix")]
+  }
+  list(rest = a[!is_o], other = o)
+}
+
+.other_facts_suffix <- function(o) {
+  if (!length(o)) return("")
+  paste0("[", paste0(names(o), "=", ifelse(o, "T", "F"), collapse = ","), "]")
 }
 
 .normalize_facts <- function(f) {
@@ -531,11 +557,12 @@ Symbol <- function(name, ...) {
 }
 
 #' @noRd
-symbols <- function(names, ...) {
+symbols <- function(names, ..., cls = NULL) {
   if (missing(names)) return(.base_call(quote(graphics::symbols)))
   if (!is.character(names)) return(graphics::symbols(names, ...))
   nms <- .expand_symbol_names(names)
-  res <- lapply(nms, function(n) Symbol(n, ...))
+  mk <- if (is.null(cls)) Symbol else if (is.character(cls)) get(cls, mode = "function") else cls
+  res <- lapply(nms, function(n) mk(n, ...))
   if (length(res) == 1 && !grepl("[, :]", trimws(names))) return(res[[1]])
   names(res) <- nms
   res
@@ -574,11 +601,14 @@ Dummy <- function(name = NULL, ...) {
   id <- .dummy_counter$n
   .dummy_counter$n <- id + 1L
   if (is.null(name)) name <- paste0("Dummy_", id)
-  facts <- .symbol_facts(.normalize_facts(list(...)))
+  sp <- .split_other_facts(list(...))
+  facts <- .symbol_facts(.normalize_facts(sp$rest))
   if (identical(facts[["commutative"]], FALSE)) .nc_state$any <- TRUE
-  new_sym("Dummy", name = name, extra = list(facts = facts, id = id),
+  extra <- list(facts = facts, id = id)
+  if (length(sp$other)) extra$other <- sp$other
+  new_sym("Dummy", name = name, extra = extra,
           key = paste0("D", id, ":", nchar(name), ":", name,
-                       .assumption_suffix(facts)))
+                       .assumption_suffix(facts), .other_facts_suffix(sp$other)))
 }
 
 #' @rdname Dummy

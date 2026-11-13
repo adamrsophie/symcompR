@@ -15,7 +15,9 @@
 #' methods. `Differential()`, `TensorProduct()`, `WedgeProduct()`,
 #' `Commutator()`, `LieDerivative()`, `BaseCovarDerivativeOp()` and
 #' `CovarDerivativeOp()` build fields and operators, applied with
-#' `rcall(field, ...)`. `contravariant_order()`, `covariant_order()`,
+#' `rcall(field, ...)`. When no argument holds a field, `TensorProduct()` and
+#' `Commutator()` are those of `sympy.physics.quantum` (see [Operator()]).
+#' `contravariant_order()`, `covariant_order()`,
 #' `vectors_in_basis()`, `twoform_to_matrix()`, `metric_to_Christoffel_1st()`,
 #' `metric_to_Christoffel_2nd()`, `metric_to_Riemann_components()`,
 #' `metric_to_Ricci_components()`, `intcurve_series()` and
@@ -248,9 +250,20 @@ register_str_printer("Differential", function(e) {
 .DG_NONE <- new_sym("DGNone", list(), name = "None", key = "DGNone")
 .dg_isnone <- function(z) is_sym(z) && identical(z$key, "DGNone")
 
+.DG_FIELD_TYPES <- c("BaseScalarField", "BaseVectorField", "Differential", "TensorProduct", "WedgeProduct",
+                     "Commutator", "LieDerivative", "BaseCovarDerivativeOp", "CovarDerivativeOp")
+.dg_involved <- function(args) any(vapply(args, function(a) is_sym(a) && .has_type(a, .DG_FIELD_TYPES), NA))
+
 #' @rdname diffgeom
 #' @export
 TensorProduct <- function(...) {
+  # without differential geometry fields this is the quantum TensorProduct
+  if (!.dg_involved(list(...))) return(.qTensorProduct(...))
+  .dg_TensorProduct(...)
+}
+
+# diffgeom.TensorProduct, which the field code below calls
+.dg_TensorProduct <- function(...) {
   args <- lapply(list(...), as_sym)
   ords <- vapply(args, function(m) covariant_order(m) + contravariant_order(m), 0)
   scalar <- .mul(args[ords == 0])
@@ -294,6 +307,12 @@ WedgeProduct <- function(...) {
 #' @rdname diffgeom
 #' @export
 Commutator <- function(v1, v2) {
+  if (!.dg_involved(list(v1, v2))) return(.qCommutator(v1, v2))
+  .dg_Commutator(v1, v2)
+}
+
+# diffgeom.Commutator, which the field code below calls
+.dg_Commutator <- function(v1, v2) {
   v1 <- as_sym(v1); v2 <- as_sym(v2)
   if (covariant_order(v1) || contravariant_order(v1) != 1 || covariant_order(v2) || contravariant_order(v2) != 1)
     stop("Only commutators of vector fields are supported.", call. = FALSE)
@@ -321,7 +340,7 @@ LieDerivative <- function(v_field, expr) {
   if (contravariant_order(v_field) != 1 || covariant_order(v_field))
     stop("Lie derivatives are defined only with respect to vector fields. The supplied argument was not a vector field.", call. = FALSE)
   if (covariant_order(expr) > 0) { .nc_state$any <- TRUE; return(new_sym("LieDerivative", list(v_field, expr))) }
-  if (length(atoms(expr, "BaseVectorField"))) return(Commutator(v_field, expr))
+  if (length(atoms(expr, "BaseVectorField"))) return(.dg_Commutator(v_field, expr))
   rcall(v_field, expr)
 }
 
@@ -377,7 +396,7 @@ rcall <- function(expr, ...) .dg_rcall(as_sym(expr), lapply(list(...), function(
       lead <- rcall(v, do.call(rcall, c(list(ex), args)))
       # SymPy multiplies the arguments with the commutator in place
       rest <- .add(lapply(seq_along(args), function(i) {
-        a <- args; a[[i]] <- Commutator(v, args[[i]])
+        a <- args; a[[i]] <- .dg_Commutator(v, args[[i]])
         .mul(a)
       }))
       .sub(lead, rest)
@@ -419,7 +438,7 @@ rcall <- function(expr, ...) .dg_rcall(as_sym(expr), lapply(list(...), function(
     t <- rcall(vf[[i]], do.call(rcall, c(list(f), vf[-i])))
     ret[[length(ret) + 1L]] <- .mul(list(.int((-1)^(i - 1L)), t))
     if (i < k) for (j in (i + 1L):k) {
-      cm <- Commutator(vf[[i]], vf[[j]])
+      cm <- .dg_Commutator(vf[[i]], vf[[j]])
       if (!is_zero_num(cm)) {
         t2 <- do.call(rcall, c(list(f), list(cm), vf[-c(i, j)]))
         ret[[length(ret) + 1L]] <- .mul(list(.int((-1)^(i + j - 2L)), t2))
@@ -439,7 +458,7 @@ rcall <- function(expr, ...) .dg_rcall(as_sym(expr), lapply(list(...), function(
     fs <- if (ends[i] >= starts[i]) fields[starts[i]:ends[i]] else list()
     do.call(rcall, c(list(e$args[[i]]), fs))
   })
-  do.call(TensorProduct, mult)
+  do.call(.dg_TensorProduct, mult)
 }
 
 .perm_sign <- function(p) {
@@ -452,7 +471,7 @@ rcall <- function(expr, ...) .dg_rcall(as_sym(expr), lapply(list(...), function(
   mul <- .inv(.mul(lapply(ords, function(o) fcall("factorial", list(.int(o))))))
   perms <- .it_perms(fields)
   signs <- vapply(.it_perms(seq_along(fields) - 1L), .perm_sign, 0L)
-  tp <- do.call(TensorProduct, e$args)
+  tp <- do.call(.dg_TensorProduct, e$args)
   .mul(list(mul, .add(Map(function(p, s) .mul(list(.dg_tensor_call(tp, p), .int(s))), perms, signs))))
 }
 

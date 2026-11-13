@@ -531,6 +531,51 @@ reference:
   - CharacteristicCurveCollection
   - musculotendon
   - MusculotendonFormulation
+- title: Quantum mechanics
+  desc: sympy.physics.quantum, secondquant, paulialgebra and hep.gamma_matrices.
+  contents:
+  - AntiCommutator
+  - Dagger
+  - HBar
+  - InnerProduct
+  - Tr
+  - Wavefunction
+  - boson
+  - cartesian-quantum
+  - cg-coefficients
+  - circuit-gates
+  - circuitutils
+  - combined_tensor_printing
+  - density-operators
+  - fermion
+  - gamma-matrices
+  - grover
+  - hilbert-spaces
+  - identitysearch
+  - m_values
+  - normalized
+  - operator-ordering
+  - operators_to_state
+  - pauli-algebra
+  - pauli
+  - piab
+  - qapply
+  - qasm
+  - qft
+  - quantum-attributes
+  - quantum-gates
+  - quantum-matrixutils
+  - quantum-operators
+  - quantum-qubits
+  - quantum-states
+  - represent
+  - secondquant-wicks
+  - secondquant
+  - sho1d
+  - shor
+  - spin-operators
+  - spin-states
+  - wigner-symbols
 - title: Code generation
   desc: The sympy.codegen AST, code printers, rewriting and optimization, and utilities.codegen routines.
   contents:

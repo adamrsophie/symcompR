@@ -29,7 +29,7 @@ probability(
 
 rv_density(expr, condition = NULL, evaluate = TRUE, numsamples = NULL, ...)
 
-Density(expr, condition = NULL)
+Density(expr, condition = NULL, ...)
 
 rv_cdf(expr, condition = NULL, evaluate = TRUE, ...)
 
@@ -48,7 +48,8 @@ rv_quantile(expr, evaluate = TRUE, ...)
 
 \item{evaluate}{\code{FALSE} keeps integrals and sums unevaluated.}
 
-\item{...}{Ignored.}
+\item{...}{Ignored, except by \code{Density()}: further \code{list(state, probability)}
+pairs of a quantum density operator (\link{density-operators}).}
 
 \item{given_condition}{An optional condition for \code{P()}.}
 }

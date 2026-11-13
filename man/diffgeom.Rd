@@ -167,7 +167,9 @@ A sym object, matrix, array or list.
 methods. \code{Differential()}, \code{TensorProduct()}, \code{WedgeProduct()},
 \code{Commutator()}, \code{LieDerivative()}, \code{BaseCovarDerivativeOp()} and
 \code{CovarDerivativeOp()} build fields and operators, applied with
-\code{rcall(field, ...)}. \code{contravariant_order()}, \code{covariant_order()},
+\code{rcall(field, ...)}. When no argument holds a field, \code{TensorProduct()} and
+\code{Commutator()} are those of \code{sympy.physics.quantum} (see \code{\link[=Operator]{Operator()}}).
+\code{contravariant_order()}, \code{covariant_order()},
 \code{vectors_in_basis()}, \code{twoform_to_matrix()}, \code{metric_to_Christoffel_1st()},
 \code{metric_to_Christoffel_2nd()}, \code{metric_to_Riemann_components()},
 \code{metric_to_Ricci_components()}, \code{intcurve_series()} and

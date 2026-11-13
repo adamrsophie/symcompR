@@ -370,15 +370,17 @@ piecewise_fold <- function(e, evaluate = TRUE) {
 #'
 #' @param e An expression.
 #' @param target The target family as a string.
+#' @param ... Options for the rewrite methods of quantum objects.
 #' @return An expression.
 #' @examples
 #' x <- Symbol("x")
 #' rewrite(sin(x), "exp")
 #' rewrite(sym_factorial(Symbol("n")), "gamma")
 #' @export
-rewrite <- function(e, target) {
-  if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) rewrite(z, target)))
+rewrite <- function(e, target, ...) {
+  if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) rewrite(z, target, ...)))
   e <- as_sym(e)
+  if (.qhas_node(e)) return(.qrewrite(e, target, ...))
   rules <- .rewrite_rules[[target]]
   # rules of the codegen functions (R/codegen-cfunctions.R)
   extra <- .cg_rewrites[[target]]

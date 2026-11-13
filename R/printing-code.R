@@ -90,7 +90,8 @@
     if (q == 2) return(paste0("\\sqrt{", .latex(b), "}"))
     return(paste0("\\sqrt[", as.character(q), "]{", .latex(b), "}"))
   }
-  if (.is_neg_exp(x)) return(paste0("\\frac{1}{", .latex(.pow(b, .neg(x))), "}"))
+  # a noncommutative base keeps its negative exponent, A^{-1}
+  if (.is_neg_exp(x) && .is_comm(b)) return(paste0("\\frac{1}{", .latex(.pow(b, .neg(x))), "}"))
   bs <- if (b$type == "Function") paste0("\\left(", .latex(b), "\\right)") else .latex_paren(b, PREC$Pow)
   paste0(bs, "^{", .latex(x), "}")
 }

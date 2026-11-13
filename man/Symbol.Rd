@@ -10,7 +10,7 @@ Symbol(name, ...)
 
 sym_var(names, ..., envir = parent.frame())
 
-sym_symbols(names, ...)
+sym_symbols(names, ..., cls = NULL)
 }
 \arguments{
 \item{name}{Symbol name.}
@@ -20,11 +20,16 @@ names are \code{commutative}, \code{complex}, \code{real}, \code{rational}, \cod
 \code{integer}, \code{noninteger}, \code{even}, \code{odd}, \code{prime}, \code{composite},
 \code{positive}, \code{negative}, \code{zero}, \code{nonzero}, \code{nonnegative}, \code{nonpositive},
 \code{finite}, \code{infinite}, \code{imaginary}, \code{algebraic}, \code{transcendental},
-\code{extended_real}, \code{hermitian}, \code{antihermitian} and \code{polar}.}
+\code{extended_real}, \code{hermitian}, \code{antihermitian} and \code{polar}, and the
+Fermi level assumptions \code{above_fermi} and \code{below_fermi} used by
+\code{\link[=wicks]{wicks()}}.}
 
 \item{names}{A string of names separated by spaces or commas.}
 
 \item{envir}{Environment in which \code{sym_var()} assigns.}
+
+\item{cls}{For \code{sym_symbols()}, the constructor to use instead of
+\code{Symbol()}, such as \code{Dummy} or \code{"Dummy"}.}
 }
 \value{
 A \code{sym} symbol, or a list of symbols.

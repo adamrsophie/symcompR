@@ -149,7 +149,9 @@ number field such as \verb{QQ<sqrt(2)>}; \code{CyclotomicField(n)} is \verb{QQ<z
 Calling a domain converts its arguments to an element: \code{ZZ(3)} is a
 \code{bigz}, \code{QQ(1, 2)} a \code{bigq}, \code{GF(7)(10)} the residue \verb{3 mod 7}, and
 \code{ZZ[x](x^2 + 1)} a \code{\link[=Poly]{Poly()}}. \code{to_sympy()} and \code{from_sympy()} convert
-between elements and expressions, and \code{Domain(K)} tests for a domain.
+between elements and expressions (with one argument, \code{to_sympy(m)} is the
+quantum matrix helper of \code{\link[=matrix_tensor_product]{matrix_tensor_product()}}), and \code{Domain(K)}
+tests for a domain.
 The names \code{IntegerRing()}, \code{RationalField()}, \code{RealField()},
 \code{ComplexField()}, \code{ExpressionDomain()}, \code{FiniteField()} and the Python
 and GMPY variants of SymPy (\code{ZZ_python}, \code{QQ_gmpy}, \code{FF_python}, ...)

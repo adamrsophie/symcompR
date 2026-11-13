@@ -47,10 +47,14 @@ expand <- function(e, deep = TRUE, mul = TRUE, multinomial = TRUE,
                                   force = force, basic = basic, factor = factor))
   h <- list(mul = mul, multinomial = multinomial, power_exp = power_exp, power_base = power_base, log = log,
             trig = trig, complex = complex, func = func, force = force, basic = basic, factor = factor)
+  # hints registered in .expand_custom, such as commutator and tensorproduct
+  extra <- list(...)
+  extra <- names(extra)[vapply(extra, isTRUE, NA) & names(extra) %in% ls(.expand_custom)]
+  hs <- c("basic", "complex", "func", "log", "multinomial", "mul", "power_base", "power_exp", "trig", extra)
   # Expr.expand: one pass per hint in sorted order (mul after multinomial),
   # then multinomial, mul and log to a fixed point
-  for (hint in c("basic", "complex", "func", "log", "multinomial", "mul", "power_base", "power_exp", "trig"))
-    if (isTRUE(h[[hint]])) e <- .expand_hint(e, hint, deep, h)
+  for (hint in hs[order(ifelse(hs == "mul", "mulz", hs), method = "radix")])
+    if (isTRUE(h[[hint]]) || hint %in% extra) e <- .expand_hint(e, hint, deep, h)
   repeat {
     was <- e$key
     if (multinomial) e <- .expand_hint(e, "multinomial", deep, h)
@@ -113,7 +117,7 @@ expand <- function(e, deep = TRUE, mul = TRUE, multinomial = TRUE,
       NULL
     },
     trig = if (t == "Function" && e$name %in% c("sin", "cos", "tan", "cot", "sec", "csc", "sinh", "cosh", "tanh", "coth", "sech", "csch")) .expand_trig1(e, h) else NULL,
-    NULL)
+    { f <- .expand_custom[[hint]]; if (is.null(f)) NULL else f(e) })
 }
 
 # Mul._eval_expand_mul (hints carry no `deep`, so new products of sums are

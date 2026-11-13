@@ -14,6 +14,7 @@
 # the SymPy class name of a node
 .sympy_class <- function(e) {
   t <- e$type
+  if (!is.null(.qnode_def(t))) return(.qnode_def(t)$pyname)
   if (t == "Symbol" && !is.null(e$extra$sympy_class)) return(e$extra$sympy_class)
   if (t == "Integer") {
     if (e$value == 0) return("Zero")

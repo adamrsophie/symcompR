@@ -304,7 +304,12 @@ as_coeff_mul_split <- function(a) {
     }
   }
 
-  if (length(ncfac) > 1L) ncfac <- .merge_nc(ncfac)
+  if (length(ncfac) > 1L) {
+    m <- .merge_nc(ncfac)
+    ncfac <- m$nc
+    # a combined power that commutes joins the commutative factors
+    if (length(m$c)) return(.mul(c(list(coeff), if (!is.null(inf_head)) list(inf_head), cfac, m$c, ncfac), depth + 1L))
+  }
 
   if (is.null(inf_head) && !length(ncfac) && length(cfac) == 1L &&
       cfac[[1L]]$type == "Add" && !(coeff$type != "Float" && num_is_one(coeff))) {
@@ -335,6 +340,8 @@ as_coeff_mul_split <- function(a) {
   out <- c(head, cfac, ncfac)
   if (!length(out)) return(S_One)
   if (length(out) == 1L) return(out[[1L]])
+  # constructor postprocessors (Basic._constructor_postprocessor_mapping)
+  if (length(ncfac) && !is.null(.arith_hooks$mul_post)) return(.arith_hooks$mul_post(out))
   new_sym("Mul", out)
 }
 
@@ -412,23 +419,29 @@ as_coeff_mul_split <- function(a) {
 }
 
 .merge_nc <- function(fs) {
-  out <- list(fs[[1L]])
-  for (f in fs[-1L]) {
+  out <- list()
+  cpart <- list()
+  todo <- fs
+  while (length(todo)) {
+    f <- todo[[1L]]
+    todo <- todo[-1L]
+    if (!length(out)) { out <- list(f); next }
     last <- out[[length(out)]]
     b1 <- .base_exp(last)
     b2 <- .base_exp(f)
     # Mul.flatten: noncommutative powers combine unless the new exponent is
-    # a sum (a^x*a^y stays, a^2*a^3 = a^5)
+    # a sum (a^x*a^y stays, a^2*a^3 = a^5); a commutative result leaves the
+    # noncommutative part, any other is combined again with the factor before
     ne <- .add(list(b1[[2L]], b2[[2L]]))
     if (identical(b1[[1L]]$key, b2[[1L]]$key) && ne$type != "Add") {
-      out[[length(out)]] <- .pow(b1[[1L]], ne)
-      if (is_one_num(out[[length(out)]])) out[[length(out)]] <- NULL
-      if (!length(out)) out <- list(S_One)
+      out[[length(out)]] <- NULL
+      p <- .pow(b1[[1L]], ne)
+      if (.is_comm(p)) cpart[[length(cpart) + 1L]] <- p else todo <- c(list(p), todo)
     } else {
       out[[length(out) + 1L]] <- f
     }
   }
-  out
+  list(nc = out, c = cpart)
 }
 
 # ---------------------------------------------------------------------------
@@ -436,6 +449,7 @@ as_coeff_mul_split <- function(a) {
 
 .pow <- function(b, e) {
   if (is_sym(b) && b$type == "Order") { r <- .order_pow(b, as_sym(e)); if (!is.null(r)) return(r) }
+  if (!is.null(.arith_hooks$pow_pre)) { r <- .arith_hooks$pow_pre(b, e); if (!is.null(r)) return(r) }
   bt <- b$type
   et <- e$type
   if (et == "Integer" || et == "Rational" || et == "Float") {

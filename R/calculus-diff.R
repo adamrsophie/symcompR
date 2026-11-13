@@ -352,6 +352,9 @@ doit <- function(e, deep = TRUE, ...) {
       list(if (identical(ne$key, e$key)) p[[1L]] else ne, doit(p[[2L]]))
     })))
   }
+  # a class whose doit does not evaluate its arguments first, as Tr.doit
+  h <- .doit_hooks[[e$type]]
+  if (isTRUE(attr(h, "shallow"))) return(.doit_hook_call(h, e, deep, ...))
   # ArrayAdd.doit evaluates its own arguments: they may become scalars
   if (deep && e$type != "ArrayAdd") {
     # an explicit matrix result stays an argument as an ImmutableMatrix node
@@ -366,8 +369,14 @@ doit <- function(e, deep = TRUE, ...) {
     if (!is.null(d$doit)) return(d$doit(e, deep = deep, ...))
   }
   h <- .doit_hooks[[t]]
-  if (!is.null(h)) return(if ("deep" %in% names(formals(h))) h(e, deep = deep) else h(e))
+  if (!is.null(h)) return(.doit_hook_call(h, e, deep, ...))
   e
+}
+
+# a hook gets the hints only when it takes them
+.doit_hook_call <- function(h, e, deep, ...) {
+  f <- names(formals(h))
+  if ("..." %in% f) h(e, deep = deep, ...) else if ("deep" %in% f) h(e, deep = deep) else h(e)
 }
 
 register_rebuilder("Derivative", function(e, args) {

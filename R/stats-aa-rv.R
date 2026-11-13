@@ -633,7 +633,8 @@ where <- function(condition, given_condition = NULL, ...) {
 #' @param given_condition An optional condition for `P()`.
 #' @param numsamples Sampling is not supported; must be `NULL`.
 #' @param evaluate `FALSE` keeps integrals and sums unevaluated.
-#' @param ... Ignored.
+#' @param ... Ignored, except by `Density()`: further `list(state, probability)`
+#'   pairs of a quantum density operator ([density-operators]).
 #' @return An expression, a distribution, a `Lambda` or a mapping.
 #' @examples
 #' X <- Normal("X", 0, 1)
@@ -685,7 +686,11 @@ rv_density <- function(expr, condition = NULL, evaluate = TRUE, numsamples = NUL
 
 #' @rdname E
 #' @export
-Density <- function(expr, condition = NULL) {
+Density <- function(expr, condition = NULL, ...) {
+  # sympy.physics.quantum.Density: the arguments are list(state, probability)
+  if ((is.list(expr) && !is_sym(expr) && !inherits(expr, "symmatrix")) ||
+      (is_sym(expr) && expr$type == "Tuple" && length(expr$args) == 2L && .qhas_node(expr$args[[1L]])))
+    return(do.call(.qdensity, c(list(expr), if (!is.null(condition)) list(condition), list(...))))
   args <- list(if (inherits(expr, "symmatrix")) expr else as_sym(expr))
   if (!is.null(condition)) args[[2L]] <- .as_bool_sym(as_sym(condition))
   new_sym("Density", args)

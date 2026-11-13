@@ -8,6 +8,7 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
 
 .prec <- function(e) {
   t <- e$type
+  if (!is.null(.qnode_def(t))) { qp <- .qfind(t, "precedence"); if (!is.null(qp)) return(qp$val) }
   switch(t,
          Add = PREC$Add,
          Mul = if (any(vapply(e$args, function(a) a$type == "UnevaluatedExpr", TRUE))) PREC$Mul
@@ -83,7 +84,7 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
   cv <- vapply(args, function(a) {
     sp <- as_coeff_mul_split(a)
     facs <- if (sp[[2L]]$type == "Mul") sp[[2L]]$args else list(sp[[2L]])
-    num <- c(list(sp[[1L]]), Filter(.expr_is_number, facs))
+    num <- c(list(sp[[1L]]), Filter(function(f) .expr_is_number(f) && !.qno_value(f), facs))
     v <- tryCatch(as.complex(.neval(.mul(num), list())), error = function(e) NA_complex_)
     if (length(v) != 1L) NA_complex_ else v
   }, 0i)
@@ -150,8 +151,9 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
   cparts <- character()
   nc <- list()
   for (f in facs) {
-    # Expr.is_number: no free symbols and no undefined function
-    if (.expr_is_number(f)) {
+    # Expr.is_number: no free symbols and no undefined function; a number
+    # holding a quantum object without a complex value stays a generator
+    if (.expr_is_number(f) && !.qno_value(f)) {
       cparts <- c(cparts, .str(f))
       next
     }
@@ -174,7 +176,12 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
 .mul_print_order <- function(fs) {
   if (length(fs) < 2L) return(fs)
   comm <- vapply(fs, .is_comm, TRUE)
-  if (!all(comm)) return(c(.mul_print_order(fs[comm]), fs[!comm]))
+  # args_cnc: the factors from the first noncommutative one on keep their
+  # order (a Mul built by the quantum transforms may hold commutative ones)
+  if (!all(comm)) {
+    k <- which(!comm)[1L]
+    return(c(.mul_print_order(fs[seq_len(k - 1L)]), fs[k:length(fs)]))
+  }
   .key_sort(lapply(fs, .sort_key), fs)
 }
 
@@ -365,7 +372,7 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
                     else as.character(e$value),
          Float = .fmt_float_sym(e, strip = TRUE),
          Symbol = e$name,
-         Dummy = paste0("_", e$name),
+         Dummy = if (isTRUE(.str_mode$dummy_key)) paste0("(", e$name, "_", e$extra$id, ")") else paste0("_", e$name),
          Wild = paste0(e$name, "_"),
          Constant = e$name,
          BooleanAtom = if (e$name == "true") "True" else "False",
@@ -408,6 +415,8 @@ sstr <- function(e) {
   # free group words, fp groups, coset tables and polyhedra print as their str()
   if (inherits(e, c("FreeGroupElement", "FreeGroup", "FpGroup", "FpSubgroup", "CosetTable", "Polyhedron")))
     return(fp_str(e))
+  # the bases of sympy.physics.secondquant print as their repr()
+  if (inherits(e, c("VarBosonicBasis", "FixedBosonicBasis"))) return(format(e))
   # permutations, cycles, groups and cosets print as their own str()
   if (inherits(e, c("Permutation", "Cycle", "PermutationGroup", "Coset", "SymmetricPermutationGroup",
                     "TransitiveSubgroupName", "galois_group_result")))
@@ -427,11 +436,14 @@ sstr <- function(e) {
 # zeros when it is part of a larger expression; Prefix.__str__ is the
 # abbreviation, while inside an expression a prefix prints as its name
 .str_top <- function(e) if (e$type == "Float") .fmt_float_sym(e, strip = FALSE) else
-  if (e$type == "Prefix") .str(e$args[[2L]]) else .str(e)
+  if (e$type == "Prefix") .str(e$args[[2L]]) else
+  if (!is.null(.qnode_def(e$type)) && !is.null(f <- .qfind(e$type, "__str__")$val)) f(e) else .str(e)
 
 #' @rdname sstr
 #' @export
 srepr <- function(e) {
+  # ReprPrinter.emptyPrinter: an object that is not Basic prints as its str()
+  if (inherits(e, c("VarBosonicBasis", "FixedBosonicBasis"))) return(format(e))
   e <- as_sym(e)
   t <- e$type
   # codegen nodes print through their own repr (R/codegen-ast.R)
@@ -449,6 +461,7 @@ srepr <- function(e) {
          } else {
            # the assumptions as given, sorted, as SymPy's srepr
            given <- if (!is.null(e$extra$given)) e$extra$given else { f <- e$extra$facts; f[!is.na(f) & names(f) != "commutative"] }
+           given <- c(given, e$extra$other)
            if (length(given)) given <- given[order(names(given), method = "radix")]
            if (length(given)) paste0("Symbol('", e$name, "', ",
                                      paste0(names(given), "=", ifelse(given, "True", "False"), collapse = ", "), ")")
@@ -457,9 +470,14 @@ srepr <- function(e) {
          Dummy = paste0("Dummy('", e$name, "')"),
          Wild = paste0(if (isTRUE(e$extra$wildfunction)) "WildFunction('" else "Wild('", e$name, "')"),
          Constant = e$name,
-         BooleanAtom = .str(e),
+         BooleanAtom = if (identical(e$name, "true")) "true" else "false",
          Predicate = , UndefinedPredicate = .str(e),
-         Function = paste0(e$name, "(", paste(vapply(e$args, srepr, ""), collapse = ", "), ")"),
+         # an undefined function prints its class, Function('f')
+         Function = paste0(if (.is_undefined_application(e)) paste0("Function('", e$name, "')") else e$name,
+                           "(", paste(vapply(e$args, srepr, ""), collapse = ", "), ")"),
+         # a noncommutative Add in the order of as_ordered_terms
+         Add = paste0("Add(", paste(vapply(if (all(vapply(e$args, .is_comm, NA))) e$args else .add_print_order(e$args),
+                                          srepr, ""), collapse = ", "), ")"),
          paste0(t, "(", paste(vapply(e$args, srepr, ""), collapse = ", "), ")"))
 }
 

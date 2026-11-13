@@ -430,6 +430,8 @@ format.lark_token <- function(x, ...) paste0("Token('", x$type, "', '", x$value,
   mul = function(t, ctx) .ltx_multiply(t[[1L]], t[[3L]]),
   div = function(t, ctx) .ltx_division(t[[1L]], t[[3L]]),
   adjacent_expressions = function(t, ctx) {
+    if (is_sym(t[[1L]]) && is_sym(t[[2L]]) && .qisa(t[[1L]], "Ket") && .qisa(t[[2L]], "Bra"))
+      return(OuterProduct(t[[1L]], t[[2L]]))
     if (.ltx_is_derivop(t[[1L]])) return(.ltx_derive(t[[1L]], t[[2L]]))
     .ltx_multiply(t[[1L]], t[[2L]])
   },
@@ -498,9 +500,9 @@ format.lark_token <- function(x, ...) paste0("Token('", x$type, "', '", x$value,
     fcall(sprintf("%s^{-1}", sstr(t[[1L]])), lapply(t[[length(t) - 1L]], .ltx_sym)),
   min = function(t, ctx) do.call(Min, lapply(t[[3L]], .ltx_sym)),
   max = function(t, ctx) do.call(Max, lapply(t[[3L]], .ltx_sym)),
-  bra = function(t, ctx) .latex_quantum("Bra"),
-  ket = function(t, ctx) .latex_quantum("Ket"),
-  inner_product = function(t, ctx) .latex_quantum("InnerProduct"),
+  bra = function(t, ctx) Bra(.ltx_sym(t[[2L]])),
+  ket = function(t, ctx) Ket(.ltx_sym(t[[2L]])),
+  inner_product = function(t, ctx) InnerProduct(Bra(.ltx_sym(t[[2L]])), Ket(.ltx_sym(t[[4L]]))),
   trigonometric_function = function(t, ctx) .ltx_apply(.ltx_fcall(.ltx_function(ctx, t[[1L]]$value)), t[[2L]]),
   trigonometric_function_power = function(t, ctx) {
     fn <- .ltx_function(ctx, t[[1L]]$value)
@@ -570,11 +572,6 @@ format.lark_token <- function(x, ...) paste0("Token('", x$type, "', '", x$value,
     if (grepl(".", tk$value, fixed = TRUE)) Float(tk$value) else make_rational(gmp::as.bigq(.str_bigz(tk$value)))
   }
 )
-
-.latex_quantum <- function(cls) {
-  stop(structure(class = c("NotImplementedError", "error", "condition"),
-                 list(message = sprintf("sympy.physics.quantum.%s is not available", cls), call = NULL)))
-}
 
 .latex_tokens <- list(
   SYMBOL = function(v, ctx) Symbol(v),

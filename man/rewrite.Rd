@@ -4,12 +4,14 @@
 \alias{rewrite}
 \title{Rewrite an expression in terms of other functions}
 \usage{
-rewrite(e, target)
+rewrite(e, target, ...)
 }
 \arguments{
 \item{e}{An expression.}
 
 \item{target}{The target family as a string.}
+
+\item{...}{Options for the rewrite methods of quantum objects.}
 }
 \value{
 An expression.

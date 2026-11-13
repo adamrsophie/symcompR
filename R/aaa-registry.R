@@ -10,6 +10,14 @@ register_str_printer <- function(type, fn) assign(type, fn, envir = .str_printer
 .latex_printers <- new.env()
 register_latex_printer <- function(type, fn) assign(type, fn, envir = .latex_printers)
 
+# mul_post(args): Mul constructor postprocessing when noncommutative factors
+# are present; pow_pre(b, e): a hook run first by the Pow constructor
+.arith_hooks <- new.env()
+
+# expand hints beyond the built in ones: .expand_custom[[hint]](e) returns
+# the expanded node or NULL
+.expand_custom <- new.env()
+
 .neval_hooks <- new.env()
 register_neval <- function(type, fn) assign(type, fn, envir = .neval_hooks)
 

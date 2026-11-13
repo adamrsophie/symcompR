@@ -26,7 +26,9 @@
 #' Calling a domain converts its arguments to an element: `ZZ(3)` is a
 #' `bigz`, `QQ(1, 2)` a `bigq`, `GF(7)(10)` the residue `3 mod 7`, and
 #' `ZZ[x](x^2 + 1)` a [Poly()]. `to_sympy()` and `from_sympy()` convert
-#' between elements and expressions, and `Domain(K)` tests for a domain.
+#' between elements and expressions (with one argument, `to_sympy(m)` is the
+#' quantum matrix helper of [matrix_tensor_product()]), and `Domain(K)`
+#' tests for a domain.
 #' The names `IntegerRing()`, `RationalField()`, `RealField()`,
 #' `ComplexField()`, `ExpressionDomain()`, `FiniteField()` and the Python
 #' and GMPY variants of SymPy (`ZZ_python`, `QQ_gmpy`, `FF_python`, ...)
@@ -287,6 +289,8 @@ chooseOpsMethod.sym_gaussian <- function(x, y, mx, my, cl, reverse) TRUE
 #' @rdname domains
 #' @export
 to_sympy <- function(K, a) {
+  # one argument: sympy.physics.quantum.matrixutils.to_sympy(m)
+  if (missing(a)) return(.qto_sympy(K))
   if (inherits(a, "sym_modint")) {
     # SymPy's symmetric representation of residues
     v <- a$val; if (v > a$mod %/% 2) v <- v - a$mod

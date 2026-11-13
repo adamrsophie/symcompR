@@ -172,6 +172,7 @@ EmptySet <- S_EmptySet
   }
   # Applications that are separate node types here
   if (t %in% .NARGS0_TYPES) return(list(4, 0, t))
+  if (!is.null(.qnode_def(t))) return(list(if (isTRUE(.qfind(t, "is_Atom")$val)) 2 else 5, 0, .qnode_def(t)$pyname))
   list(5, 0, if (!is.null(e$extra$sympy_class)) e$extra$sympy_class else t)
 }
 
@@ -201,11 +202,12 @@ EmptySet <- S_EmptySet
   }
   args <- if (ex$type == "Symbol" && !is.null(ex$extra$rv_class)) list(.sort_key(ex$extra$symbol), .sort_key(ex$extra$pspace)) else
     if (!length(ex$args) || ex$type == "Indexed") list(.str(ex)) else {
+    # Mul.as_ordered_factors: the commutative factors sorted, then the
+    # noncommutative ones in their order
     a <- if (ex$type == "Add") .add_print_order(ex$args) else
-      if (ex$type %in% c("And", "Or")) .bool_print_order(ex$args) else ex$args
-    k <- lapply(a, .sort_key)
-    if (ex$type == "Mul") k <- .key_sort(k)
-    k
+      if (ex$type %in% c("And", "Or")) .bool_print_order(ex$args) else
+      if (ex$type == "Mul") .mul_print_order(ex$args) else ex$args
+    lapply(a, .sort_key)
   }
   list(.class_key(ex), list(length(args), args), .sort_key(pw), .sort_num(sp[[1L]]))
 }
