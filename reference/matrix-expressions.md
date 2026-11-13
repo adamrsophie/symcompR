@@ -29,9 +29,9 @@ OneMatrix(n, m)
 
 mat_shape(e)
 
-MatMul(..., evaluate = TRUE)
+MatMul(..., evaluate = FALSE)
 
-MatAdd(..., evaluate = TRUE)
+MatAdd(..., evaluate = FALSE)
 
 MatPow(A, k)
 
@@ -106,9 +106,11 @@ as_explicit(e)
 
 - evaluate:
 
-  If `FALSE`, `MatAdd()` and `MatMul()` keep their arguments as given,
-  as SymPy's default; explicit matrices are held as arguments either way
-  when symbolic matrices are present.
+  If `TRUE`, `MatAdd()` and `MatMul()` put their arguments in canonical
+  form, as
+  [`doit()`](https://adamrsophie.github.io/symcompR/reference/doit.md)
+  does; by default they keep them as given, as in SymPy. A `MatMul()` of
+  scalars only is their product.
 
 - k:
 

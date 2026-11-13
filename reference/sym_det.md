@@ -4,7 +4,11 @@
 `"berkowitz"` or `"laplace"`). `inverse()` (also `solve(M)`) inverts by
 Gauss-Jordan elimination; `adjugate()`, `cofactor()`, `minor()`,
 `trace_matrix()`, `rank_matrix()`, `rref()`, `nullspace()`,
-`columnspace()` and `rowspace()` follow SymPy.
+`columnspace()` and `rowspace()` follow SymPy. Given a characteristic
+curve such as
+[`TendonForceLengthDeGroote2016()`](https://adamrsophie.github.io/symcompR/reference/characteristic-curves.md),
+`inverse()` returns the constructor of its inverse curve, as SymPy's
+`Function.inverse()`.
 
 ## Usage
 

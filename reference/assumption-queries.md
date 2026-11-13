@@ -36,7 +36,7 @@ is_prime_expr(e)
 
 is_finite(e)
 
-is_infinite(e)
+is_infinite(e, assumptions = NULL)
 
 is_imaginary(e)
 
@@ -52,6 +52,13 @@ is_transcendental(e)
 - e:
 
   A `sym` expression.
+
+- assumptions:
+
+  For `is_infinite()`, assumptions such as `Q$infinite(e)` to decide
+  with
+  [`ask()`](https://adamrsophie.github.io/symcompR/reference/ask.md)
+  instead.
 
 ## Value
 

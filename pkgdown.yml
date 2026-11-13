@@ -1,8 +1,41 @@
 pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
-articles: {}
-last_built: 2026-11-12T15:52Z
+articles:
+  aliases-and-conditions: aliases-and-conditions.html
+  assumptions: assumptions.html
+  calculus: calculus.html
+  categories: categories.html
+  code-printers: code-printers.html
+  combinatorics: combinatorics.html
+  cryptography: cryptography.html
+  differential-geometry: differential-geometry.html
+  expressions: expressions.html
+  fp-groups: fp-groups.html
+  galois-number-fields: galois-number-fields.html
+  geometry: geometry.html
+  holonomic: holonomic.html
+  integration: integration.html
+  lie-algebras: lie-algebras.html
+  logic-and-sets: logic-and-sets.html
+  matrices: matrices.html
+  number-theory: number-theory.html
+  other-modules: other-modules.html
+  parsing: parsing.html
+  pattern-matching: pattern-matching.html
+  permutation-groups: permutation-groups.html
+  physics-units: physics-units.html
+  polynomial-domains: polynomial-domains.html
+  polynomials: polynomials.html
+  printing: printing.html
+  series-and-sequences: series-and-sequences.html
+  simplification: simplification.html
+  solvers: solvers.html
+  special-functions: special-functions.html
+  symcompR: symcompR.html
+  tensors: tensors.html
+  vector-calculus: vector-calculus.html
+last_built: 2026-11-13T01:36Z
 urls:
   reference: https://adamrsophie.github.io/symcompR/reference
   article: https://adamrsophie.github.io/symcompR/articles

@@ -21,7 +21,7 @@ orthogonalize(..., orthonormal = FALSE)
 
 directional_derivative(field, direction_vector)
 
-scalar_potential_difference(field, coord_sys, point1, point2)
+scalar_potential_difference(field, coord_sys, point1, point2, origin = NULL)
 ```
 
 ## Arguments
@@ -66,6 +66,11 @@ scalar_potential_difference(field, coord_sys, point1, point2)
 - point1, point2:
 
   Points.
+
+- origin:
+
+  For physics reference frames, the origin point used by
+  `scalar_potential_difference()`; ignored for `CoordSys3D` systems.
 
 ## Value
 
