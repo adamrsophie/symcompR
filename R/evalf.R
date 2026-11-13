@@ -105,7 +105,8 @@ N <- function(e, digits = 15, subs = list()) {
   # applied undefined functions stay as they are, arguments included
   if (!.has_undef(e) && (!length(fs0) || all(vapply(fs0, function(s) !is.null(env[[s$name]]), TRUE)))) {
     prec <- .dps_to_prec(digits)
-    r <- tryCatch(.mpeval_adaptive(e, prec, lapply(env, as_sym)), error = function(err) NULL)
+    r <- tryCatch(.mpeval_top(e, prec, lapply(env, as_sym)), error = .mp_error_handler)
+    if (is_sym(r)) return(r)
     if (!is.null(r)) return(.mpc_sym(r, prec, zero_int = TRUE))
   } else {
     # free symbols remain: every numeric part at the requested precision

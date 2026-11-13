@@ -31,10 +31,9 @@
     if (.bitlen(m) > p) { m <- .shr_round(m, 1); e <- e + 1 }
   }
   # strip trailing zero bits, as mpmath's normalized form
-  if (m != 0) {
-    tz <- 0
-    while (gmp::mod.bigz(m, 2) == 0) { m <- gmp::divq.bigz(m, 2); tz <- tz + 1 }
-    e <- e + tz
+  if (gmp::mod.bigz(m, 2) == 0) {
+    tz <- .v2(abs(m))
+    m <- gmp::divq.bigz(m, .pow2(tz)); e <- e + tz
   }
   list(m = m, e = e)
 }
@@ -60,8 +59,16 @@
 .mp_to_dbl <- function(a) {
   if (a$m == 0) return(0)
   b <- .bitlen(a$m)
-  if (b > 60) { s <- b - 60; return(as.numeric(gmp::divq.bigz(a$m, .pow2(s))) * 2^(a$e + s)) }
-  as.numeric(a$m) * 2^a$e
+  m <- a$m; e <- a$e
+  if (b > 60) { s <- b - 60; m <- gmp::divq.bigz(m, .pow2(s)); e <- e + s }
+  .ldexp_dbl(as.numeric(m), e)
+}
+# x * 2^e in steps, so that a subnormal result is not lost to an
+# intermediate underflow of 2^e
+.ldexp_dbl <- function(x, e) {
+  while (e > 1000) { x <- x * 2^1000; e <- e - 1000 }
+  while (e < -1000 && x != 0) { x <- x * 2^-1000; e <- e + 1000 }
+  x * 2^e
 }
 .mp_neg <- function(a) list(m = -a$m, e = a$e)
 .mp_sign <- function(a) if (a$m > 0) 1 else if (a$m < 0) -1 else 0
@@ -138,57 +145,133 @@
   }
   s
 }
-.fx_pi <- function(wp) {
-  key <- paste0("pi", wp)
-  if (!is.null(v <- .mp_cache[[key]])) return(v)
-  w <- wp + 10
-  v <- gmp::divq.bigz(16 * .fx_atan_inv(5, w) - 4 * .fx_atan_inv(239, w), .pow2(10))
-  assign(key, v, envir = .mp_cache)
-  v
+# A constant in fixed point is computed once at a precision a little above
+# the largest one requested so far and shifted down for lower precisions,
+# as mpmath's constant_memo.
+.fx_const_memo <- function(name, wp, compute) {
+  memo <- .mp_cache[[name]]
+  if (is.null(memo) || memo$prec < wp) {
+    w <- as.integer(wp * 1.05 + 10)
+    memo <- list(prec = w, v = compute(w))
+    assign(name, memo, envir = .mp_cache)
+  }
+  gmp::divq.bigz(memo$v, .pow2(memo$prec - wp))
 }
-.fx_ln2 <- function(wp) {
-  key <- paste0("ln2", wp)
-  if (!is.null(v <- .mp_cache[[key]])) return(v)
+.fx_pi <- function(wp) .fx_const_memo("pi", wp, function(w)
+  gmp::divq.bigz(16 * .fx_atan_inv(5, w + 10) - 4 * .fx_atan_inv(239, w + 10), .pow2(10)))
+.fx_ln2 <- function(wp) .fx_const_memo("ln2", wp, function(w) {
   # log(2) = 2*atanh(1/3) = 2 * sum 1/((2k+1) 3^(2k+1))
-  w <- wp + 10; one <- .pow2(w)
+  w <- w + 10; one <- .pow2(w)
   term <- gmp::divq.bigz(one, 3); s <- term; k <- 1
   repeat {
     term <- gmp::divq.bigz(term, 9)
     if (term == 0) break
     s <- s + gmp::divq.bigz(term, 2 * k + 1); k <- k + 1
   }
-  v <- gmp::divq.bigz(2 * s, .pow2(10))
-  assign(key, v, envir = .mp_cache)
-  v
-}
-.mp_pi <- function(p) .fx_mp(.fx_pi(p + 10), p + 10, p)
-.mp_ln2 <- function(p) .fx_mp(.fx_ln2(p + 10), p + 10, p)
+  gmp::divq.bigz(2 * s, .pow2(10))
+})
+.mp_pi <- function(p) .fx_mp(.fx_pi(p + 20), p + 20, p)
+.mp_ln2 <- function(p) .fx_mp(.fx_ln2(p + 20), p + 20, p)
 
-# exp(x) for real x
+# Fixed point helpers: x / 2^wp with signed floor shifts, as Python's >>
+.fx_shift <- function(x, k) if (k >= 0) x * .pow2(k) else gmp::divq.bigz(x, .pow2(-k))
+.to_fixed <- function(a, wp) .fx_shift(a$m, a$e + wp)
+
+# exp(x / 2^prec) * 2^prec for a fixed point x: mpmath's exp_basecase, the
+# even and odd Taylor sums of x / 2^r followed by r squarings, or
+# exponential_series above EXP_COSH_CUTOFF (600 bits with the Python backend)
+.fx_exp_basecase <- function(x, prec) {
+  if (prec > 600) return(.fx_exponential_series(x, prec))
+  r <- as.integer(floor(sqrt(prec)))
+  prec <- prec + r
+  s0 <- s1 <- .pow2(prec)
+  k <- 2
+  a <- x2 <- .fx_shift(x * x, -prec)
+  while (a != 0) {
+    a <- gmp::divq.bigz(a, k); s0 <- s0 + a; k <- k + 1
+    a <- gmp::divq.bigz(a, k); s1 <- s1 + a; k <- k + 1
+    a <- .fx_shift(a * x2, -prec)
+  }
+  s1 <- .fx_shift(s1 * x, -prec)
+  s <- s0 + s1
+  for (i in seq_len(r)) s <- .fx_shift(s * s, -prec)
+  .fx_shift(s, -r)
+}
+# exponential_series(x, prec, type = 0): exp(x) from cosh(x) by
+# exp = cosh + sqrt(cosh^2 - 1), with the argument halved r times
+.fx_exponential_series <- function(x, prec) {
+  sign <- x < 0
+  if (sign) x <- -x
+  r <- as.integer(floor(0.5 * sqrt(prec)))
+  xmag <- .bitlen(x) - prec
+  r <- max(0, xmag + r)
+  extra <- 10 + 2 * max(r, -xmag)
+  wp <- prec + extra
+  x <- .fx_shift(x, extra - r)
+  one <- .pow2(wp)
+  if (prec < 1500) {
+    x2 <- a <- .fx_shift(x * x, -wp)
+    x4 <- .fx_shift(x2 * x2, -wp)
+    s0 <- s1 <- gmp::as.bigz(0)
+    k <- 2
+    while (a != 0) {
+      a <- gmp::divq.bigz(a, (k - 1) * k); s0 <- s0 + a; k <- k + 2
+      a <- gmp::divq.bigz(a, (k - 1) * k); s1 <- s1 + a; k <- k + 2
+      a <- .fx_shift(a * x4, -wp)
+    }
+    s1 <- .fx_shift(x2 * s1, -wp)
+    c <- s1 + s0 + one
+  } else {
+    u <- as.integer(floor(0.3 * prec^0.35))
+    x2 <- a <- .fx_shift(x * x, -wp)
+    xpowers <- list(one, x2)
+    for (i in seq_len(u - 1L)) xpowers[[length(xpowers) + 1L]] <- .fx_shift(xpowers[[length(xpowers)]] * x2, -wp)
+    sums <- rep(list(gmp::as.bigz(0)), u)
+    k <- 2
+    while (a != 0) {
+      for (i in seq_len(u)) {
+        a <- gmp::divq.bigz(a, (k - 1) * k)
+        sums[[i]] <- sums[[i]] + a
+        k <- k + 2
+      }
+      a <- .fx_shift(a * xpowers[[length(xpowers)]], -wp)
+    }
+    for (i in seq_len(u)[-1L]) sums[[i]] <- .fx_shift(sums[[i]] * xpowers[[i]], -wp)
+    c <- Reduce(`+`, sums) + one
+  }
+  s <- .mp_isqrt(c * c - .pow2(wp) * one)
+  v <- if (sign) c - s else c + s
+  for (i in seq_len(r)) v <- .fx_shift(v * v, -wp)
+  .fx_shift(v, -extra)
+}
+
+# exp(x) for real x, after mpmath's mpf_exp: x = n*log(2) + t with
+# 0 <= t < log(2) in fixed point, the exponent n kept as an exact integer
 .mp_exp <- function(a, p) {
   if (a$m == 0) return(.mpf(1, 0))
   mag <- .mp_mag(a)
-  wp <- p + 20 + max(0, mag)
-  # x = n*log(2) + r, |r| <= log(2)/2
-  ln2 <- .fx_mp(.fx_ln2(wp), wp, wp)
-  n <- .mp_floor(.mp_add(.mp_div(a, ln2, wp), .mpf(1, -1), wp))
-  r <- .mp_sub(a, .mp_mul(.mp_round(n, 0, wp), ln2, wp), wp)
-  # r / 2^k, Taylor series, then k squarings
-  k <- max(0, floor(sqrt(wp) / 2))
-  w2 <- wp + k + 10
-  x <- .tdiv(.fxp(r, w2), .pow2(k))
-  one <- .pow2(w2)
-  s <- one; term <- one; j <- 1
-  repeat {
-    term <- .tdiv(.tdiv(term * x, one), gmp::as.bigz(j))
-    if (term == 0) break
-    s <- s + term; j <- j + 1
+  wp <- p + 14
+  if (mag < -wp) return(.mpf(1, 0))
+  if (mag > 1) {
+    wpmod <- wp + mag
+    t <- .to_fixed(a, wpmod)
+    lg2 <- .fx_ln2(wpmod)
+    n <- gmp::divq.bigz(t, lg2)
+    t <- .fx_shift(t - n * lg2, -mag)
+  } else {
+    t <- .to_fixed(a, wp)
+    n <- gmp::as.bigz(0)
   }
-  for (i in seq_len(k)) s <- .tdiv(s * s, one)
-  .mp_ldexp(.fx_mp(s, w2, p + 4), as.numeric(n)) |> (\(z) .mp_round(z$m, z$e, p))()
+  # exponents are doubles, exact below 2^53. A huge result cannot be held;
+  # a tiny one (a quadrature node far out) only enters sums as negligible,
+  # so its exponent may be rounded. .mpc_sym refuses such a final value.
+  if (n > 2^52) stop("exponent overflow in multiprecision exp", call. = FALSE)
+  .mp_round(.fx_exp_basecase(t, wp), as.numeric(n) - wp, p)
 }
 
-# log(x) for real x > 0: x = y * 2^n with y near 1, log(y) = 2*atanh((y-1)/(y+1))
+# log(x) for real x > 0: x = y * 2^n with y near 1, log(y) = 2*atanh(z)
+# with z = (y-1)/(y+1); the fixed point series is scaled to the size of z,
+# so x near 1 keeps its relative accuracy
 .mp_log <- function(a, p, extra = 0) {
   if (a$m <= 0) stop("log of a nonpositive number in real arithmetic", call. = FALSE)
   wp <- p + 20 + extra
@@ -196,36 +279,30 @@
   n <- b + a$e
   y <- list(m = a$m, e = -b)                  # y in [1/2, 1)
   if (.mp_cmp(y, .mp_sqrt(.mpf(1, -1), wp)) < 0) { y <- .mp_ldexp(y, 1); n <- n - 1 }
-  z <- .mp_div(.mp_sub(y, .mpf(1, 0), wp), .mp_add(y, .mpf(1, 0), wp), wp)
-  w2 <- wp + 10; one <- .pow2(w2)
-  zf <- .fxp(z, w2); z2 <- .tdiv(zf * zf, one)
-  s <- zf; term <- zf; k <- 1
-  repeat {
-    term <- .tdiv(term * z2, one)
-    if (term == 0) break
-    s <- s + .tdiv(term, 2 * k + 1); k <- k + 1
+  num <- .mp_add(y, .mpf(-1, 0), .bitlen(y$m) + abs(y$e) + 2)
+  if (num$m == 0) {
+    ly <- .mp_zero
+  } else {
+    z <- .mp_div(num, .mp_add(y, .mpf(1, 0), wp), wp)
+    w2 <- wp + 10 + max(0, -.mp_mag(z)); one <- .pow2(w2)
+    zf <- .to_fixed(z, w2); z2 <- gmp::divq.bigz(zf * zf, one)
+    s <- zf; term <- zf; k <- 1
+    repeat {
+      term <- .tdiv(term * z2, one)
+      if (term == 0) break
+      s <- s + .tdiv(term, 2 * k + 1); k <- k + 1
+    }
+    ly <- .fx_mp(2 * s, w2, wp)
   }
-  ly <- .fx_mp(2 * s, w2, wp)
-  r <- .mp_add(ly, .mp_mul(.mp_round(gmp::as.bigz(n), 0, wp), .fx_mp(.fx_ln2(wp), wp, wp), wp), p)
-  # log of a number near 1: redo with the bits lost to cancellation
-  if (extra == 0 && r$m != 0 && .mp_mag(r) < -10) return(.mp_log(a, p, extra = 10 - .mp_mag(r)))
-  r
+  if (n == 0) return(.mp_round(ly$m, ly$e, p))
+  .mp_add(ly, .mp_mul(.mp_round(gmp::as.bigz(n), 0, wp), .fx_mp(.fx_ln2(wp), wp, wp), wp), p)
 }
 
-# sin and cos of real x, by reduction modulo pi/2
-.mp_sincos <- function(a, p, extra = 0) {
-  if (a$m == 0) return(list(sin = .mp_zero, cos = .mpf(1, 0)))
-  # |x| below the working precision: sin(x) = x and cos(x) = 1 to p bits
-  if (.mp_mag(a) < -(p + 10)) return(list(sin = .mp_round(a$m, a$e, p), cos = .mpf(1, 0)))
-  mag <- max(0, .mp_mag(a))
-  wp <- p + 20 + mag + extra + max(0, -.mp_mag(a))
-  pi2 <- .mp_ldexp(.fx_mp(.fx_pi(wp), wp, wp), -1)
-  n <- .mp_floor(.mp_add(.mp_div(a, pi2, wp), .mpf(1, -1), wp))
-  r <- .mp_sub(a, .mp_mul(.mp_round(n, 0, wp), pi2, wp), wp)
-  # x near a multiple of pi/2: redo with the bits lost to cancellation
-  if (extra == 0 && n != 0 && r$m != 0 && .mp_mag(r) < -10) return(.mp_sincos(a, p, extra = 10 - .mp_mag(r)))
-  w2 <- wp + 10; one <- .pow2(w2)
-  x <- .fxp(r, w2); x2 <- .tdiv(x * x, one)
+# cos(t / 2^wp), sin(t / 2^wp) in fixed point for 0 <= t <= pi/2: Taylor
+# series with guard bits
+.fx_cos_sin_basecase <- function(t, wp) {
+  w2 <- wp + 12; one <- .pow2(w2)
+  x <- .fx_shift(t, 12); x2 <- gmp::divq.bigz(x * x, one)
   s <- x; c <- one; ts <- x; tc <- one; k <- 1
   repeat {
     ts <- -.tdiv(.tdiv(ts * x2, one), gmp::as.bigz((2 * k) * (2 * k + 1)))
@@ -233,11 +310,493 @@
     if (ts == 0 && tc == 0) break
     s <- s + ts; c <- c + tc; k <- k + 1
   }
-  S <- .fx_mp(s, w2, p); C <- .fx_mp(c, w2, p)
-  switch(as.integer(gmp::mod.bigz(n, 4)) + 1L,
-         list(sin = S, cos = C), list(sin = C, cos = .mp_neg(S)),
-         list(sin = .mp_neg(S), cos = .mp_neg(C)), list(sin = .mp_neg(C), cos = S))
+  list(c = .fx_shift(c, -12), s = .fx_shift(s, -12))
 }
+
+# cos and sin of x, or of pi*x, after mpmath's mpf_cos_sin: reduction modulo
+# pi/2 with the working precision raised until the reduced argument is
+# resolved (mod_pi2); for pi*x the nearest half integer is subtracted
+# exactly, so integers and half integers give exact zeros.
+.mp_cos_sin <- function(a, p, pi = FALSE) {
+  if (a$m == 0) return(list(cos = .mpf(1, 0), sin = .mp_zero))
+  sign <- a$m < 0
+  man <- abs(a$m); ex <- a$e
+  mag <- .bitlen(man) + ex
+  wp <- p + 10
+  if (mag < 0 && mag < -wp) {
+    x <- if (pi) .mp_mul(a, .mp_pi(wp), wp + 4) else a
+    return(list(cos = .mpf(1, 0), sin = .mp_round(x$m, x$e, p)))
+  }
+  if (pi) {
+    if (ex >= -1) {
+      if (ex == -1) {
+        odd <- gmp::mod.bigz(gmp::divq.bigz(man, 2), 2) == 1
+        return(list(cos = .mp_zero, sin = .mpf(if (xor(odd, sign)) -1 else 1, 0)))
+      }
+      if (ex == 0) return(list(cos = .mpf(-1, 0), sin = .mp_zero))
+      return(list(cos = .mpf(1, 0), sin = .mp_zero))
+    }
+    n <- gmp::divq.bigz(gmp::divq.bigz(man, .pow2(-ex - 2)) + 1, 2)
+    man <- man - n * .pow2(-ex - 1)
+    mag2 <- .bitlen(abs(man)) + ex
+    wp <- p + 10 - mag2
+    t <- .fx_shift(man, ex + wp)
+    t <- gmp::divq.bigz(t * .fx_pi(wp), .pow2(wp))
+    # the reduced argument may be negative: cos is even, sin odd
+    tneg <- t < 0
+    cs <- .fx_cos_sin_basecase(abs(t), wp)
+    if (tneg) cs$s <- -cs$s
+  } else {
+    if (mag > 0) {
+      i <- 0
+      repeat {
+        cp <- 20 * 2^i
+        wpmod <- wp + mag + cp
+        pi2 <- .fx_pi(wpmod - 1)
+        pi4 <- gmp::divq.bigz(pi2, 2)
+        t <- .fx_shift(man, wpmod + ex)
+        n <- gmp::divq.bigz(t, pi2); y <- t - n * pi2
+        small <- if (y > pi4) pi2 - y else y
+        if (gmp::divq.bigz(small, .pow2(wp + mag - 10)) != 0) {
+          t <- gmp::divq.bigz(y, .pow2(mag))
+          wp <- wpmod - mag
+          break
+        }
+        i <- i + 1
+      }
+    } else {
+      wp <- wp - mag
+      t <- .fx_shift(man, ex + wp)
+      n <- gmp::as.bigz(0)
+    }
+    cs <- .fx_cos_sin_basecase(t, wp)
+  }
+  c <- cs$c; s <- cs$s
+  m <- as.integer(gmp::mod.bigz(n, 4))
+  if (m == 1) { tmp <- c; c <- -s; s <- tmp }
+  else if (m == 2) { c <- -c; s <- -s }
+  else if (m == 3) { tmp <- c; c <- s; s <- -tmp }
+  if (sign) s <- -s
+  list(cos = .mp_round(c, -wp, p), sin = .mp_round(s, -wp, p))
+}
+.mp_sincos <- function(a, p) .mp_cos_sin(a, p)
+
+# ---- complex helpers (libmpc) ----
+.mp_xmul <- function(a, b) list(m = a$m * b$m, e = a$e + b$e)
+.mpc_mul <- function(a, b, p) {
+  if (.mpc_real(a) && .mpc_real(b)) return(.mpc(.mp_mul(a$re, b$re, p)))
+  # exact products, one rounding, as mpc_mul
+  .mpc(.mp_sub(.mp_xmul(a$re, b$re), .mp_xmul(a$im, b$im), p),
+       .mp_add(.mp_xmul(a$re, b$im), .mp_xmul(a$im, b$re), p))
+}
+.mpc_div <- function(a, b, p) {
+  if (.mpc_real(b)) return(.mpc(.mp_div(a$re, b$re, p), .mp_div(a$im, b$re, p)))
+  w <- p + 10
+  n <- .mp_add(.mp_xmul(b$re, b$re), .mp_xmul(b$im, b$im), w)
+  .mpc(.mp_div(.mp_add(.mp_xmul(a$re, b$re), .mp_xmul(a$im, b$im), w), n, p),
+       .mp_div(.mp_sub(.mp_xmul(a$im, b$re), .mp_xmul(a$re, b$im), w), n, p))
+}
+.mpc_abs <- function(z, p) {
+  if (z$im$m == 0) return(.mp_round(abs(z$re$m), z$re$e, p))
+  if (z$re$m == 0) return(.mp_round(abs(z$im$m), z$im$e, p))
+  .mp_sqrt(.mp_add(.mp_xmul(z$re, z$re), .mp_xmul(z$im, z$im), p + 4), p)
+}
+# log(sqrt(a^2 + b^2)) without cancellation near the unit circle
+.mp_log_hypot <- function(a, b, p) {
+  if (b$m == 0) { t <- a; a <- b; b <- t }
+  if (a$m == 0) {
+    if (b$m == 0) stop("log of zero", call. = FALSE)
+    return(.mp_log(list(m = abs(b$m), e = b$e), p))
+  }
+  a2 <- .mp_xmul(a, a); b2 <- .mp_xmul(b, b)
+  extra <- 20
+  h2 <- .mp_add(a2, b2, p + extra)
+  cancelled <- .mp_add(h2, .mpf(-1, 0), 10)
+  if (cancelled$m == 0 || .mp_mag(cancelled) < -extra %/% 2)
+    h2 <- .mp_add(a2, b2, p + extra - min(a2$e, b2$e))
+  .mp_ldexp(.mp_log(h2, p), -1)
+}
+.mpc_log <- function(z, p) {
+  if (.mpc_real(z) && z$re$m > 0) return(.mpc(.mp_log(z$re, p)))
+  if (z$re$m == 0 && z$im$m == 0) stop("log of zero", call. = FALSE)
+  .mpc(.mp_log_hypot(z$re, z$im, p), .mp_atan2(z$im, z$re, p))
+}
+# principal square root, as mpc_sqrt: the smaller part by division
+.mpc_sqrt <- function(z, p) {
+  if (.mpc_real(z)) {
+    if (z$re$m >= 0) return(.mpc(.mp_sqrt(z$re, p)))
+    return(.mpc(.mp_zero, .mp_sqrt(.mp_neg(z$re), p)))
+  }
+  a <- z$re; b <- z$im
+  wp <- p + 20
+  if (a$m >= 0) {
+    t <- .mp_add(.mpc_abs(z, wp), a, wp)
+    re <- .mp_sqrt(.mp_ldexp(t, -1), p)
+    im <- .mp_div(b, .mp_sqrt(.mp_ldexp(t, 1), wp), p)
+  } else {
+    t <- .mp_sub(.mpc_abs(z, wp), a, wp)
+    im <- .mp_sqrt(.mp_ldexp(t, -1), p)
+    re <- .mp_div(b, .mp_sqrt(.mp_ldexp(t, 1), wp), p)
+    if (b$m < 0) { re <- .mp_neg(re); im <- .mp_neg(im) }
+  }
+  .mpc(re, im)
+}
+# cosh and sinh of real x, after mpf_cosh_sinh: extra precision for tiny x
+.mpc_cosh_sinh <- function(x, p) {
+  if (x$m == 0) return(list(cosh = .mpf(1, 0), sinh = .mp_zero))
+  sign <- x$m < 0
+  mag <- .mp_mag(x)
+  wp <- p + 14
+  if (mag < -4) {
+    if (mag < -wp) return(list(cosh = .mpf(1, 0), sinh = .mp_round(x$m, x$e, p)))
+    wp <- wp - mag
+  }
+  ax <- list(m = abs(x$m), e = x$e)
+  if (mag > 10 && 3 * 2^(mag - 1) > wp) {
+    c <- .mp_ldexp(.mp_exp(ax, p), -1)
+    return(list(cosh = c, sinh = if (sign) .mp_neg(c) else c))
+  }
+  if (mag > 1) {
+    wpmod <- wp + mag
+    t <- .to_fixed(ax, wpmod)
+    lg2 <- .fx_ln2(wpmod)
+    n <- gmp::divq.bigz(t, lg2)
+    t <- .fx_shift(t - n * lg2, -mag)
+    n <- as.numeric(n)
+  } else {
+    t <- .to_fixed(ax, wp); n <- 0
+  }
+  ea <- .fx_exp_basecase(t, wp)
+  eb <- gmp::divq.bigz(.pow2(2 * wp), ea)
+  ebs <- gmp::divq.bigz(eb, .pow2(2 * n))
+  ch <- ea + ebs; sh <- ea - ebs
+  if (sign) sh <- -sh
+  list(cosh = .mp_round(ch, n - wp - 1, p), sinh = .mp_round(sh, n - wp - 1, p))
+}
+.mpc_exp <- function(z, p) {
+  if (z$im$m == 0) return(.mpc(.mp_exp(z$re, p)))
+  if (z$re$m == 0) { cs <- .mp_cos_sin(z$im, p); return(.mpc(cs$cos, cs$sin)) }
+  mg <- .mp_exp(z$re, p + 4)
+  cs <- .mp_cos_sin(z$im, p + 4)
+  .mpc(.mp_mul(mg, cs$cos, p), .mp_mul(mg, cs$sin, p))
+}
+.mpc_sin <- function(z, p) {
+  if (z$im$m == 0) return(.mpc(.mp_cos_sin(z$re, p)$sin))
+  if (z$re$m == 0) return(.mpc(.mp_zero, .mpc_cosh_sinh(z$im, p)$sinh))
+  wp <- p + 6
+  cs <- .mp_cos_sin(z$re, wp); ch <- .mpc_cosh_sinh(z$im, wp)
+  .mpc(.mp_mul(cs$sin, ch$cosh, p), .mp_mul(cs$cos, ch$sinh, p))
+}
+.mpc_cos <- function(z, p) {
+  if (z$im$m == 0) return(.mpc(.mp_cos_sin(z$re, p)$cos))
+  if (z$re$m == 0) return(.mpc(.mpc_cosh_sinh(z$im, p)$cosh))
+  wp <- p + 6
+  cs <- .mp_cos_sin(z$re, wp); ch <- .mpc_cosh_sinh(z$im, wp)
+  .mpc(.mp_mul(cs$cos, ch$cosh, p), .mp_neg(.mp_mul(cs$sin, ch$sinh, p)))
+}
+# cos(pi*z) and sin(pi*z), as mpc_cos_sin_pi
+.mpc_cos_sin_pi <- function(z, p) {
+  if (z$im$m == 0) { cs <- .mp_cos_sin(z$re, p, pi = TRUE); return(list(cos = .mpc(cs$cos), sin = .mpc(cs$sin))) }
+  b <- .mp_mul(z$im, .mp_pi(p + 5), p + 5)
+  if (z$re$m == 0) { ch <- .mpc_cosh_sinh(b, p); return(list(cos = .mpc(ch$cosh), sin = .mpc(.mp_zero, ch$sinh))) }
+  wp <- p + 6
+  cs <- .mp_cos_sin(z$re, wp, pi = TRUE); ch <- .mpc_cosh_sinh(b, wp)
+  list(cos = .mpc(.mp_mul(cs$cos, ch$cosh, p), .mp_neg(.mp_mul(cs$sin, ch$sinh, p))),
+       sin = .mpc(.mp_mul(cs$sin, ch$cosh, p), .mp_mul(cs$cos, ch$sinh, p)))
+}
+# (a + b i)^n exactly for n >= 0
+.complex_int_pow <- function(a, b, n) {
+  wre <- gmp::as.bigz(1); wim <- gmp::as.bigz(0)
+  n <- gmp::as.bigz(n)
+  while (n > 0) {
+    if (gmp::mod.bigz(n, 2) == 1) {
+      t <- wre * a - wim * b; wim <- wim * a + wre * b; wre <- t
+      n <- n - 1
+    }
+    t <- a * a - b * b; b <- 2 * a * b; a <- t
+    n <- gmp::divq.bigz(n, 2)
+  }
+  list(re = wre, im = wim)
+}
+.mpc_reciprocal <- function(z, p) {
+  m <- .mp_add(.mp_xmul(z$re, z$re), .mp_xmul(z$im, z$im), p + 10)
+  .mpc(.mp_div(z$re, m, p), .mp_neg(.mp_div(z$im, m, p)))
+}
+.mpc_square <- function(z, p) {
+  .mpc(.mp_sub(.mp_xmul(z$re, z$re), .mp_xmul(z$im, z$im), p), .mp_ldexp(.mp_mul(z$re, z$im, p), 1))
+}
+# z^n for an integer n, as mpc_pow_int
+.mpc_pow_int <- function(z, n, p) {
+  n <- gmp::as.bigz(n)
+  if (z$im$m == 0) return(.mpc(.mp_pow_int(z$re, n, p)))
+  if (z$re$m == 0) {
+    v <- .mp_pow_int(z$im, n, p)
+    return(switch(as.integer(gmp::mod.bigz(n, 4)) + 1L, .mpc(v), .mpc(.mp_zero, v), .mpc(.mp_neg(v)), .mpc(.mp_zero, .mp_neg(v))))
+  }
+  if (n == 0) return(.mpc_one)
+  if (n == 1) return(.mpc(.mp_round(z$re$m, z$re$e, p), .mp_round(z$im$m, z$im$e, p)))
+  if (n == 2) return(.mpc_square(z, p))
+  if (n == -1) return(.mpc_reciprocal(z, p))
+  if (n < 0) return(.mpc_reciprocal(.mpc_pow_int(z, -n, p + 4), p))
+  a <- z$re; b <- z$im
+  de <- a$e - b$e
+  exact_size <- as.numeric(n) * (abs(de) + max(.bitlen(a$m), .bitlen(b$m)))
+  if (exact_size < 10000) {
+    am <- a$m; bm <- b$m; ae <- a$e; be <- b$e
+    if (de > 0) { am <- am * .pow2(de); ae <- be } else { bm <- bm * .pow2(-de); be <- ae }
+    r <- .complex_int_pow(am, bm, n)
+    nn <- as.numeric(n)
+    return(.mpc(.mp_round(r$re, nn * ae, p), .mp_round(r$im, nn * be, p)))
+  }
+  l <- .mpc_log(z, p + 10)
+  .mpc_exp(.mpc(.mp_mul(l$re, .mpf(n, 0), p + 10), .mp_mul(l$im, .mpf(n, 0), p + 10)), p)
+}
+
+# x^n for an integer n, as mpf_pow_int: exact when small, otherwise binary
+# powering with truncation at p + 4*bitlen(n) + 4 bits
+.mp_pow_int <- function(a, n, p) {
+  n <- gmp::as.bigz(n)
+  if (n == 0) return(.mpf(1, 0))
+  if (a$m == 0) {
+    if (n < 0) stop("division by zero in multiprecision arithmetic", call. = FALSE)
+    return(.mp_zero)
+  }
+  if (n == 1) return(.mp_round(a$m, a$e, p))
+  if (n == -1) return(.mp_div(.mpf(1, 0), a, p))
+  if (n < 0) return(.mp_div(.mpf(1, 0), .mp_pow_int(a, -n, p + 5), p))
+  neg <- a$m < 0 && gmp::mod.bigz(n, 2) == 1
+  man <- abs(a$m); ex <- a$e
+  nn <- as.numeric(n)
+  bc <- .bitlen(man)
+  if (man == 1) return(list(m = if (neg) gmp::as.bigz(-1) else gmp::as.bigz(1), e = ex * nn))
+  if (bc * nn < 1000) {
+    r <- .mp_round(man^n, ex * nn, p)
+    if (neg) r$m <- -r$m
+    return(r)
+  }
+  workprec <- p + 4 * .bitlen(n) + 4
+  pm <- gmp::as.bigz(1); pe <- 0
+  repeat {
+    if (gmp::mod.bigz(n, 2) == 1) {
+      pm <- pm * man; pe <- pe + ex
+      b <- .bitlen(pm)
+      if (b > workprec) { pm <- gmp::divq.bigz(pm, .pow2(b - workprec)); pe <- pe + b - workprec }
+      n <- n - 1
+      if (n == 0) break
+    }
+    man <- man * man; ex <- ex + ex
+    b <- .bitlen(man)
+    if (b > workprec) { man <- gmp::divq.bigz(man, .pow2(b - workprec)); ex <- ex + b - workprec }
+    n <- gmp::divq.bigz(n, 2)
+  }
+  .mp_round(if (neg) -pm else pm, pe, p)
+}
+
+# b^x after mpmath's mpf_pow, mpc_pow_mpf and mpc_pow; xq is an exact
+# rational exponent when the caller knows one
+.mpc_pow <- function(b, x, p, xq = NULL) {
+  if (x$im$m == 0) {
+    if (is.null(xq)) {
+      t <- x$re
+      if (t$m == 0) return(.mpc_one)
+      t <- .mp_round(t$m, t$e, .bitlen(t$m))
+      if (t$e >= 0) xq <- gmp::as.bigq(t$m * .pow2(t$e))
+      else if (t$e == -1) xq <- gmp::as.bigq(t$m, 2)
+    }
+    if (!is.null(xq)) {
+      num <- gmp::numerator(xq); den <- gmp::denominator(xq)
+      if (den == 1) return(.mpc_pow_int(b, num, p))
+      if (den == 2) {
+        if (.mpc_real(b) && b$re$m >= 0) {
+          if (num == 1) return(.mpc_sqrt(b, p))
+          if (num == -1) return(.mpc(.mp_div(.mpf(1, 0), .mp_sqrt(b$re, p + 10), p)))
+          return(.mpc(.mp_pow_int(.mp_sqrt(b$re, p + 10), num, p)))
+        }
+        return(.mpc_pow_int(.mpc_sqrt(b, p + 10), num, p))
+      }
+    }
+    if (b$re$m == 0 && b$im$m == 0) return(.mpc(.mp_zero))
+    if (.mpc_real(b) && b$re$m > 0) {
+      if (.mp_cmp(b$re, .mpf(1, 0)) == 0) return(.mpc_one)
+      return(.mpc(.mp_exp(.mp_xmul(x$re, .mp_log(b$re, p + 10)), p)))
+    }
+    l <- .mpc_log(b, p + 10)
+    return(.mpc_exp(.mpc(.mp_mul(l$re, x$re, p + 10), .mp_mul(l$im, x$re, p + 10)), p))
+  }
+  if (b$re$m == 0 && b$im$m == 0) return(.mpc(.mp_zero))
+  .mpc_exp(.mpc_mul(.mpc_log(b, p + 10), x, p + 10), p)
+}
+
+# ---- gamma functions ----
+# Stirling's series for log gamma(w), real (mpf) or complex (mpc) w with |w|
+# large enough that the terms fall below 2^-wp relative to the sum before
+# they start to grow; an expansion that does not converge is an error, never
+# a silently truncated value.
+.mp_stirling_terms <- function(w, wp, cx) {
+  if (cx) {
+    lw <- .mpc_log(w, wp)
+    half <- .mpc(.mpf(1, -1))
+    s <- .mpc_sub(.mpc_mul(.mpc_sub(w, half, wp), lw, wp), w, wp)
+    s <- .mpc_add(s, .mpc(.mp_half_log_2pi(wp)), wp)
+    winv <- .mpc_div(.mpc_one, w, wp); w2 <- .mpc_mul(winv, winv, wp)
+    mag <- function(v) suppressWarnings(max(.mp_mag(v$re), .mp_mag(v$im)))
+  } else {
+    lw <- .mp_log(w, wp)
+    s <- .mp_sub(.mp_mul(.mp_sub(w, .mpf(1, -1), wp), lw, wp), w, wp)
+    s <- .mp_add(s, .mp_half_log_2pi(wp), wp)
+    winv <- .mp_div(.mpf(1, 0), w, wp); w2 <- .mp_mul(winv, winv, wp)
+    mag <- .mp_mag
+  }
+  wpow <- winv
+  smag <- mag(s)
+  if (!is.finite(smag)) smag <- 0
+  prev <- Inf
+  k <- 1
+  repeat {
+    c <- .mp_stirling_coef(k, wp)
+    t <- if (cx) .mpc(.mp_mul(c, wpow$re, wp), .mp_mul(c, wpow$im, wp)) else .mp_mul(c, wpow, wp)
+    tm <- mag(t)
+    if (!is.finite(tm) || tm < smag - wp - 4) break
+    if (tm > prev) stop("Stirling series for the gamma function did not converge", call. = FALSE)
+    s <- if (cx) .mpc_add(s, t, wp) else .mp_add(s, t, wp)
+    prev <- tm
+    wpow <- if (cx) .mpc_mul(wpow, w2, wp) else .mp_mul(wpow, w2, wp)
+    k <- k + 1
+  }
+  s
+}
+# the series constants at wp bits, cached: log(2*pi)/2 and B_2k/(2k(2k-1))
+.mp_half_log_2pi <- function(wp) {
+  key <- paste0("hl2pi_", wp)
+  if (!is.null(v <- .mp_cache[[key]])) return(v)
+  v <- .mp_ldexp(.mp_log(.mp_ldexp(.mp_pi(wp), 1), wp), -1)
+  assign(key, v, envir = .mp_cache)
+  v
+}
+.mp_stirling_coef <- function(k, wp) {
+  key <- paste0("stc", k, "_", wp)
+  if (!is.null(v <- .mp_cache[[key]])) return(v)
+  v <- .mp_from_q(.mp_bernoulli(2 * k) / (2 * k * (2 * k - 1)), wp)
+  assign(key, v, envir = .mp_cache)
+  v
+}
+# bits needed above p so that exp(log gamma) keeps p bits: |log gamma(z)|
+# is about |z| log|z|
+.mp_lgamma_extra <- function(mag) {
+  if (!is.finite(mag) || mag <= 0) return(24)
+  24 + mag + ceiling(log2(mag + 1))
+}
+.mp_exact_sub <- function(a, b) .mp_add(a, .mp_neg(b), max(.bitlen(a$m), .bitlen(b$m)) + abs(a$e - b$e) + 4)
+.mp_is_int <- function(a) a$m == 0 || .mp_round(a$m, a$e, .bitlen(a$m))$e >= 0
+
+# gamma(x) (rgamma = FALSE) or 1/gamma(x) (rgamma = TRUE) for real x, with
+# one final rounding to p bits
+.mp_gamma_r <- function(a, p, rgamma = FALSE) {
+  if (.mp_is_int(a)) {
+    n <- .mp_floor(a)
+    if (n <= 0) {
+      if (rgamma) return(.mp_zero)
+      stop(.sympy_condition("ValueError", "gamma function pole"))
+    }
+    if (n < 3000) {
+      f <- gmp::factorialZ(as.numeric(n) - 1)
+      return(if (rgamma) .mp_div(.mpf(1, 0), list(m = f, e = 0), p) else .mp_round(f, 0, p))
+    }
+  }
+  if (.mp_cmp(a, .mpf(1, -1)) < 0) {
+    # reflection: gamma(x) = pi / (sin(pi x) gamma(1 - x))
+    wp <- p + 15
+    s <- .mp_cos_sin(a, wp, pi = TRUE)$sin
+    g <- .mp_gamma_r(.mp_exact_sub(.mpf(1, 0), a), wp)
+    if (rgamma) return(.mp_div(.mp_mul(s, g, wp), .mp_pi(wp), p))
+    return(.mp_div(.mp_pi(wp), .mp_mul(s, g, wp), p))
+  }
+  mg <- .mp_mag(a)
+  wp <- p + .mp_lgamma_extra(mg)
+  z0 <- max(10, ceiling(wp / 4))
+  shift <- 0
+  if (mg <= 30) shift <- max(0, ceiling(z0 - .mp_to_dbl(a)))
+  w <- if (shift > 0) .mp_add(a, .mpf(shift, 0), wp) else a
+  lg <- .mp_stirling_terms(w, wp, FALSE)
+  pr <- NULL
+  if (shift > 0) {
+    pr <- .mpf(1, 0)
+    for (j in 0:(shift - 1)) pr <- .mp_mul(pr, .mp_add(a, .mpf(j, 0), wp + 10), wp + 10)
+  }
+  if (rgamma) {
+    r <- .mp_exp(.mp_neg(lg), wp)
+    return(if (is.null(pr)) .mp_round(r$m, r$e, p) else .mp_mul(r, pr, p))
+  }
+  r <- .mp_exp(lg, wp)
+  if (is.null(pr)) .mp_round(r$m, r$e, p) else .mp_div(r, pr, p)
+}
+.mp_gamma <- function(a, p) .mp_gamma_r(a, p)
+.mp_rgamma <- function(a, p) .mp_gamma_r(a, p, TRUE)
+
+# complex gamma and its reciprocal
+.mpc_gamma_r <- function(z, p, rgamma = FALSE) {
+  if (z$im$m == 0) return(.mpc(.mp_gamma_r(z$re, p, rgamma)))
+  if (.mp_cmp(z$re, .mpf(1, -1)) < 0) {
+    wp <- p + 15
+    s <- .mpc_cos_sin_pi(z, wp)$sin
+    g <- .mpc_gamma_r(.mpc(.mp_exact_sub(.mpf(1, 0), z$re), .mp_neg(z$im)), wp)
+    pi <- .mpc(.mp_pi(wp))
+    if (rgamma) return(.mpc_div(.mpc_mul(s, g, wp), pi, p))
+    return(.mpc_div(pi, .mpc_mul(s, g, wp), p))
+  }
+  mg <- max(.mp_mag(z$re), .mp_mag(z$im))
+  wp <- p + .mp_lgamma_extra(mg)
+  z0 <- max(10, ceiling(wp / 4))
+  shift <- 0
+  if (mg <= 30) {
+    zr <- .mp_to_dbl(z$re); zi <- .mp_to_dbl(z$im)
+    if (zr * zr + zi * zi < z0 * z0) shift <- max(0, ceiling(sqrt(max(0, z0 * z0 - zi * zi)) - zr))
+  }
+  w <- if (shift > 0) .mpc_add(z, .mpc(.mpf(shift, 0)), wp) else z
+  lg <- .mp_stirling_terms(w, wp, TRUE)
+  pr <- NULL
+  if (shift > 0) {
+    pr <- .mpc_one
+    for (j in 0:(shift - 1)) pr <- .mpc_mul(pr, .mpc_add(z, .mpc(.mpf(j, 0)), wp + 10), wp + 10)
+  }
+  if (rgamma) {
+    r <- .mpc_exp(.mpc_neg(lg), wp)
+    return(if (is.null(pr)) .mpc(.mp_round(r$re$m, r$re$e, p), .mp_round(r$im$m, r$im$e, p)) else .mpc_mul(r, pr, p))
+  }
+  r <- .mpc_exp(lg, wp)
+  if (is.null(pr)) .mpc(.mp_round(r$re$m, r$re$e, p), .mp_round(r$im$m, r$im$e, p)) else .mpc_div(r, pr, p)
+}
+.mpc_gamma <- function(z, p) .mpc_gamma_r(z, p)
+
+# log gamma(x) for real x > 0, redone at higher precision when the result
+# cancels (x near 1 or 2)
+.mp_loggamma <- function(a, p) {
+  extra <- 0
+  repeat {
+    mg <- .mp_mag(a)
+    wp <- p + .mp_lgamma_extra(mg) + extra
+    z0 <- max(10, ceiling(wp / 4))
+    shift <- if (mg <= 30) max(0, ceiling(z0 - .mp_to_dbl(a))) else 0
+    w <- if (shift > 0) .mp_add(a, .mpf(shift, 0), wp) else a
+    lg <- .mp_stirling_terms(w, wp, FALSE)
+    if (shift > 0) {
+      pr <- .mpf(1, 0)
+      for (j in 0:(shift - 1)) pr <- .mp_mul(pr, .mp_add(a, .mpf(j, 0), wp + 10), wp + 10)
+      lp <- .mp_log(pr, wp)
+      r <- .mp_sub(lg, lp, wp)
+      if (r$m == 0) {
+        if (extra > 4 * p + 200) return(.mp_zero)
+        extra <- 2 * extra + p; next
+      }
+      lost <- max(.mp_mag(lg), .mp_mag(lp)) - .mp_mag(r)
+      if (lost > 10 + extra) { extra <- lost + 10; next }
+      return(.mp_round(r$m, r$e, p))
+    }
+    return(.mp_round(lg$m, lg$e, p))
+  }
+}
+
+
 
 # atan(x) for real x
 .mp_atan <- function(a, p) {
@@ -265,19 +824,6 @@
   .mp_ldexp(.fx_mp(s, w2, p), h)
 }
 
-.mp_pow_int <- function(a, n, p) {
-  n <- gmp::as.bigz(n)
-  if (n == 0) return(.mpf(1, 0))
-  wp <- p + 10 + .bitlen(n)
-  r <- .mpf(1, 0); b <- a; k <- abs(n)
-  while (k > 0) {
-    if (gmp::mod.bigz(k, 2) == 1) r <- .mp_mul(r, b, wp)
-    k <- gmp::divq.bigz(k, 2)
-    if (k > 0) b <- .mp_mul(b, b, wp)
-  }
-  if (n < 0) r <- .mp_div(.mpf(1, 0), r, wp)
-  .mp_round(r$m, r$e, p)
-}
 
 # decimal string with dps significant digits, after mpmath's to_str
 .mp_to_str <- function(a, dps, strip_zeros = TRUE, min_fixed = NULL, max_fixed = NULL) {
@@ -308,12 +854,13 @@
       ip <- "0"; fp <- paste0(strrep("0", -ex - 1L), ds)
     }
     if (strip_zeros) fp <- sub("0+$", "", fp)
-    if (!nzchar(fp)) fp <- "0"
+    # a stripped empty fraction becomes .0; an unstripped one stays empty
+    if (strip_zeros && !nzchar(fp)) fp <- "0"
     s <- paste0(ip, ".", fp)
   } else {
     fp <- substring(ds, 2L)
     if (strip_zeros) fp <- sub("0+$", "", fp)
-    if (!nzchar(fp)) fp <- "0"
+    if (strip_zeros && !nzchar(fp)) fp <- "0"
     s <- paste0(substr(ds, 1L, 1L), ".", fp, "e", if (ex >= 0) "+" else "-", abs(ex))
   }
   if (neg) paste0("-", s) else s
@@ -328,18 +875,6 @@
 .mpc <- function(re, im = .mp_zero) list(re = re, im = im)
 .mpc_real <- function(z) z$im$m == 0
 .mpc_add <- function(a, b, p) .mpc(.mp_add(a$re, b$re, p), .mp_add(a$im, b$im, p))
-.mpc_mul <- function(a, b, p) {
-  if (.mpc_real(a) && .mpc_real(b)) return(.mpc(.mp_mul(a$re, b$re, p)))
-  .mpc(.mp_sub(.mp_mul(a$re, b$re, p + 10), .mp_mul(a$im, b$im, p + 10), p),
-       .mp_add(.mp_mul(a$re, b$im, p + 10), .mp_mul(a$im, b$re, p + 10), p))
-}
-.mpc_div <- function(a, b, p) {
-  if (.mpc_real(b)) return(.mpc(.mp_div(a$re, b$re, p), .mp_div(a$im, b$re, p)))
-  w <- p + 10
-  n <- .mp_add(.mp_mul(b$re, b$re, w), .mp_mul(b$im, b$im, w), w)
-  .mpc(.mp_div(.mp_add(.mp_mul(a$re, b$re, w), .mp_mul(a$im, b$im, w), w), n, p),
-       .mp_div(.mp_sub(.mp_mul(a$im, b$re, w), .mp_mul(a$re, b$im, w), w), n, p))
-}
 .mp_atan2 <- function(y, x, p) {
   if (x$m == 0) {
     if (y$m == 0) return(.mp_zero)
@@ -350,69 +885,6 @@
   if (x$m > 0) return(.mp_round(t$m, t$e, p))
   pi <- .mp_pi(p + 10)
   if (y$m >= 0) .mp_add(t, pi, p) else .mp_sub(t, pi, p)
-}
-.mpc_abs <- function(z, p) .mp_sqrt(.mp_add(.mp_mul(z$re, z$re, p + 10), .mp_mul(z$im, z$im, p + 10), p + 10), p)
-.mpc_exp <- function(z, p) {
-  r <- .mp_exp(z$re, p + 10)
-  if (.mpc_real(z)) return(.mpc(.mp_round(r$m, r$e, p)))
-  sc <- .mp_sincos(z$im, p + 10)
-  .mpc(.mp_mul(r, sc$cos, p), .mp_mul(r, sc$sin, p))
-}
-.mpc_log <- function(z, p) {
-  if (.mpc_real(z) && z$re$m > 0) return(.mpc(.mp_log(z$re, p)))
-  if (z$re$m == 0 && z$im$m == 0) stop("log of zero", call. = FALSE)
-  .mpc(.mp_log(.mpc_abs(z, p + 10), p), .mp_atan2(z$im, z$re, p))
-}
-.mpc_sqrt <- function(z, p) {
-  if (.mpc_real(z)) {
-    if (z$re$m >= 0) return(.mpc(.mp_sqrt(z$re, p)))
-    return(.mpc(.mp_zero, .mp_sqrt(.mp_neg(z$re), p)))
-  }
-  w <- p + 10
-  r <- .mpc_abs(z, w)
-  a <- .mp_sqrt(.mp_ldexp(.mp_add(r, z$re, w), -1), w)
-  b <- .mp_sqrt(.mp_ldexp(.mp_sub(r, z$re, w), -1), w)
-  if (z$im$m < 0) b <- .mp_neg(b)
-  .mpc(.mp_round(a$m, a$e, p), .mp_round(b$m, b$e, p))
-}
-.mpc_pow <- function(b, x, p, xq = NULL) {
-  # a real float exponent that is an integer or 1/2, as mpc_pow_mpf
-  if (is.null(xq) && x$im$m == 0) {
-    if (x$re$m == 0) xq <- gmp::as.bigq(0)
-    else if (x$re$e >= 0) xq <- gmp::as.bigq(x$re$m * .pow2(x$re$e))
-    else if (x$re$e == -1) xq <- gmp::as.bigq(x$re$m, 2)
-  }
-  # half-integers: sqrt(b)^m
-  if (!is.null(xq) && gmp::denominator(xq) == 2 && gmp::numerator(xq) != 1)
-    return(.mpc_pow(.mpc_sqrt(b, p + 10 + .bitlen(gmp::numerator(xq))), .mpc(.mpf(gmp::numerator(xq), 0)), p, gmp::as.bigq(gmp::numerator(xq))))
-  # an integer exponent: repeated squaring; otherwise exp(x*log(b))
-  if (!is.null(xq) && gmp::denominator(xq) == 1) {
-    n <- gmp::numerator(xq)
-    if (.mpc_real(b)) return(.mpc(.mp_pow_int(b$re, n, p)))
-    w <- p + 10 + .bitlen(n); r <- .mpc(.mpf(1, 0)); bb <- b; k <- abs(n)
-    while (k > 0) { if (gmp::mod.bigz(k, 2) == 1) r <- .mpc_mul(r, bb, w); k <- gmp::divq.bigz(k, 2); if (k > 0) bb <- .mpc_mul(bb, bb, w) }
-    return(if (n < 0) .mpc_div(.mpc(.mpf(1, 0)), r, p) else r)
-  }
-  if (!is.null(xq) && gmp::denominator(xq) == 2 && gmp::numerator(xq) == 1) return(.mpc_sqrt(b, p))
-  if (b$re$m == 0 && b$im$m == 0) return(.mpc(.mp_zero))
-  w <- p + 20 + max(0, .mp_mag(x$re))
-  .mpc_exp(.mpc_mul(x, .mpc_log(b, w), w), p)
-}
-.mpc_sin <- function(z, p) {
-  sc <- .mp_sincos(z$re, p + 10)
-  if (.mpc_real(z)) return(.mpc(.mp_round(sc$sin$m, sc$sin$e, p)))
-  ch <- .mpc_cosh_sinh(z$im, p + 10)
-  .mpc(.mp_mul(sc$sin, ch$cosh, p), .mp_mul(sc$cos, ch$sinh, p))
-}
-.mpc_cos <- function(z, p) {
-  sc <- .mp_sincos(z$re, p + 10)
-  if (.mpc_real(z)) return(.mpc(.mp_round(sc$cos$m, sc$cos$e, p)))
-  ch <- .mpc_cosh_sinh(z$im, p + 10)
-  .mpc(.mp_mul(sc$cos, ch$cosh, p), .mp_neg(.mp_mul(sc$sin, ch$sinh, p)))
-}
-.mpc_cosh_sinh <- function(x, p) {
-  e1 <- .mp_exp(x, p + 10); e2 <- .mp_div(.mpf(1, 0), e1, p + 10)
-  list(cosh = .mp_ldexp(.mp_add(e1, e2, p), -1), sinh = .mp_ldexp(.mp_sub(e1, e2, p), -1))
 }
 .mpc_I <- .mpc(.mp_zero, .mpf(1, 0))
 .mpc_neg <- function(z) .mpc(.mp_neg(z$re), .mp_neg(z$im))
@@ -484,9 +956,9 @@
     sign = if (real) .mpc(.mpf(.mp_sign(z$re), 0)) else .mpc_div(z, .mpc(.mpc_abs(z, w)), p),
     floor = if (real) .mpc(.mp_round(.mp_floor(z$re), 0, p)) else NULL,
     ceiling = if (real) .mpc(.mp_neg(.mp_round(.mp_floor(.mp_neg(z$re)), 0, p))) else NULL,
-    gamma = if (real) .mpc(.mp_gamma(z$re, p)) else NULL,
+    gamma = if (real) .mpc(.mp_gamma(z$re, p)) else .mpc_gamma(z, p),
     loggamma = if (real && z$re$m > 0) .mpc(.mp_loggamma(z$re, p)) else NULL,
-    factorial = if (real) .mpc(.mp_gamma(.mp_add(z$re, p1, w), p)) else NULL,
+    factorial = if (real) .mpc(.mp_gamma(.mp_add(z$re, p1, w), p)) else .mpc_gamma(.mpc_add(z, one, w), p),
     erf = if (real) .mpc(.mp_erf(z$re, p)) else NULL,
     erfc = if (real) .mpc(.mp_erfc(z$re, p)) else NULL,
     zeta = if (real) .mpc(.mp_zeta(z$re, p)) else NULL,
@@ -554,6 +1026,8 @@
       .mpc_pow(b, xv, p, xq)
     },
     Function = {
+      r <- .mp_sympy_fun(e, p, env)
+      if (!isFALSE(r)) return(r)
       h <- .FUNS[[e$name]]$evalf
       if (!is.null(h)) return(.mpeval(h(e), p, env))
       if (length(e$args) != 1L) return(NULL)
@@ -591,6 +1065,7 @@
 # two evaluations agree to prec bits, as mpmath's autoprec.
 .mpeval_adaptive <- function(e, prec, env = list(), maxprec = NULL) {
   if (is.null(maxprec)) maxprec <- max(2000, 8 * prec)
+  if (!is.null(r <- .mp_sympy_const(e, prec))) return(r)
   wp <- prec + 30
   prev <- .mpeval(e, wp, env)
   if (is.null(prev)) return(NULL)
@@ -626,47 +1101,6 @@
   v
 }
 
-# loggamma(x) for real x > 0: shift to z >= wp/4, Stirling's series, undo
-.mp_loggamma <- function(a, p) {
-  wp <- p + 30
-  x <- a
-  z0 <- max(10, ceiling(wp / 4))
-  shift <- max(0, ceiling(z0 - .mp_to_dbl(x)))
-  z <- .mp_add(x, .mpf(shift, 0), wp)
-  lz <- .mp_log(z, wp)
-  s <- .mp_sub(.mp_mul(.mp_sub(z, .mpf(1, -1), wp), lz, wp), z, wp)
-  s <- .mp_add(s, .mp_ldexp(.mp_log(.mp_ldexp(.mp_pi(wp), 1), wp), -1), wp)
-  zinv <- .mp_div(.mpf(1, 0), z, wp); z2 <- .mp_mul(zinv, zinv, wp); zp <- zinv
-  for (k in 1:2000) {
-    t <- .mp_mul(.mp_from_q(.mp_bernoulli(2 * k) / (2 * k * (2 * k - 1)), wp), zp, wp)
-    if (t$m == 0 || .mp_mag(t) < .mp_mag(s) - wp) break
-    s <- .mp_add(s, t, wp)
-    zp <- .mp_mul(zp, z2, wp)
-  }
-  if (shift > 0) {
-    pr <- .mpf(1, 0)
-    for (j in 0:(shift - 1)) pr <- .mp_mul(pr, .mp_add(x, .mpf(j, 0), wp), wp)
-    s <- .mp_sub(s, .mp_log(list(m = abs(pr$m), e = pr$e), wp), wp)
-  }
-  .mp_round(s$m, s$e, p)
-}
-.mp_gamma <- function(a, p) {
-  wp <- p + 30
-  if (a$e >= 0 || .mp_cmp(.mp_round(.mp_floor(a), 0, wp), a) == 0) {
-    n <- .mp_floor(a)
-    if (.mp_cmp(.mp_round(n, 0, wp), a) == 0) {
-      if (n <= 0) stop("gamma has a pole at a nonpositive integer", call. = FALSE)
-      if (n < 3000) return(.mp_round(gmp::factorialZ(as.numeric(n) - 1), 0, p))
-    }
-  }
-  if (.mp_cmp(a, .mpf(1, -1)) < 0) {
-    # reflection: gamma(x) = pi / (sin(pi*x) * gamma(1 - x))
-    s <- .mp_sincos(.mp_mul(.mp_pi(wp), a, wp), wp)$sin
-    g <- .mp_gamma(.mp_sub(.mpf(1, 0), a, wp), wp)
-    return(.mp_div(.mp_pi(wp), .mp_mul(s, g, wp), p))
-  }
-  .mp_exp(.mp_loggamma(a, wp), p)
-}
 
 # erfc(x): 1 - erf(x) with the bits lost to cancellation for moderate x,
 # the asymptotic series for large x (terms decrease up to n = x^2)
@@ -741,10 +1175,9 @@
 }
 
 # Euler's constant by the Brent-McMillan algorithm
-.mp_euler <- function(p) {
-  key <- paste0("gamma", p)
-  if (!is.null(v <- .mp_cache[[key]])) return(v)
-  wp <- p + 30
+.mp_euler <- function(p) .fx_mp(.fx_euler(p + 20), p + 20, p)
+.fx_euler <- function(wp) .fx_const_memo("euler", wp, function(w) {
+  wp <- w + 10
   N <- ceiling(wp * 0.1733) + 2
   w2 <- wp + 20; one <- .pow2(w2)
   A <- -.fxp(.mp_log(.mpf(N, 0), w2), w2); B <- one
@@ -755,10 +1188,8 @@
     U <- U + A; V <- V + B
     if (A == 0 && B == 0) break
   }
-  v <- .mp_div(.fx_mp(U, w2, wp), .fx_mp(V, w2, wp), p)
-  assign(key, v, envir = .mp_cache)
-  v
-}
+  gmp::divq.bigz(U * .pow2(w), V)
+})
 
 # Catalan's constant: pi/8*log(2 + sqrt(3)) + 3/8*sum (k!)^2/((2k)! (2k+1)^2)
 .mp_catalan <- function(p) {
@@ -827,6 +1258,8 @@
 .mpc_sym <- function(r, prec, zero_int = FALSE) {
   # EvalfMixin.evalf: a zero result is the integer 0
   if (zero_int && r$re$m == 0 && r$im$m == 0) return(S_Zero)
+  if (abs(r$re$e) > 2^52 || abs(r$im$e) > 2^52)
+    stop("exponent beyond the exact range of multiprecision numbers", call. = FALSE)
   re <- .mp_float(r$re, prec)
   if (r$im$m == 0) return(re)
   im <- .mp_float(r$im, prec)

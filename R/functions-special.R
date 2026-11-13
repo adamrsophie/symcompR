@@ -1399,9 +1399,10 @@ def_function("jacobi", nargs = 4L,
       }
       return(NULL)
     }
-    if (n$type != "Integer") return(NULL)
+    # named_poly builds the polynomial of index int(n), for a Rational n too
+    if (!(n$type %in% c("Integer", "Rational"))) return(NULL)
     if (n$value < 0) .op_value_error(paste0("Cannot generate Jacobi polynomial of index ", .str(n)))
-    .op_expr(.dup_jacobi(.int_val(n), a, b), x)
+    .op_expr(.dup_jacobi(as.integer(trunc(as.numeric(n$value))), a, b), x)
   })
 
 def_function("gegenbauer", nargs = 3L,
@@ -1431,8 +1432,8 @@ def_function("gegenbauer", nargs = 3L,
         return(.mul(list(fcall("RisingFactorial", list(a, n)), S_Infinity)))
       return(NULL)
     }
-    if (n$type != "Integer") return(NULL)
-    .op_expr(.dup_gegenbauer(.int_val(n), a), x)
+    if (!(n$type %in% c("Integer", "Rational"))) return(NULL)
+    .op_expr(.dup_gegenbauer(as.integer(trunc(as.numeric(n$value))), a), x)
   })
 
 def_function("chebyshevt", nargs = 2L,
@@ -1551,8 +1552,8 @@ def_function("assoc_laguerre", nargs = 3L,
       return(NULL)
     }
     if (isTRUE(ask_fact(n, "negative"))) .op_value_error(paste0("The index n must be nonnegative integer (got ", .str(n), ")"))
-    if (n$type != "Integer") return(NULL)
-    .op_expr(.dup_laguerre(.int_val(n), alpha), x)
+    if (!(n$type %in% c("Integer", "Rational"))) return(NULL)
+    .op_expr(.dup_laguerre(as.integer(trunc(as.numeric(n$value))), alpha), x)
   })
 
 .op_diff <- function(f) {

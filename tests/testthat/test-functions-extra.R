@@ -61,9 +61,9 @@ test_that("third review round fixes", {
   expect_equal(s(nsolve(x^2 + 1, x, 1i)), "1.0*I")
 })
 
-test_that("exclusive bounds compare exactly and hyper reports non-convergence", {
+test_that("exclusive bounds compare exactly and hyper converges near the unit circle", {
   xr <- Symbol("x", real = TRUE); n <- Integer("9007199254740992")
   p <- Piecewise(list(0, xr <= n), list(1, xr >= n + 1), list(2, TRUE))
   expect_equal(s(subs(piecewise_exclusive(p), xr, n + Rational(1, 2))), "2")
-  expect_error(N(hyper(list(1, 1), list(2), Rational(9999, 10000))), "did not converge")
+  expect_equal(sstr(N(hyper(list(1, 1), list(2), Rational(9999, 10000)))), "9.21126149812599")
 })

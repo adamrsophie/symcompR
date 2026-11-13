@@ -415,7 +415,8 @@ sstr <- function(e) {
   # MatrixBase.__str__: Matrix(<rows as a Python list>), or the shape when empty
   if (inherits(e, "symmatrix")) {
     if (e$nrow == 0L || e$ncol == 0L) return(sprintf("Matrix(%d, %d, [])", e$nrow, e$ncol))
-    rows <- vapply(.mrows(e), function(r) paste0("[", paste(vapply(r, .str, ""), collapse = ", "), "]"), "")
+    # str(self.tolist()): each entry prints as its own repr, so Floats keep their zeros
+    rows <- vapply(.mrows(e), function(r) paste0("[", paste(vapply(r, .str_top, ""), collapse = ", "), "]"), "")
     return(paste0("Matrix([", paste(rows, collapse = ", "), "])"))
   }
   if (inherits(e, "SymArray")) return(.ae_str_ndarray(e$data, e$shape))
