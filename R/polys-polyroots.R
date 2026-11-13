@@ -589,9 +589,9 @@ roots_cyclotomic <- function(f, factor = FALSE) {
     if (n == 1L) return(c(result, lapply(roots_linear(f), cancel)))
     if (n == 2L) return(c(result, lapply(roots_quadratic(f), cancel)))
     if (.dp_is_cyclotomic(f)) return(c(result, roots_cyclotomic(f)))
-    if (n == 3L && cubics) return(c(result, roots_cubic(f, trig = trig)))
-    if (n == 4L && quartics) return(c(result, roots_quartic(f)))
-    if (n == 5L && quintics) return(c(result, roots_quintic(f)))
+    if (n == 3L && isTRUE(cubics)) return(c(result, roots_cubic(f, trig = trig)))
+    if (n == 4L && isTRUE(quartics)) return(c(result, roots_quartic(f)))
+    if (n == 5L && isTRUE(quintics)) return(c(result, roots_quintic(f)))
     result
   }
   try_decompose <- function(f) {

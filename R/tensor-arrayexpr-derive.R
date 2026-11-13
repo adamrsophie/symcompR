@@ -150,6 +150,9 @@ as_sym_any <- function(e) if (is.numeric(e)) as_sym(e) else e
 # _eval_derivative of matrix expressions by a scalar; NULL when not computed
 
 .me_eval_derivative <- function(e, x) {
+  # a type with its own _eval_derivative, such as codegen's MatrixSolve
+  h <- .diff_hooks[[e$type]]
+  if (!is.null(h)) return(h(e, x))
   has_x <- .ae_has(e, x) || (.ae_is_type(x, "MatrixElement") && .ae_has(e, x$args[[1L]]))
   if (e$type == "MatrixSymbol") {
     if (length(intersect(.ae_free_keys(e), .ae_free_keys(x)))) {
