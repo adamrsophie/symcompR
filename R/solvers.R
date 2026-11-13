@@ -300,6 +300,10 @@ unique_syms <- function(lsts) {
         acosh = lapply(rhss, function(r) fcall("cosh", list(r))),
         atanh = lapply(rhss, function(r) fcall("tanh", list(r))),
         LambertW = lapply(rhss, function(r) .mul(list(r, fcall("exp", list(r))))),
+        erf = lapply(rhss, function(r) fcall("erfinv", list(r))),
+        erfc = lapply(rhss, function(r) fcall("erfcinv", list(r))),
+        erfinv = lapply(rhss, function(r) fcall("erf", list(r))),
+        erfcinv = lapply(rhss, function(r) fcall("erfc", list(r))),
         Abs = if (isTRUE(ask_fact(a, "real")) || TRUE)
           unlist(lapply(rhss, function(r) list(r, .neg(r))), recursive = FALSE) else NULL,
         NULL)

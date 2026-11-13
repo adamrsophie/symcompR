@@ -115,8 +115,7 @@ def_function("beta", nargs = 2L,
         (.is_pos_int(a) || .half_int(a)) && (.is_pos_int(b) || .half_int(b)))
       return(.div(.mul(list(fcall("gamma", list(a)), fcall("gamma", list(b)))), fcall("gamma", list(.add(list(a, b))))))
     if (a$type == "Float" || b$type == "Float") return(.float_eval("beta", args))
-    k <- .sort_by_key(args)
-    if (!identical(k[[1L]]$key, a$key)) return(fnode("beta", k))
+    # SymPy keeps the arguments in the order given
     NULL
   },
   diff = function(args, i) {

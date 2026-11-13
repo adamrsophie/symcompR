@@ -149,6 +149,8 @@ EmptySet <- S_EmptySet
   if (t == "SpecialSet") return(list(5, 0, e$name))
   if (t %in% .NUMBER_TYPES || (t == "Constant" && e$name %in% c("oo", "-oo"))) return(list(1, 0, "Number"))
   if (t == "Constant") return(list(2, 0, if (is.na(.CONST_CLASS[e$name])) e$name else .CONST_CLASS[[e$name]]))
+  # a random symbol of sympy.stats is an Expr with arguments, not an Atom
+  if (t == "Symbol" && !is.null(e$extra$rv_class)) return(list(5, 0, e$extra$sympy_class))
   if (t %in% c("Symbol", "Dummy", "Wild", "Object", "Str")) return(list(2, 0, if (!is.null(e$extra$sympy_class)) e$extra$sympy_class else t))
   # sympy.vector: base vectors and dyadics are atoms; their sums and
   # products subclass Add and Mul
@@ -178,6 +180,9 @@ EmptySet <- S_EmptySet
     return(list(.class_key(e), list(0, list()), list(),
                 if (e$type == "Constant") (if (e$name == "oo") Inf else -Inf) else .sort_num(e)))
   if (e$type == "Constant" && e$name == "nan") return(list(list(1, 0, "NaN"), list(0, list()), list(), -Inf))
+  # a random symbol sorts by its arguments, the symbol and the space
+  if (e$type == "Symbol" && !is.null(e$extra$rv_class))
+    return(list(.class_key(e), list(2, list(.sort_key(e$extra$symbol), .sort_key(e$extra$pspace))), .ONE_SORT_KEY, 1))
   # atoms, and Indexed (an atom in SymPy), sort by their string
   if (!length(e$args) || e$type == "Indexed") return(list(.class_key(e), list(1, list(.str(e))), .ONE_SORT_KEY, 1))
   # SymPy's MatrixSymbol args start with its name, a Str
@@ -191,7 +196,8 @@ EmptySet <- S_EmptySet
     pw <- ex$args[[2L]]
     ex <- ex$args[[1L]]
   }
-  args <- if (!length(ex$args)) list(.str(ex)) else {
+  args <- if (ex$type == "Symbol" && !is.null(ex$extra$rv_class)) list(.sort_key(ex$extra$symbol), .sort_key(ex$extra$pspace)) else
+    if (!length(ex$args) || ex$type == "Indexed") list(.str(ex)) else {
     a <- if (ex$type == "Add") .add_print_order(ex$args) else
       if (ex$type %in% c("And", "Or")) .bool_print_order(ex$args) else ex$args
     k <- lapply(a, .sort_key)
@@ -364,6 +370,9 @@ Lambda <- function(vars, expr) {
 #' @rdname Lambda
 #' @export
 apply_lambda <- function(f, ...) {
+  # a distribution or finite density is called like a function (sympy.stats)
+  if (is.function(f)) return(f(...))
+  if (is_sym(f) && f$type != "Lambda") return(.rv_call(f, list(...)))
   vals <- lapply(list(...), as_sym)
   vars <- f$args[[1L]]$args
   subs(f$args[[2L]], lapply(seq_along(vars), function(i) list(vars[[i]], vals[[i]])), simultaneous = TRUE)
@@ -701,6 +710,23 @@ solveset <- function(f, x = NULL, domain = Complexes) {
     return(ConditionSet(x, Eq(e, 0), domain))
   }
   is_real_dom <- domain$type == "SpecialSet" && domain$name == "Reals" || domain$type == "Interval"
+  if (is_real_dom && e$type == "Piecewise" &&
+      all(vapply(e$args, function(pc) all(vapply(free_symbols(pc$args[[2L]]), function(s) identical(s$key, x$key), NA)), NA))) {
+    # Piecewise.as_expr_set_pairs: each piece is solved on the part of the
+    # domain where its condition is the first to hold; a condition that
+    # cannot be turned into a set leaves the equation unsolved
+    res <- tryCatch({
+      U <- domain
+      res <- S_EmptySet
+      for (pc in e$args) {
+        ci <- Intersection(U, .conv_cond_set(pc$args[[2L]], x))
+        U <- Complement(U, ci)
+        if (!identical(ci$key, S_EmptySet$key)) res <- Union(res, solveset(pc$args[[1L]], x, ci))
+      }
+      res
+    }, error = function(err) if (grepl("time limit", conditionMessage(err))) stop(err) else NULL)
+    if (!is.null(res)) return(res)
+  }
   if (is_real_dom) {
     per <- .periodic_solutions(e, x)
     # the families are real already
@@ -713,9 +739,16 @@ solveset <- function(f, x = NULL, domain = Complexes) {
   }
   sols <- tryCatch(.solve_univariate(e, x), error = function(err) NULL)
   if (is.null(sols)) return(ConditionSet(x, Eq(e, 0), domain))
-  if (is_real_dom) sols <- Filter(function(s) !identical(ask_fact(s, "real"), FALSE), sols)
+  if (is_real_dom) sols <- Filter(function(s) !identical(ask_fact(s, "real"), FALSE) && !.num_nonreal(s), sols)
   if (domain$type == "SpecialSet" && domain$name == "Complexes") return(if (length(sols)) FiniteSet(sols) else S_EmptySet)
   Intersection(FiniteSet(sols), domain)
+}
+
+# A constant whose numerical value is clearly not real
+.num_nonreal <- function(s) {
+  if (length(free_symbols(s))) return(FALSE)
+  v <- tryCatch(.neval(s, list()), error = function(err) NA)
+  !is.na(v) && abs(Im(v)) > 1e-10 * max(1, Mod(v))
 }
 
 # General solutions of sin(g(x)) = c style equations over the reals.

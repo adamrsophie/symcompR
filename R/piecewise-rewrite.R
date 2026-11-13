@@ -394,6 +394,11 @@ rewrite <- function(e, target) {
       r <- do.call(rules[[z$type]], z$args)
       if (!is.null(r)) return(r)
     }
+    # sympy.stats objects (Expectation, Variance, ...) are node types
+    if (z$type != "Function" && !is.null(rules[[z$type]])) {
+      r <- do.call(rules[[z$type]], z$args)
+      if (!is.null(r)) return(r)
+    }
     if (target == "exp" && z$type == "Pow" && !is_number_type(z$args[[2L]]) && !.has1(z$args[[1L]], S_E) &&
         is_number_type(z$args[[1L]]))
       return(fcall("exp", list(.mul(list(z$args[[2L]], fcall("log", list(z$args[[1L]])))))))
