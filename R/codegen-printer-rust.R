@@ -33,7 +33,7 @@ def_function("float_ceiling", facts = function(args, afs) c(integer = FALSE))
   new_sym("TypeCast", list(e, type_), extra = list(explicit = explicit))
 }
 .cgp_rust_cast <- function(e) {
-  if (!.expr_is_number(e)) return(.cg_typecast(e, real))
+  if (!.expr_is_number(e)) return(.cg_typecast(e, .cg_real))
   if (isTRUE(ask_fact(e, "integer"))) return(Float(N(e)))
   e
 }
@@ -118,7 +118,7 @@ def_function("float_ceiling", facts = function(args, afs) c(integer = FALSE))
            p$known_functions <- kf
            p$dereference_set <- settings$dereference
            p$reserved_words <- .cg_rust_reserved
-           p$type_aliases <- .cgd(list(list(sym_integer, int32), list(real, float64)))
+           p$type_aliases <- .cgd(list(list(sym_integer, int32), list(.cg_real, float64)))
            p$type_mappings <- .cgd(list(list(int32, "i32"), list(float32, "f32"), list(float64, "f64"), list(bool_, "bool")))
            invisible(NULL)
          },
@@ -127,7 +127,7 @@ def_function("float_ceiling", facts = function(args, afs) c(integer = FALSE))
            `_get_statement` = function(p, s) paste0(s, ";"),
            `_get_comment` = function(p, text) paste0("// ", text),
            `_declare_number_const` = function(p, name, value)
-             sprintf("const %s: %s = %s;", .py_str_of(name), .cgp_rust_type(p, real), .py_str_of(value)),
+             sprintf("const %s: %s = %s;", .py_str_of(name), .cgp_rust_type(p, .cg_real), .py_str_of(value)),
            `_format_code` = function(p, lines) .cgp_call(p, "indent_code", lines),
            `_traverse_matrix_indices` = function(p, mat) {
              sh <- .cgp_mshape(mat)
@@ -174,14 +174,14 @@ def_function("float_ceiling", facts = function(args, afs) c(integer = FALSE))
            },
            `_print_Float` = function(p, e, `_type` = FALSE) {
              r <- .cgp_super(p, "RustCodePrinter", "_print_Float", e)
-             if (isTRUE(`_type`)) paste0(r, "_", .cgp_rust_type(p, real)) else r
+             if (isTRUE(`_type`)) paste0(r, "_", .cgp_rust_type(p, .cg_real)) else r
            },
            `_print_Integer` = function(p, e, `_type` = FALSE) {
              r <- .cgp_super(p, "RustCodePrinter", "_print_Integer", e)
              if (isTRUE(`_type`)) paste0(r, "_", .cgp_rust_type(p, sym_integer)) else r
            },
            `_print_Rational` = function(p, e)
-             sprintf("%s_%s/%s.0", as.character(gmp::numerator(e$value)), .cgp_rust_type(p, real), as.character(gmp::denominator(e$value))),
+             sprintf("%s_%s/%s.0", as.character(gmp::numerator(e$value)), .cgp_rust_type(p, .cg_real), as.character(gmp::denominator(e$value))),
            `_print_Relational` = function(p, e) {
              l <- e$args[[1L]]; r <- e$args[[2L]]
              li <- isTRUE(ask_fact(l, "integer")); ri <- isTRUE(ask_fact(r, "integer"))

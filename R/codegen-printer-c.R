@@ -46,7 +46,7 @@ cgdict_get <- function(d, key) .cgd_get(d, key)
 # the _as_macro_if_defined decorator
 .cgp_macro_or <- function(p, e, f) {
   mm <- p$math_macros
-  if (is_sym(e) && .cgd_has(mm, e)) return(paste0(.cgd_get(mm, e), .cgp_c_macro_suffix(p, real)))
+  if (is_sym(e) && .cgd_has(mm, e)) return(paste0(.cgd_get(mm, e), .cgp_c_macro_suffix(p, .cg_real)))
   f()
 }
 # the requires decorator
@@ -158,7 +158,7 @@ cgdict_get <- function(d, key) .cgd_get(d, key)
 }
 
 .cgp_c_print_float <- function(p, e) {
-  type_ <- .cgd_get(p$type_aliases, real, real)
+  type_ <- .cgd_get(p$type_aliases, .cg_real, .cg_real)
   .cgp_update(p, "macros", .cgd_get(p$type_macros, type_, character()))
   suffix <- .cgp_c_literal_suffix(p, type_)
   num <- .str_top(N(e, .int_val(.ft_attr(type_, "decimal_dig"))))
@@ -221,7 +221,7 @@ cgdict_get <- function(d, key) .cgd_get(d, key)
     }
     if (is.function(known)) return(do.call(known, c(list(p), e$args)))
     ns <- .cgp_a(p, "_ns")
-    suffix <- if (paste0(ns, known) %in% .cgp_a(p, "_prec_funcs")) .cgp_c_func_suffix(p, real) else ""
+    suffix <- if (paste0(ns, known) %in% .cgp_a(p, "_prec_funcs")) .cgp_c_func_suffix(p, .cg_real) else ""
     if (nest) {
       args <- .cgpp(p, e$args[[1L]])
       paren_pile <- ""
@@ -282,7 +282,7 @@ cgdict_get <- function(d, key) .cgd_get(d, key)
            `_get_statement` = function(p, s) if (endsWith(s, ";")) s else paste0(s, ";"),
            `_get_comment` = function(p, text) sprintf("/* %s */", text),
            `_declare_number_const` = function(p, name, value) {
-             type_ <- .cgd_get(p$type_aliases, real)
+             type_ <- .cgd_get(p$type_aliases, .cg_real)
              var <- Variable(name, type = type_, value = N(value, .int_val(.ft_attr(type_, "decimal_dig"))), attrs = list(value_const))
              .cgp_call(p, "_get_statement", .cgpp(p, Declaration(var)))
            },
@@ -297,7 +297,7 @@ cgdict_get <- function(d, key) .cgd_get(d, key)
            `_print_Pow` = function(p, e) .cgp_macro_or(p, e, function() {
              if ("Pow" %in% names(p$known_functions)) return(.cgp_print_function(p, e))
              PREC <- .cgp_prec(e)
-             suffix <- .cgp_c_func_suffix(p, real)
+             suffix <- .cgp_c_func_suffix(p, .cg_real)
              ns <- .cgp_a(p, "_ns")
              b <- e$args[[1L]]; x <- e$args[[2L]]
              if (.cgp_equal_valued(x, -1)) return(sprintf("%s/%s", .cgp_call(p, "_print_Float", Float(1.0)), .cgp_paren(p, b, PREC)))
@@ -319,7 +319,7 @@ cgdict_get <- function(d, key) .cgd_get(d, key)
              .cgp_call(p, "_print_math_func", e, known = "fmod")
            },
            `_print_Rational` = function(p, e) {
-             suffix <- .cgp_c_literal_suffix(p, real)
+             suffix <- .cgp_c_literal_suffix(p, .cg_real)
              sprintf("%s.0%s/%s.0%s", as.character(gmp::numerator(e$value)), suffix, as.character(gmp::denominator(e$value)), suffix)
            },
            `_print_Indexed` = function(p, e) .cgp_c_print_indexed(p, e),
@@ -408,9 +408,9 @@ cgdict_get <- function(d, key) .cgd_get(d, key)
 }
 
 # class attributes of C89CodePrinter (dictionaries keyed by types)
-.cgp_classes$C89CodePrinter$attrs$.type_aliases <- .cgd(list(list(real, float64), list(complex_, complex128), list(sym_integer, intc)))
+.cgp_classes$C89CodePrinter$attrs$.type_aliases <- .cgd(list(list(.cg_real, float64), list(complex_, complex128), list(sym_integer, intc)))
 .cgp_classes$C89CodePrinter$attrs$.type_mappings <- .cgd(list(
-  list(real, "double"), list(intc, "int"), list(float32, "float"), list(float64, "double"), list(sym_integer, "int"),
+  list(.cg_real, "double"), list(intc, "int"), list(float32, "float"), list(float64, "double"), list(sym_integer, "int"),
   list(bool_, "bool"), list(int8, "int8_t"), list(int16, "int16_t"), list(int32, "int32_t"), list(int64, "int64_t"),
   list(uint8, "int8_t"), list(uint16, "int16_t"), list(uint32, "int32_t"), list(uint64, "int64_t")))
 .cgp_classes$C89CodePrinter$attrs$.type_headers <- .cgd(c(list(list(bool_, "stdbool.h")),

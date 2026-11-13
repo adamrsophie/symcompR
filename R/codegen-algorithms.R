@@ -57,7 +57,7 @@ newtons_method <- function(expr, wrt, atol = 1e-12, delta = NULL, rtol = 4e-16, 
     whl_bdy <- c(whl_bdy, list(prnt))
   }
   req <- Gt(Abs(delta), as_sym(atol) + as_sym(rtol) * Abs(wrt))
-  declars <- list(Declaration(Variable(delta, type = real, value = S_Infinity)))
+  declars <- list(Declaration(Variable(delta, type = .cg_real, value = S_Infinity)))
   if (!is.null(itermax)) {
     if (is.null(counter)) counter <- Dummy(integer = TRUE)
     v_counter <- variable_deduced(counter, 0L)
@@ -106,7 +106,7 @@ newtons_method_function <- function(expr, wrt, params = NULL, func_name = "newto
   if (length(not_in_params))
     .cg_err("ValueError", paste0("Missing symbols in params: ",
                                  paste(vapply(not_in_params, .py_str_of, ""), collapse = ", ")))
-  declars <- lapply(params, function(p) Variable(p, real))
+  declars <- lapply(params, function(p) Variable(p, .cg_real))
   body <- CodeBlock(algo, Return(wrt))
-  FunctionDefinition(real, func_name, declars, body, attrs = attrs)
+  FunctionDefinition(.cg_real, func_name, declars, body, attrs = attrs)
 }

@@ -142,7 +142,7 @@
          init = function(p, settings, nxt) {
            p$mangled_symbols <- list()
            p$used_name <- character()
-           p$type_aliases <- .cgd_merge(.cgd(list(list(sym_integer, int32), list(real, float64), list(complex_, complex128))),
+           p$type_aliases <- .cgd_merge(.cgd(list(list(sym_integer, int32), list(.cg_real, float64), list(complex_, complex128))),
                                         settings$type_aliases)
            p$type_mappings <- .cgd_merge(.cgd(list(list(intc, "integer(c_int)"), list(float32, "real*4"), list(float64, "real*8"),
                                                    list(float80, "real*10"), list(complex64, "complex*8"),

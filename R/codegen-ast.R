@@ -442,6 +442,8 @@ untyped <- Type("untyped")
 #' @rdname codegen-ast
 #' @export
 real <- FloatBaseType("real")
+# package code refers to the type by this name; base R has a defunct real()
+.cg_real <- real
 #' @rdname codegen-ast
 #' @export
 sym_integer <- IntBaseType("integer")
@@ -499,17 +501,17 @@ NULL
 #' @rdname codegen-types
 #' @export
 type_from_expr <- function(e) {
-  if (is.double(e) && length(e) == 1L && !is.integer(e)) return(real)
+  if (is.double(e) && length(e) == 1L && !is.integer(e)) return(.cg_real)
   if (is.integer(e) && length(e) == 1L) return(sym_integer)
   if (is.complex(e) && length(e) == 1L) return(complex_)
   if (is.logical(e) && length(e) == 1L) return(bool_)
   if (is_sym(e)) {
-    if (e$type == "Float") return(real)
+    if (e$type == "Float") return(.cg_real)
     if (e$type == "Integer") return(sym_integer)
     f <- tryCatch(.facts(e), error = function(err) NULL)
     if (!is.null(f)) {
       if (isTRUE(f[["integer"]])) return(sym_integer)
-      if (isTRUE(f[["real"]])) return(real)
+      if (isTRUE(f[["real"]])) return(.cg_real)
       if (isTRUE(f[["complex"]])) return(complex_)
     }
     if (e$type %in% .REL_TYPES) return(bool_)
