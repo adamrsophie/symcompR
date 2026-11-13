@@ -86,7 +86,12 @@ sym_type <- function(e) as_sym(e)$type
 #' @param e A `sym` expression.
 #' @return A list of `sym` expressions.
 #' @export
-sym_args <- function(e) .args_sympy(as_sym(e))
+sym_args <- function(e) {
+  # a mutable Matrix has no .args in SymPy
+  if (inherits(e, "symmatrix"))
+    stop(.sympy_condition("AttributeError", "'MutableDenseMatrix' object has no attribute 'args'"))
+  .args_sympy(as_sym(e))
+}
 
 # the args of a node as SymPy's .args gives them (Add and Mul sorted by
 # Basic.compare, see .sympy_args)

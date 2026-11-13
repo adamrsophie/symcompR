@@ -473,3 +473,13 @@ test_that("p15 review fixes: assumptions keep symbols apart and catch contradict
   expect_error(assuming(Q$positive(x), ask(Q$positive(x), !Q$positive(x))), "inconsistent")
   expect_true(assuming(Q$positive(x + y), ask(Q$positive(x + y))))
 })
+
+test_that("sym_args of a mutable Matrix raises SymPy's AttributeError", {
+  expect_error(sym_args(Matrix(list(list(1, 2), list(3, 4)))), class = "AttributeError")
+})
+
+test_that("subs accepts solve()'s named list with function keys", {
+  tt <- Symbol("t"); y <- Symbol("y"); f <- Function("f")
+  s <- solve(list(f(tt) - y), list(f(tt)))
+  expect_identical(sstr(subs(diff(f(tt), tt) + f(tt), s)), "y + Derivative(y, t)")
+})

@@ -235,6 +235,12 @@ has <- function(e, ...) {
 .resolve_name <- function(e, nm) {
   fs <- .free_sym_list(e)
   for (s in fs) if (s$name == nm) return(s)
+  # keys such as "f(t)" from solve()'s named list stand for the expression
+  # SymPy uses as the dict key
+  if (grepl("(", nm, fixed = TRUE)) {
+    k <- tryCatch(sympify(nm), error = function(err) NULL)
+    if (is_sym(k) && k$type != "Symbol") return(k)
+  }
   Symbol(nm)
 }
 
