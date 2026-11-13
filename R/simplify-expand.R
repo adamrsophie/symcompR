@@ -32,6 +32,7 @@ expand <- function(e, deep = TRUE, mul = TRUE, multinomial = TRUE,
                    power_exp = TRUE, power_base = TRUE, log = TRUE,
                    trig = FALSE, complex = FALSE, func = FALSE,
                    force = FALSE, basic = TRUE, factor = FALSE, ...) {
+  if (inherits(e, "pyobj")) return(.pyobj_expand(e))
   if (inherits(e, "TensExpr")) return(.tn_expand(e))
   if (inherits(e, "symmatrix")) return(.mat_map(e, function(z)
     expand(z, deep, mul, multinomial, power_exp, power_base, log, trig, complex, func, force)))

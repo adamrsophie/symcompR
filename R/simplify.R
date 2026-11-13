@@ -111,9 +111,13 @@ nsimplify <- function(e, constants = list(), tolerance = 1e-10, rational = FALSE
     if (z$type != "Float") return(z)
     if (.float_prec(z) > 53 || !is.finite(z$value) || (z$value == 0 && .float_mp(z)$m != 0))
       return(make_rational(.decimal_to_bigq(.fmt_float_sym(z, strip = TRUE))))
-    r <- .nsimplify_num(z$value, constants, tolerance, rational)
-    # nothing identified: _real_to_rational with base 10 conversion
-    if (r$type == "Float") r <- make_rational(.decimal_to_bigq(.fmt_float_sym(z, strip = TRUE)))
+    # _real_to_rational: nsimplify(fl, rational=False) first, then a base 10
+    # conversion when that is not a Rational (and rational = TRUE); a nonzero
+    # float identified as zero is not identified (nsimplify_real raises)
+    r <- .nsimplify_num(z$value, constants, tolerance, FALSE)
+    if (r$type == "Float" || (is_zero_num(r) && z$value != 0) ||
+        (isTRUE(rational) && !r$type %in% c("Integer", "Rational")))
+      r <- make_rational(.decimal_to_bigq(.fmt_float_sym(z, strip = TRUE)))
     # _real_to_rational: a nonzero float never becomes zero
     if (is_zero_num(r) && .float_mp(z)$m != 0) r <- make_rational(.mp_to_q(.float_mp(z)))
     r

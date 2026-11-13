@@ -1,0 +1,31 @@
+test_that("columns solve for their reactions as in SymPy", {
+  E <- Symbol("E"); A <- Symbol("A")
+  c <- Column(10, E, A)
+  c$apply_support(0)
+  c$apply_support(10)
+  c$apply_load(-1, 5, -1)
+  c$solve_for_reaction_loads()
+  expect_identical(format(c$reaction_loads), "{R_0: 1/2, R_10: 1/2}")
+})
+
+test_that("beams solve for their reactions as in SymPy", {
+  E <- Symbol("E"); I <- Symbol("I"); R1 <- Symbol("R1"); R2 <- Symbol("R2")
+  b <- Beam(4, E, I)
+  b$apply_load(R1, 0, -1)
+  b$apply_load(R2, 4, -1)
+  b$apply_load(6, 2, -1)
+  b$bc_deflection <- list(list(0L, 0L), list(4L, 0L))
+  b$solve_for_reaction_loads(R1, R2)
+  expect_identical(format(b$reaction_loads), "{R1: -3, R2: -3}")
+})
+
+test_that("the maximum bending moment matches SymPy", {
+  E <- Symbol("E"); I <- Symbol("I"); R1 <- Symbol("R1"); R2 <- Symbol("R2")
+  l <- Symbol("l", positive = TRUE); P <- Symbol("P", positive = TRUE)
+  b <- Beam(l, E, I)
+  b$apply_load(R1, 0, -1)
+  b$apply_load(R2, l, -1)
+  b$apply_load(P, l / 2, -1)
+  b$solve_for_reaction_loads(R1, R2)
+  expect_identical(format(b$max_bmoment()), "(l/2, P*l/4)")
+})

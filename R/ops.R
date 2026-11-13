@@ -2,7 +2,7 @@
 
 #' @export
 chooseOpsMethod.sym <- function(x, y, mx, my, cl, reverse)
-  !inherits(y, c("sym_ordinal", "sym_omega_power", "DifferentialOperator", "HolonomicFunction", "RecurrenceOperator", "physics_obj", "sym_ring_element"))
+  !inherits(y, c("sym_ordinal", "sym_omega_power", "DifferentialOperator", "HolonomicFunction", "RecurrenceOperator", "physics_obj", "sym_ring_element", "pyobj"))
 
 
 #' Arithmetic, comparison and logic operators for symbolic expressions

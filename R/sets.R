@@ -145,6 +145,8 @@ EmptySet <- S_EmptySet
 
 .class_key <- function(e) {
   t <- e$type
+  # a node may carry its own class key (the reduced Planck constant, an Atom)
+  if (!is.null(e$extra$class_key)) return(e$extra$class_key)
   # the number sets sort by their SymPy class name (Basic.class_key)
   if (t == "SpecialSet") return(list(5, 0, e$name))
   if (t %in% .NUMBER_TYPES || (t == "Constant" && e$name %in% c("oo", "-oo"))) return(list(1, 0, "Number"))

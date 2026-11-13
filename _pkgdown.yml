@@ -531,6 +531,46 @@ reference:
   - CharacteristicCurveCollection
   - musculotendon
   - MusculotendonFormulation
+- title: Optics
+  desc: "sympy.physics.optics: Gaussian beams, ray transfer matrices, media, polarization and waves."
+  contents:
+  - BeamParameter
+  - RayTransferMatrix
+  - Medium
+  - TWave
+  - jones_vector
+  - lens_makers_formula
+  - refraction_angle
+  - geometric_conj_ab
+- title: Control systems
+  desc: "sympy.physics.control: transfer functions, state space models, interconnections, Routh-Hurwitz and response data."
+  contents:
+  - TransferFunction
+  - TransferFunctionMatrix
+  - StateSpace
+  - Series
+  - RouthHurwitz
+  - create_transfer_function
+  - gbt
+  - pole_zero_numerical_data
+- title: Continuum mechanics
+  desc: "sympy.physics.continuum_mechanics: beams, columns, trusses, cables and arches."
+  contents:
+  - Beam
+  - Column
+  - Truss
+  - Cable
+  - Arch
+- title: Other physics
+  desc: Hydrogen atom, harmonic oscillators, particle on a ring, Wigner symbols and physics matrices.
+  contents:
+  - hydrogen_R_nl
+  - sho_R_nl
+  - qho_psi_n
+  - pring_wavefunction
+  - wigner_d_small
+  - dot_rot_grad_Ynm
+  - msigma
 - title: Quantum mechanics
   desc: sympy.physics.quantum, secondquant, paulialgebra and hep.gamma_matrices.
   contents:
@@ -575,7 +615,7 @@ reference:
   - shor
   - spin-operators
   - spin-states
-  - wigner-symbols
+  - wigner_3j
 - title: Code generation
   desc: The sympy.codegen AST, code printers, rewriting and optimization, and utilities.codegen routines.
   contents:

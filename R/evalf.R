@@ -86,6 +86,7 @@
 #' N(sin(x), subs = list(x = 1))
 #' @export
 N <- function(e, digits = 15, subs = list()) {
+  if (inherits(e, "pyobj")) return(.pyobj_evalf(e, digits))
   if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) N(z, digits, subs)))
   if (is.list(e) && !inherits(e, "sym")) return(lapply(e, N, digits = digits, subs = subs))
   e <- as_sym(e)
@@ -162,6 +163,11 @@ evalf <- N
     # a function's own evaluator (SymPy's _eval_evalf)
     if (z$type == "Function" && !is.null(.FUNS[[z$name]]$evalf)) return(rec(.FUNS[[z$name]]$evalf(z)))
     if (z$type == "Pow" && z$args[[2L]]$type == "Integer") return(.pow(rec(z$args[[1L]]), z$args[[2L]]))
+    # Mul._eval_evalf: a -1 coefficient stays exact
+    if (z$type == "Mul") {
+      m1 <- vapply(z$args, function(a) identical(a$key, S_NegativeOne$key), TRUE)
+      if (any(m1)) return(.neg(rec(.mul(z$args[!m1]))))
+    }
     sym_rebuild(z, lapply(z$args, rec))
   }
   r <- rec(e)

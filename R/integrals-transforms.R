@@ -203,7 +203,7 @@ singularityintegrate <- function(f, x) {
     if (!identical(simplify(.diff1(arg, x))$key, S_One$key)) return(NULL)
     SF <- function(a, n) fcall("SingularityFunction", list(arg, a, as_sym(n)))
     if (isTRUE(.facts(n)[["nonnegative"]])) return(.div(SF(a, .add(list(n, S_One))), .add(list(n, S_One))))
-    if (n$type == "Integer" && .int_val(n) %in% c(-1, -2)) return(SF(a, .add(list(n, S_One))))
+    if (n$type == "Integer" && .int_val(n) %in% c(-1, -2, -3, -4)) return(SF(a, .add(list(n, S_One))))
     return(NULL)
   }
   if (f$type == "Mul") {
@@ -215,6 +215,9 @@ singularityintegrate <- function(f, x) {
     ga <- subs(g, x, a)
     if (.int_val(n) == -1L) return(.mul(list(ga, SF(a, 0))))
     if (.int_val(n) == -2L) return(.sub(.mul(list(ga, SF(a, -1))), .mul(list(subs(.diff1(g, x), x, a), SF(a, 0)))))
+    # g*(x - a)^n*Heaviside(x - a) at a = 0 integrates to G*Heaviside(x)
+    if (.int_val(n) >= 0L && is_zero_num(a) && .has1(g, x) && is_polynomial(g, x))
+      return(.mul(list(integrate(.mul(list(g, .pow(x, n))), x), SF(a, 0))))
   }
   NULL
 }

@@ -17,6 +17,7 @@
 #' @param expression,t,ex Tensor expressions.
 #' @param component A tensor head.
 #' @param sort Whether to sort the components first.
+#' @param ... Indices of the gamma matrix.
 #' @return A tensor expression, a matrix or, for `extract_type_tens()`, a
 #'   list of two expressions.
 #' @examples

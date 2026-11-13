@@ -26,6 +26,8 @@ gamma_trace(t)
 kahane_simplify(expression)
 }
 \arguments{
+\item{...}{Indices of the gamma matrix.}
+
 \item{expression, t, ex}{Tensor expressions.}
 
 \item{component}{A tensor head.}

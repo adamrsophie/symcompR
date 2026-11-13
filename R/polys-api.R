@@ -854,6 +854,7 @@ factor <- function(x, ...) {
 #' @rdname sym_factor
 #' @export
 factor_sym <- function(f, ..., deep = FALSE) {
+  if (inherits(f, "pyobj")) return(.pyobj_factor(f, ..., deep = deep))
   if (inherits(f, "symmatrix")) return(.mat_map(f, function(z) factor_sym(z, ..., deep = deep)))
   if (is.list(f) && !inherits(f, "sym") && !inherits(f, "Poly")) return(lapply(f, factor_sym, ..., deep = deep))
   if (inherits(f, "Poly")) f <- as_expr(f)

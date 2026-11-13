@@ -31,8 +31,6 @@ enumerate_states(...)
 \item{basis}{A basis operator, state or class name.}
 
 \item{replace_none}{Use the default basis when \code{basis} is \code{NULL}.}
-
-\item{state}{A state.}
 }
 \value{
 A matrix, an expression or a list of states.

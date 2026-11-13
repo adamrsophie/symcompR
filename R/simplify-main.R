@@ -43,6 +43,7 @@
 #' simplify((x^3 + x^2 - x - 1) / (x^2 + 2*x + 1))
 #' @export
 simplify <- function(e, ratio = 1.7, measure = count_ops, rational = FALSE, inverse = FALSE, doit = TRUE, ...) {
+  if (inherits(e, "pyobj")) return(.pyobj_simplify(e))
   if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) simplify(z, ratio, measure, rational, inverse, doit)))
   if (is.list(e) && !inherits(e, "sym")) return(lapply(e, simplify, ratio = ratio, measure = measure, rational = rational, inverse = inverse, doit = doit))
   if (.is_bd(e)) return(.bd_simplify(e, ratio = ratio, measure = measure, rational = rational, inverse = inverse, doit = doit))

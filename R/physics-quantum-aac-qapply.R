@@ -161,7 +161,6 @@ qapply <- function(e, dagger = FALSE, sum_doit = FALSE, ip_doit = TRUE, ...) {
 #' @param expr A quantum expression.
 #' @param basis A basis operator, state or class name.
 #' @param ... Options such as `nqubits`, `j` or `format`.
-#' @param state A state.
 #' @param orig_expr,result The represented expression and its matrix.
 #' @return A matrix, an expression or a list of states.
 #' @examples
