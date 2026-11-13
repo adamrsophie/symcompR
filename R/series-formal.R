@@ -160,11 +160,9 @@
 # linsolve as a substitution: SymPy's dict(zip(syms, solution))
 .fps_linsolve_subs <- function(eqs, syms) {
   sol <- tryCatch(linsolve(eqs, syms), error = function(err) NULL)
-  if (is.null(sol) || !length(sol)) return(list())
-  nm <- vapply(syms, function(s) s$name, "")
-  out <- list()
-  for (i in seq_along(syms)) if (!is.null(sol[[nm[i]]])) out[[length(out) + 1L]] <- list(syms[[i]], sol[[nm[i]]])
-  out
+  if (is.null(sol) || sol$type != "FiniteSet") return(list())
+  vals <- sol$args[[1L]]$args
+  lapply(seq_along(syms), function(i) list(syms[[i]], vals[[i]]))
 }
 .fps_rsolve_hypergeometric_ <- function(f, x, P, Q, k, m) {
   proots <- .fps_root_items(P, k); qroots <- .fps_root_items(Q, k)

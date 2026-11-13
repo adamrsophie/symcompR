@@ -362,6 +362,9 @@ ask_fact <- function(e, fact) {
           isTRUE(bad[["finite"]])) out[nm] <- FALSE
     }
   }
+  # Add._eval_is_extended_real: _fuzzy_group of the terms
+  if (is.na(out["extended_real"] %||% NA) && all(vapply(e$args, function(a) isTRUE(ask_fact(a, "extended_real")), TRUE)))
+    out["extended_real"] <- TRUE
   if (.all_true(fs, "nonnegative") && .any_true(fs, "positive")) out["positive"] <- TRUE
   if (.all_true(fs, "nonpositive") && .any_true(fs, "negative")) out["negative"] <- TRUE
   if (.all_true(fs, "nonnegative")) out["nonnegative"] <- TRUE
@@ -405,6 +408,30 @@ ask_fact <- function(e, fact) {
           }
         }
       }
+    }
+  }
+  # Add._eval_is_extended_positive/negative: with infinite terms the sign
+  # comes from them when every other term has a known sign (saw_INF)
+  if (.any_true(fs, "infinite")) {
+    for (pos in c(TRUE, FALSE)) {
+      nm <- if (pos) "extended_positive" else "extended_negative"
+      if (!is.na(out[nm] %||% NA)) next
+      nn <- if (pos) "extended_nonnegative" else "extended_nonpositive"
+      np <- if (pos) "extended_nonpositive" else "extended_nonnegative"
+      f1 <- function(a, k) { v <- ask_fact(a, k); if (length(v) == 1L) v else NA }
+      saw <- logical(0); res <- NULL
+      for (a in e$args) {
+        if (is_zero_num(a)) next
+        isp <- f1(a, nm); inf <- f1(a, "infinite")
+        if (isTRUE(inf)) {
+          saw <- c(saw, if (isTRUE(isp) || isTRUE(f1(a, nn))) TRUE
+                   else if (identical(isp, FALSE) && identical(f1(a, nn), FALSE)) FALSE else NA)
+          if (TRUE %in% saw && FALSE %in% saw) { saw <- NA; break }
+        }
+        if (isTRUE(isp) || isTRUE(f1(a, nn)) || isTRUE(f1(a, np))) next
+        if (is.na(inf)) { saw <- NA; break }
+      }
+      if (length(saw) && !anyNA(saw) && length(unique(saw)) == 1L) out[nm] <- saw[[1L]]
     }
   }
   if (isTRUE(out["rational"]) || is.na(out["rational"])) {

@@ -2,20 +2,16 @@
 % Please edit documentation in R/zz-aliases.R
 \name{solver-helpers}
 \alias{solver-helpers}
-\alias{linear_eq_to_matrix}
 \alias{solve_linear_system}
 \alias{solve_linear}
 \alias{checksol}
 \alias{checkodesol}
 \alias{solve_undetermined_coeffs}
-\alias{nonlinsolve}
 \alias{solve_poly_system}
 \alias{det_quick}
 \alias{inv_quick}
 \title{Solver helpers}
 \usage{
-linear_eq_to_matrix(eqs, syms)
-
 solve_linear_system(M, syms, ...)
 
 solve_linear(lhs, rhs = 0, symbols = list(), exclude = list(), x = NULL)
@@ -26,8 +22,6 @@ checkodesol(eq, sol, fx = NULL)
 
 solve_undetermined_coeffs(eq, coeffs, ..., dict = FALSE, set = FALSE)
 
-nonlinsolve(eqs, syms, ...)
-
 solve_poly_system(eqs, ..., strict = FALSE)
 
 det_quick(M)
@@ -35,14 +29,12 @@ det_quick(M)
 inv_quick(M)
 }
 \arguments{
-\item{eqs}{A list of equations or expressions.}
+\item{M}{An augmented matrix.}
 
 \item{syms, coeffs}{Lists of symbols.}
 
-\item{M}{An augmented matrix.}
-
 \item{...}{Further symbols for \code{solve_linear_system()},
-\code{solve_undetermined_coeffs()} or \code{nonlinsolve()}, or flags such as \code{numerical = FALSE} for
+\code{solve_undetermined_coeffs()}, or flags such as \code{numerical = FALSE} for
 \code{checksol()}.}
 
 \item{lhs, rhs}{Sides of an equation.}
@@ -63,6 +55,8 @@ pairs) giving the whole solution.}
 \item{dict, set}{Output forms of \code{solve_undetermined_coeffs()}, as for
 \code{\link[=solve]{solve()}}.}
 
+\item{eqs}{A list of equations or expressions.}
+
 \item{strict}{Kept for SymPy compatibility; roots that cannot be found are
 left out.}
 }
@@ -70,7 +64,6 @@ left out.}
 A list, expression, logical or set.
 }
 \description{
-\code{linear_eq_to_matrix(eqs, syms)} returns \code{list(A, b)} with \verb{A x = b}.
 \code{solve_linear_system(M, syms, ...)} solves an augmented matrix; further
 symbols may follow \code{syms}. It returns \code{NULL} when there is no solution.
 \code{solve_linear(lhs, rhs, symbols, exclude)} solves one equation for one of
@@ -81,13 +74,12 @@ symbols may follow \code{syms}. It returns \code{NULL} when there is no solution
 ODE solution and returns the pair \verb{(TRUE, 0)} or \verb{(FALSE, residual)}.
 \code{solve_undetermined_coeffs(eq, coeffs, ...)} makes \code{eq} vanish identically
 in the symbols \code{...}, as SymPy: a named list for one solution, a list of
-them for several, and \code{NULL} when no solution exists. \code{nonlinsolve()} solves a system;
+them for several, and \code{NULL} when no solution exists.
 \code{solve_poly_system(eqs, ...)} solves a zero dimensional polynomial system
 in the generators \code{...} and returns a list of solution tuples; \code{det_quick()} and \code{inv_quick()} are
 \code{\link[=sym_det]{sym_det()}} and \code{\link[=inverse]{inverse()}}.
 }
 \examples{
 x <- Symbol("x"); y <- Symbol("y")
-linear_eq_to_matrix(list(x + 2*y - 3, 3*x - y), list(x, y))
 checksol(x^2 - 4, list(x = 2))
 }

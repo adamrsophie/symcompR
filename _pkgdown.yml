@@ -236,6 +236,13 @@ reference:
   - approximants
 - title: Solvers
   contents:
+  - domain_check
+  - invert_real
+  - linear_coeffs
+  - linear_eq_to_matrix
+  - nonlinsolve
+  - solve_decomposition
+  - solvify
   - lpmin
   - solve.sym
   - solveset

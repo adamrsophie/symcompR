@@ -603,6 +603,8 @@ def_function("erfc",
     NULL
   },
   diff = function(args, i) .mul(list(.int(-2), .inv(.sqrt(S_Pi)), fcall("exp", list(.neg(.sq(args[[1L]])))))),
+  # erfc._eval_is_real
+  facts = function(args, afs) if (.real_arg(afs)) c(commutative = TRUE, real = TRUE, extended_real = TRUE) else c(commutative = TRUE),
   numeric = function(x) if (Im(x) == 0) 2 * stats::pnorm(-Re(x) * sqrt(2)) else .erfc_complex(x))
 
 # erfc of a complex argument: Maclaurin series of erf near zero, the
@@ -661,6 +663,16 @@ def_function("erfinv",
     NULL
   },
   diff = function(args, i) .mul(list(S_Half, .sqrt(S_Pi), fcall("exp", list(.sq(fcall("erfinv", args)))))),
+  # the numeric sign Expr gives a number erfinv(a) with -1 < a < 1
+  facts = function(args, afs) {
+    a <- args[[1L]]
+    out <- c(commutative = TRUE)
+    if (!length(free_symbols(a))) {
+      v <- tryCatch(.neval(a, list()), error = function(e) NA)
+      if (length(v) == 1L && !is.na(v) && Im(v) == 0 && abs(Re(v)) < 1) out[c("extended_real", "real", "finite")] <- TRUE
+    }
+    out
+  },
   numeric = function(x) stats::qnorm((Re(x) + 1) / 2) / sqrt(2))
 
 def_function("erfcinv",

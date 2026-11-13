@@ -55,8 +55,8 @@ test_that("calculus utilities", {
 
 test_that("solver and matrix helpers", {
   m <- linear_eq_to_matrix(list(x + 2*y - 3, 3*x - y), list(x, y))
-  expect_equal(vapply(m$b$data, s, ""), c("3", "0"))
-  expect_error(linear_eq_to_matrix(list(x^2), list(x)), "NonlinearError")
+  expect_equal(vapply(m[[2L]]$data, s, ""), c("3", "0"))
+  expect_error(linear_eq_to_matrix(list(x^2), list(x)), class = "NonlinearError")
   expect_equal(rotations(c(1, 2)), list(c(1, 2), c(2, 1)))
   expect_true(checksol(x^2 - 4, list(x = 2)))
   expect_equal(s(solve_linear(3*x + 6, 0, x)[[2]]), "-2")

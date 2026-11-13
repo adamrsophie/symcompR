@@ -62,13 +62,13 @@ Arch <- function(left_support, right_support, ...) {
   L <- .cm_get(self, "_left_support"); R <- .cm_get(self, "_right_support")
   x0 <- .cm_get(self, "_crown_x"); y0 <- .cm_get(self, "_crown_y")
   if (.arch_truthy(x0) && .arch_truthy(y0)) {
-    sol <- linsolve(list(a * (L[[1L]] - x0)^2 + y0 - L[[2L]]), list(a))
+    sol <- .linsolve_named(list(a * (L[[1L]] - x0)^2 + y0 - L[[2L]]), list(a))
     if (is.null(sol) || is.null(sol[["a"]])) .physics_error("IndexError", "list index out of range")
     eqn <- sol[["a"]] * (x - x0)^2 + y0
     if (!.cm_same(subs(eqn, x, R[[1L]]), R[[2L]]))
       .physics_error("ValueError", "provided coordinates of crown and supports are not consistent with parabolic arch")
   } else if (.arch_truthy(x0)) {
-    sol <- linsolve(list(a * (L[[1L]] - x0)^2 + c - L[[2L]], a * (R[[1L]] - x0)^2 + c - R[[2L]]), list(a, c))
+    sol <- .linsolve_named(list(a * (L[[1L]] - x0)^2 + c - L[[2L]], a * (R[[1L]] - x0)^2 + c - R[[2L]]), list(a, c))
     if (is.null(sol) || length(sol) < 2L || is_zero_num(sol[["a"]]))
       .physics_error("ValueError", "parabolic arch cannot be constructed with the provided coordinates, try providing crown_y")
     eqn <- sol[["a"]] * (x - x0)^2 + sol[["c"]]

@@ -393,8 +393,8 @@ rot_ccw_axis3(sym_pi / 2)
 rot_givens(0, 1, sym_pi / 3)
 ```
 
-Linear systems and other constructions: `linear_eq_to_matrix()` extracts
-the coefficient matrix and right hand side, `casoratian()` is the
+Linear systems and other constructions: `linear_eq_to_matrix()` returns
+the coefficient matrix and right hand side as a tuple `(A, b)`, `casoratian()` is the
 Casoratian of sequences (the discrete Wronskian), and `symarray()` is a
 matrix of indexed symbols.
 

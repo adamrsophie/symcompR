@@ -408,9 +408,9 @@ test_that("p13 h2 fixes: noncommutative coeff and per-root solveset conditions",
   expect_equal(sstr(coeff(q*p*r + 2*p, p)), "0")
   x <- Symbol("x"); z <- Symbol("z"); a <- Symbol("a", real = TRUE)
   expect_equal(sstr(solveset(sin(x) - z, x, Reals)),
-               "ConditionSet(x, (z >= -1) & (z <= 1), Union(ImageSet(Lambda(_n, 2*_n*pi + asin(z)), Integers), ImageSet(Lambda(_n, 2*_n*pi - asin(z) + pi), Integers)))")
+               "ConditionSet(x, (-1 <= z) & (z <= 1), Union(ImageSet(Lambda(_n, 2*_n*pi + asin(z)), Integers), ImageSet(Lambda(_n, 2*_n*pi - asin(z) + pi), Integers)))")
   expect_equal(sstr(solveset(tan(x) - z, x, Reals)),
-               "ConditionSet(x, (z > -oo) & (z < oo), ImageSet(Lambda(_n, _n*pi + atan(z)), Integers))")
+               "ConditionSet(x, (-oo < z) & (z < oo), ImageSet(Lambda(_n, _n*pi + atan(z)), Integers))")
   s <- solveset(sin(x)*(sin(x) - a), x, Reals)
   expect_true(contains(subs(s, a, 2), 0))
   expect_true(contains(subs(solveset(sin(x) - z, x, Reals), z, 0), 0))

@@ -52,7 +52,7 @@ set_inf(s)
 
 set_sup(s)
 
-ImageSet(lam, base)
+ImageSet(lam, base, ...)
 
 Reals
 
@@ -91,7 +91,8 @@ ConditionSet(sym, condition, base = UniversalSet)
 
 \item{x}{An element.}
 
-\item{...}{Elements or sets.}
+\item{...}{Elements or sets; for \code{ImageSet()}, further sets, one for each
+argument of a \code{Lambda} with several arguments.}
 
 \item{lam}{A \code{\link[=Lambda]{Lambda()}}.}
 

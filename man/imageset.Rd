@@ -6,19 +6,29 @@
 \alias{PowerSet}
 \title{Set aliases}
 \usage{
-imageset(lam, base)
+imageset(...)
 
 Contains(x, s)
 
 PowerSet(s)
 }
 \arguments{
-\item{lam, base, x, s}{Arguments.}
+\item{...}{The map, then the sets.}
+
+\item{x, s}{An element and a set.}
 }
 \value{
 A set or boolean.
 }
 \description{
-\code{imageset()} is \code{\link[=ImageSet]{ImageSet()}}, \code{Contains(x, s)} the membership condition,
-and \code{PowerSet(s)} the set of all subsets of a finite set.
+\code{imageset()} is the simplified image of sets under a map, as SymPy's
+\code{imageset()}: the map is a \code{Lambda}, a function name such as \code{"cos"}, or
+a symbol (or list of symbols) followed by an expression, and the sets
+come after it. \code{Contains(x, s)} is the membership condition, and
+\code{PowerSet(s)} the set of all subsets of a finite set.
+}
+\examples{
+x <- Symbol("x")
+imageset(x, 2 * x, Interval(0, 1))
+imageset(Lambda(x, x^2), Interval(-2, 1))
 }

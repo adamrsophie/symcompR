@@ -98,26 +98,23 @@ def_function(
   latex = function(a) paste0("e^{", a[1], "}")
 )
 
-.log_exact <- function(x, b) {
-  if (!is_exact_number(x) || !is_exact_number(b)) return(NULL)
-  if (x$value <= 0 || b$value <= 0 || b$value == 1) return(NULL)
-  lx <- log(abs(as.double(x$value)))
-  lb <- log(abs(as.double(b$value)))
-  if (!is.finite(lx) || !is.finite(lb)) return(NULL)
-  k <- round(lx / lb)
-  if (abs(k) > 10000) return(NULL)
-  if (.bigq_pow_int(b$value, k) == x$value) return(.int(k))
-  NULL
-}
-
 def_function(
   "log", nargs = 1:2,
   eval = function(args) {
     if (length(args) == 2L) {
+      # log.eval with a base: powers of the base are extracted with
+      # multiplicity() when both arguments are rational numbers
       x <- args[[1L]]
       b <- args[[2L]]
-      ex <- .log_exact(x, b)
-      if (!is.null(ex)) return(ex)
+      if (is_one_num(b)) return(if (is_one_num(x)) S_NaN else S_ComplexInfinity)
+      if (x$type %in% c("Integer", "Rational") && b$type %in% c("Integer", "Rational") &&
+          b$value > 0 && !is_zero_num(x)) {
+        m <- tryCatch(as.integer(multiplicity(b, x)), error = function(e) NULL)
+        if (!is.null(m)) {
+          if (m == 0L) return(.div(fcall("log", list(x)), fcall("log", list(b))))
+          return(.add(list(.int(m), .div(fcall("log", list(.div(x, .pow(b, .int(m))))), fcall("log", list(b))))))
+        }
+      }
       if (is_const(b, "E")) return(fcall("log", list(x)))
       return(.div(fcall("log", list(x)), fcall("log", list(b))))
     }
@@ -186,6 +183,15 @@ def_function(
       if (isTRUE(f[["finite"]])) out["finite"] <- TRUE
     }
     if (isTRUE(f[["negative"]])) out["real"] <- FALSE
+    # log._eval_is_extended_real is arg.is_extended_positive, which evalf
+    # decides False for a number with an imaginary part
+    # ponytail: double precision test of the imaginary part; use mpmath
+    # evalf if tiny imaginary parts show up
+    if (length(args) == 1L && !length(free_symbols(args[[1L]]))) {
+      v <- tryCatch(.neval(args[[1L]], list()), error = function(e) NA)
+      if (length(v) == 1L && !is.na(v) && is.finite(Mod(v)) && abs(Im(v)) > 1e-10 * max(1, Mod(v)))
+        out[c("real", "extended_real")] <- FALSE
+    }
     # SymPy: the sign of log(a) is the sign of a - 1
     if (length(args) == 1L && isTRUE(f[["positive"]])) {
       d <- .sub(args[[1L]], S_One)
@@ -482,6 +488,10 @@ def_function(
       out["real"] <- TRUE
       if (name %in% c("sin", "cos")) out["finite"] <- TRUE
     }
+    # sin._eval_is_complex and cos._eval_is_complex: a complex argument
+    # gives a complex, so finite, value
+    if (name %in% c("sin", "cos") && "complex" %in% names(f) && isTRUE(f[["complex"]]))
+      out[c("complex", "finite")] <- TRUE
     if (isTRUE(f[["rational"]]) && isTRUE(f[["nonzero"]]) && name %in% c("sin", "cos", "tan"))
       out["transcendental"] <- TRUE
     out
@@ -555,10 +565,33 @@ def_function("sinc",
     list(.add(list(S_Two, s(3))), .mul(list(.rat(5, 12), S_Pi))),
     list(.sub(s(2), S_One), .mul(list(.rat(1, 8), S_Pi))),
     list(.add(list(S_One, s(2))), .mul(list(.rat(3, 8), S_Pi))),
+    # the pi/5, 2*pi/5, pi/10 and 3*pi/10 entries of atan._atan_table
+    list(.sqrt(.sub(.int(5), .mul(list(S_Two, s(5))))), .mul(list(.rat(1, 5), S_Pi))),
+    list(.sqrt(.add(list(.int(5), .mul(list(S_Two, s(5)))))), .mul(list(.rat(2, 5), S_Pi))),
+    list(.sqrt(.sub(S_One, .mul(list(.rat(2, 5), s(5))))), .mul(list(.rat(1, 10), S_Pi))),
+    list(.sqrt(.add(list(S_One, .mul(list(.rat(2, 5), s(5)))))), .mul(list(.rat(3, 10), S_Pi))),
     list(S_Infinity, .mul(list(S_Half, S_Pi)))
   )
   for (v in vals) if (identical(v[[1L]]$key, a$key)) return(v[[2L]])
   NULL
+}
+
+# asin and acos _eval_is_extended_real: x.is_extended_real and
+# (1 - abs(x)).is_nonnegative; asin keeps the sign of a real argument,
+# acos is nonnegative
+.asin_facts <- function(name) function(args, afs) {
+  a <- args[[1L]]
+  out <- c(commutative = TRUE)
+  if (!(isTRUE(afs[[1L]][["real"]]))) return(out)
+  inside <- tryCatch(ask_fact(.sub(S_One, fcall("Abs", list(a))), "nonnegative"), error = function(e) NA)
+  if (!isTRUE(inside)) return(out)
+  out[c("real", "extended_real", "finite")] <- TRUE
+  if (name == "acos") out["nonnegative"] <- TRUE
+  else {
+    if (isTRUE(afs[[1L]][["positive"]])) out["positive"] <- TRUE
+    if (isTRUE(afs[[1L]][["negative"]])) out["negative"] <- TRUE
+  }
+  out
 }
 
 def_function("asin",
@@ -573,10 +606,22 @@ def_function("asin",
                }
                ic <- .imag_coeff(a)
                if (!is.null(ic)) return(.mul(list(S_I, fcall("asinh", list(ic)))))
+               # asin.eval: asin(sin(ang)) and asin(cos(ang)) for a comparable ang
+               if (a$type == "Function" && a$name %in% c("sin", "cos") && .is_comparable(a$args[[1L]])) {
+                 if (a$name == "cos") return(.sub(.mul(list(S_Half, S_Pi)), fcall("acos", list(a))))
+                 gt <- function(u, v) isTRUE(Re(.neval(.sub(u, v), list())) > 0)
+                 ang <- Mod(a$args[[1L]], .mul(list(S_Two, S_Pi)))
+                 if (gt(ang, S_Pi)) ang <- .sub(S_Pi, ang)
+                 hp <- .mul(list(S_Half, S_Pi))
+                 if (gt(ang, hp)) ang <- .sub(S_Pi, ang)
+                 if (gt(.neg(hp), ang)) ang <- .sub(.neg(S_Pi), ang)
+                 return(ang)
+               }
                .odd_eval("asin", a)
              },
              diff = function(args, i) .inv(.sqrt(.sub(S_One, .sq(args[[1L]])))),
-             numeric = function(x) if (is.complex(x) || abs(x) > 1) asin(as.complex(x)) else asin(x))
+             numeric = function(x) if (is.complex(x) || abs(x) > 1) asin(as.complex(x)) else asin(x),
+             facts = .asin_facts("asin"))
 
 def_function("acos",
              eval = function(args) {
@@ -596,7 +641,8 @@ def_function("acos",
                NULL
              },
              diff = function(args, i) .neg(.inv(.sqrt(.sub(S_One, .sq(args[[1L]]))))),
-             numeric = function(x) if (is.complex(x) || abs(x) > 1) acos(as.complex(x)) else acos(x))
+             numeric = function(x) if (is.complex(x) || abs(x) > 1) acos(as.complex(x)) else acos(x),
+             facts = .asin_facts("acos"))
 
 def_function("atan",
              eval = function(args) {
@@ -792,8 +838,44 @@ def_function("csch", eval = .hyp_eval("csch"),
              diff = function(args, i) .neg(.mul(list(fcall("coth", args), fcall("csch", args)))),
              numeric = function(x) 1 / sinh(x), facts = .hyp_facts("csch"))
 
+# the _eval_is_extended_real, _eval_is_finite and _eval_is_zero methods of
+# the inverse hyperbolic functions
+.ahyp_facts <- function(name) function(args, afs) {
+  a <- args[[1L]]
+  # the evalf sign of a number answers what the assumptions leave open
+  q <- function(e, nm) {
+    v <- tryCatch(ask_fact(e, nm), error = function(err) NA)
+    if (length(v) == 1L && !is.na(v)) return(v)
+    if (length(free_symbols(e)) || !(nm %in% c("zero", "nonnegative", "extended_nonnegative", "extended_nonpositive"))) return(NA)
+    z <- tryCatch(.neval(e, list()), error = function(err) NA)
+    if (length(z) != 1L || is.na(z) || abs(Im(z)) > 1e-12 || abs(Re(z)) < 1e-12) return(NA)
+    switch(nm, zero = FALSE, nonnegative = , extended_nonnegative = Re(z) > 0, extended_nonpositive = Re(z) < 0)
+  }
+  fand <- function(...) { v <- c(...); if (any(v %in% FALSE)) FALSE else if (all(v %in% TRUE)) TRUE else NA }
+  fnot <- function(v) if (is.na(v)) NA else !v
+  er <- q(a, "extended_real")
+  am1 <- function(nm) q(.sub(a, S_One), nm); ap1 <- function(nm) q(.add(list(a, S_One)), nm)
+  ext <- switch(name, asinh = er, acsch = er,
+                acosh = fand(er, am1("extended_nonnegative")),
+                atanh = fand(er, q(.sub(S_One, a), "nonnegative"), ap1("nonnegative")),
+                acoth = fand(er, { v <- c(am1("extended_nonnegative"), ap1("extended_nonpositive"))
+                                   if (any(v %in% TRUE)) TRUE else if (all(v %in% FALSE)) FALSE else NA }),
+                asech = fand(er, q(a, "nonnegative"), q(.sub(S_One, a), "nonnegative")))
+  fin <- switch(name, asinh = , acosh = q(a, "finite"),
+                atanh = , acoth = fnot({ v <- c(am1("zero"), ap1("zero"))
+                                         if (any(v %in% TRUE)) TRUE else if (all(v %in% FALSE)) FALSE else NA }),
+                asech = , acsch = fnot(q(a, "zero")))
+  out <- c(commutative = TRUE)
+  if (!is.na(ext)) out["extended_real"] <- ext
+  if (!is.na(fin)) out["finite"] <- fin
+  if (isTRUE(ext) && isTRUE(fin)) out["real"] <- TRUE
+  if (identical(ext, FALSE)) out["real"] <- FALSE
+  if (name == "asinh" && !is.na(q(a, "zero"))) out["zero"] <- q(a, "zero")
+  out
+}
+
 .ahyp <- function(name, zero, diff, numeric, odd = TRUE, extra = NULL) {
-  def_function(name,
+  def_function(name, facts = .ahyp_facts(name),
                eval = function(args) {
                  a <- args[[1L]]
                  if (a$type == "Float") return(.float_eval(name, args))
@@ -851,7 +933,42 @@ def_function("csch", eval = .hyp_eval("csch"),
         .neg(.div(.sqrt(.inv(.add(list(z, S_One)))), .mul(list(z, .sqrt(.sub(S_One, z))))))
       },
       function(x) acosh(as.complex(1 / x)), odd = FALSE,
-      extra = function(a) if (is_one_num(a)) S_Zero else NULL)
+      extra = function(a) {
+        # asech.eval and _asech_table
+        if (is_one_num(a)) return(S_Zero)
+        if (is_negone_num(a)) return(.mul(list(S_Pi, S_I)))
+        if (is_const(a, "oo") || is_const(a, "-oo")) return(.mul(list(S_Half, S_Pi, S_I)))
+        if (length(free_symbols(a))) return(NULL)
+        .asech_table_get(a)
+      })
+.asech_cache <- new.env()
+.asech_table_get <- function(a) {
+  if (is.null(.asech_cache$tab)) {
+    s2 <- .sqrt(S_Two); s3 <- .sqrt(.int(3)); s5 <- .sqrt(.int(5)); s6 <- .sqrt(.int(6))
+    pr <- function(p, q) .mul(list(make_rational(gmp::as.bigq(p, q)), S_Pi))
+    l12 <- .add(list(S_One, s2))
+    tab <- list(
+      list(S_I, .add(list(.neg(.mul(list(S_Half, S_Pi, S_I))), fcall("log", list(l12))))),
+      list(.neg(S_I), .add(list(.mul(list(S_Half, S_Pi, S_I)), fcall("log", list(l12))))),
+      list(.sub(s6, s2), pr(1, 12)), list(.sub(s2, s6), pr(11, 12)),
+      list(.sqrt(.sub(S_Two, .div(S_Two, s5))), pr(1, 10)), list(.neg(.sqrt(.sub(S_Two, .div(S_Two, s5)))), pr(9, 10)),
+      list(.div(S_Two, .sqrt(.add(list(S_Two, s2)))), pr(1, 8)), list(.neg(.div(S_Two, .sqrt(.add(list(S_Two, s2))))), pr(7, 8)),
+      list(.div(S_Two, s3), pr(1, 6)), list(.neg(.div(S_Two, s3)), pr(5, 6)),
+      list(.sub(s5, S_One), pr(1, 5)), list(.sub(S_One, s5), pr(4, 5)),
+      list(s2, pr(1, 4)), list(.neg(s2), pr(3, 4)),
+      list(.sqrt(.add(list(S_Two, .div(S_Two, s5)))), pr(3, 10)), list(.neg(.sqrt(.add(list(S_Two, .div(S_Two, s5))))), pr(7, 10)),
+      list(S_Two, pr(1, 3)), list(.int(-2), pr(2, 3)),
+      list(.sqrt(.mul(list(S_Two, .add(list(S_Two, s2))))), pr(3, 8)), list(.neg(.sqrt(.mul(list(S_Two, .add(list(S_Two, s2)))))), pr(5, 8)),
+      list(.add(list(S_One, s5)), pr(2, 5)), list(.sub(.int(-1), s5), pr(3, 5)),
+      list(.add(list(s6, s2)), pr(5, 12)), list(.sub(.neg(s6), s2), pr(7, 12)))
+    .asech_cache$tab <- tab
+  }
+  for (kv in .asech_cache$tab) if (identical(kv[[1L]]$key, a$key)) {
+    if (isTRUE(ask_fact(a, "extended_real"))) return(.mul(list(kv[[2L]], S_I)))
+    return(kv[[2L]])
+  }
+  NULL
+}
 .ahyp("acsch", S_ComplexInfinity,
       function(args, i) {
         x <- args[[1L]]

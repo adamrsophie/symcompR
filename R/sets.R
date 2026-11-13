@@ -19,7 +19,8 @@ is_set <- function(e) e$type %in% .SET_TYPES
 #'
 #' @param a,b Endpoints.
 #' @param left_open,right_open Openness of the endpoints.
-#' @param ... Elements or sets.
+#' @param ... Elements or sets; for `ImageSet()`, further sets, one for each
+#'   argument of a `Lambda` with several arguments.
 #' @param s,t Sets.
 #' @param x An element.
 #' @return A set expression, or a logical/boolean value.
@@ -86,8 +87,19 @@ FiniteSet <- function(...) {
   if (length(els) == 1L && is.list(els[[1L]]) && !inherits(els[[1L]], "sym")) els <- els[[1L]]
   els <- lapply(els, as_sym)
   if (!length(els)) return(S_EmptySet)
-  els <- els[!duplicated(vapply(els, .k, ""))]
+  els <- els[!duplicated(vapply(els, .canon_key, ""))]
   new_sym("FiniteSet", .sort_set_elems(els))
+}
+
+# Lambda equality uses canonical_variables: elements that differ only in
+# the bound symbols of a Lambda are one element of a set
+.canon_key <- function(e) {
+  if (!grepl("Lambda", e$key, fixed = TRUE)) return(e$key)
+  lams <- Filter(function(n) is_sym(n) && n$type == "Lambda", preorder_traversal(e))
+  vs <- unique(do.call(c, lapply(lams, function(l) .lambda_vars(l$args[[1L]]$args))))
+  if (!length(vs)) return(e$key)
+  reps <- lapply(seq_along(vs), function(i) list(vs[[i]], Symbol(paste0("_lambda_var", i))))
+  .k(xreplace(e, reps))
 }
 
 .sort_set_elems <- function(els) {
@@ -189,6 +201,8 @@ EmptySet <- S_EmptySet
   # a random symbol sorts by its arguments, the symbol and the space
   if (e$type == "Symbol" && !is.null(e$extra$rv_class))
     return(list(.class_key(e), list(2, list(.sort_key(e$extra$symbol), .sort_key(e$extra$pspace))), .ONE_SORT_KEY, 1))
+  # Dummy.sort_key: its name, then its dummy_index
+  if (e$type == "Dummy" && !is.null(e$extra$id)) return(list(.class_key(e), list(2, list(e$name, e$extra$id)), .ONE_SORT_KEY, 1))
   # atoms, and Indexed (an atom in SymPy), sort by their string
   if (!length(e$args) || e$type == "Indexed") return(list(.class_key(e), list(1, list(.str(e))), .ONE_SORT_KEY, 1))
   # SymPy's MatrixSymbol args start with its name, a Str
@@ -282,7 +296,7 @@ register_str_printer("EmptySet", function(e) "EmptySet")
     Interval = { a <- s$args[[1L]]; if (is_const(a, "-oo")) -Inf else if (length(free_symbols(a))) NA_real_ else tryCatch(num_value_dbl(N(a)), error = function(e) NA_real_) },
     FiniteSet = {
       vals <- vapply(s$args, function(a) if (length(free_symbols(a))) NA_real_ else
-        tryCatch({ z <- .neval(a, list()); if (is.complex(z) && Im(z) != 0) NA_real_ else as.double(Re(z)) }, error = function(e) NA_real_), 0)
+        tryCatch({ z <- .neval(a, list()); if (length(z) != 1L || (is.complex(z) && Im(z) != 0)) NA_real_ else as.double(Re(z)) }, error = function(e) NA_real_), 0)
       if (anyNA(vals)) NA_real_ else min(vals)
     },
     SpecialSet = switch(s$name, Reals = , Integers = , Rationals = -Inf, Naturals = 1, Naturals0 = 0, NA_real_),
@@ -382,10 +396,18 @@ apply_lambda <- function(f, ...) {
   if (is_sym(f) && f$type != "Lambda") return(.rv_call(f, list(...)))
   vals <- lapply(list(...), as_sym)
   vars <- f$args[[1L]]$args
-  subs(f$args[[2L]], lapply(seq_along(vars), function(i) list(vars[[i]], vals[[i]])), simultaneous = TRUE)
+  # Lambda._match_signature: a tuple in the signature takes a tuple apart
+  pairs <- list()
+  match_sig <- function(vs, xs) for (i in seq_along(vs)) {
+    if (vs[[i]]$type == "Tuple" && is_sym(xs[[i]]) && xs[[i]]$type == "Tuple") match_sig(vs[[i]]$args, xs[[i]]$args)
+    else pairs[[length(pairs) + 1L]] <<- list(vs[[i]], xs[[i]])
+  }
+  match_sig(vars, vals)
+  subs(f$args[[2L]], pairs, simultaneous = TRUE)
 }
 
-register_bound_vars("Lambda", function(e) vapply(e$args[[1L]]$args, .k, ""))
+.lambda_vars <- function(l) do.call(c, lapply(l, function(v) if (v$type == "Tuple") .lambda_vars(v$args) else list(v)))
+register_bound_vars("Lambda", function(e) vapply(.lambda_vars(e$args[[1L]]$args), .k, ""))
 register_latex_printer("Lambda", function(e) {
   v <- e$args[[1L]]$args
   vs <- if (length(v) == 1L) .latex(v[[1L]]) else paste0("\\left( ", paste(vapply(v, .latex, ""), collapse = ", \\  "), "\\right)")
@@ -393,11 +415,13 @@ register_latex_printer("Lambda", function(e) {
 })
 register_str_printer("Lambda", function(e) {
   v <- e$args[[1L]]$args
-  vs <- if (length(v) == 1L) .str(v[[1L]]) else paste0("(", paste(vapply(v, .str, ""), collapse = ", "), ")")
+  # StrPrinter._print_Lambda: a one symbol signature prints as the symbol
+  vs <- if (length(v) == 1L && v[[1L]]$type != "Tuple") .str(v[[1L]])
+        else paste0("(", paste(vapply(v, .str, ""), collapse = ", "), if (length(v) == 1L) ",", ")")
   paste0("Lambda(", vs, ", ", .str(e$args[[2L]]), ")")
 })
 
-register_str_printer("ImageSet", function(e) paste0("ImageSet(", .str(e$args[[1L]]), ", ", .str(e$args[[2L]]), ")"))
+register_str_printer("ImageSet", function(e) paste0("ImageSet(", paste(vapply(e$args, .str, ""), collapse = ", "), ")"))
 
 #' @rdname sets
 #' @param sym A symbol.
@@ -405,10 +429,32 @@ register_str_printer("ImageSet", function(e) paste0("ImageSet(", .str(e$args[[1L
 #' @export
 ConditionSet <- function(sym, condition, base = UniversalSet) {
   # ConditionSet.__new__
-  sym <- as_sym(sym); condition <- as_sym(condition); base <- as_sym(base)
+  err <- function(cls, msg) stop(.sympy_condition(cls, msg))
+  islist <- function(v) is.list(v) && !is_sym(v)
+  # sympify turns a tuple of symbols into a Tuple and fails on a list
+  tup <- function(v) if (islist(v)) do.call(Tuple, lapply(v, tup)) else as_sym(v)
+  if (islist(condition))
+    err("SympifyError", paste0("SympifyError: [", paste(vapply(condition, function(b) .str(as_sym(b)), ""), collapse = ", "), "]"))
+  if (islist(base))
+    err("SympifyError", paste0("SympifyError: [", paste(vapply(base, function(b) .str(as_sym(b)), ""), collapse = ", "), "]"))
+  sym <- tup(sym); condition <- as_sym(condition); base <- as_sym(base)
+  flat <- if (sym$type == "Tuple") .lambda_vars(sym$args) else list(sym)
+  if (anyDuplicated(vapply(flat, .k, ""))) err("BadSignatureError", "Duplicate symbols detected")
+  if (!is_set(base)) err("TypeError", paste0("base set should be a Set object, not ", .str(base)))
+  if (condition$type == "FiniteSet") condition <- do.call(And, lapply(condition$args, function(l) Eq(l, 0)))
+  # as_Boolean: an expression other than a symbol is not a condition
+  if (.is_expr_s(condition) && !(condition$type %in% c("Symbol", "Dummy", "Wild", .REL_TYPES, .BOOL_TYPES)))
+    err("TypeError", paste0("expecting bool or Boolean, not `", .str(condition), "`."))
   if (identical(condition$key, S_true$key)) return(base)
   if (identical(condition$key, S_false$key)) return(S_EmptySet)
   if (base$type == "EmptySet") return(S_EmptySet)
+  for (i in flat)
+    # _diff_wrt: symbols, applied undefined functions, Indexed, Derivative
+    if (!(is_symbol_like(i) || .is_undefined_application(i) || i$type %in% c("Indexed", "Derivative")))
+      err("ValueError", paste0("`", .str(i), "` is not symbol-like"))
+  inb <- tryCatch(.contains(base, sym), error = function(e) NULL)
+  if (!is.null(inb) && identical(inb$key, S_false$key))
+    err("TypeError", paste0("sym `", .str(sym), "` is not in base_set `", .str(base), "`"))
   know <- NULL
   if (base$type == "FiniteSet") {
     v <- vapply(base$args, function(el) .fb(subs(condition, sym, el)), NA)
@@ -416,148 +462,38 @@ ConditionSet <- function(sym, condition, base = UniversalSet) {
     know <- FiniteSet(base$args[!is.na(v) & v])
     base <- FiniteSet(base$args[is.na(v)])
   }
-  # ponytail: a nested ConditionSet merges only when it uses the same symbol
-  if (base$type == "ConditionSet" && identical(base$args[[1L]]$key, sym$key)) {
-    condition <- And(condition, base$args[[2L]])
-    base <- base$args[[3L]]
+  if (base$type == "ConditionSet") {
+    s <- base$args[[1L]]; c <- base$args[[2L]]; b <- base$args[[3L]]
+    sflat <- if (s$type == "Tuple") s$args else list(s)
+    if (length(sflat) != length(flat)) err("BadSignatureError", "sym does not match sym of base set")
+    fk <- function(e) vapply(free_symbols(e), .k, "")
+    if (identical(s$key, sym$key)) {
+      condition <- And(condition, c)
+      base <- b
+    } else if (!length(intersect(fk(c), fk(sym)))) {
+      condition <- And(condition, xreplace(c, Map(list, sflat, flat)))
+      base <- b
+    } else if (!length(intersect(fk(condition), fk(s)))) {
+      sym <- xreplace(sym, Map(list, flat, sflat))
+      condition <- And(xreplace(condition, Map(list, flat, sflat)), c)
+      base <- b
+    }
   }
   if (condition$type == "Contains" && identical(condition$args[[1L]]$key, sym$key) && is_set(condition$args[[2L]]))
     return(Intersection(condition$args[[2L]], base))
   rv <- new_sym("ConditionSet", list(sym, condition, base))
   if (is.null(know)) rv else Union(know, rv)
 }
-register_bound_vars("ConditionSet", function(e) e$args[[1L]]$key)
+# xreplace and subs rebuild a ConditionSet through ConditionSet.__new__
+register_rebuilder("ConditionSet", function(e, args) ConditionSet(args[[1L]], args[[2L]], args[[3L]]))
+register_bound_vars("ConditionSet", function(e) {
+  s <- e$args[[1L]]
+  if (s$type == "Tuple") vapply(s$args, .k, "") else s$key
+})
 register_str_printer("Contains", function(e) paste0("Contains(", .str(e$args[[1L]]), ", ", .str(e$args[[2L]]), ")"))
 
 # ---------------------------------------------------------------------------
 # Inequalities and solveset
-
-#' Solve univariate inequalities
-#'
-#' Solves polynomial and rational inequalities in one real variable by
-#' locating the real roots of numerator and denominator and testing the sign
-#' on each piece, like SymPy's `solve_univariate_inequality()`. Returns a
-#' relational (default) or a set with `relational = FALSE`.
-#'
-#' @param expr An inequality such as `x^2 > 4`.
-#' @param x The variable.
-#' @param relational Return a relational instead of a set.
-#' @param domain The domain, by default the real line.
-#' @return A boolean expression or a set.
-#' @examples
-#' x <- Symbol("x")
-#' solve_univariate_inequality(x^2 > 4, x)
-#' solve_univariate_inequality((x - 1) / (x + 2) <= 0, x, relational = FALSE)
-#' @export
-solve_univariate_inequality <- function(expr, x, relational = TRUE, domain = Reals) {
-  expr <- as_sym(expr)
-  x <- as_sym(x)
-  if (expr$type == "BooleanAtom") return(if (relational) expr else if (.is_true(expr)) domain else S_EmptySet)
-  op <- expr$type
-  f <- .sub(expr$args[[1L]], expr$args[[2L]])
-  nd <- fraction(together(f))
-  num <- expand(nd[[1L]])
-  den <- expand(nd[[2L]])
-  crit <- list()
-  zeros <- list()
-  poles <- list()
-  for (part in list(list(num, "z"), list(den, "p"))) {
-    if (!.has1(part[[1L]], x)) next
-    rs <- tryCatch(.solve_univariate(part[[1L]], x, check = FALSE), error = function(e) NULL)
-    if (is.null(rs)) {
-      # SymPy's message, with the powers written as Python's str() writes them
-      msg <- .filldedent(paste0("The inequality, ", gsub("^", "**", .str(subs(expr, x, Symbol("x"))), fixed = TRUE),
-                                ", cannot be solved using solve_univariate_inequality."))
-      stop(.sympy_condition("NotImplementedError", msg))
-    }
-    rs <- Filter(function(r) isTRUE(ask_fact(r, "real")), rs)
-    rs <- Filter(function(r) .residual_ok(part[[1L]], x, r), rs)
-    if (part[[2L]] == "z") zeros <- c(zeros, rs) else poles <- c(poles, rs)
-  }
-  # boundaries of the real domain: zeros of logarithm and even root arguments
-  dom_pts <- list()
-  walk_dom <- function(z) {
-    if (z$type == "Function" && z$name == "log" && .has1(z$args[[1L]], x)) poles <<- c(poles, .real_zeros(z$args[[1L]], x))
-    if (z$type == "Pow" && z$args[[2L]]$type == "Rational" && gmp::mod.bigz(gmp::denominator(z$args[[2L]]$value), 2) == 0 &&
-        .has1(z$args[[1L]], x)) dom_pts <<- c(dom_pts, .real_zeros(z$args[[1L]], x))
-    for (a in z$args) walk_dom(a)
-  }
-  walk_dom(f)
-  crit <- .sort_set_elems(c(zeros, poles, dom_pts))
-  crit <- crit[!duplicated(vapply(crit, .k, ""))]
-  # test points are exact rationals when the bounds are, so close roots
-  # keep their interval
-  test_pt <- function(v) {
-    val <- if (is_sym(v)) {
-      ev <- tryCatch(subs(f, x, v), error = function(e) NULL)
-      fe <- if (!is.null(ev) && !is_exact_number(ev) && !length(free_symbols(ev))) .facts(ev) else NULL
-      if (!is.null(ev) && is_exact_number(ev)) num_sign(ev)
-      else if (!is.null(fe) && isTRUE(fe[["positive"]])) 1
-      else if (!is.null(fe) && isTRUE(fe[["negative"]])) -1
-      else if (!is.null(fe) && isTRUE(fe[["zero"]])) 0
-      else tryCatch(.neval(if (is.null(ev)) subs(f, x, Float(num_value_dbl(v))) else ev, list()), error = function(e) NA)
-    } else tryCatch(.neval(subs(f, x, Float(v)), list()), error = function(e) NA)
-    if (length(val) != 1L || is.na(val) || is.complex(val) && Im(val) != 0) return(NA)
-    val <- Re(val)
-    switch(op, StrictGreaterThan = val > 0, GreaterThan = val >= 0,
-           StrictLessThan = val < 0, LessThan = val <= 0, Unequality = val != 0, Equality = val == 0)
-  }
-  exact_mid <- function(a, b) {
-    ea <- is_exact_number(a); eb <- is_exact_number(b)
-    if (is_inf_const(a) && is_inf_const(b)) return(S_Zero)
-    if (is_inf_const(a) && eb) return(.sub(.sub(b, S_One), fcall("Abs", list(b))))
-    if (is_inf_const(b) && ea) return(.add(list(a, S_One, fcall("Abs", list(a)))))
-    if (ea && eb) return(.div(.add(list(a, b)), S_Two))
-    NULL
-  }
-  cv <- vapply(crit, function(c) as.double(.neval(c, list())), 0)
-  # periodic expressions are solved over one period, as SymPy does
-  period <- .ineq_period(f, x)
-  lo_sym <- S_NegativeInfinity
-  hi_sym <- S_Infinity
-  if (!is.null(period)) {
-    pc <- .periodic_critical(f, x, period)
-    crit <- pc$crit
-    poles <- pc$poles
-    zeros <- pc$zeros
-    dom_pts <- c(dom_pts, list(S_Zero))
-    cv <- vapply(crit, function(c) as.double(.neval(c, list())), 0)
-    lo_sym <- S_Zero
-    hi_sym <- period
-  }
-  pts <- c(as.double(.neval(lo_sym, list())), cv, as.double(.neval(hi_sym, list())))
-  pieces <- list()
-  for (k in seq_len(length(pts) - 1L)) {
-    lo <- pts[k]; hi <- pts[k + 1L]
-    a <- if (k == 1L) lo_sym else crit[[k - 1L]]
-    b <- if (k == length(pts) - 1L) hi_sym else crit[[k]]
-    mid <- exact_mid(a, b)
-    if (is.null(mid))
-      mid <- if (is.infinite(lo) && is.infinite(hi)) 0 else if (is.infinite(lo)) hi - 1 - abs(hi)
-             else if (is.infinite(hi)) lo + 1 + abs(lo) else (lo + hi) / 2
-    if (isTRUE(test_pt(mid))) pieces[[length(pieces) + 1L]] <- Interval(a, b, TRUE, TRUE)
-  }
-  nonstrict <- op %in% c("GreaterThan", "LessThan", "Equality")
-  pk <- vapply(poles, .k, "")
-  if (nonstrict) {
-    for (z in zeros) if (!(z$key %in% pk)) pieces[[length(pieces) + 1L]] <- FiniteSet(z)
-  }
-  # points of the domain boundary where the inequality holds exactly
-  zk <- vapply(zeros, .k, "")
-  for (p in dom_pts) {
-    if (p$key %in% pk || p$key %in% zk) next
-    v <- tryCatch(subs(f, x, p), error = function(e) NULL)
-    if (is.null(v) || !isTRUE(ask_fact(v, "real"))) next
-    ok <- tryCatch(.rel_to_r(.make_rel(op, v, S_Zero)), error = function(e) NA)
-    if (isTRUE(ok)) pieces[[length(pieces) + 1L]] <- FiniteSet(p)
-  }
-  # the domain itself when the inequality holds on the whole real line, as
-  # SymPy (Interval(-oo, oo) is no longer turned into Reals)
-  u <- do.call(Union, pieces)
-  res <- if (.reals_like(u)) domain else Intersection(u, domain)
-  if (!relational) return(res)
-  as_relational(res, x)
-}
 
 # Period of an expression with trigonometric functions of linear arguments,
 # or NULL when there are none. Errors if periods cannot be combined.
@@ -575,66 +511,6 @@ solve_univariate_inequality <- function(expr, x, relational = TRUE, domain = Rea
     if (!is_exact_number(r)) stop("inequality solving needs commensurate periods")
     .mul(list(b, make_rational(gmp::as.bigq(gmp::numerator(r$value)))))
   }, ps)
-}
-
-# Critical points of a single-generator trigonometric expression in [0, T).
-.periodic_critical <- function(f, x, period) {
-  tf <- Filter(function(z) z$name %in% c("sin", "cos", "tan", "cot", "sec", "csc") && .has1(z, x), atoms(f, "Function"))
-  if (length(unique(vapply(tf, function(z) z$args[[1L]]$key, ""))) != 1L || length(tf) != 1L)
-    stop("inequality solving supports one trigonometric function of x")
-  z <- tf[[1L]]
-  la <- .linear_arg(z$args[[1L]], x)
-  Tv <- as.double(.neval(period, list()))
-  in_range <- function(v) v >= -1e-12 && v < Tv - 1e-12
-  sols <- function(ang_base, step) {
-    # x = (ang_base + k*step*pi - b)/a for integer k, inside [0, T)
-    out <- list()
-    for (k in -60:60) {
-      v <- expand(.div(.sub(.add(list(ang_base, .mul(list(.int(k), .int(step), S_Pi)))), la$b), la$a))
-      nv <- as.double(.neval(v, list()))
-      if (in_range(nv)) out[[length(out) + 1L]] <- v
-    }
-    out
-  }
-  u <- Dummy("u")
-  nd <- fraction(together(f))
-  zeros <- list()
-  if (.has1(nd[[1L]], x)) {
-    pu <- subs(expand(nd[[1L]]), z, u)
-    if (.has1(pu, x) || !is_polynomial(pu, u)) stop("inequality solving needs a polynomial in one trigonometric function")
-    for (v in Filter(function(r) isTRUE(ask_fact(r, "real")), as.list(roots(pu, u)))) {
-      zeros <- c(zeros, switch(z$name,
-        sin = c(sols(fcall("asin", list(v)), 2L), sols(.sub(S_Pi, fcall("asin", list(v))), 2L)),
-        cos = c(sols(fcall("acos", list(v)), 2L), sols(.neg(fcall("acos", list(v))), 2L)),
-        tan = sols(fcall("atan", list(v)), 1L),
-        cot = sols(fcall("acot", list(v)), 1L),
-        list()))
-    }
-  }
-  poles <- switch(z$name,
-                  tan = , sec = sols(.mul(list(S_Half, S_Pi)), 1L),
-                  cot = , csc = sols(S_Zero, 1L),
-                  list())
-  if (.has1(nd[[2L]], x)) {
-    du <- subs(expand(nd[[2L]]), z, u)
-    if (!.has1(du, x) && is_polynomial(du, u)) {
-      for (v in Filter(function(r) isTRUE(ask_fact(r, "real")), as.list(roots(du, u)))) {
-        poles <- c(poles, switch(z$name,
-          sin = c(sols(fcall("asin", list(v)), 2L), sols(.sub(S_Pi, fcall("asin", list(v))), 2L)),
-          cos = c(sols(fcall("acos", list(v)), 2L), sols(.neg(fcall("acos", list(v))), 2L)),
-          list()))
-      }
-    }
-  }
-  all <- .sort_set_elems(c(zeros, poles))
-  all <- all[!duplicated(vapply(all, .k, ""))]
-  nz <- vapply(all, function(v) as.double(.neval(v, list())) > 1e-12, TRUE)
-  list(crit = all[nz], zeros = zeros[!duplicated(vapply(zeros, .k, ""))], poles = poles)
-}
-
-.real_zeros <- function(g, x) {
-  rs <- tryCatch(.solve_univariate(g, x, check = FALSE), error = function(e) list())
-  Filter(function(r) isTRUE(ask_fact(r, "real")), rs)
 }
 
 #' Convert a set to a relational condition
@@ -685,175 +561,4 @@ as_relational <- function(s, x, ...) {
          },
          SpecialSet = if (s$name == "Reals") Lt(S_NegativeInfinity, x) & Lt(x, S_Infinity) else .contains(s, x),
          .contains(s, x))
-}
-
-#' Solve equations as sets
-#'
-#' `solveset(f, x, domain)` returns the solution set of `f = 0` (or of an
-#' inequality) in `domain` (`Complexes` by default), like SymPy's
-#' `solveset()`. Periodic trigonometric equations over the reals give
-#' `ImageSet` unions; unsolvable equations give a `ConditionSet`.
-#'
-#' @param f An equation, expression or inequality.
-#' @param x The variable.
-#' @param domain `Complexes`, `Reals` or another set.
-#' @return A set.
-#' @examples
-#' x <- Symbol("x")
-#' solveset(x^2 - 1, x, Reals)
-#' solveset(x^2 > 1, x, Reals)
-#' solveset(sin(x), x, Reals)
-#' @export
-solveset <- function(f, x = NULL, domain = Complexes) {
-  f <- as_sym(f)
-  if (is.null(x)) x <- free_symbols(f)[[1L]]
-  x <- as_sym(x)
-  domain <- as_sym(domain)
-  if (is_relational(f) && !(f$type %in% c("Equality", "Unequality"))) {
-    return(solve_univariate_inequality(f, x, relational = FALSE,
-                                       domain = if (domain$type == "SpecialSet" && domain$name == "Complexes") Reals else domain))
-  }
-  if (f$type == "Unequality") return(Complement(domain, solveset(Eq(f$args[[1L]], f$args[[2L]]), x, domain)))
-  e <- .eq_to_expr(f)
-  if (!.has1(e, x)) {
-    z <- simplify(e)
-    if (is_zero_num(z)) return(domain)
-    if (isTRUE(ask_fact(z, "nonzero"))) return(S_EmptySet)
-    return(ConditionSet(x, Eq(e, 0), domain))
-  }
-  is_real_dom <- domain$type == "SpecialSet" && domain$name == "Reals" || domain$type == "Interval"
-  if (is_real_dom && e$type == "Piecewise" &&
-      all(vapply(e$args, function(pc) all(vapply(free_symbols(pc$args[[2L]]), function(s) identical(s$key, x$key), NA)), NA))) {
-    # Piecewise.as_expr_set_pairs: each piece is solved on the part of the
-    # domain where its condition is the first to hold; a condition that
-    # cannot be turned into a set leaves the equation unsolved
-    res <- tryCatch({
-      U <- domain
-      res <- S_EmptySet
-      for (pc in e$args) {
-        ci <- Intersection(U, .conv_cond_set(pc$args[[2L]], x))
-        U <- Complement(U, ci)
-        if (!identical(ci$key, S_EmptySet$key)) res <- Union(res, solveset(pc$args[[1L]], x, ci))
-      }
-      res
-    }, error = function(err) if (grepl("time limit", conditionMessage(err))) stop(err) else NULL)
-    if (!is.null(res)) return(res)
-  }
-  if (is_real_dom) {
-    per <- .periodic_solutions(e, x)
-    # the families are real already
-    if (!is.null(per)) return(if (.reals_like(domain)) per else Intersection(per, domain))
-  } else if (domain$type == "SpecialSet" && domain$name == "Complexes") {
-    # SymPy returns the periodic families over the complexes too
-    per <- .periodic_solutions(e, x, real = FALSE)
-    if (is.null(per)) per <- .exp_solutions(e, x)
-    if (!is.null(per)) return(per)
-  }
-  sols <- tryCatch(.solve_univariate(e, x), error = function(err) NULL)
-  if (is.null(sols)) return(ConditionSet(x, Eq(e, 0), domain))
-  if (is_real_dom) sols <- Filter(function(s) !identical(ask_fact(s, "real"), FALSE) && !.num_nonreal(s), sols)
-  if (domain$type == "SpecialSet" && domain$name == "Complexes") return(if (length(sols)) FiniteSet(sols) else S_EmptySet)
-  Intersection(FiniteSet(sols), domain)
-}
-
-#' Solve equations as sets over the reals or the complexes
-#'
-#' `solveset_real(f, symbol)` is `solveset(f, symbol, Reals)` and
-#' `solveset_complex(f, symbol)` is `solveset(f, symbol, Complexes)`, as
-#' SymPy's functions of the same names.
-#'
-#' @param f An equation, expression or inequality.
-#' @param symbol The variable.
-#' @return A set.
-#' @examples
-#' x <- Symbol("x")
-#' solveset_real(x^2 + 1, x)
-#' solveset_complex(x^2 + 1, x)
-#' @export
-solveset_real <- function(f, symbol) solveset(f, symbol, Reals)
-
-#' @rdname solveset_real
-#' @export
-solveset_complex <- function(f, symbol) solveset(f, symbol, Complexes)
-
-# A constant whose numerical value is clearly not real
-.num_nonreal <- function(s) {
-  if (length(free_symbols(s))) return(FALSE)
-  v <- tryCatch(.neval(s, list()), error = function(err) NA)
-  !is.na(v) && abs(Im(v)) > 1e-10 * max(1, Mod(v))
-}
-
-# General solutions of sin(g(x)) = c style equations over the reals.
-# exp(a*x + b) = v over the complexes: x = (log(v) + 2*pi*I*n - b)/a.
-.exp_solutions <- function(e, x) {
-  fs <- Filter(function(f) f$name == "exp" && .has1(f, x), atoms(e, "Function"))
-  if (length(fs) != 1L) return(NULL)
-  f <- fs[[1L]]
-  if (!is_polynomial(f$args[[1L]], x) || length(.coeff_list(f$args[[1L]], x)) != 2L) return(NULL)
-  u <- Dummy("u")
-  pu <- subs(e, f, u)
-  if (.has1(pu, x) || !is_polynomial(pu, u)) return(NULL)
-  vals <- Filter(function(v) !is_zero_num(v), roots(pu, u))
-  if (!length(vals)) return(S_EmptySet)
-  cl <- .coeff_list(f$args[[1L]], x)
-  a <- cl[[1L]]; b <- cl[[2L]]
-  n <- Dummy("n", integer = TRUE)
-  sets <- lapply(vals, function(v) {
-    g <- .add(list(.mul(list(S_Two, S_Pi, S_I, n)), fcall("log", list(v))))
-    ImageSet(Lambda(n, expand(.div(.sub(g, b), a))), Integers)
-  })
-  do.call(Union, sets[!duplicated(vapply(sets, .k, ""))])
-}
-
-.periodic_solutions <- function(e, x, real = TRUE) {
-  fs <- Filter(function(f) f$name %in% c("sin", "cos", "tan") && .has1(f, x), atoms(e, "Function"))
-  if (length(fs) != 1L) return(NULL)
-  f <- fs[[1L]]
-  if (!is_polynomial(f$args[[1L]], x) || length(.coeff_list(f$args[[1L]], x)) != 2L) return(NULL)
-  u <- Dummy("u")
-  pu <- subs(e, f, u)
-  if (.has1(pu, x)) return(NULL)
-  if (!is_polynomial(pu, u)) {
-    # rational in u: numerator families minus the poles of the denominator
-    nd <- fraction(together(pu))
-    if (!is_polynomial(nd[[1L]], u) || !is_polynomial(nd[[2L]], u) || !.has1(nd[[2L]], u)) return(NULL)
-    num <- .periodic_solutions(subs(nd[[1L]], u, f), x, real)
-    den <- .periodic_solutions(subs(nd[[2L]], u, f), x, real)
-    if (is.null(num) || is.null(den)) return(NULL)
-    return(if (den$type == "EmptySet") num else Complement(num, den))
-  }
-  vals <- roots(pu, u, rootof = TRUE)
-  # every root is needed, else the families would be incomplete
-  if (sum(attr(vals, "multiplicity")) < degree(expand(pu), u)) return(NULL)
-  n <- Dummy("n", integer = TRUE)
-  cl <- .coeff_list(f$args[[1L]], x)
-  a <- cl[[1L]]; b <- cl[[2L]]
-  # each root gives its own families, wrapped in that root's condition only
-  out <- list()
-  for (v in vals) {
-    cond <- NULL
-    if (real) {
-      isr <- ask_fact(v, "real")
-      if (isFALSE(isr)) next
-      if (f$name %in% c("sin", "cos")) {
-        # exact range check; an undecidable one becomes a condition
-        inr <- And(Ge(v, S_NegativeOne), Le(v, S_One))
-        if (.is_false(inr)) next
-        if (!.is_true(inr)) cond <- inr
-      } else if (!isTRUE(isr)) cond <- And(Gt(v, S_NegativeInfinity), Lt(v, S_Infinity))
-    }
-    bs <- switch(f$name,
-      sin = list(list(fcall("asin", list(v)), 2), list(.sub(S_Pi, fcall("asin", list(v))), 2)),
-      cos = list(list(fcall("acos", list(v)), 2), list(.neg(fcall("acos", list(v))), 2)),
-      tan = list(list(fcall("atan", list(v)), 1)))
-    sets <- lapply(bs, function(z) {
-      theta <- .add(list(.mul(list(.int(z[[2L]]), S_Pi, n)), z[[1L]]))
-      ImageSet(Lambda(n, expand(.div(.sub(theta, b), a))), Integers)
-    })
-    sets <- sets[!duplicated(vapply(sets, .k, ""))]
-    fam <- do.call(Union, sets)
-    out[[length(out) + 1L]] <- if (is.null(cond)) fam else ConditionSet(x, cond, fam)
-  }
-  if (!length(out)) return(S_EmptySet)
-  do.call(Union, out)
 }

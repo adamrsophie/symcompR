@@ -40,6 +40,8 @@
     s <- vapply(v, .pyfmt, "", top = FALSE)
     return(paste0("{", paste(s[.pyord(s)], collapse = ", "), "}"))
   }
+  # repr() of a Matrix inside a container is MatrixBase._format_str
+  if (inherits(v, "symmatrix") && !top) return(get(".mat_format_str", envir = asNamespace("symcompR"))(v$nrow, v$ncol, v$data))
   if (inherits(v, "sym") || inherits(v, "symmatrix")) return(sstr(v))
   if (inherits(v, "Poly")) return(paste(format(v), collapse = " "))
   if (inherits(v, "bigz") || inherits(v, "bigq")) {

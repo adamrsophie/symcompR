@@ -199,8 +199,24 @@ c.sym <- function(...) lapply(list(...), as_sym)
       else {
         fd <- .facts(d)
         if (isTRUE(fd[["zero"]])) TRUE
-        else if (isTRUE(fd[["nonzero"]])) FALSE
+        # is_eq: dif.is_zero False decides, as for a nonreal difference
+        else if (isTRUE(fd[["nonzero"]]) || (identical(fd[["zero"]], FALSE) && !identical(unname(fd["commutative"]), FALSE))) FALSE
         else if (a$type == "BooleanAtom" && b$type == "BooleanAtom") FALSE
+        # Add._eval_is_extended_real through _fuzzy_group: extended real
+        # terms and one that is not make a difference that is not real,
+        # so not zero
+        else if (d$type == "Add" && {
+          er <- vapply(d$args, function(t) { v <- ask_fact(t, "extended_real"); if (length(v) == 1L) v else NA }, NA)
+          !anyNA(er) && sum(!er) == 1L
+        }) FALSE
+        # a number difference whose evalf is clearly nonzero: the evalf sign
+        # makes is_extended_real or is_zero False, as in _n2
+        # ponytail: double precision with a fixed 1e-8 cutoff; use mpmath
+        # evalf with a precision check if near cancellations show up
+        else if (!length(free_symbols(d)) && {
+          v <- tryCatch(.neval(d, list()), error = function(e) NA)
+          length(v) == 1L && !is.na(v) && is.finite(Mod(v)) && Mod(v) > 1e-8
+        }) FALSE
         else NA
       }
     }

@@ -513,25 +513,6 @@ simplify_if_cheap <- function(e) {
   stop("could not solve the system")
 }
 
-#' Solve linear systems
-#'
-#' `linsolve(eqs, syms)` solves a linear system, returning a named list with
-#' free variables left as parameters, or `NULL` if inconsistent.
-#'
-#' @param eqs A list of linear equations or expressions.
-#' @param syms A list of symbols.
-#' @return A named list, or `NULL`.
-#' @examples
-#' x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
-#' linsolve(list(x + y + z - 1, x + y + 2*z - 3), list(x, y, z))
-#' @export
-linsolve <- function(eqs, syms) {
-  eqs <- lapply(eqs, function(e) expand(.eq_to_expr(e)))
-  syms <- .as_gens(list(syms))
-  if (!all(vapply(eqs, .is_linear_in, TRUE, syms = syms))) stop("system is not linear")
-  .solve_linear_system(eqs, syms)
-}
-
 #' Numerical solution of equations
 #'
 #' `nsolve(f, x, x0)` finds a root near `x0` by Newton's method (secant

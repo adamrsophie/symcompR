@@ -785,14 +785,36 @@ NULL
 #' @rdname calculus-utils
 #' @export
 singularities <- function(f, x, domain = NULL) {
+  # sympy.calculus.singularities.singularities
   f <- as_sym(f); x <- as_sym(x)
-  trig <- c("tan", "cot", "sec", "csc", "tanh", "coth", "sech", "csch")
-  if (any(vapply(atoms(f, "Function"), function(g) g$name %in% trig && .has1(g, x), TRUE)))
-    stop("singularities of trigonometric poles are not implemented")
   if (is.null(domain)) domain <- if (isTRUE(ask_fact(x, "real"))) Reals else Complexes
   domain <- as_sym(domain)
-  pts <- FiniteSet(.sort_set_elems(.real_singularities(f, x, real = FALSE)))
-  if (identical(domain$key, Complexes$key)) pts else Intersection(pts, domain)
+  trig <- c("tan", "cot", "sec", "csc", "tanh", "coth", "sech", "csch")
+  has_trig <- any(vapply(atoms(f, "Function"), function(g) g$name %in% trig && .has1(g, x), TRUE))
+  if (!has_trig) {
+    pts <- FiniteSet(.sort_set_elems(.real_singularities(f, x, real = FALSE)))
+    return(if (identical(domain$key, Complexes$key)) pts else Intersection(pts, domain))
+  }
+  # the poles of the trigonometric and hyperbolic functions come from the
+  # negative powers of their cos and cosh rewrites
+  e <- rewrite(rewrite(f, "cos"), "cosh")
+  notimpl <- function() .sset_err("NotImplementedError", .filldedent(
+    "Methods for determining the singularities of this function have not been developed."))
+  sings <- S_EmptySet
+  for (i in Filter(function(a) a$type == "Pow", preorder_traversal(e))) {
+    b <- i$args[[1L]]; ex <- i$args[[2L]]
+    if (is_zero_num(b)) { sings <- Union(sings, solveset(Lt(ex, 0), x, domain)); next }
+    if (isTRUE(ask_fact(ex, "infinite"))) notimpl()
+    if (isTRUE(ask_fact(ex, "negative"))) sings <- Union(sings, solveset(b, x, domain))
+    else if (.has1(ex, x)) sings <- Union(sings, Intersection(solveset(b, x, domain), solveset(Lt(ex, 0), x, domain)))
+  }
+  fa <- Filter(function(a) is_sym(a) && a$type == "Function", preorder_traversal(f))
+  for (i in Filter(function(a) a$name %in% c("log", "asech", "acsch"), fa)) sings <- Union(sings, solveset(i$args[[1L]], x, domain))
+  for (i in Filter(function(a) a$name %in% c("atanh", "acoth"), fa)) {
+    sings <- Union(sings, solveset(.sub(i$args[[1L]], S_One), x, domain))
+    sings <- Union(sings, solveset(.add(list(i$args[[1L]], S_One)), x, domain))
+  }
+  sings
 }
 
 #' @rdname calculus-utils
@@ -929,6 +951,8 @@ is_convex <- function(f, x = NULL, domain = Reals) {
 #' @export
 periodicity <- function(f, x) {
   f <- as_sym(f); x <- as_sym(x)
+  # periodicity: a function free of the symbol has period 0
+  if (!.has1(f, x)) return(S_Zero)
   p <- tryCatch(.ineq_period(f, x), error = function(e) NULL)
   if (is.null(p)) return(NULL)
   p <- simplify(p)
@@ -1009,7 +1033,6 @@ apply_finite_diff <- function(order, x_list, y_list, x0 = 0) {
 
 #' Solver helpers
 #'
-#' `linear_eq_to_matrix(eqs, syms)` returns `list(A, b)` with `A x = b`.
 #' `solve_linear_system(M, syms, ...)` solves an augmented matrix; further
 #' symbols may follow `syms`. It returns `NULL` when there is no solution.
 #' `solve_linear(lhs, rhs, symbols, exclude)` solves one equation for one of
@@ -1020,7 +1043,7 @@ apply_finite_diff <- function(order, x_list, y_list, x0 = 0) {
 #' ODE solution and returns the pair `(TRUE, 0)` or `(FALSE, residual)`.
 #' `solve_undetermined_coeffs(eq, coeffs, ...)` makes `eq` vanish identically
 #' in the symbols `...`, as SymPy: a named list for one solution, a list of
-#' them for several, and `NULL` when no solution exists. `nonlinsolve()` solves a system;
+#' them for several, and `NULL` when no solution exists.
 #' `solve_poly_system(eqs, ...)` solves a zero dimensional polynomial system
 #' in the generators `...` and returns a list of solution tuples; `det_quick()` and `inv_quick()` are
 #' [sym_det()] and [inverse()].
@@ -1028,7 +1051,7 @@ apply_finite_diff <- function(order, x_list, y_list, x0 = 0) {
 #' @param eqs A list of equations or expressions.
 #' @param syms,coeffs Lists of symbols.
 #' @param ... Further symbols for `solve_linear_system()`,
-#'   `solve_undetermined_coeffs()` or `nonlinsolve()`, or flags such as `numerical = FALSE` for
+#'   `solve_undetermined_coeffs()`, or flags such as `numerical = FALSE` for
 #'   `checksol()`.
 #' @param dict,set Output forms of `solve_undetermined_coeffs()`, as for
 #'   [solve()].
@@ -1046,26 +1069,9 @@ apply_finite_diff <- function(order, x_list, y_list, x0 = 0) {
 #' @return A list, expression, logical or set.
 #' @examples
 #' x <- Symbol("x"); y <- Symbol("y")
-#' linear_eq_to_matrix(list(x + 2*y - 3, 3*x - y), list(x, y))
 #' checksol(x^2 - 4, list(x = 2))
 #' @name solver-helpers
 NULL
-
-#' @rdname solver-helpers
-#' @export
-linear_eq_to_matrix <- function(eqs, syms) {
-  eqs <- lapply(eqs, function(e) expand(.eq_to_expr(e)))
-  syms <- .as_gens(list(syms))
-  rows <- lapply(eqs, function(e) lapply(syms, function(s) .linear_coeff(e, s)))
-  b <- lapply(seq_along(eqs), function(i) {
-    rest <- expand(.sub(eqs[[i]], .add(Map(function(c, s) .mul(list(c, s)), rows[[i]], syms))))
-    .neg(rest)
-  })
-  hit <- function(e) any(vapply(syms, function(s) .has1(e, s), TRUE))
-  if (any(vapply(c(unlist(rows, recursive = FALSE), b), hit, TRUE)))
-    stop("NonlinearError: equations are not linear in the given symbols")
-  list(A = Matrix(rows), b = Matrix(b))
-}
 
 #' @rdname solver-helpers
 #' @export
@@ -1155,19 +1161,6 @@ solve_undetermined_coeffs <- function(eq, coeffs, ..., dict = FALSE, set = FALSE
   .solve_linear_system(.coeff_list(e, x), coeffs)
 }
 
-#' @rdname solver-helpers
-#' @export
-nonlinsolve <- function(eqs, syms, ...) {
-  # ponytail: solve(dict = TRUE) as a FiniteSet of tuples; SymPy's own
-  # nonlinsolve (substitution over complexes, ImageSet solutions) is not ported
-  syms <- .as_gens(c(list(syms), list(...)))
-  sols <- solve(eqs, syms, dict = TRUE)
-  if (!length(sols)) return(S_EmptySet)
-  do.call(FiniteSet, lapply(sols, function(s) do.call(Tuple, lapply(syms, function(v) {
-    k <- .str(v)
-    if (is.null(s[[k]])) v else s[[k]]
-  }))))
-}
 #' @rdname solver-helpers
 #' @export
 solve_poly_system <- function(eqs, ..., strict = FALSE) {
@@ -1411,13 +1404,46 @@ intersecting_product <- function(a, b) {
 
 #' Set aliases
 #'
-#' `imageset()` is [ImageSet()], `Contains(x, s)` the membership condition,
-#' and `PowerSet(s)` the set of all subsets of a finite set.
+#' `imageset()` is the simplified image of sets under a map, as SymPy's
+#' `imageset()`: the map is a `Lambda`, a function name such as `"cos"`, or
+#' a symbol (or list of symbols) followed by an expression, and the sets
+#' come after it. `Contains(x, s)` is the membership condition, and
+#' `PowerSet(s)` the set of all subsets of a finite set.
 #'
-#' @param lam,base,x,s Arguments.
+#' @param ... The map, then the sets.
+#' @param x,s An element and a set.
 #' @return A set or boolean.
+#' @examples
+#' x <- Symbol("x")
+#' imageset(x, 2 * x, Interval(0, 1))
+#' imageset(Lambda(x, x^2), Interval(-2, 1))
 #' @export
-imageset <- function(lam, base) .imageset(lam, as_sym(base))
+imageset <- function(...) {
+  # sympy.sets.sets.imageset
+  args <- list(...)
+  if (length(args) < 2L) .sset_err("ValueError", sprintf("imageset expects at least 2 args, got: %d", length(args)))
+  a1 <- args[[1L]]
+  if ((is_sym(a1) && a1$type == "Symbol") || (is.list(a1) && !is_sym(a1)) || (is_sym(a1) && a1$type == "Tuple")) {
+    if (length(args) > 2L) {
+      body <- args[[2L]]
+      if (is.list(body) && !is_sym(body)) body <- do.call(Tuple, lapply(body, as_sym))
+      f <- Lambda(if (is_sym(a1) && a1$type == "Tuple") a1$args else a1, body)
+      set_list <- args[-(1:2)]
+    } else { f <- a1; set_list <- args[-1L] }
+  } else { f <- a1; set_list <- args[-1L] }
+  if (is.character(f) && length(f) == 1L) f <- Lambda(Symbol("x"), fcall(f, list(Symbol("x"))))
+  else if (is.function(f)) f <- Lambda(Symbol("x"), as_sym(f(Symbol("x"))))
+  else if (!(is_sym(f) && f$type == "Lambda"))
+    .sset_err("TypeError", .filldedent(sprintf("expecting lambda, Lambda, or FunctionClass, not '%s'.",
+                                               if (is_sym(f)) .sympy_class(f) else class(f)[1L])))
+  set_list <- lapply(set_list, function(s) if (is.list(s) && !is_sym(s)) s else as_sym(s))
+  if (!all(vapply(set_list, function(s) is_sym(s) && is_set(s), NA))) {
+    nm <- vapply(set_list, function(s) if (!is_sym(s)) "list" else if (s$type == "SpecialSet") s$name else .sympy_class(s), "")
+    .sset_err("ValueError", sprintf("arguments after mapping should be sets, not [%s]", paste0("'", nm, "'", collapse = ", ")))
+  }
+  if (length(set_list) == 1L) return(.imageset(f, set_list[[1L]]))
+  do.call(ImageSet, c(list(f), set_list))
+}
 
 #' @rdname imageset
 #' @export

@@ -22,7 +22,7 @@
 # free unknown stays itself. linsolve() solves over a fraction field, so a
 # value prints as its expanded numerator over its expanded denominator.
 .cm_linsolve <- function(eqs, syms) {
-  sol <- linsolve(eqs, syms)
+  sol <- .linsolve_named(eqs, syms)
   if (is.null(sol)) .physics_error("IndexError", "tuple index out of range")
   lapply(syms, function(s) {
     v <- sol[[s$name]]

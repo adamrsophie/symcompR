@@ -543,6 +543,11 @@ as_coeff_mul_split <- function(a) {
     r <- .pow_eval_power(b$args[[1L]], b$args[[2L]], e)
     if (!is.null(r)) return(r)
   }
+  # Abs._eval_power: |a|^n for a real a and an integer n
+  if (bt == "Function" && b$name == "Abs" && isTRUE(ask_fact(b$args[[1L]], "extended_real")) && isTRUE(ask_fact(e, "integer"))) {
+    if (isTRUE(ask_fact(e, "even"))) return(.pow(b$args[[1L]], e))
+    if (et == "Integer" && !is_negone_num(e)) return(.mul(list(.pow(b$args[[1L]], .sub(e, S_One)), b)))
+  }
   # a polar base: (exp_polar(a))^e = exp_polar(a*e)
   if (bt == "Function" && b$name == "exp_polar") return(fcall("exp_polar", list(.mul(list(b$args[[1L]], e)))))
   if (bt == "Function" && b$name == "exp") {

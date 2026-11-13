@@ -210,7 +210,7 @@ Cable <- function(support_1, support_2) {
   lowest_x <- as_sym(lowest_x)
   .cm_set(self, "_lowest_x_global", lowest_x)
   a <- Symbol("a", positive = TRUE); c <- Symbol("c")
-  sol <- linsolve(list((L[[1L]] - lowest_x)^2 * a + c - L[[2L]], (R[[1L]] - lowest_x)^2 * a + c - R[[2L]]), list(a, c))
+  sol <- .linsolve_named(list((L[[1L]] - lowest_x)^2 * a + c - L[[2L]], (R[[1L]] - lowest_x)^2 * a + c - R[[2L]]), list(a, c))
   if (is.null(sol) || is.null(sol[["a"]]) || is_zero_num(sol[["a"]]))
     .physics_error("ValueError", "The lowest point is inconsistent with the supports")
   sa <- sol[["a"]]; sc <- sol[["c"]] %||% c

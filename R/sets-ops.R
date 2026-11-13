@@ -1021,18 +1021,29 @@ set_sup <- function(s) {
 #' @param lam A [Lambda()].
 #' @param base A set.
 #' @export
-ImageSet <- function(lam, base) {
-  base <- as_sym(base)
+ImageSet <- function(lam, base, ...) {
+  # ImageSet.__new__(flambda, *sets)
   if (!is_sym(lam) || lam$type != "Lambda") .perr("ValueError", "First argument must be a Lambda")
-  if (!is_set(base)) .perr("TypeError", "Set arguments to ImageSet should of type Set")
+  sets <- c(list(base), list(...))
   vs <- lam$args[[1L]]$args; expr <- lam$args[[2L]]
-  if (length(vs) == 1L && identical(vs[[1L]]$key, expr$key)) return(base)
-  if (!any(vapply(vs, function(v) .has1(expr, v), NA))) {
-    ie <- .set_is_empty(base)
-    if (isTRUE(ie)) return(S_EmptySet)
-    if (identical(ie, FALSE)) return(FiniteSet(expr))
+  if (length(vs) != length(sets)) .perr("ValueError", "Incompatible signature")
+  pyrepr <- function(v, top) if (is.list(v) && !is_sym(v)) {
+    inner <- paste(vapply(v, pyrepr, "", top = FALSE), collapse = ", ")
+    if (top) paste0("[", inner, "]") else paste0("(", inner, if (length(v) == 1L) ",", ")")
+  } else .str(as_sym(v))
+  sets <- lapply(sets, function(b) {
+    if (is.list(b) && !is_sym(b)) .perr("SympifyError", paste0("SympifyError: ", pyrepr(b, TRUE)))
+    as_sym(b)
+  })
+  if (!all(vapply(sets, is_set, NA))) .perr("TypeError", "Set arguments to ImageSet should of type Set")
+  if (length(sets) == 1L && length(vs) == 1L && identical(vs[[1L]]$key, expr$key)) return(sets[[1L]])
+  # Lambda.variables flattens a nested signature
+  if (!any(vapply(.lambda_vars(vs), function(v) .has1(expr, v), NA))) {
+    ie <- lapply(sets, .set_is_empty)
+    if (any(vapply(ie, isTRUE, NA))) return(S_EmptySet)
+    if (all(vapply(ie, function(z) identical(z, FALSE), NA))) return(FiniteSet(expr))
   }
-  new_sym("ImageSet", list(lam, base))
+  new_sym("ImageSet", c(list(lam), sets))
 }
 
 # sympy.sets.sets.imageset for a Lambda and one set
@@ -1048,7 +1059,7 @@ ImageSet <- function(lam, base) {
   if (identical(vs[[1L]]$key, f$args[[2L]]$key)) return(set)
   if (set$type == "ImageSet") {
     inner <- set$args[[1L]]
-    if (length(inner$args[[1L]]$args) == 1L && length(vs) == 1L)
+    if (length(inner$args[[1L]]$args) == 1L && inner$args[[1L]]$args[[1L]]$type != "Tuple" && length(vs) == 1L && vs[[1L]]$type != "Tuple")
       return(.imageset(Lambda(inner$args[[1L]]$args[[1L]], subs(f$args[[2L]], vs[[1L]], inner$args[[2L]])), set$args[[2L]]))
   }
   r
@@ -1243,6 +1254,9 @@ ImageSet <- function(lam, base) {
 }
 
 .sf_generic <- function(f, x) {
+  # f(_x) raises BadArgumentsError, a TypeError, for a tuple signature
+  v <- f$args[[1L]]$args
+  if (length(v) != 1L || v[[1L]]$type == "Tuple") .perr("TypeError", "Can't match the signature")
   X <- Symbol("x")
   ImageSet(Lambda(X, .lam_call(f, X)), x)
 }
@@ -1280,6 +1294,14 @@ ImageSet <- function(lam, base) {
 .imageset_doit <- function(lam, base) {
   r <- ImageSet(lam, base)
   if (r$type != "ImageSet") return(r)
+  # ImageSet.doit: a tuple signature maps a finite base element by element
+  sig <- lam$args[[1L]]$args
+  if (length(sig) != 1L || sig[[1L]]$type == "Tuple") {
+    # EmptySet.is_FiniteSet is True
+    if (base$type == "EmptySet") return(S_EmptySet)
+    if (base$type == "FiniteSet") return(FiniteSet(lapply(base$args, function(a) .lam_call(lam, a))))
+    return(r)
+  }
   res <- .set_function(lam, base)
   if (is.null(res)) r else res
 }

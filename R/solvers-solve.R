@@ -891,7 +891,8 @@
   swap <- list()
   i <- 0L
   for (s in srt) {
-    if (s$type != "Symbol" && !any(vapply(swap, function(p) identical(p[[1L]]$key, s$key), TRUE))) {
+    # a Dummy or Wild is a Symbol subclass
+    if (!(s$type %in% c("Symbol", "Dummy", "Wild")) && !any(vapply(swap, function(p) identical(p[[1L]]$key, s$key), TRUE))) {
       swap[[length(swap) + 1L]] <- list(s, Dummy(paste0("X", i)))
       i <- i + 1L
     }
@@ -1638,14 +1639,14 @@
 
 .sp_poly_rational <- function(p) all(vapply(p$terms, function(t) is_exact_number(t$coeff), TRUE))
 
-.sp_solve_poly_system <- function(polys, gens) {
+.sp_solve_poly_system <- function(polys, gens, strict = FALSE) {
   exprs <- lapply(polys, function(p) .sp_poly_expr(structure(list(terms = p$terms, gens = gens), class = "sp_poly")))
   degs_ok <- function(e) all(vapply(gens, function(g) degree(e, g) <= 2, TRUE))
   if (length(exprs) == 2L && length(gens) == 2L && all(vapply(exprs, degs_ok, TRUE))) {
     r <- tryCatch(.sp_solve_biquadratic(exprs[[1L]], exprs[[2L]], gens), SolveFailed = function(e) "failed")
     if (!identical(r, "failed")) return(r)
   }
-  .sp_solve_generic(exprs, gens)
+  .sp_solve_generic(exprs, gens, strict)
 }
 
 .sp_groebner <- function(F, gens) {
@@ -1790,7 +1791,7 @@
   .key_sort(lapply(sols, function(s) list(length(s), lapply(s, .sort_key))), sols)
 }
 
-.sp_solve_generic <- function(polys, gens) {
+.sp_solve_generic <- function(polys, gens, strict = FALSE) {
   is_univariate <- function(f, gs) {
     if (length(gs) <= 1L) return(TRUE)
     !any(vapply(gs[-length(gs)], function(g) .has1(f, g), TRUE))
@@ -1802,7 +1803,7 @@
   }
   rec <- function(system, gs, entry = FALSE) {
     if (length(system) == 1L && length(gs) == 1L) {
-      zr <- .roots_sympy(system[[1L]], gs[[1L]])
+      zr <- .roots_sympy(system[[1L]], gs[[1L]], strict = strict)
       return(lapply(zr[seq_along(zr)], function(z) list(z)))
     }
     basis <- .sp_groebner(system, gs)
@@ -1812,7 +1813,7 @@
       .sp_stop("NotImplementedError", .filldedent("only zero-dimensional systems supported (finite number of solutions)"))
     f <- univariate[[1L]]
     gen <- gs[[length(gs)]]
-    zr <- .roots_sympy(f, gen)
+    zr <- .roots_sympy(f, gen, strict = strict)
     zeros <- zr[seq_along(zr)]
     if (!length(zeros)) return(list())
     if (length(basis) == 1L) return(lapply(zeros, function(z) list(z)))
