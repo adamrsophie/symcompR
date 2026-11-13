@@ -48,10 +48,5 @@ rv_attr(DH, "pdf", 3)
 #> 1/8
 FH <- FiniteDistributionHandmade(Dict(list(1, 2), list(Rational(1, 2), Rational(1, 2))))
 rv_attr(FH, "set")
-#> [[1]]
-#> 1
-#> 
-#> [[2]]
-#> 2
-#> 
+#> {1, 2}
 ```
