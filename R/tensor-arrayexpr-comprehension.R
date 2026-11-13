@@ -51,8 +51,8 @@ ArrayComprehension <- function(fun, ...) .ac_new("ArrayComprehension", as_sym(fu
 ArrayComprehensionMap <- function(f, ...) {
   if (!is.function(f)) .perr("ValueError", "Data type not supported")
   e <- .ac_new("ArrayComprehensionMap", NULL, list(...), list(fun = f))
-  e$key <- paste0(e$key, "|fn:", paste(deparse(f), collapse = ""))
-  e
+  new_sym(e$type, e$args, extra = e$extra,
+          key = paste0(e$key, "|fn:", paste(deparse(f), collapse = "")))
 }
 
 .ac_limits <- function(e) if (e$type == "ArrayComprehension") e$args[-1L] else e$args

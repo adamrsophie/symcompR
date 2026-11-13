@@ -149,6 +149,7 @@ Series(G1, G2)$doit()
 Parallel(G1, G2)$doit()
 Feedback(G1, G2)
 Feedback(G1, G2)$doit()
+PIDController(1, 2, 3, 0, s)
 PIDController(1, 2, 3, 0, s)$doit()
 ```
 

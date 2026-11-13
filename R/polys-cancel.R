@@ -96,6 +96,12 @@
     if (.poly_ngens(P) == length(P$gens) && is.null(P$dom_str)) P$dom_str <- "QQ"
     return(P)
   }
+  # domain = EX: the coefficients stay expressions; the label is kept
+  if (identical(d, "EX")) {
+    P <- do.call(Poly, c(list(expr), pa$gens))
+    P$dom_str <- "EX"
+    return(P)
+  }
   if (!is.character(d) || !grepl("^(ZZ|QQ)[[(].*[])]$", d)) return(NULL)
   P <- do.call(Poly, c(list(expr), pa$gens))
   P$dom_str <- gsub(" ", "", d, fixed = TRUE)

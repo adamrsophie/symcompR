@@ -164,8 +164,11 @@
     x <- .mat_pdf_arg(x)
     nu <- d$args[[1L]]; M <- d$args[[2L]]; Omega <- d$args[[3L]]; Sigma <- d$args[[4L]]
     s <- .mshape(M); n <- s[[1L]]; p <- s[[2L]]
-    K <- multigamma((nu + n + p - 1) / 2, p) * Determinant(Omega)^(-n / 2) * Determinant(Sigma)^(-p / 2) /
-      (S_Pi^(n * p / 2) * multigamma((nu + p - 1) / 2, p))
+    # n, p = M.shape: Python ints for an explicit matrix, so n*p/2, -n/2 and
+    # -p/2 are Python floats there
+    half <- if (.is_imm(M)) function(v) Float(.int_val(v) / 2) else function(v) v / 2
+    K <- multigamma((nu + n + p - 1) / 2, p) * Determinant(Omega)^half(-n) * Determinant(Sigma)^half(-p) /
+      (S_Pi^half(n * p) * multigamma((nu + p - 1) / 2, p))
     I <- .as_block(eye(as.integer(n$value)))
     d <- .msub(x, M)
     K * Determinant(I + .mprod(.mprod(.mprod(.minv(Sigma), d), .minv(Omega)), .mt(d)))^(-(nu + n + p - 1) / 2)

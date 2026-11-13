@@ -67,6 +67,14 @@
 # set limits: an Interval-like set gives its ends
 .lim_from_set <- function(v, s) list(v, set_inf(s), set_sup(s))
 
+# _process_limits(discrete=False) of a (symbol, set) limit of an Integral:
+# an Interval gives its bounds, a Range is a TypeError
+.docsmm_integral_limit <- function(v, s) {
+  if (s$type == "Range") .serr("TypeError", "use Interval or Relational, not Range")
+  if (s$type == "Interval" || (s$type == "SpecialSet" && s$name == "Reals")) return(.lim_from_set(v, s))
+  .serr("NotImplementedError", "Relational or single Interval")
+}
+
 .defm("JointPSpace", "marginal_distribution", function(ps, ...) {
   indices <- vapply(list(...), function(i) as.integer(.int_val(as_sym(i))), 0L)
   count <- .callm(ps, "component_count")
@@ -100,7 +108,7 @@
   if (.in_list(value, random_symbols(expr)))
     .serr("NotImplementedError", "\nExpectations of expression with unindexed joint random symbols cannot\nbe calculated yet.")
   dset <- .dist_set(.jps_dist(ps))
-  limits <- lapply(syms, function(rv) .lim_from_set(Indexed(.str(rv$args[[1L]]), rv$args[[2L]]), dset$args[[.int_val(rv$args[[2L]]) + 1L]]))
+  limits <- lapply(syms, function(rv) .docsmm_integral_limit(Indexed(.str(rv$args[[1L]]), rv$args[[2L]]), dset$args[[.int_val(rv$args[[2L]]) + 1L]]))
   do.call(Integral, c(list(expr), limits))
 })
 
@@ -235,7 +243,8 @@ JointRV <- function(symbol, pdf, set = NULL) {
     if (inherits(mu, "symmatrix") && inherits(sigma, "symmatrix") && inherits(xv, "symmatrix")) {
       x <- xv - mu
       q <- (Rational(-1, 2) * t(x)) %*% (inverse(sigma) %*% x)
-      return(S_One / sqrt((2 * S_Pi)^k * det(sigma)) * exp(.mget(q, 1L, 1L)))
+      # exp of the 1 x 1 matrix is Matrix.exp, as in SymPy
+      return(S_One / sqrt((2 * S_Pi)^k * det(sigma)) * .mget(matrix_exp(q), 1L, 1L))
     }
     x <- MatAdd(xv, -mu)
     density <- S_One / sqrt((2 * S_Pi)^k * Determinant(sigma)) *
@@ -254,7 +263,7 @@ JointRV <- function(symbol, pdf, set = NULL) {
     }
     dv <- mu - symv
     q <- (Rational(-1, 2) * t(dv)) %*% (inverse(sigma) %*% dv)
-    Lambda(symv$data, S_One / sqrt((2 * S_Pi)^length(mu$data) * det(sigma)) * exp(.mget(q, 1L, 1L)))
+    Lambda(symv$data, S_One / sqrt((2 * S_Pi)^length(mu$data) * det(sigma)) * .mget(matrix_exp(q), 1L, 1L))
   })
 .row_del <- function(M, i) Matrix(lapply(setdiff(seq_len(M$nrow), i + 1L), function(r) lapply(seq_len(M$ncol), function(c) .mget(M, r, c))))
 .col_del <- function(M, i) Matrix(lapply(seq_len(M$nrow), function(r) lapply(setdiff(seq_len(M$ncol), i + 1L), function(c) .mget(M, r, c))))

@@ -296,12 +296,16 @@ doit(ArraySum(i * AA, list(i, 1, 3)))
 ```
 
 `ArrayComprehension()` builds an array from an expression in its index
-variables.
+variables; `ArrayComprehensionMap()` takes an R function of the index
+instead.
 
 ```{r}
 ac <- ArrayComprehension(i * j, list(i, 1, 3), list(j, 2, 4))
 do.call(Tuple, get_shape(ac))
 doit(ac)
+acm <- ArrayComprehensionMap(function(i) i + 1, list(i, 1, 5))
+acm
+doit(acm)
 ```
 
 Matrix expressions convert to array expressions and back, and so do
@@ -330,6 +334,8 @@ derivative of an array.
 array_derive(convert_matrix_to_array(MP * MX), MX)
 ArrayDerivative(MX, MX)
 ArrayDerivative(MX, MX, evaluate = TRUE)
+tryCatch(ArrayDerivative(ArraySymbol("A", list(2, 2)), ArraySymbol("A", list(2, 2))),
+         error = conditionMessage)
 ArrayDerivative(Array(list(x^2, x * y)), x)
 doit(ArrayDerivative(Array(list(x^2, x * y)), x))
 ```

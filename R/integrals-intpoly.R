@@ -581,7 +581,7 @@ intpoly_decompose <- function(expr, separate = FALSE) {
     if (e$type == "Symbol") put(1, e)
     else if (e$type == "Add") {
       syms <- free_symbols(e)
-      degs <- lapply(e$args, function(mo) {
+      degs <- lapply(.sympy_args(e), function(mo) {
         dl <- if (length(syms)) do.call(degree_list, c(list(mo), syms)) else 0
         list(sum(dl), mo)
       })
@@ -593,7 +593,7 @@ intpoly_decompose <- function(expr, separate = FALSE) {
     } else if (e$type == "Pow") put(e$args[[2L]], e)
     else {
       deg <- S_Zero
-      for (t in e$args) {
+      for (t in .sympy_args(e)) {
         if (!length(t$args) && t$type == "Symbol") deg <- .add(list(deg, S_One))
         else if (length(t$args) == 2L) deg <- .add(list(deg, t$args[[2L]]))
       }

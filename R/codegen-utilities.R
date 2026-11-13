@@ -204,7 +204,9 @@ Routine <- function(name, arguments, results, local_vars, global_vars) {
   if (inherits(x, "Routine") && name == "variables") return(.cgu_variables(x))
   if (inherits(x, "Routine") && name == "result_variables") return(.cgu_result_variables(x))
   if (name == "get_datatype") return(function(language) .cgu_get_datatype(x, language))
-  if (name %in% names(x)) return(x[[name]])
+  # Variable keeps its datatypes in the attribute _datatype, a dict by language
+  if (name == "_datatype" && !is.null(x[["datatype"]])) return(x[["datatype"]])
+  if (name %in% setdiff(names(x), "datatype")) return(x[[name]])
   .cg_err("AttributeError", sprintf("'%s' object has no attribute '%s'", class(x)[1L], name))
 }
 

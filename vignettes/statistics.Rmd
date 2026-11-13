@@ -74,6 +74,7 @@ smoment(X, 4)
 factorial_moment(Poisson("Po", 2), 2)
 coskewness(X, X, X)
 entropy(Normal("N", 0, 2))
+entropy(Die("D", 6))
 ```
 
 The capitalized functions are unevaluated, and evaluate with `doit()`:
@@ -186,6 +187,9 @@ function on a set of integers:
 ```{r}
 Xd <- DiscreteRV(s, S(1) / 2^s, set = Naturals)
 Xd
+apply_lambda(rv_density(Xd), z)
+E(Xd)
+P(Xd > 2)
 ```
 
 Finite distributions list their values and probabilities:
@@ -213,6 +217,7 @@ Joint random variables have densities in several variables;
 M <- Multinomial("M", 3, S(1) / 2, S(1) / 2)
 apply_lambda(rv_density(M), 1, 2)
 rv_getitem(M, 0)
+tryCatch(E(rv_getitem(M, 0)), error = conditionMessage)
 apply_lambda(rv_density(Dirichlet("D", list(1, 2))), x1, x2)
 apply_lambda(rv_density(MultivariateBeta("B", 1, 2)), x1, x2)
 apply_lambda(rv_density(MultivariateLaplace("L", list(0, 0), list(list(1, 0), list(0, 1)))), x1, x2)
@@ -222,7 +227,8 @@ apply_lambda(rv_density(MultivariateEwens("E", 2, 1)), 1, 0)
 apply_lambda(rv_density(NormalGamma("G", 0, 1, 2, 3)), x1, x2)
 MN2 <- MultivariateNormal("A", list(1, 2), list(list(1, 0), list(0, 1)))
 apply_lambda(rv_density(MN2), 1, 2)
-expand(apply_lambda(rv_density(MN2), x1, x2))
+apply_lambda(rv_density(MN2), x1, x2)
+apply_lambda(marginal_distribution(MN2, 0), x1)
 apply_lambda(rv_density(GeneralizedMultivariateLogGamma("G", S(1) / 2, 1, list(1, 1), list(1, 1))), x1, x2)
 omega <- Matrix(list(list(1, S(1) / 2), list(S(1) / 2, 1)))
 apply_lambda(rv_density(GeneralizedMultivariateLogGammaOmega("G", omega, 1, list(1, 1), list(1, 1))), x1, x2)
@@ -250,8 +256,12 @@ W <- Wishart("W", 3, list(list(1, 0), list(0, 1)))
 apply_lambda(rv_density(W), MatrixSymbol("Xm", 2, 2))
 MN <- MatrixNormal("M", list(list(1, 2)), list(1), list(list(1, 0), list(0, 1)))
 rv_attr(rv_attr(rv_attr(MN, "pspace"), "distribution"), "set")
+doit(apply_lambda(rv_density(MN), MatrixSymbol("Xm", 1, 2)))
+doit(apply_lambda(rv_density(MN), Matrix(list(list(3, 4)))))
 MT <- MatrixStudentT("M", 2, list(list(1, 2)), list(list(1, 0), list(0, 1)), list(1))
 rv_attr(rv_attr(rv_attr(MT, "pspace"), "distribution"), "set")
+doit(apply_lambda(rv_density(MT), MatrixSymbol("Xm", 1, 2)))
+doit(apply_lambda(rv_density(MT), Matrix(list(list(3, 4)))))
 ```
 
 The Gaussian and circular ensembles of random matrix theory, with their

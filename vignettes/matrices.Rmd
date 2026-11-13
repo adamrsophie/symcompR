@@ -443,6 +443,10 @@ do.call(Tuple, mat_lu(Xk))
 do.call(Tuple, mat_qr(Xk))
 do.call(Tuple, mat_eig(Xk))
 do.call(Tuple, mat_svd(Xk))
+shape(EigenVectors(MatrixSymbol("M", 3, 3)))
+ask(Q$orthogonal(QofQR(Xk)))
+ask(Q$upper_triangular(RofQR(Xk)))
+ask(Q$diagonal(SofSVD(Xk)))
 ```
 
 `GenericIdentity()` and `GenericZeroMatrix()` are an identity and a zero

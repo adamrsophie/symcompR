@@ -143,6 +143,8 @@ psi <- Wavefunction(sqrt(2 / L) * sin(sym_pi * x / L), list(x, 0, L))
 qattr(psi, "norm")
 qattr(Wavefunction(x^2, x), "expr")
 qcall(Wavefunction(x^2, list(x, 0, 1)), "normalize")
+qcall(Wavefunction(x^2, x), "__call__", 3)
+qcall(Wavefunction(x^2, list(x, 0, 1)), "__call__", 2)
 D <- DifferentialOperator(Derivative(f(x), x), f(x))
 D
 qapply(D * Wavefunction(x^3, x))

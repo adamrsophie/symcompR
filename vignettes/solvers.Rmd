@@ -392,7 +392,10 @@ infinitesimals(Eq(Derivative(f(x), x), x^2 * f(x)), f(x))
 eq1 <- Derivative(f(x), x) - x^2
 checkinfsol(eq1, infinitesimals(eq1, f(x)), f(x))
 t <- Symbol("t")
-classify_sysode(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), -f(t))))
+cs <- classify_sysode(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), -f(t))))
+cs
+cs$is_linear
+cs$type_of_equation
 linear_ode_to_matrix(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), f(t))),
                      list(f(t), g(t)), t, 1)
 canonical_odes(list(Eq(Derivative(f(x), x), g(x)), Eq(Derivative(g(x), x) + f(x), 0)),

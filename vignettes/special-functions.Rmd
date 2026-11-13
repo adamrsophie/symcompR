@@ -429,6 +429,7 @@ objects.
 ```{r}
 sapply(0:7, function(i) sstr(motzkin(i)))
 subfactorial(5)
+rewrite(subfactorial(n), "uppergamma")
 ```
 
 ## Polar numbers and branches

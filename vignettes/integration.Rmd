@@ -183,6 +183,7 @@ logarithmic part into real arctangents and logarithms:
 
 ```{r}
 log_to_atan(Poly(x, x, domain = "ZZ"), Poly(1, x, domain = "ZZ"))
+log_to_atan(Poly(x + S(1) / 2, x, domain = "QQ"), Poly(sqrt(S(3)) / 2, x, domain = "EX"))
 log_to_real(Poly(x + 3 * t / 2 + Rational(1, 2), x, domain = "QQ[t]"),
             Poly(3 * t^2 + 1, t, domain = "ZZ"), x, t)
 log_to_real(Poly(x^2 - 1, x, domain = "ZZ"), Poly(-2 * t + 1, t, domain = "ZZ"), x, t)

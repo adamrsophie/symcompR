@@ -31,14 +31,15 @@ shape(a)
 \arguments{
 \item{...}{Arguments for \code{\link[=Array]{Array()}}.}
 
-\item{a}{An array.}
+\item{a}{An array or a matrix expression.}
 }
 \value{
 An array, function or \code{sym} expression.
 }
 \description{
 \code{NDimArray()}, \code{MutableDenseNDimArray()}, \code{ImmutableDenseNDimArray()}
-and \code{DenseNDimArray()} are \code{\link[=Array]{Array()}}, and \code{shape()} its dimensions.
+and \code{DenseNDimArray()} are \code{\link[=Array]{Array()}}, and \code{shape()} its dimensions
+(the shape tuple of a matrix expression).
 Indexed objects are documented in \code{\link[=Indexed]{Indexed()}}.
 }
 \examples{

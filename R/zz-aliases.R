@@ -1292,11 +1292,12 @@ ImmutableDenseMatrix <- ImmutableMatrix
 #' Array aliases and indexed objects
 #'
 #' `NDimArray()`, `MutableDenseNDimArray()`, `ImmutableDenseNDimArray()`
-#' and `DenseNDimArray()` are [Array()], and `shape()` its dimensions.
+#' and `DenseNDimArray()` are [Array()], and `shape()` its dimensions
+#' (the shape tuple of a matrix expression).
 #' Indexed objects are documented in [Indexed()].
 #'
 #' @param ... Arguments for [Array()].
-#' @param a An array.
+#' @param a An array or a matrix expression.
 #' @return An array, function or `sym` expression.
 #' @examples
 #' shape(Array(list(1, 2, 3)))
@@ -1326,7 +1327,12 @@ MutableSparseNDimArray <- NDimArray
 ImmutableSparseNDimArray <- NDimArray
 #' @rdname array-aliases
 #' @export
-shape <- function(a) if (inherits(a, "SymArray")) a$shape else dim(a)
+shape <- function(a) {
+  if (inherits(a, "SymArray")) return(a$shape)
+  # MatrixExpr.shape: a tuple of the row and column counts
+  if (is_sym(a) && .is_matexpr(a)) return(.pytuple(.mshape(a)))
+  dim(a)
+}
 
 #' Discrete transform aliases
 #'
@@ -1433,6 +1439,8 @@ Contains <- function(x, s) {
   r <- .set_contains_raw(s, x)
   if (!is.null(r) && r$type == "BooleanAtom") r else new_sym("Contains", list(x, s))
 }
+# Basic.func(*args): rebuilding a Contains (subs, xreplace) evaluates it again
+register_rebuilder("Contains", function(e, args) Contains(args[[1L]], args[[2L]]))
 #' @rdname imageset
 #' @export
 PowerSet <- function(s) {

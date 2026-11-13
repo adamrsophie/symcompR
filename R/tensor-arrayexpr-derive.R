@@ -499,6 +499,12 @@ matrix_derive <- function(expr, x) doit(convert_array_to_matrix(.ad(.m2a(.ae_sym
 #' @export
 ArrayDerivative <- function(expr, ..., evaluate = FALSE) {
   spec <- .ae_diff_spec(list(...))
+  # Derivative.__new__: every variable must have _diff_wrt True
+  for (sp in spec) {
+    v <- sp[[1L]]
+    if (is_sym(v) && v$type %in% c("ArraySymbol", "Add", "Mul", "Pow"))
+      .perr("ValueError", paste0("Can't calculate derivative wrt ", sstr(v), "."))
+  }
   if (isTRUE(evaluate)) return(.ae_derivative_eval(expr, spec))
   spec <- lapply(spec, function(s) list(.ae_sympify(s[[1L]]), s[[2L]]))
   .derivative_node(.ae_sympify(expr), spec, sort = FALSE)

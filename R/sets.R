@@ -559,6 +559,12 @@ as_relational <- function(s, x, ...) {
            }
            do.call(Or, lapply(s$args, as_relational, x = x))
          },
-         SpecialSet = if (s$name == "Reals") Lt(S_NegativeInfinity, x) & Lt(x, S_Infinity) else .contains(s, x),
+         SpecialSet = switch(s$name,
+           Reals = Lt(S_NegativeInfinity, x) & Lt(x, S_Infinity),
+           # Naturals.as_relational, Naturals0 inherits it, Integers.as_relational
+           Naturals = And(Eq(floor(x), x), Ge(x, S_One), Lt(x, S_Infinity)),
+           Naturals0 = And(Eq(floor(x), x), Ge(x, S_Zero), Lt(x, S_Infinity)),
+           Integers = And(Eq(floor(x), x), Lt(S_NegativeInfinity, x), Lt(x, S_Infinity)),
+           .contains(s, x)),
          .contains(s, x))
 }

@@ -194,8 +194,10 @@ MatMul <- function(..., evaluate = FALSE) {
   if (is_zero_num(coef) || any(vapply(mats, function(m) m$type == "ZeroMatrix", TRUE))) return(ZeroMatrix(shp[[1L]], shp[[2L]]))
   # merge equal neighbours into powers, X^-1 * X cancels
   out <- list()
-  # remove_ids: identities, and ones matrices known to be 1x1
-  is_id <- function(m) m$type == "Identity" || (m$type == "OneMatrix" && is_one_num(m$args[[1L]]) && is_one_num(m$args[[2L]]))
+  # remove_ids: identities, and ones matrices known to be 1x1 (x.is_Identity,
+  # which an explicit identity matrix has too)
+  is_id <- function(m) m$type == "Identity" || (m$type == "OneMatrix" && is_one_num(m$args[[1L]]) && is_one_num(m$args[[2L]])) ||
+    (.is_explicit(m) && .me_is_identity(m))
   for (m in Filter(Negate(is_id), mats)) {
     if (length(out)) {
       last <- out[[length(out)]]
