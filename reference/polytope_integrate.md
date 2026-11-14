@@ -3,7 +3,7 @@
 `polytope_integrate(poly, expr)` integrates a polynomial in `x` and `y`
 over a polygon, or in `x`, `y` and `z` over a polyhedron, as
 `sympy.integrals.intpoly.polytope_integrate()`. A polygon is a
-[`Polygon()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+[`Polygon()`](https://adamrsophie.github.io/symcompR/reference/Polygon.md)
 (the vertex representation, whose float coordinates are made rational)
 or a list of hyperplanes `list(a, b)` meaning `a . (x, y) <= b`; a
 polyhedron is a list whose first entry is the list of vertices and whose

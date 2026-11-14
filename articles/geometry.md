@@ -135,14 +135,7 @@ intersection(pl, Line3D(Point3D(0, 0, 5), Point3D(1, 1, 5)))
 #> [[1]]
 #> Point3D(-5/2, -5/2, 5)
 normal_vector(Plane(Point3D(1, 0, 0), Point3D(0, 1, 0), Point3D(0, 0, 1)))
-#> [[1]]
-#> 1
-#> 
-#> [[2]]
-#> 1
-#> 
-#> [[3]]
-#> 1
+#> (1, 1, 1)
 distance(Plane(Point3D(0, 0, 0), normal_vector = c(0, 0, 1)), Point3D(1, 2, 3))
 #> 3
 angle_between(Plane(Point3D(0, 0, 0), normal_vector = c(1, 0, 0)),
@@ -152,15 +145,15 @@ angle_between(Plane(Point3D(0, 0, 0), normal_vector = c(1, 0, 0)),
 
 ### Rays, curves, and more properties
 
-[`Ray()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+[`Ray()`](https://adamrsophie.github.io/symcompR/reference/Line.md)
 starts at a point and passes through another.
-[`Ray2D()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md),
-[`Ray3D()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md),
-[`Point2D()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md),
-[`Line2D()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md),
-[`Segment2D()`](https://adamrsophie.github.io/symcompR/reference/geometry-aliases.md),
+[`Ray2D()`](https://adamrsophie.github.io/symcompR/reference/Line.md),
+[`Ray3D()`](https://adamrsophie.github.io/symcompR/reference/Line.md),
+[`Point2D()`](https://adamrsophie.github.io/symcompR/reference/Point.md),
+[`Line2D()`](https://adamrsophie.github.io/symcompR/reference/Line.md),
+[`Segment2D()`](https://adamrsophie.github.io/symcompR/reference/Line.md),
 and
-[`Segment3D()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+[`Segment3D()`](https://adamrsophie.github.io/symcompR/reference/Line.md)
 are the dimension specific names.
 
 ``` r
@@ -193,7 +186,7 @@ direction_cosine(Line3D(Point3D(0, 0, 0), Point3D(3, 4, 5)))
 #> [[3]]
 #> sqrt(2)/2
 projection(Line(Point(0, 0), Point(1, 1)), Point(2, 0))
-#> Point()
+#> Point2D(1, 1)
 is_parallel(Line(Point(0, 0), Point(1, 1)), Line(Point(0, 1), Point(1, 2)))
 #> [1] TRUE
 closest_points(Point(0, 0), Point(3, 0), Point(1, 1))
@@ -229,7 +222,7 @@ p_parameter(P2)
 #> 1
 ```
 
-[`Curve()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+[`Curve()`](https://adamrsophie.github.io/symcompR/reference/Curve.md)
 is a parametric curve:
 
 ``` r

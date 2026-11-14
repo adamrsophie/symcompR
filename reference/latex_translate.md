@@ -2,7 +2,7 @@
 
 Converts Greek letter names, other special names and trailing modifiers
 such as `hat` or `dot` to LaTeX, as SymPy's
-[`translate()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md).
+[`translate()`](https://adamrsophie.github.io/symcompR/reference/geometry-transformations.md).
 
 ## Usage
 

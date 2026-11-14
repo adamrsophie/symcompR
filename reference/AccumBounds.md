@@ -8,7 +8,7 @@ other bounds is interval arithmetic: `AccumBounds(1, 2) + 3` is
 Comparisons decide when the bounds do,
 [`contains()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
 tests membership and
-[`intersection()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+[`intersection()`](https://adamrsophie.github.io/symcompR/reference/geometry-shared.md)
 intersects with bounds or a finite set.
 
 ## Usage
@@ -31,7 +31,7 @@ ab_union(a, b)
 
   Bounds; `ab_union()` is SymPy's `AccumBounds.union()` (base R has
   [`union()`](https://rdrr.io/r/base/sets.html)), and
-  [`intersection()`](https://adamrsophie.github.io/symcompR/reference/Point.md)
+  [`intersection()`](https://adamrsophie.github.io/symcompR/reference/geometry-shared.md)
   takes bounds or a finite set.
 
 ## Value

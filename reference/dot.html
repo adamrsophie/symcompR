@@ -111,7 +111,7 @@ square, as <code>sympy.ntheory.primetest.is_square</code> does.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dot</span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span>, doit <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">dot</span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span>, doit <span class="op">=</span> <span class="cn">FALSE</span>, hermitian <span class="op">=</span> <span class="cn">NULL</span>, conjugate_convention <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">cross</span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span>, doit <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
@@ -141,6 +141,15 @@ the <code><a href="Del.html">Del()</a></code> operator, for which the methods of
 
 <dt id="arg-doit">doit<a class="anchor" aria-label="anchor" href="#arg-doit"></a></dt>
 <dd><p>For the del operator: evaluate the derivatives.</p></dd>
+
+
+<dt id="arg-hermitian">hermitian<a class="anchor" aria-label="anchor" href="#arg-hermitian"></a></dt>
+<dd><p>Conjugate one of the vectors.</p></dd>
+
+
+<dt id="arg-conjugate-convention">conjugate_convention<a class="anchor" aria-label="anchor" href="#arg-conjugate-convention"></a></dt>
+<dd><p>Which vector to conjugate: <code>"maths"</code> or
+<code>"left"</code> the first, <code>"physics"</code> or <code>"right"</code> the second.</p></dd>
 
 
 <dt id="arg-m">M<a class="anchor" aria-label="anchor" href="#arg-m"></a></dt>

@@ -2,7 +2,7 @@
 
 `line_integrate(f, curve, vars)` integrates `f` along a parametric
 curve, a
-[`Curve()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md)
+[`Curve()`](https://adamrsophie.github.io/symcompR/reference/Curve.md)
 or a list `list(param, a, b, x(param), y(param), ...)`.
 
 ## Usage
@@ -20,7 +20,7 @@ line_integrate(f, curve, vars)
 - curve:
 
   A
-  [`Curve()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md),
+  [`Curve()`](https://adamrsophie.github.io/symcompR/reference/Curve.md),
   or a list `list(param, a, b, coord1, coord2, ...)`.
 
 - vars:

@@ -12,7 +12,7 @@ for a perfect square, as `sympy.ntheory.primetest.is_square` does.
 ## Usage
 
 ``` r
-dot(a, b, doit = FALSE)
+dot(a, b, doit = FALSE, hermitian = NULL, conjugate_convention = NULL)
 
 cross(a, b, doit = FALSE)
 
@@ -44,6 +44,15 @@ pinv(M)
 - doit:
 
   For the del operator: evaluate the derivatives.
+
+- hermitian:
+
+  Conjugate one of the vectors.
+
+- conjugate_convention:
+
+  Which vector to conjugate: `"maths"` or `"left"` the first,
+  `"physics"` or `"right"` the second.
 
 - M:
 

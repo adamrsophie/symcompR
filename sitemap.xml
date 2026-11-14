@@ -69,6 +69,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Coset.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/CosetTable.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Cross.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/Curve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Cycle.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/DDM.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Dagger.html</loc></url>
@@ -83,6 +84,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/E.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/EPath.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/ElementwiseApplyFunction.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/Ellipse.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/EllipticCurve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Eq.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/FactorCache.html</loc></url>
@@ -106,8 +108,10 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/JointsMethod.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/KanesMethod.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/LUdecomposition.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/LUdecomposition_Simple.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/LagrangesMethod.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Lambda.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/Line.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/LinearPathway.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Linearizer.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Matrix.html</loc></url>
@@ -130,10 +134,12 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/PhysPoint.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/PhysVector.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Piecewise.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/Plane.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Point.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Poly.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/PolyQuintic.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/PolycyclicGroup.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/Polygon.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Polyhedron.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Predicate.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Prefix.html</loc></url>
@@ -239,6 +245,8 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/collect_tensor_products.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/combined_tensor_printing.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/compose.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/condition_number.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/connected_components_decomposition.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/constants.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/constantsimp.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/construct_domain.html</loc></url>
@@ -261,6 +269,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/degree.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/denoms.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/density-operators.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/diagonal_solve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/diagram_drawing.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/diff.sym.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/differentiate_finite.html</loc></url>
@@ -285,6 +294,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/dsolve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/dummy_sgs.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/dynamicsymbols.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/echelon_form.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/ecm.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/egypt_harmonic.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/egyptian_fraction.html</loc></url>
@@ -322,8 +332,10 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/gcd.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/gcdex_steps.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/geometric_conj_ab.html</loc></url>
-<url><loc>https://adamrsophie.github.io/symcompR/reference/geometry-3d.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/geometry-aliases.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/geometry-operators.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/geometry-shared.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/geometry-transformations.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/get_math_macros.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/get_motion_params.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/get_perm_group.html</loc></url>
@@ -354,16 +366,19 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integral-transforms.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integral_steps.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/interactive-session.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/inverse_GE.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/invert_real.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/is_nthpow_residue.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/is_polynomial.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/is_positive_definite.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/is_sym.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/is_upper.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/isprime.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/iterables.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/jacobian.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/joint_rv.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/jones_vector.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/jordan_block.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/jordan_form.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/kinematic_equations.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/kronecker_product.html</loc></url>
@@ -405,9 +420,12 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_exp.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_exp_jordan_form.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_expectation.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_log.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/matrix_pow.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/meijerint_indefinite.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/mellin_transform.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/mersenne_prime_exponent.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/minor_submatrix.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/misc-helpers.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/monotonicity_helper.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/more-code-printers.html</loc></url>
@@ -424,6 +442,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/newtons_method.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/nonlinsolve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/normalized.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/normalized_vector.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/not_empty_in.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/npartitions.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/nroots.html</loc></url>
@@ -507,6 +526,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/risch_integrate.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/roots.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/round_two.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/row_insert.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/rsolve-parts.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/rsolve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/rv_attr.html</loc></url>

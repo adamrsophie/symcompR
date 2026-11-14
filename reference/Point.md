@@ -1,77 +1,102 @@
-# Plane geometry
+# Points
 
-`Point()`, `Line()`, `Segment()`, `Circle()`, `Polygon()` and
-`Triangle()` build geometric entities with exact coordinates.
-`distance()` measures between points, `midpoint()`, `area()`,
-`perimeter()`, `centroid()`, `slope()`, `is_parallel()`,
-`is_perpendicular()`, `is_collinear()`, `intersection()`,
-`line_equation()` and `circle_equation()` follow SymPy.
+`Point()` builds a point of any dimension, as SymPy's `Point`: two
+coordinates give a `Point2D`, three a `Point3D`. Float coordinates are
+replaced by rationals unless `evaluate = FALSE`; `dim` pads with zeros
+or drops trailing zero coordinates. Points support `+`, `-`, `*` and `/`
+(each coordinate is simplified, as in SymPy) and `==`, which compares
+the coordinates structurally.
 
 ## Usage
 
 ``` r
-Point(...)
+Point(..., evaluate = TRUE, dim = NULL, on_morph = "ignore")
 
-distance(p, q)
+Point2D(..., evaluate = TRUE)
 
-midpoint(p, q = NULL)
+Point3D(..., evaluate = TRUE)
 
-Line(p, q)
+point_x(p)
 
-Segment(p, q)
+point_y(p)
 
-slope(l)
+point_z(p)
 
-line_equation(l, x = Symbol("x"), y = Symbol("y"))
+ambient_dimension(p)
 
-is_parallel(l, m)
-
-is_perpendicular(l, m)
+affine_rank(...)
 
 is_collinear(...)
 
-Circle(center, radius)
+are_collinear(...)
 
-circle_equation(l, x = Symbol("x"), y = Symbol("y"))
+is_concyclic(...)
 
-Polygon(...)
+is_scalar_multiple(p, q)
 
-Triangle(a, b, P)
+midpoint(p, q = NULL)
 
-area(p)
+origin(p)
 
-perimeter(p)
+orthogonal_direction(p)
 
-centroid(p)
+project(a, b)
 
-intersection(a, b)
+taxicab_distance(p, q)
+
+canberra_distance(p, q)
+
+unit(p)
+
+geo_transform(p, matrix)
+
+direction_ratio(p, q = NULL)
+
+direction_cosine(p, q = NULL)
 ```
 
 ## Arguments
 
 - ...:
 
-  Coordinates for `Point()`; vertices for `Polygon()`.
+  Coordinates, a list of coordinates, or a point; for `affine_rank()`,
+  `is_collinear()`, `are_collinear()` and `is_concyclic()`, points.
 
-- p, q, a, b, P:
+- evaluate:
 
-  Points or entities.
+  Replace floats by rationals.
 
-- l, m:
+- dim:
 
-  Lines.
+  The dimension of the point.
 
-- x, y:
+- on_morph:
 
-  Symbols for equations.
+  What to do when `dim` changes the dimension: `"ignore"`, `"warn"` or
+  `"error"`.
 
-- center, radius:
+- p, q, a, b:
 
-  Circle data.
+  Points.
+
+- matrix:
+
+  A 3 by 3 (or, in 3D, 4 by 4) transformation matrix.
 
 ## Value
 
-A geometric entity, expression or list.
+A point, an expression, a logical value or a list.
+
+## Details
+
+The functions below are SymPy's `Point` methods and properties:
+`point_x()`, `point_y()` and `point_z()` (the `x`, `y` and `z`
+properties), `ambient_dimension()`, `affine_rank()`, `is_collinear()`,
+`are_collinear()`, `is_concyclic()`, `is_scalar_multiple()`,
+`midpoint()`, `origin()`, `orthogonal_direction()`, `project()`,
+`taxicab_distance()`, `canberra_distance()`, `unit()`,
+`direction_ratio()`, `direction_cosine()` and `geo_transform()` (SymPy's
+`transform`).
 
 ## Examples
 
@@ -79,10 +104,12 @@ A geometric entity, expression or list.
 A <- Point(0, 0); B <- Point(3, 4)
 distance(A, B)
 #> 5
-area(Triangle(Point(0, 0), Point(4, 0), Point(0, 3)))
-#> 6
-intersection(Line(Point(0, 0), Point(1, 1)), Line(Point(0, 2), Point(2, 0)))
-#> [[1]]
-#> Point2D(1, 1) 
-#> 
+A + B
+#> Point2D(3, 4) 
+Point(0.5, 0.25)
+#> Point2D(1/2, 1/4) 
+is_collinear(Point(0, 0), Point(1, 1), Point(2, 2))
+#> [1] TRUE
+midpoint(A, B)
+#> Point2D(3/2, 2) 
 ```

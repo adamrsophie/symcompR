@@ -1,7 +1,7 @@
 # Vector operations
 
 `magnitude()`, `normalize()`,
-[`projection()`](https://adamrsophie.github.io/symcompR/reference/geometry-3d.md),
+[`projection()`](https://adamrsophie.github.io/symcompR/reference/geometry-shared.md),
 `to_matrix()`, `separate()` and `vector_equals()` port the methods of
 SymPy's `Vector`. `outer_sym()` is the outer product (also `v1 | v2`).
 [`dot()`](https://adamrsophie.github.io/symcompR/reference/dot.md) and
