@@ -604,6 +604,10 @@ system.
   : Pretty printing
 - [`latex()`](https://adamrsophie.github.io/symcompR/reference/latex.md)
   : LaTeX output
+- [`latex_escape()`](https://adamrsophie.github.io/symcompR/reference/latex_escape.md)
+  : Escape a string for LaTeX
+- [`latex_translate()`](https://adamrsophie.github.io/symcompR/reference/latex_translate.md)
+  : Translate a symbol name to LaTeX
 - [`mathml()`](https://adamrsophie.github.io/symcompR/reference/mathml.md)
   [`print_mathml()`](https://adamrsophie.github.io/symcompR/reference/mathml.md)
   [`dotprint()`](https://adamrsophie.github.io/symcompR/reference/mathml.md)

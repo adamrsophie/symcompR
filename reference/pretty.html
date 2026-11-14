@@ -137,7 +137,10 @@ encoding is UTF-8. <code>pager_print()</code> shows the result in the pager.</p>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Unused.</p></dd>
+<dd><p>Printer settings of SymPy's <code>PrettyPrinter</code> for <code>pretty()</code> of an
+expression: <code>order</code> (<code>"lex"</code>, <code>"rev-lex"</code> or <code>"none"</code>), <code>full_prec</code>,
+<code>use_unicode_sqrt_char</code>, <code>root_notation</code>, <code>mat_symbol_style</code> (<code>"plain"</code>
+or <code>"bold"</code>), <code>imaginary_unit</code> and <code>perm_cyclic</code>; unused otherwise.</p></dd>
 
 
 <dt id="arg-e-x">e, x<a class="anchor" aria-label="anchor" href="#arg-e-x"></a></dt>
@@ -165,6 +168,17 @@ invisibly.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    ________</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   /  2     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> \/  x  + 1 </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">pretty</span><span class="op">(</span><span class="fu"><a href="Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"theta"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"x1"</span><span class="op">)</span>, use_unicode <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> θ + x₁ </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">pretty</span><span class="op">(</span><span class="fu"><a href="sym_integrate.html">Integral</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>, use_unicode <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   /      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  |       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  |   2   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  |  x  dx</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  |       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> /        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 0         </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

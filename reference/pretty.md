@@ -35,7 +35,11 @@ pager_print(e, use_unicode = NULL)
 
 - ...:
 
-  Unused.
+  Printer settings of SymPy's `PrettyPrinter` for `pretty()` of an
+  expression: `order` (`"lex"`, `"rev-lex"` or `"none"`), `full_prec`,
+  `use_unicode_sqrt_char`, `root_notation`, `mat_symbol_style`
+  (`"plain"` or `"bold"`), `imaginary_unit` and `perm_cyclic`; unused
+  otherwise.
 
 - e, x:
 
@@ -61,4 +65,15 @@ pprint(sqrt(x^2 + 1), use_unicode = FALSE)
 #>    ________
 #>   /  2     
 #> \/  x  + 1 
+cat(pretty(Symbol("theta") + Symbol("x1"), use_unicode = TRUE), "\n")
+#> θ + x₁ 
+cat(pretty(Integral(x^2, list(x, 0, 1)), use_unicode = FALSE), "\n")
+#>   1      
+#>   /      
+#>  |       
+#>  |   2   
+#>  |  x  dx
+#>  |       
+#> /        
+#> 0         
 ```
