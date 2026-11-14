@@ -636,7 +636,7 @@
   if (absz < 1.1 && .hx_re(z) <= 1) {
     cache <- new.env(parent = emptyenv())
     cache[["0"]] <- .hx_one()
-    term <- function(kk) {
+    term_kk <- function(kk) {
       kk <- .mv(kk)
       k <- .hx_int_value(kk)
       if (!(kk == .mv_int(k))) {
@@ -647,7 +647,7 @@
       }
       key <- as.character(k)
       if (!is.null(cache[[key]])) return(cache[[key]])
-      t <- term(k - 1)
+      t <- term_kk(k - 1)
       m <- k - 1
       for (j in seq_len(p)) t <- .hx_mul(t, .hx_add(a_s[[j]], m))
       for (j in seq_len(q)) t <- .hx_div(t, .hx_add(b_s[[j]], m))

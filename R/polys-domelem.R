@@ -264,7 +264,7 @@ print.FracElement <- function(x, ...) { cat(format(x), "\n", sep = ""); invisibl
   } else if (inherits(a, "ANP")) {
     a <- .anp_to_sym(a)
   }
-  switch(k,
+  switch(EXPR = k,
     ZZ = {
       if (is.numeric(a) && !is.integer(a) && a != round(a)) stop(CoercionFailed(paste0("expected an integer, got ", a)))
       if (is_sym(a) && a$type != "Integer") stop(CoercionFailed(paste0("expected an integer, got ", sstr(a))))
@@ -352,7 +352,7 @@ print.FracElement <- function(x, ...) { cat(format(x), "\n", sep = ""); invisibl
 .de_inv <- function(K, a) .de_exquo(K, .de_one(K), a)
 
 .de_is_negative <- function(K, a) {
-  switch(.de_kind(K),
+  switch(EXPR = .de_kind(K),
     ZZ = , QQ = , RR = a < 0,
     PolyRing = !qp_is_zero(a$p) && qp_lc(a$p) < 0,
     FracField = !qp_is_zero(a$n) && qp_lc(a$n) < 0,

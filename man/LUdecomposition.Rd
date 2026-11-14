@@ -14,9 +14,9 @@ GramSchmidt(vlist, orthonormal = FALSE)
 
 QRdecomposition(M)
 
-cholesky(M)
+cholesky(M, hermitian = TRUE)
 
-LDLdecomposition(M)
+LDLdecomposition(M, hermitian = TRUE)
 }
 \arguments{
 \item{M}{A \code{symmatrix}.}
@@ -24,6 +24,9 @@ LDLdecomposition(M)
 \item{vlist}{A list of column vectors.}
 
 \item{orthonormal}{Normalize the vectors.}
+
+\item{hermitian}{For \code{cholesky()} and \code{LDLdecomposition()}: require a Hermitian
+matrix and use conjugates (SymPy's default); \code{FALSE} requires a symmetric matrix.}
 }
 \value{
 A list of matrices.

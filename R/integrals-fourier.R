@@ -80,7 +80,9 @@
 #' @return The transform, or `list(F, cond)` when `noconds = FALSE`.
 #' @examples
 #' x <- Symbol("x"); k <- Symbol("k")
+#' \donttest{
 #' fourier_transform(exp(-x^2), x, k)
+#' }
 #' @export
 fourier_transform <- function(f, x, k, simplify = TRUE, noconds = TRUE, needeval = FALSE) {
   f <- as_sym(f); x <- as_sym(x); k <- as_sym(k)

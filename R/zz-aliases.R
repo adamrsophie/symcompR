@@ -33,7 +33,8 @@
 #' @param n Significant digits for `nfloat()`.
 #' @param exponent If `TRUE`, `nfloat()` also converts exponents.
 #' @param dkeys If `TRUE`, `nfloat()` also converts the names of a list.
-#' @param evaluate If `FALSE`, `Equality()` keeps the relation unevaluated.
+#' @param evaluate If `FALSE`, `Equality()` keeps the relation unevaluated and
+#'   `Add()`, `Mul()` and `Pow()` keep their arguments as given.
 #' @return An expression, list, logical or string.
 #' @examples
 #' x <- Symbol("x")
@@ -45,7 +46,8 @@ NULL
 
 #' @rdname core-helpers
 #' @export
-Add <- function(...) {
+Add <- function(..., evaluate = TRUE) {
+  if (isFALSE(evaluate)) return(new_sym("Add", lapply(list(...), as_sym)))
   if (any(vapply(list(...), .me_is_matrix, NA))) return(.me_postprocess("Add", list(...)))
   a <- lapply(list(...), as_sym)
   bd <- Filter(.is_bd, a)
@@ -54,7 +56,8 @@ Add <- function(...) {
 }
 #' @rdname core-helpers
 #' @export
-Mul <- function(...) {
+Mul <- function(..., evaluate = TRUE) {
+  if (isFALSE(evaluate)) return(new_sym("Mul", lapply(list(...), as_sym)))
   if (any(vapply(list(...), .me_is_matrix, NA))) return(.me_postprocess("Mul", list(...)))
   a <- lapply(list(...), as_sym)
   bd <- Filter(.is_bd, a)
@@ -67,7 +70,8 @@ Mul <- function(...) {
 }
 #' @rdname core-helpers
 #' @export
-Pow <- function(a, b) {
+Pow <- function(a, b, evaluate = TRUE) {
+  if (isFALSE(evaluate)) return(new_sym("Pow", list(as_sym(a), as_sym(b))))
   if (.is_vec(as_sym(a)) || .is_vec(as_sym(b))) .vec_stop("TypeError", "Power operation is not supported for vectors")
   .pow(as_sym(a), as_sym(b))
 }

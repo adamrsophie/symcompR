@@ -112,9 +112,9 @@
 # type(x).mro()]; R lists stand for Python lists and tuples.
 .epath_types <- function(x) {
   if (is_sym(x)) {
-    cls <- switch(x$type,
+    cls <- switch(EXPR = x$type,
       Function = x$name,
-      Constant = switch(x$name, pi = "Pi", E = "Exp1", I = "ImaginaryUnit", oo = "Infinity",
+      Constant = switch(EXPR = x$name, pi = "Pi", E = "Exp1", I = "ImaginaryUnit", oo = "Infinity",
                         "-oo" = "NegativeInfinity", zoo = "ComplexInfinity", nan = "NaN", x$name),
       BooleanAtom = if (identical(x$name, "true")) "BooleanTrue" else "BooleanFalse",
       Integer = if (x$value == 0) "Zero" else if (x$value == 1) "One" else if (x$value == -1) "NegativeOne" else "Integer",

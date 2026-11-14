@@ -37,6 +37,7 @@ A list of expressions, or an integer.
 integer and rational coefficients by the Durand-Kerner iteration of
 mpmath's \code{polyroots()}, as SymPy's \code{Poly.nroots()}. \code{real_roots(f, x)} returns the real
 roots with multiplicity, exact where possible. \code{count_roots(f, x, a, b)}
+(or SymPy's \code{count_roots(f, a, b)} with numeric bounds)
 counts real roots in \verb{[a, b]} with a Sturm sequence. \code{sturm()} returns the
 Sturm sequence.
 }

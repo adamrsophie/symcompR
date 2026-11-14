@@ -126,7 +126,9 @@
 #' @examples
 #' x <- Symbol("x"); y <- Symbol("y")
 #' eq <- (x + y^5 + y) / (x - y)
+#' \donttest{
 #' ratsimpmodprime(eq, list(x * y^5 - x - y), x, y, order = "lex")
+#' }
 #' @export
 ratsimpmodprime <- function(expr, G, ..., quick = TRUE, polynomial = FALSE, order = "lex") {
   expr <- as_sym(expr)

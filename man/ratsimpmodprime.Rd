@@ -31,5 +31,7 @@ least total degree (Monagan and Pearce's algorithm). With \code{quick = FALSE} i
 \examples{
 x <- Symbol("x"); y <- Symbol("y")
 eq <- (x + y^5 + y) / (x - y)
+\donttest{
 ratsimpmodprime(eq, list(x * y^5 - x - y), x, y, order = "lex")
+}
 }

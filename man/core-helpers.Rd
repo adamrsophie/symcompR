@@ -25,11 +25,11 @@
 \alias{sym_ordered}
 \title{Core constructors and helpers}
 \usage{
-Add(...)
+Add(..., evaluate = TRUE)
 
-Mul(...)
+Mul(..., evaluate = TRUE)
 
-Pow(a, b)
+Pow(a, b, evaluate = TRUE)
 
 Equality(a, b, evaluate = TRUE)
 
@@ -70,9 +70,10 @@ sym_ordered(x, ...)
 \arguments{
 \item{...}{Expressions, or assumption facts as \code{name = value}.}
 
-\item{a, b, e}{Expressions.}
+\item{evaluate}{If \code{FALSE}, \code{Equality()} keeps the relation unevaluated and
+\code{Add()}, \code{Mul()} and \code{Pow()} keep their arguments as given.}
 
-\item{evaluate}{If \code{FALSE}, \code{Equality()} keeps the relation unevaluated.}
+\item{a, b, e}{Expressions.}
 
 \item{op}{One of \code{"=="}, \code{"!="}, \code{"<"}, \code{"<="}, \code{">"}, \code{">="}.}
 

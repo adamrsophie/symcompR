@@ -168,7 +168,7 @@
 }
 
 .ev_const_evalf <- function(e, prec) {
-  switch(e$name,
+  switch(EXPR = e$name,
     pi = .ev_float(.ev_pi(prec), prec),
     E = .ev_float(.ev_e(prec), prec),
     oo = S_Infinity, `-oo` = S_NegativeInfinity, nan = S_NaN,

@@ -1107,10 +1107,10 @@
     return(.hx_hypercomb(h, list(n)))
   }
   if (!.hx_isint(b)) {
-    h <- function(n, a) list(.hx_term(list(), list(), list(.hx_neg(b)), list(.hx_add(n, 1), .hx_sub(.hx_neg(b), n)),
+    h2 <- function(n, a) list(.hx_term(list(), list(), list(.hx_neg(b)), list(.hx_add(n, 1), .hx_sub(.hx_neg(b), n)),
                                       list(.hx_neg(n), .hx_add(.hx_add(.hx_add(a, b), n), 1)), list(.hx_add(b, 1)),
                                       .hx_mul(.hx_add(x, 1), 0.5)))
-    return(.hx_hypercomb(h, list(n, a)))
+    return(.hx_hypercomb(h2, list(n, a)))
   }
   .mp_error("NotImplementedError", "jacobi with a nonpositive integer a and an integer b")
 }, n, a, b, x)

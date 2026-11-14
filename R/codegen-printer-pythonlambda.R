@@ -62,11 +62,11 @@
            `_print_CodeBlock` = function(p, e)
              .cg_err("TypeError", "CodePrinter._print_CodeBlock() takes 2 positional arguments but 3 were given")
          ),
-         setNames(rep(list(.prt_blacklisted), 13L),
+         stats::setNames(rep(list(.prt_blacklisted), 13L),
                   paste0("_print_", c("SparseRepMatrix", "MutableSparseMatrix", "ImmutableSparseMatrix", "Matrix",
                                       "DenseMatrix", "MutableDenseMatrix", "ImmutableMatrix", "ImmutableDenseMatrix",
                                       "list", "tuple", "Tuple", "dict", "Dict"))),
-         setNames(rep(list(.prt_numexpr_function), length(.prt_numexpr_functions)),
+         stats::setNames(rep(list(.prt_numexpr_function), length(.prt_numexpr_functions)),
                   paste0("_print_", names(.prt_numexpr_functions)))))
 
 # IntervalPrinter(MpmathPrinter, LambdaPrinter): numbers as mpi intervals

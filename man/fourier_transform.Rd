@@ -77,5 +77,7 @@ unevaluated transform is returned.
 }
 \examples{
 x <- Symbol("x"); k <- Symbol("k")
+\donttest{
 fourier_transform(exp(-x^2), x, k)
+}
 }

@@ -45,6 +45,8 @@ power basis of \code{b} (highest power first), or \code{NULL} when \code{a} is n
 \examples{
 x <- Symbol("x")
 primitive_element(list(sqrt(Integer(2)), sqrt(Integer(3))), x)
+\donttest{
 field_isomorphism(sqrt(Integer(2)), sqrt(Integer(2)) + sqrt(Integer(3)))
 to_number_field(sqrt(Integer(2)), sqrt(Integer(2)) + sqrt(Integer(3)))
+}
 }

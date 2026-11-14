@@ -810,7 +810,7 @@
 
 .ev_table <- function(x) {
   t <- x$type
-  switch(t,
+  switch(EXPR = t,
     Symbol = , Dummy = .ev_evalf_symbol,
     Float = function(x, prec, options) {
       f <- .float_mp(x)
@@ -829,7 +829,7 @@
       if (n == -1) return(.ev_res(.ev_fnone, NULL, prec, NULL))
       .ev_res(.ev_from_int(n, prec), NULL, prec, NULL)
     },
-    Constant = switch(x$name,
+    Constant = switch(EXPR = x$name,
       pi = function(x, prec, options) .ev_res(.ev_pi(prec), NULL, prec, NULL),
       E = function(x, prec, options) .ev_res(.ev_e(prec), NULL, prec, NULL),
       I = function(x, prec, options) .ev_res(NULL, .ev_fone, NULL, prec),
@@ -839,7 +839,7 @@
     Add = .ev_evalf_add,
     Mul = .ev_evalf_mul,
     Pow = .ev_evalf_pow,
-    Function = switch(x$name,
+    Function = switch(EXPR = x$name,
       exp = .ev_evalf_exp,
       cos = , sin = , tan = .ev_evalf_trig,
       log = .ev_evalf_log,

@@ -388,6 +388,7 @@ register_neval("CRootOf", function(e, env) {
 #' integer and rational coefficients by the Durand-Kerner iteration of
 #' mpmath's `polyroots()`, as SymPy's `Poly.nroots()`. `real_roots(f, x)` returns the real
 #' roots with multiplicity, exact where possible. `count_roots(f, x, a, b)`
+#' (or SymPy's `count_roots(f, a, b)` with numeric bounds)
 #' counts real roots in `[a, b]` with a Sturm sequence. `sturm()` returns the
 #' Sturm sequence.
 #'
@@ -576,6 +577,13 @@ sturm <- function(f, x = NULL) {
 #' @export
 count_roots <- function(f, x = NULL, a = -Inf, b = Inf) {
   f <- as_sym(f)
+  # SymPy's count_roots(f, inf, sup): numeric second and third arguments are bounds
+  if (!is.null(x) && (is.numeric(x) || (is_sym(x) && !length(free_symbols(x))))) {
+    if (!missing(b)) stop("count_roots: give the generator or two bounds, not both")
+    b <- if (missing(a)) Inf else a
+    a <- x
+    x <- NULL
+  }
   if (is.null(x)) x <- free_symbols(f)[[1L]]
   x <- as_sym(x)
   p <- up_from_qpoly(expr_to_qpoly(f, list(x)), 1L)
@@ -595,9 +603,12 @@ count_roots <- function(f, x = NULL, a = -Inf, b = Inf) {
     s <- s[s != 0]
     sum(diff(s) != 0)
   }
-  av <- if (is.infinite(a)) a else as_bigq(as_sym(a))
-  bv <- if (is.infinite(b)) b else as_bigq(as_sym(b))
+  inf_of <- function(v) if (is_sym(v) && identical(v$key, S_Infinity$key)) Inf
+                         else if (is_sym(v) && identical(v$key, S_NegativeInfinity$key)) -Inf else v
+  a <- inf_of(a); b <- inf_of(b)
+  av <- if ((is.numeric(a) && is.infinite(a))) a else as_bigq(as_sym(a))
+  bv <- if ((is.numeric(b) && is.infinite(b))) b else as_bigq(as_sym(b))
   n <- changes(av) - changes(bv)
-  if (!is.infinite(a) && up_eval(sf, av) == 0) n <- n + 1L
+  if (!(is.numeric(a) && is.infinite(a)) && up_eval(sf, av) == 0) n <- n + 1L
   as.integer(n)
 }

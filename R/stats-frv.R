@@ -494,7 +494,7 @@ NULL
 .as_fd <- function(density) {
   if (is_sym(density) && density$type == "FiniteDensity") return(density)
   if (is_sym(density) && density$type == "Dict") return(.FD(lapply(density$args, function(t) t$args[[1L]]), lapply(density$args, function(t) t$args[[2L]])))
-  if (is.list(density) && !is.null(names(density))) return(.FD(lapply(names(density), function(n) as_sym(type.convert(n, as.is = TRUE))), lapply(density, as_sym)))
+  if (is.list(density) && !is.null(names(density))) return(.FD(lapply(names(density), function(n) as_sym(utils::type.convert(n, as.is = TRUE))), lapply(density, as_sym)))
   stop("density must be a Dict or a named list", call. = FALSE)
 }
 

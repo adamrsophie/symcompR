@@ -55,8 +55,10 @@ q <- e$point(-1, 3)
 p + q
 2 * p + q
 e$discriminant
+\donttest{
 EllipticCurve(0, 1)$torsion_points()
 f <- EllipticCurve(1, 0, modulus = 19)
 f$order()
 point_order(f$point(3, 7))
+}
 }

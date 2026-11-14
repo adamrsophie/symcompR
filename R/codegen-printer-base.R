@@ -227,7 +227,7 @@ rm(.cg_n)
     tail <- if (!is.null(cl$tail)) cl$tail else c("CodegenAST", if (isTRUE(cl$expr)) "Expr", "Basic")
     return(c(isa, tail))
   }
-  switch(t,
+  switch(EXPR = t,
          Integer = {
            v <- e$value
            c(if (v == 0) c("Zero", "IntegerConstant") else if (v == 1) c("One", "IntegerConstant")
@@ -238,7 +238,7 @@ rm(.cg_n)
          Symbol = if (.is_idx(e)) c("Idx", "Expr", "Basic") else c("Symbol", "AtomicExpr", "Atom", "Expr", "Boolean", "Basic"),
          Dummy = c("Dummy", "Symbol", "AtomicExpr", "Atom", "Expr", "Boolean", "Basic"),
          Wild = c("Wild", "Symbol", "AtomicExpr", "Atom", "Expr", "Boolean", "Basic"),
-         Constant = switch(e$name,
+         Constant = switch(EXPR = e$name,
                            pi = c("Pi", .CGP_NUMSYM), E = c("Exp1", .CGP_NUMSYM),
                            EulerGamma = c("EulerGamma", .CGP_NUMSYM), Catalan = c("Catalan", .CGP_NUMSYM),
                            GoldenRatio = c("GoldenRatio", .CGP_NUMSYM),
@@ -1099,7 +1099,7 @@ format.cg_pysetobj <- function(x, ...) {
 
 .cgp_sort_optimized <- function(p, indices, expr) {
   if (!length(indices)) return(list())
-  score <- setNames(rep(0, length(indices)), vapply(indices, .k, ""))
+  score <- stats::setNames(rep(0, length(indices)), vapply(indices, .k, ""))
   arrays <- .cg_collect(expr, "Indexed")
   for (arr in arrays) {
     inds <- arr$args[-1L]

@@ -56,6 +56,17 @@ Ops.sym <- function(e1, e2) {
   }
   # Set.__mul__: the Cartesian product
   if (.Generic == "*" && is_set(a) && is_set(b)) return(ProductSet(a, b))
+  # Set.__add__/__or__ union, __and__ intersect, __sub__ Complement, __xor__
+  # (R's ^ between two sets) SymmetricDifference, __pow__ a Cartesian power
+  if (is_set(a) && is_set(b)) {
+    r <- switch(.Generic, "+" = , "|" = Union(a, b), "&" = Intersection(a, b),
+                "-" = Complement(a, b), "^" = SymmetricDifference(a, b), NULL)
+    if (!is.null(r)) return(r)
+  }
+  if (.Generic == "^" && is_set(a) && !is_set(b)) {
+    if (!(b$type == "Integer" && b$value >= 0)) stop("ValueError: ", sstr(b), ": Exponent must be a positive Integer")
+    return(do.call(ProductSet, rep(list(a), as.integer(as.character(b$value)))))
+  }
   switch(.Generic,
          "+" = .add(list(a, b)),
          "-" = .sub(a, b),

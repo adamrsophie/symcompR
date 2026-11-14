@@ -650,6 +650,8 @@ matrix_exp <- function(M) {
 #' @param M A `symmatrix`.
 #' @param vlist A list of column vectors.
 #' @param orthonormal Normalize the vectors.
+#' @param hermitian For `cholesky()` and `LDLdecomposition()`: require a Hermitian
+#'   matrix and use conjugates (SymPy's default); `FALSE` requires a symmetric matrix.
 #' @return A list of matrices.
 #' @export
 LUdecomposition <- function(M) {
@@ -720,37 +722,54 @@ QRdecomposition <- function(M) {
 
 #' @rdname LUdecomposition
 #' @export
-cholesky <- function(M) {
-  M <- Matrix(M)
+cholesky <- function(M, hermitian = TRUE) {
+  M <- .ldl_check(Matrix(M), hermitian)
   n <- M$nrow
   L <- .mrows(zeros(n))
+  cj <- if (hermitian) function(z) fcall("conjugate", list(z)) else identity
   for (i in seq_len(n)) {
-    for (j in seq_len(i)) {
-      s <- .add(lapply(seq_len(j - 1L), function(k) .mul(list(L[[i]][[k]], fcall("conjugate", list(L[[j]][[k]]))))))
-      if (i == j) {
-        L[[i]][[j]] <- simplify(.sqrt(.sub(.mget(M, i, i), s)))
-      } else {
-        L[[i]][[j]] <- simplify(.div(.sub(.mget(M, i, j), s), L[[j]][[j]]))
-      }
+    for (j in seq_len(i - 1L)) {
+      s <- .add(lapply(seq_len(j - 1L), function(k) .mul(list(L[[i]][[k]], cj(L[[j]][[k]])))))
+      L[[i]][[j]] <- .mul(list(.div(S_One, L[[j]][[j]]), .sub(.mget(M, i, j), s)))
     }
+    s <- .add(lapply(seq_len(i - 1L), function(k) if (hermitian) .mul(list(L[[i]][[k]], cj(L[[i]][[k]]))) else .pow(L[[i]][[k]], S_Two)))
+    d <- .sub(.mget(M, i, i), s)
+    if (hermitian && isFALSE(ask_fact(d, "positive"))) stop("NonPositiveDefiniteMatrixError: Matrix must be positive-definite", call. = FALSE)
+    L[[i]][[i]] <- .sqrt(d)
   }
   .from_rows(L)
 }
 
+# _cholesky and _LDLdecomposition: square, then Hermitian (or symmetric)
+.ldl_check <- function(M, hermitian) {
+  if (M$nrow != M$ncol) stop("NonSquareMatrixError: Matrix must be square.", call. = FALSE)
+  if (hermitian && !.is_hermitian(M)) stop("ValueError: Matrix must be Hermitian.", call. = FALSE)
+  if (!hermitian && !is_symmetric(M)) stop("ValueError: Matrix must be symmetric.", call. = FALSE)
+  M
+}
+.is_hermitian <- function(M) all(vapply(seq_along(M$data), function(k) {
+  i <- (k - 1L) %/% M$ncol + 1L
+  j <- (k - 1L) %% M$ncol + 1L
+  is_zero_num(simplify(.sub(.mget(M, i, j), fcall("conjugate", list(.mget(M, j, i))))))
+}, TRUE))
+
 #' @rdname LUdecomposition
 #' @export
-LDLdecomposition <- function(M) {
-  M <- Matrix(M)
+LDLdecomposition <- function(M, hermitian = TRUE) {
+  M <- .ldl_check(Matrix(M), hermitian)
   n <- M$nrow
   L <- .mrows(eye(n))
   D <- rep(list(S_Zero), n)
+  cj <- if (hermitian) function(z) fcall("conjugate", list(z)) else identity
   for (i in seq_len(n)) {
-    for (j in seq_len(i)) {
-      # Hermitian recurrence, as SymPy's default hermitian = TRUE
-      s <- .add(lapply(seq_len(j - 1L), function(k) .mul(list(L[[i]][[k]], conjugate(L[[j]][[k]]), D[[k]]))))
-      if (i == j) D[[i]] <- simplify(.sub(.mget(M, i, i), s))
-      else L[[i]][[j]] <- simplify(.div(.sub(.mget(M, i, j), s), D[[j]]))
+    for (j in seq_len(i - 1L)) {
+      s <- .add(lapply(seq_len(j - 1L), function(k) .mul(list(L[[i]][[k]], cj(L[[j]][[k]]), D[[k]]))))
+      L[[i]][[j]] <- .mul(list(.div(S_One, D[[j]]), .sub(.mget(M, i, j), s)))
     }
+    s <- .add(lapply(seq_len(i - 1L), function(k)
+      if (hermitian) .mul(list(L[[i]][[k]], cj(L[[i]][[k]]), D[[k]])) else .mul(list(.pow(L[[i]][[k]], S_Two), D[[k]]))))
+    D[[i]] <- .sub(.mget(M, i, i), s)
+    if (hermitian && isFALSE(ask_fact(D[[i]], "positive"))) stop("NonPositiveDefiniteMatrixError: Matrix must be positive-definite", call. = FALSE)
   }
   list(L = .from_rows(L), D = diag_matrix(D))
 }
@@ -780,6 +799,9 @@ dot <- function(a, b, doit = FALSE) {
   if (.is_bd(a) || .is_bd(b)) return(.bd_dot_method(a, b))
   a <- Matrix(a)
   b <- Matrix(b)
+  # MatrixBase.dot: two vectors of equal length
+  if (!(1L %in% c(a$nrow, a$ncol)) || !(1L %in% c(b$nrow, b$ncol)) || length(a$data) != length(b$data))
+    stop(sprintf("ShapeError: Dimensions incorrect for dot product: (%d, %d), (%d, %d)", a$nrow, a$ncol, b$nrow, b$ncol), call. = FALSE)
   .add(Map(function(x, y) .mul(list(x, y)), a$data, b$data))
 }
 

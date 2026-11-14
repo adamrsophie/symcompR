@@ -7,7 +7,7 @@
           "floor", "log", "exp", "cbrt", "sqrt", "erf", "erfc", "erfi", "factorial", "gamma", "digamma", "trigamma",
           "polygamma", "beta", "airyai", "airyaiprime", "airybi", "airybiprime", "besselj", "bessely", "besseli",
           "besselk", "erfinv", "erfcinv")
-  c(as.list(setNames(s1, s1)), list(Abs = "abs", ceiling = "ceil", conjugate = "conj", hankel1 = "hankelh1",
+  c(as.list(stats::setNames(s1, s1)), list(Abs = "abs", ceiling = "ceil", conjugate = "conj", hankel1 = "hankelh1",
                                     hankel2 = "hankelh2", im = "imag", re = "real"))
 })
 .cg_kf_octave <- local({
@@ -15,7 +15,7 @@
           "cosh", "tanh", "coth", "csch", "sech", "asinh", "acosh", "atanh", "acoth", "asech", "acsch", "erfc", "erfi",
           "erf", "erfinv", "erfcinv", "besseli", "besselj", "besselk", "bessely", "bernoulli", "beta", "euler", "exp",
           "factorial", "floor", "fresnelc", "fresnels", "gamma", "harmonic", "log", "polylog", "sign", "zeta", "legendre")
-  c(as.list(setNames(s1, s1)), list(Abs = "abs", arg = "angle", binomial = "bincoeff", ceiling = "ceil",
+  c(as.list(stats::setNames(s1, s1)), list(Abs = "abs", arg = "angle", binomial = "bincoeff", ceiling = "ceil",
                                     chebyshevu = "chebyshevU", chebyshevt = "chebyshevT", Chi = "coshint", Ci = "cosint",
                                     conjugate = "conj", DiracDelta = "dirac", Heaviside = "heaviside", im = "imag",
                                     laguerre = "laguerreL", LambertW = "lambertw", li = "logint", loggamma = "gammaln",

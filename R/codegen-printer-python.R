@@ -12,7 +12,7 @@
                  log10 = "log10", log1p = "log1p", log2 = "log2", sin = "sin", sinh = "sinh", Sqrt = "sqrt",
                  tan = "tan", tanh = "tanh")
 .cg_kc_math <- c(Exp1 = "e", Pi = "pi", E = "e", Infinity = "inf", `NaN` = "nan", ComplexInfinity = "nan")
-.cg_prefixed <- function(x, pre) as.list(setNames(paste0(pre, x), names(x)))
+.cg_prefixed <- function(x, pre) as.list(stats::setNames(paste0(pre, x), names(x)))
 
 .cg_kf_numpy <- local({
   m <- .cg_kf_math[!(names(.cg_kf_math) %in% c("erf", "erfc", "factorial", "gamma", "loggamma"))]
@@ -58,7 +58,7 @@ print.cg_modimports <- function(x, ...) {
   }
   if (isTRUE(.cgp_s(p, "fully_qualified_modules"))) return(fqn)
   s <- strsplit(strsplit(fqn, "(", fixed = TRUE)[[1L]][1L], "[", fixed = TRUE)[[1L]][1L]
-  tail(strsplit(s, ".", fixed = TRUE)[[1L]], 1L)
+  utils::tail(strsplit(s, ".", fixed = TRUE)[[1L]], 1L)
 }
 .cgp_print_known_func <- function(p, e) {
   known <- p$known_functions[[.cgp_clsname(e)]]

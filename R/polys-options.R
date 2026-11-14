@@ -528,8 +528,10 @@
 #' @examples
 #' x <- Symbol("x")
 #' primitive_element(list(sqrt(Integer(2)), sqrt(Integer(3))), x)
+#' \donttest{
 #' field_isomorphism(sqrt(Integer(2)), sqrt(Integer(2)) + sqrt(Integer(3)))
 #' to_number_field(sqrt(Integer(2)), sqrt(Integer(2)) + sqrt(Integer(3)))
+#' }
 #' @name primitive_element
 NULL
 

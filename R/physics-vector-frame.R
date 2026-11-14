@@ -66,13 +66,13 @@
     special <- if (identical(v$key, S_Zero$key)) "Zero" else if (identical(v$key, S_One$key)) "One"
                else if (identical(v$key, S_NegativeOne$key)) "NegativeOne" else if (identical(v$key, S_Half$key)) "Half"
     if (!is.null(special)) return(paste0("<class 'sympy.core.numbers.", special, "'>"))
-    mod <- switch(v$type,
+    mod <- switch(EXPR = v$type,
                   Symbol = "sympy.core.symbol.Symbol", Dummy = "sympy.core.symbol.Dummy",
                   Integer = , Rational = , Float = paste0("sympy.core.numbers.", v$type),
                   Add = "sympy.core.add.Add", Mul = "sympy.core.mul.Mul",
                   Pow = "sympy.core.power.Pow", NULL)
     if (is.null(mod) && v$type == "Constant") {
-      mod <- switch(v$name, pi = "sympy.core.numbers.Pi", E = "sympy.core.numbers.Exp1",
+      mod <- switch(EXPR = v$name, pi = "sympy.core.numbers.Pi", E = "sympy.core.numbers.Exp1",
                     paste0("sympy.core.numbers.", v$name))
     }
     if (is.null(mod) && v$type == "Function") {

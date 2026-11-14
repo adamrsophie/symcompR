@@ -4927,10 +4927,12 @@ qs <- function(N, prime_bound, M, ERROR_TERM = 25, seed = 1234) {
 #' p + q
 #' 2 * p + q
 #' e$discriminant
+#' \donttest{
 #' EllipticCurve(0, 1)$torsion_points()
 #' f <- EllipticCurve(1, 0, modulus = 19)
 #' f$order()
 #' point_order(f$point(3, 7))
+#' }
 #' @export
 EllipticCurve <- function(a4, a6, a1 = 0, a2 = 0, a3 = 0, modulus = 0) {
   modulus <- .nt_int(modulus)

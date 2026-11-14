@@ -60,5 +60,7 @@ as SymPy does; \code{+} and \code{-} add series with the same period.
 x <- Symbol("x")
 s <- fourier_series(x^2, list(x, -pi, pi))
 truncate(s, 4)
+\donttest{
 fourier_series(sin(x)^2)
+}
 }
