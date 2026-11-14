@@ -171,7 +171,8 @@ solve_linear_system_LU <- function(M, syms) {
   lu <- LUdecomposition(A)
   L <- .mrows(lu$L)
   U <- .mrows(lu$U)
-  pb <- b[lu$perm]
+  pb <- b
+  for (sw in lu$perm) { tmp <- pb[[sw[1L]]]; pb[[sw[1L]]] <- pb[[sw[2L]]]; pb[[sw[2L]]] <- tmp }
   # Matrix.LUsolve: forward and backward substitution without simplification
   xs <- pb
   for (i in seq_len(n)) if (i > 1L) for (j in seq_len(i - 1L)) xs[[i]] <- .sub(xs[[i]], .mul(list(L[[i]][[j]], xs[[j]])))

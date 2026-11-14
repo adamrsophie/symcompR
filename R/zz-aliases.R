@@ -946,6 +946,7 @@ is_monotonic <- function(f, interval = Reals, x = NULL) {
 #' @rdname calculus-utils
 #' @export
 is_convex <- function(f, x = NULL, domain = Reals) {
+  if (inherits(f, "GeoPolygon")) return(.mg_poly_is_convex(f))
   f <- as_sym(f); if (is.null(x)) x <- .first_free(f)
   x <- as_sym(x)
   .sign_on(.diff1(.diff1(f, x), x), x, domain, "GreaterThan")
@@ -1462,50 +1463,25 @@ register_str_printer("PowerSet", function(e) paste0("PowerSet(", .str(e$args[[1L
   FiniteSet(lapply(subsets(s$args), function(sub) if (length(sub)) FiniteSet(sub) else S_EmptySet))
 }
 
-#' Geometry aliases and helpers
+#' Angle conversion
 #'
-#' `Point2D()`, `Line2D()` and `Segment2D()` are the 2D constructors.
-#' `rad()` and `deg()` convert angles. `RegularPolygon(center, r, n)` gives
-#' the vertices of a regular polygon as a [Polygon()]. `convex_hull()`
-#' returns the hull of points (Andrew's monotone chain), and
-#' `closest_points()` and `farthest_points()` the pairs at minimal and
-#' maximal distance.
+#' `rad()` and `deg()` convert degrees to radians and back, as
+#' `sympy.geometry.polygon.rad` and `deg`.
 #'
-#' @param ... Coordinates or points.
-#' @param p,q Points.
 #' @param x An angle.
-#' @param center,r,n Regular polygon data.
-#' @return A geometric entity, expression or list.
+#' @return An expression.
 #' @examples
-#' convex_hull(Point(0, 0), Point(1, 1), Point(2, 0), Point(1, 0.5), Point(1, -1))
+#' rad(180)
+#' deg(pi / 3)
 #' @name geometry-aliases
 NULL
 
-#' @rdname geometry-aliases
-#' @export
-Point2D <- function(...) Point(...)
-#' @rdname geometry-aliases
-#' @export
-Line2D <- function(p, q) Line(p, q)
-#' @rdname geometry-aliases
-#' @export
-Segment2D <- function(p, q) Segment(p, q)
 #' @rdname geometry-aliases
 #' @export
 rad <- function(x) .mul(list(as_sym(x), S_Pi, .rat(1L, 180L)))
 #' @rdname geometry-aliases
 #' @export
 deg <- function(x) .mul(list(as_sym(x), .int(180), .inv(S_Pi)))
-#' @rdname geometry-aliases
-#' @export
-RegularPolygon <- function(center, r, n) {
-  c <- center$coords
-  do.call(Polygon, lapply(seq_len(n) - 1L, function(k) {
-    ang <- .mul(list(.rat(2L * k, n), S_Pi))
-    Point(.add(list(c[[1L]], .mul(list(as_sym(r), fcall("cos", list(ang)))))),
-          .add(list(c[[2L]], .mul(list(as_sym(r), fcall("sin", list(ang)))))))
-  }))
-}
 
 # Sign of a - b, exactly when possible.
 .sgn_cmp <- function(a, b) {
@@ -1513,65 +1489,6 @@ RegularPolygon <- function(center, r, n) {
   if (!is.na(r)) return(r)
   sign(as.numeric(N(.sub(as_sym(a), as_sym(b)))))
 }
-
-#' @rdname geometry-aliases
-#' @export
-convex_hull <- function(...) {
-  pts <- list(...)
-  pts <- pts[!duplicated(vapply(pts, function(p) paste(vapply(p$coords, .k, ""), collapse = ","), ""))]
-  if (length(pts) == 1L) return(pts[[1L]])
-  before <- function(p, q) {
-    c1 <- .sgn_cmp(p$coords[[1L]], q$coords[[1L]])
-    c1 < 0 || (c1 == 0 && .sgn_cmp(p$coords[[2L]], q$coords[[2L]]) < 0)
-  }
-  # ponytail: insertion sort with exact comparisons; fine for small point sets
-  o <- list()
-  for (p in pts) {
-    k <- length(o)
-    while (k > 0 && before(p, o[[k]])) k <- k - 1L
-    o <- append(o, list(p), after = k)
-  }
-  pts <- o
-  cross2 <- function(o, a, b) {
-    P <- pts[[o]]$coords; A <- pts[[a]]$coords; B <- pts[[b]]$coords
-    .sgn_cmp(.mul(list(.sub(A[[1L]], P[[1L]]), .sub(B[[2L]], P[[2L]]))),
-             .mul(list(.sub(A[[2L]], P[[2L]]), .sub(B[[1L]], P[[1L]]))))
-  }
-  lower <- integer(); upper <- integer()
-  for (i in seq_along(pts)) {
-    while (length(lower) >= 2L && cross2(lower[length(lower) - 1L], lower[length(lower)], i) <= 0) lower <- lower[-length(lower)]
-    lower <- c(lower, i)
-  }
-  for (i in rev(seq_along(pts))) {
-    while (length(upper) >= 2L && cross2(upper[length(upper) - 1L], upper[length(upper)], i) <= 0) upper <- upper[-length(upper)]
-    upper <- c(upper, i)
-  }
-  idx <- c(lower[-length(lower)], upper[-length(upper)])
-  if (length(idx) == 2L) return(Segment(pts[[idx[1L]]], pts[[idx[2L]]]))
-  do.call(Polygon, pts[idx])
-}
-.pair_search <- function(pts, best) {
-  pts <- pts[!duplicated(vapply(pts, function(p) paste(vapply(p$coords, .k, ""), collapse = ","), ""))]
-  out <- list()
-  bv <- NULL
-  for (i in seq_len(length(pts) - 1L)) for (j in (i + 1L):length(pts)) {
-    d <- distance(pts[[i]], pts[[j]])
-    c1 <- if (is.null(bv)) best else .sgn_cmp(d, bv)
-    if (c1 == best) {
-      bv <- d
-      out <- list(list(pts[[i]], pts[[j]]))
-    } else if (c1 == 0) {
-      out[[length(out) + 1L]] <- list(pts[[i]], pts[[j]])
-    }
-  }
-  out
-}
-#' @rdname geometry-aliases
-#' @export
-closest_points <- function(...) .pair_search(list(...), -1)
-#' @rdname geometry-aliases
-#' @export
-farthest_points <- function(...) .pair_search(list(...), 1)
 
 #' Printing helpers
 #'

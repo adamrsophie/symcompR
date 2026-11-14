@@ -85,6 +85,7 @@
 #' free_symbols(x^2 + y)
 #' @export
 free_symbols <- function(e) {
+  if (inherits(e, "GeoEntity")) return(.mg_geo_free(e))
   if (inherits(e, "symmatrix")) {
     out <- list()
     for (a in e$data) out <- c(out, free_symbols(a))
@@ -271,6 +272,7 @@ has <- function(e, ...) {
 #' subs(x * y + 1, x * y, Symbol("z"))
 #' @export
 subs <- function(e, ..., simultaneous = FALSE) {
+  if (inherits(e, "GeoEntity")) return(.mg_geo_subs(e, ...))
   if (inherits(e, "symmatrix")) {
     a <- list(...)
     return(.mat_map(e, function(z) do.call(subs, c(list(z), a, list(simultaneous = simultaneous)))))

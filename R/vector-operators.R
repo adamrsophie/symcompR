@@ -417,6 +417,12 @@ matrix_to_dyadic <- function(matrix, system) {
 #' @export
 orthogonalize <- function(..., orthonormal = FALSE) {
   vlist <- list(...)
+  if (length(vlist) && inherits(vlist[[1L]], "symmatrix")) {
+    nm <- names(vlist)
+    opt <- if (is.null(nm)) list() else vlist[nzchar(nm)]
+    v <- if (is.null(nm)) vlist else vlist[!nzchar(nm)]
+    return(.mg_orthogonalize(v, normalize = isTRUE(opt$normalize) || isTRUE(orthonormal), rankcheck = isTRUE(opt$rankcheck)))
+  }
   if (!all(vapply(vlist, .is_vec, TRUE))) .vec_stop("TypeError", "Each element must be of Type Vector")
   ortho <- list()
   for (i in seq_along(vlist)) {

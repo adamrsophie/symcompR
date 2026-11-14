@@ -97,6 +97,7 @@
 N <- function(e, digits = 15, subs = list(), maxn = 100, chop = FALSE, strict = FALSE,
               quad = NULL, verbose = FALSE) {
   if (inherits(e, "pyobj")) return(.pyobj_evalf(e, digits))
+  if (inherits(e, "GeoEntity")) return(.mg_geo_evalf(e, digits))
   if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) N(z, digits, subs, maxn, chop, strict, quad, verbose)))
   if (is.list(e) && !inherits(e, "sym"))
     return(lapply(e, N, digits = digits, subs = subs, maxn = maxn, chop = chop, strict = strict, quad = quad, verbose = verbose))

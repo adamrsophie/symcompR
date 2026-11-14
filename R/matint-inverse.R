@@ -353,5 +353,8 @@
     LU = .matint_lusolve(M, eye(M$nrow), iszerofunc),
     ADJ = .matint_inv_adj(M, iszerofunc),
     BLOCK = .matint_inv_block(M, iszerofunc),
+    CH = .mg_inv_ch(M, iszerofunc),
+    LDL = .mg_inv_ldl(M, iszerofunc),
+    QR = .mg_inv_qr(M, iszerofunc),
     stop(.sympy_condition("ValueError", "Inversion method unrecognized")))
 }

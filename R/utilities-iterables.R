@@ -152,6 +152,7 @@ common_suffix <- function(...) {
 #' @rdname iterables
 #' @export
 strongly_connected_components <- function(G) {
+  if (inherits(G, "symmatrix")) return(.mg_components(G, TRUE))
   V <- G[[1L]]; E <- G[[2L]]
   vk <- vapply(V, .it_key, "")
   Gmap <- stats::setNames(rep(list(integer()), length(V)), vk)
@@ -206,6 +207,7 @@ strongly_connected_components <- function(G) {
 #' @rdname iterables
 #' @export
 connected_components <- function(G) {
+  if (inherits(G, "symmatrix")) return(.mg_components(G, FALSE))
   E <- unlist(lapply(G[[2L]], function(e) list(list(e[[1L]], e[[2L]]), list(e[[2L]], e[[1L]]))), recursive = FALSE)
   strongly_connected_components(list(G[[1L]], E))
 }

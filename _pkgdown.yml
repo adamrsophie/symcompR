@@ -345,6 +345,19 @@ reference:
   - left_eigenvects
   - jordan_form
   - LUdecomposition
+  - LUdecomposition_Simple
+  - matrix_pow
+  - matrix_log
+  - jordan_block
+  - echelon_form
+  - row_insert
+  - minor_submatrix
+  - is_upper
+  - inverse_GE
+  - diagonal_solve
+  - condition_number
+  - connected_components_decomposition
+  - normalized_vector
   - hermite_normal_form
   - smith_normal_decomp
   - matrix_exp
@@ -461,7 +474,14 @@ reference:
 - title: Geometry
   contents:
   - Point
-  - geometry-3d
+  - Line
+  - Ellipse
+  - Polygon
+  - Plane
+  - Curve
+  - geometry-operators
+  - geometry-shared
+  - geometry-transformations
   - geometry-aliases
 - title: Vectors
   contents:

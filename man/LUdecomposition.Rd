@@ -8,7 +8,7 @@
 \alias{LDLdecomposition}
 \title{Matrix decompositions}
 \usage{
-LUdecomposition(M)
+LUdecomposition(M, iszerofunc = NULL, simpfunc = NULL, rankcheck = FALSE)
 
 GramSchmidt(vlist, orthonormal = FALSE)
 
@@ -21,6 +21,10 @@ LDLdecomposition(M, hermitian = TRUE)
 \arguments{
 \item{M}{A \code{symmatrix}.}
 
+\item{iszerofunc, simpfunc, rankcheck}{For \code{LUdecomposition()}: the zero
+test, an optional simplification for the pivot search, and whether to
+raise for a rank deficient matrix.}
+
 \item{vlist}{A list of column vectors.}
 
 \item{orthonormal}{Normalize the vectors.}
@@ -32,7 +36,8 @@ matrix and use conjugates (SymPy's default); \code{FALSE} requires a symmetric m
 A list of matrices.
 }
 \description{
-\code{LUdecomposition()} returns \code{list(L, U, perm)} with \code{P*M = L*U};
+\code{LUdecomposition()} returns \code{list(L, U, perm)} with \code{P*M = L*U}, where
+\code{perm} lists the row swaps (1 based) that make \code{P};
 \code{QRdecomposition()} returns \code{list(Q, R)} by Gram-Schmidt;
 \code{cholesky()} returns \code{L} with \code{M = L*t(L)} for symmetric positive definite
 matrices; \code{LDLdecomposition()} returns \code{list(L, D)}. \code{GramSchmidt()}

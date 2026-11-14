@@ -12,7 +12,7 @@
 \alias{pinv}
 \title{Matrix utilities}
 \usage{
-dot(a, b, doit = FALSE)
+dot(a, b, doit = FALSE, hermitian = NULL, conjugate_convention = NULL)
 
 cross(a, b, doit = FALSE)
 
@@ -35,6 +35,11 @@ pinv(M)
 the \code{\link[=Del]{Del()}} operator, for which the methods of \code{sympy.vector} apply.}
 
 \item{doit}{For the del operator: evaluate the derivatives.}
+
+\item{hermitian}{Conjugate one of the vectors.}
+
+\item{conjugate_convention}{Which vector to conjugate: \code{"maths"} or
+\code{"left"} the first, \code{"physics"} or \code{"right"} the second.}
 
 \item{M}{A matrix.}
 

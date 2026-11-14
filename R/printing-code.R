@@ -212,7 +212,10 @@ lambdify <- function(args, e) {
   args <- .as_gens(list(args))
   nms <- vapply(args, function(s) s$name, "")
   .cg_imp_namespace(e)
-  body <- if (is.list(e) && !inherits(e, "sym")) as.call(c(list(as.name("list")), lapply(e, function(z) .to_call(as_sym(z)))))
+  body <- if (inherits(e, "symmatrix"))
+            as.call(c(list(as.name("matrix"), as.call(c(list(as.name("c")), lapply(e$data, .to_call)))),
+                      list(nrow = e$nrow, ncol = e$ncol, byrow = TRUE)))
+          else if (is.list(e) && !inherits(e, "sym")) as.call(c(list(as.name("list")), lapply(e, function(z) .to_call(as_sym(z)))))
           else .to_call(as_sym(e))
   fn <- function() NULL
   formals(fn) <- stats::setNames(rep(list(quote(expr = )), length(nms)), nms)

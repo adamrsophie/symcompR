@@ -289,25 +289,7 @@ matrixOps.symmatrix <- function(x, y) {
 #' @rdname Matrix
 #' @param A A matrix.
 #' @export
-`%^%` <- function(A, n) {
-  A <- Matrix(A)
-  if (A$nrow != A$ncol) stop(NonSquareMatrixError("matrix power needs a square matrix"))
-  n <- as_sym(n)
-  if (n$type != "Integer") return(.matrix_function(A, function(l, t) .pow(l, n)))
-  k <- gmp::numerator(n$value)
-  if (k < 0) {
-    A <- inverse(A)
-    k <- -k
-  }
-  res <- eye(A$nrow)
-  base <- A
-  while (k > 0) {
-    if (k %% 2 == 1) res <- .mat_map(.matmul(res, base), expand)
-    k <- k %/% 2
-    if (k > 0) base <- .mat_map(.matmul(base, base), expand)
-  }
-  res
-}
+`%^%` <- function(A, n) matrix_pow(A, n)
 
 #' @export
 cbind.symmatrix <- function(..., deparse.level = 1) {
@@ -375,13 +357,20 @@ det <- function(x, ...) {
   base::det(x, ...)
 }
 
-.det <- function(M, method = "bareiss") {
-  if (M$nrow != M$ncol) stop(NonSquareMatrixError("determinant needs a square matrix"))
+.det <- function(M, method = "bareiss", iszerofunc = NULL) {
+  if (is.character(iszerofunc) && !iszerofunc %in% c("_is_zero_after_expand_mul"))
+    stop(.sympy_condition("ValueError", sprintf("Zero testing method '%s' unrecognized", iszerofunc)))
+  if (M$nrow != M$ncol) stop(NonSquareMatrixError(""))
+  method <- tolower(method)
+  if (method == "bareis") method <- "bareiss" else if (method == "det_lu") method <- "lu"
+  else if (method %in% c("domain-ge", "domain_ge")) method <- "bareiss"
   switch(method,
          bareiss = .det_bareiss(.mrows(M)),
          berkowitz = .det_berkowitz(M),
          laplace = .det_laplace(M),
-         stop("unknown determinant method"))
+         lu = .mg_det_lu(M),
+         bird = .mg_det_bird(M),
+         stop(.sympy_condition("ValueError", sprintf("Determinant method '%s' unrecognized", method))))
 }
 
 .det_laplace <- function(M) {
@@ -470,28 +459,33 @@ rowspace <- function(M) {
 
 #' @rdname sym_det
 #' @export
-minor <- function(M, i, j) {
+minor <- function(M, i, j, method = "berkowitz") {
   if (inherits(M, "GeoEllipse")) return(.ellipse_minor(M))
-  det(M[-i, -j, drop = FALSE])
+  M <- Matrix(M)
+  if (M$nrow != M$ncol || M$nrow < 1L) stop(NonSquareMatrixError(""))
+  if (i < 1L || i > M$nrow || j < 1L || j > M$ncol)
+    stop(.sympy_condition("ValueError", sprintf("`i` and `j` must satisfy 1 <= i <= ``M.rows`` (%d)and 1 <= j <= ``M.cols`` (%d).", M$nrow, M$ncol)))
+  .det(M[-i, -j, drop = FALSE], method)
 }
 
 #' @rdname sym_det
 #' @export
-cofactor <- function(M, i, j) {
-  m <- minor(M, i, j)
+cofactor <- function(M, i, j, method = "berkowitz") {
+  m <- minor(M, i, j, method)
   if ((i + j) %% 2L == 1L) .neg(m) else m
 }
 
 #' @rdname sym_det
 #' @export
-cofactor_matrix <- function(M) {
+cofactor_matrix <- function(M, method = "berkowitz") {
   M <- Matrix(M)
-  Matrix(M$nrow, M$ncol, function(i, j) cofactor(M, i, j))
+  if (M$nrow != M$ncol) stop(NonSquareMatrixError(""))
+  Matrix(M$nrow, M$ncol, function(i, j) cofactor(M, i, j, method))
 }
 
 #' @rdname sym_det
 #' @export
-adjugate <- function(M) t(cofactor_matrix(M))
+adjugate <- function(M, method = "berkowitz") t(cofactor_matrix(M, method))
 
 #' @rdname sym_det
 #' @export
@@ -641,7 +635,8 @@ matrix_exp <- function(M) {
 
 #' Matrix decompositions
 #'
-#' `LUdecomposition()` returns `list(L, U, perm)` with `P*M = L*U`;
+#' `LUdecomposition()` returns `list(L, U, perm)` with `P*M = L*U`, where
+#' `perm` lists the row swaps (1 based) that make `P`;
 #' `QRdecomposition()` returns `list(Q, R)` by Gram-Schmidt;
 #' `cholesky()` returns `L` with `M = L*t(L)` for symmetric positive definite
 #' matrices; `LDLdecomposition()` returns `list(L, D)`. `GramSchmidt()`
@@ -650,75 +645,31 @@ matrix_exp <- function(M) {
 #' @param M A `symmatrix`.
 #' @param vlist A list of column vectors.
 #' @param orthonormal Normalize the vectors.
+#' @param iszerofunc,simpfunc,rankcheck For `LUdecomposition()`: the zero
+#'   test, an optional simplification for the pivot search, and whether to
+#'   raise for a rank deficient matrix.
 #' @param hermitian For `cholesky()` and `LDLdecomposition()`: require a Hermitian
 #'   matrix and use conjugates (SymPy's default); `FALSE` requires a symmetric matrix.
 #' @return A list of matrices.
 #' @export
-LUdecomposition <- function(M) {
+LUdecomposition <- function(M, iszerofunc = NULL, simpfunc = NULL, rankcheck = FALSE) {
   M <- Matrix(M)
-  n <- M$nrow
-  m <- M$ncol
-  U <- .mrows(M)
-  L <- .mrows(eye(n))
-  perm <- seq_len(n)
-  for (k in seq_len(min(n, m))) {
-    if (is_zero_num(cancel(U[[k]][[k]]))) {
-      sw <- NA
-      if (k < n) for (i in (k + 1L):n) if (!is_zero_num(cancel(U[[i]][[k]]))) {
-        sw <- i
-        break
-      }
-      if (is.na(sw)) next
-      tmp <- U[[k]]; U[[k]] <- U[[sw]]; U[[sw]] <- tmp
-      if (k > 1L) for (j in seq_len(k - 1L)) {
-        tmp <- L[[k]][[j]]; L[[k]][[j]] <- L[[sw]][[j]]; L[[sw]][[j]] <- tmp
-      }
-      tp <- perm[k]; perm[k] <- perm[sw]; perm[sw] <- tp
-    }
-    if (k < n) for (i in (k + 1L):n) {
-      f <- cancel(.div(U[[i]][[k]], U[[k]][[k]]))
-      L[[i]][[k]] <- f
-      U[[i]] <- lapply(seq_len(m), function(j) cancel(.sub(U[[i]][[j]], .mul(list(f, U[[k]][[j]])))))
-    }
-  }
-  list(L = .from_rows(L), U = .from_rows(U), perm = perm)
+  r <- .mg_lu(M, iszerofunc, simpfunc, rankcheck)
+  cm <- r$lu
+  L <- .mg_new(cm$nrow, cm$nrow, function(i, j) if (i < j) S_Zero else if (i == j) S_One else if (j <= cm$ncol) .mget(cm, i, j) else S_Zero)
+  U <- .mg_new(cm$nrow, cm$ncol, function(i, j) if (i > j) S_Zero else .mget(cm, i, j))
+  list(L = L, U = U, perm = r$swaps)
 }
 
 #' @rdname LUdecomposition
 #' @export
-GramSchmidt <- function(vlist, orthonormal = FALSE) {
-  vlist <- lapply(vlist, Matrix)
-  out <- list()
-  for (v in vlist) {
-    w <- v
-    for (u in out) {
-      coef <- .div(.dot(u, v), .dot(u, u))
-      w <- w - .mat_map(u, function(z) .mul(list(z, coef)))
-    }
-    w <- .mat_map(w, simplify)
-    if (all(vapply(w$data, is_zero_num, TRUE))) next
-    out[[length(out) + 1L]] <- w
-  }
-  if (orthonormal) out <- lapply(out, function(w) {
-    nrm <- .sqrt(.dot(w, w))
-    .mat_map(w, function(z) simplify(.div(z, nrm)))
-  })
-  out
-}
+GramSchmidt <- function(vlist, orthonormal = FALSE) .mg_orthogonalize(vlist, normalize = orthonormal, rankcheck = TRUE)
 
 .dot <- function(a, b) .add(Map(function(x, y) .mul(list(fcall("conjugate", list(x)), y)), a$data, b$data))
 
 #' @rdname LUdecomposition
 #' @export
-QRdecomposition <- function(M) {
-  M <- Matrix(M)
-  cols <- lapply(seq_len(M$ncol), function(j) M[, j, drop = FALSE])
-  Q <- GramSchmidt(cols, orthonormal = TRUE)
-  if (!length(Q)) return(list(Q = zeros(M$nrow, 0L), R = zeros(0L, M$ncol)))
-  Qm <- do.call(cbind.symmatrix, Q)
-  R <- .mat_map(.matmul(t(.mat_map(Qm, function(z) fcall("conjugate", list(z)))), M), simplify)
-  list(Q = Qm, R = R)
-}
+QRdecomposition <- function(M) .mg_qr(Matrix(M), normalize = TRUE)
 
 #' @rdname LUdecomposition
 #' @export
@@ -734,7 +685,7 @@ cholesky <- function(M, hermitian = TRUE) {
     }
     s <- .add(lapply(seq_len(i - 1L), function(k) if (hermitian) .mul(list(L[[i]][[k]], cj(L[[i]][[k]]))) else .pow(L[[i]][[k]], S_Two)))
     d <- .sub(.mget(M, i, i), s)
-    if (hermitian && isFALSE(ask_fact(d, "positive"))) stop("NonPositiveDefiniteMatrixError: Matrix must be positive-definite", call. = FALSE)
+    if (hermitian && isFALSE(ask_fact(d, "positive"))) stop(NonPositiveDefiniteMatrixError("Matrix must be positive-definite"))
     L[[i]][[i]] <- .sqrt(d)
   }
   .from_rows(L)
@@ -742,9 +693,9 @@ cholesky <- function(M, hermitian = TRUE) {
 
 # _cholesky and _LDLdecomposition: square, then Hermitian (or symmetric)
 .ldl_check <- function(M, hermitian) {
-  if (M$nrow != M$ncol) stop("NonSquareMatrixError: Matrix must be square.", call. = FALSE)
-  if (hermitian && !.is_hermitian(M)) stop("ValueError: Matrix must be Hermitian.", call. = FALSE)
-  if (!hermitian && !is_symmetric(M)) stop("ValueError: Matrix must be symmetric.", call. = FALSE)
+  if (M$nrow != M$ncol) stop(NonSquareMatrixError("Matrix must be square."))
+  if (hermitian && !.is_hermitian(M)) stop(.sympy_condition("ValueError", "Matrix must be Hermitian."))
+  if (!hermitian && !is_symmetric(M)) stop(.sympy_condition("ValueError", "Matrix must be symmetric."))
   M
 }
 .is_hermitian <- function(M) all(vapply(seq_along(M$data), function(k) {
@@ -769,7 +720,7 @@ LDLdecomposition <- function(M, hermitian = TRUE) {
     s <- .add(lapply(seq_len(i - 1L), function(k)
       if (hermitian) .mul(list(L[[i]][[k]], cj(L[[i]][[k]]), D[[k]])) else .mul(list(.pow(L[[i]][[k]], S_Two), D[[k]]))))
     D[[i]] <- .sub(.mget(M, i, i), s)
-    if (hermitian && isFALSE(ask_fact(D[[i]], "positive"))) stop("NonPositiveDefiniteMatrixError: Matrix must be positive-definite", call. = FALSE)
+    if (hermitian && isFALSE(ask_fact(D[[i]], "positive"))) stop(NonPositiveDefiniteMatrixError("Matrix must be positive-definite"))
   }
   list(L = .from_rows(L), D = diag_matrix(D))
 }
@@ -789,11 +740,15 @@ LDLdecomposition <- function(M, hermitian = TRUE) {
 #' @param a,b Vectors as matrices, or [CoordSys3D()] vectors, dyadics and
 #'   the [Del()] operator, for which the methods of `sympy.vector` apply.
 #' @param doit For the del operator: evaluate the derivatives.
+#' @param hermitian Conjugate one of the vectors.
+#' @param conjugate_convention Which vector to conjugate: `"maths"` or
+#'   `"left"` the first, `"physics"` or `"right"` the second.
 #' @param M A matrix.
 #' @param f A function applied to each entry.
 #' @return An expression or matrix.
 #' @export
-dot <- function(a, b, doit = FALSE) {
+dot <- function(a, b, doit = FALSE, hermitian = NULL, conjugate_convention = NULL) {
+  if (inherits(a, "GeoPoint")) return(.mg_pdot(a, if (inherits(b, "GeoPoint")) b else Point(b)))
   if (.pv_dispatch(a, b)) return(.pv_dot_dispatch(a, b))
   if (inherits(a, "Del")) return(.vec_divergence(b, doit = doit))
   if (.is_bd(a) || .is_bd(b)) return(.bd_dot_method(a, b))
@@ -802,6 +757,13 @@ dot <- function(a, b, doit = FALSE) {
   # MatrixBase.dot: two vectors of equal length
   if (!(1L %in% c(a$nrow, a$ncol)) || !(1L %in% c(b$nrow, b$ncol)) || length(a$data) != length(b$data))
     stop(sprintf("ShapeError: Dimensions incorrect for dot product: (%d, %d), (%d, %d)", a$nrow, a$ncol, b$nrow, b$ncol), call. = FALSE)
+  if (!is.null(conjugate_convention) && is.null(hermitian)) hermitian <- TRUE
+  if (isTRUE(hermitian) && is.null(conjugate_convention)) conjugate_convention <- "maths"
+  if (isTRUE(hermitian)) {
+    if (conjugate_convention %in% c("maths", "left", "math")) a <- conjugate(a)
+    else if (conjugate_convention %in% c("physics", "right")) b <- conjugate(b)
+    else stop(.sympy_condition("ValueError", "Unknown conjugate_convention was entered. conjugate_convention must be one of the following: math, maths, left, physics or right."))
+  }
   .add(Map(function(x, y) .mul(list(x, y)), a$data, b$data))
 }
 

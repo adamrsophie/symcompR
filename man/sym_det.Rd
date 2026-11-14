@@ -36,13 +36,13 @@ columnspace(M)
 
 rowspace(M)
 
-minor(M, i, j)
+minor(M, i, j, method = "berkowitz")
 
-cofactor(M, i, j)
+cofactor(M, i, j, method = "berkowitz")
 
-cofactor_matrix(M)
+cofactor_matrix(M, method = "berkowitz")
 
-adjugate(M)
+adjugate(M, method = "berkowitz")
 
 trace_matrix(M)
 

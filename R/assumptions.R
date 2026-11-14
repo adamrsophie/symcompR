@@ -848,10 +848,10 @@ is_positive <- function(e) ask_fact(e, "positive")
 is_negative <- function(e) ask_fact(e, "negative")
 #' @rdname assumption-queries
 #' @export
-is_zero <- function(e) ask_fact(e, "zero")
+is_zero <- function(e) if (inherits(e, "GeoPoint")) .mg_pt_is_zero(e) else ask_fact(e, "zero")
 #' @rdname assumption-queries
 #' @export
-is_nonzero <- function(e) ask_fact(e, "nonzero")
+is_nonzero <- function(e) if (inherits(e, "GeoPoint")) !.mg_pt_is_zero(e) else ask_fact(e, "nonzero")
 #' @rdname assumption-queries
 #' @export
 is_nonnegative <- function(e) ask_fact(e, "nonnegative")

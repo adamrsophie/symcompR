@@ -87,6 +87,7 @@ sym_type <- function(e) as_sym(e)$type
 #' @return A list of `sym` expressions.
 #' @export
 sym_args <- function(e) {
+  if (inherits(e, "GeoEntity")) return(.mg_geo_args(e))
   # a mutable Matrix has no .args in SymPy
   if (inherits(e, "symmatrix"))
     stop(.sympy_condition("AttributeError", "'MutableDenseMatrix' object has no attribute 'args'"))
