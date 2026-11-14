@@ -105,3 +105,9 @@ test_that("heurisch visits Bessel functions of higher order first", {
   expect_identical(sstr(heurisch((nu * besselj(nu, x) - x * besselj(nu + 1, x)) / x, x)), "besselj(nu, x)")
   expect_null(heurisch(besselj(nu, x) * x, x))
 })
+
+test_that("a rebuilt power stays a nested Mul as in Mul.flatten", {
+  got <- vapply(list(sqrt(1 / (2 * (2 - sym_I)^2)), sqrt(3 / (2 - sym_I)^2),
+                     (1 / (8 * (1 + sym_I)^2))^Rational(1, 3)), sstr, "")
+  expect_identical(got, c("sqrt(2)*((2 + I)/5)/2", "sqrt(3)*((2 + I)/5)", "((1 + I)^(-2))^(1/3)/2"))
+})

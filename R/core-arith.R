@@ -709,7 +709,19 @@ as_coeff_mul_split <- function(a) {
     om <- .mul(other)
     # Mul.flatten rebuilds each collected power with Pow(b, e), so a single
     # remaining factor gets its own _eval_power, as (2 - I)^(-2) does
-    parts[[length(parts) + 1L]] <- if (is_number_type(om) || length(other) == 1L) .pow(om, e) else new_sym("Pow", list(om, e))
+    pe <- if (is_number_type(om) || length(other) == 1L) .pow(om, e) else new_sym("Pow", list(om, e))
+    # Mul.flatten appends that rebuilt power to c_part as it is, so a Mul
+    # such as (2 + I)/5 stays nested: sqrt(2)*((2 + I)/5)/2
+    if (pe$type == "Mul" && !is_number_type(om)) {
+      r <- .mul(parts)
+      if (is_one_num(r)) return(pe)
+      ra <- if (r$type == "Mul") r$args else list(r)
+      co <- if (is_number_type(ra[[1L]])) ra[1L] else list()
+      rest <- c(if (length(co)) ra[-1L] else ra, list(pe))
+      rest <- .key_sort(lapply(rest, .sort_key), rest)
+      return(new_sym("Mul", c(co, rest)))
+    }
+    parts[[length(parts) + 1L]] <- pe
   }
   .mul(parts)
 }
