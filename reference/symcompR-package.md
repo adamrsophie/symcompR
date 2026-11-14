@@ -34,3 +34,13 @@ holder\]
 Authors:
 
 - Adam R Sophie <adamrsophie@gmail.com> \[copyright holder\]
+
+Other contributors:
+
+- SymPy Development Team (Author of 'SymPy', from which the algorithms
+  are ported) \[copyright holder\]
+
+- Fredrik Johansson (Author of 'mpmath', from which the multiprecision
+  code is ported) \[copyright holder\]
+
+- mpmath contributors \[copyright holder\]

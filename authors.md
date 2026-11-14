@@ -4,6 +4,14 @@
 
 - **Adam R Sophie**. Author, maintainer, copyright holder.
 
+- **SymPy Development Team**. Copyright holder.  
+  Author of 'SymPy', from which the algorithms are ported
+
+- **Fredrik Johansson**. Copyright holder.  
+  Author of 'mpmath', from which the multiprecision code is ported
+
+- **mpmath contributors**. Copyright holder.
+
 ## Citation
 
 Source:
