@@ -44,6 +44,8 @@ matrix, from a vector (a column), or from dimensions and a function
 and \code{diag_matrix()} build special matrices. \code{+}, \code{-} and scalar \code{*} work as
 usual; \code{*} between two matrices of equal shape is elementwise, \code{\%*\%} is the
 matrix product and \verb{\%^\%} the matrix power. \code{[} indexes like R matrices.
+A scalar added to or subtracted from a matrix acts on every entry, as R
+arithmetic does; SymPy raises a \code{TypeError} for \code{Matrix + 2} instead.
 }
 \examples{
 x <- Symbol("x")

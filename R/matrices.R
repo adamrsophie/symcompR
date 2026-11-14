@@ -25,6 +25,8 @@
 #' and `diag_matrix()` build special matrices. `+`, `-` and scalar `*` work as
 #' usual; `*` between two matrices of equal shape is elementwise, `%*%` is the
 #' matrix product and `%^%` the matrix power. `[` indexes like R matrices.
+#' A scalar added to or subtracted from a matrix acts on every entry, as R
+#' arithmetic does; SymPy raises a `TypeError` for `Matrix + 2` instead.
 #'
 #' @param data A list of rows, an R matrix, a vector, or a number of rows.
 #' @param ncol Number of columns, when `data` is a number of rows.

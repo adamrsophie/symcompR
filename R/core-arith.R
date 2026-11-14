@@ -888,7 +888,18 @@ as_coeff_mul_split <- function(a) {
 # Integer._eval_power: perfect roots, then the factors of n up to 2^15
 # (or the base of a perfect power) give integer parts and radicals.
 # NULL when nothing simplifies.
+.int_pow_rat_cache <- new.env(hash = TRUE, parent = emptyenv())
 .int_pow_rat <- function(n, ex) {
+  # pure in (n, ex); quintic and radical work repeats the same few pairs
+  key <- paste(as.character(n), as.character(ex))
+  hit <- .int_pow_rat_cache[[key]]
+  if (!is.null(hit)) return(if (identical(hit, FALSE)) NULL else hit)
+  v <- .int_pow_rat_raw(n, ex)
+  # ponytail: unbounded cache; clear it if long sessions grow memory
+  if (length(.int_pow_rat_cache) < 1e5) .int_pow_rat_cache[[key]] <- if (is.null(v)) FALSE else v
+  v
+}
+.int_pow_rat_raw <- function(n, ex) {
   n <- gmp::as.bigz(n)
   p <- gmp::numerator(ex); q <- gmp::denominator(ex)
   big <- function(b, k) if (as.double(k) * .bitlen(gmp::as.bigz(b)) > 1e7) stop("exponent too large for exact power") else b^k
