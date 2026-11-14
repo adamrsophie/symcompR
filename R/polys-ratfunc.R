@@ -138,35 +138,68 @@ cancel <- function(e, ...) {
     return(.div(fl(pq[[1L]]), fl(pq[[2L]])))
   }
   ii <- which(vapply(cv$gens, function(g) identical(g$key, S_I$key), TRUE))
-  if (length(ii)) return(.div(.qp_gauss_expr(pq[[1L]], cv$gens, ii), .qp_gauss_expr(pq[[2L]], cv$gens, ii)))
+  if (length(ii)) return(.qp_gauss_cancel(pq[[1L]], pq[[2L]], cv$gens, ii))
   .div(qpoly_to_expr(pq[[1L]], cv$gens), qpoly_to_expr(pq[[2L]], cv$gens))
 }
 
 # A qpoly with I among its generators read back over QQ_I: powers of I
 # reduced by I^2 = -1 and the terms of each monomial in the other generators
-# joined into one Gaussian coefficient, as PolyElement.as_expr does there.
-# ponytail: the gcd still treats I as a variable, so a common Gaussian factor
-# of several terms is not cancelled; port PolyRing over ZZ_I if that matters
-.qp_gauss_expr <- function(P, gens, ii) {
-  if (qp_is_zero(P)) return(S_Zero)
+# joined into one Gaussian coefficient; list(E, re, im), rows in lex order
+.qp_gauss_terms <- function(P, ii) {
   E <- P$e[, -ii, drop = FALSE]
   k <- P$e[, ii] %% 4L
   key <- apply(E, 1L, paste, collapse = ",")
-  terms <- list()
+  rows <- integer(); re <- gmp::as.bigq(numeric(0)); im <- gmp::as.bigq(numeric(0))
   for (u in unique(key)) {
     w <- which(key == u)
-    re <- gmp::as.bigq(0); im <- gmp::as.bigq(0)
+    a <- gmp::as.bigq(0); b <- gmp::as.bigq(0)
     for (i in w) {
       v <- P$c[i]
-      if (k[i] == 0L) re <- re + v else if (k[i] == 1L) im <- im + v
-      else if (k[i] == 2L) re <- re - v else im <- im - v
+      if (k[i] == 0L) a <- a + v else if (k[i] == 1L) b <- b + v
+      else if (k[i] == 2L) a <- a - v else b <- b - v
     }
-    if (re == 0 && im == 0) next
-    cf <- .add(list(make_rational(re), .mul(list(make_rational(im), S_I))))
-    mono <- lapply(which(E[w[1L], ] > 0L), function(j) .pow(gens[-ii][[j]], .int(E[w[1L], j])))
-    terms[[length(terms) + 1L]] <- .mul(c(list(cf), mono))
+    if (a == 0 && b == 0) next
+    rows <- c(rows, w[1L]); re <- c(re, a); im <- c(im, b)
   }
-  .add(terms)
+  E <- E[rows, , drop = FALSE]
+  o <- do.call(order, c(lapply(seq_len(ncol(E)), function(j) -E[, j])))
+  list(E = E[o, , drop = FALSE], re = re[o], im = im[o])
+}
+
+.gauss_terms_expr <- function(t, gens) {
+  if (!length(t$re)) return(S_Zero)
+  .add(lapply(seq_along(t$re), function(i) {
+    cf <- .add(list(make_rational(t$re[i]), .mul(list(make_rational(t$im[i]), S_I))))
+    .mul(c(list(cf), lapply(which(t$E[i, ] > 0L), function(j) .pow(gens[[j]], .int(t$E[i, j])))))
+  }))
+}
+
+# PolyElement.cancel over ZZ_I or QQ_I for the Gaussian content: the
+# denominators cleared, the gcd of all coefficients removed, then both sides
+# multiplied by the canonical unit of the denominator's leading coefficient.
+# ponytail: the gcd still treats I as a variable beyond the content, so a
+# common nonconstant Gaussian factor of several generators stays
+.qp_gauss_cancel <- function(P, Q, gens, ii) {
+  og <- gens[-ii]
+  if (qp_is_zero(P)) return(S_Zero)
+  p <- .qp_gauss_terms(P, ii); q <- .qp_gauss_terms(Q, ii)
+  den <- Reduce(gmp::lcm.bigz, lapply(c(p$re, p$im, q$re, q$im), gmp::denominator), gmp::as.bigz(1))
+  sc <- function(t, s) { t$re <- t$re * s; t$im <- t$im * s; t }
+  p <- sc(p, gmp::as.bigq(den)); q <- sc(q, gmp::as.bigq(den))
+  g <- gmp::as.bigq(c(0, 0))
+  for (t in list(p, q)) for (i in seq_along(t$re)) g <- .gi_gcd(g, c(t$re[i], t$im[i]))
+  dv <- function(t) {
+    for (i in seq_along(t$re)) { z <- .gc_div(c(t$re[i], t$im[i]), g); t$re[i] <- z[1]; t$im[i] <- z[2] }
+    t
+  }
+  mu <- function(t, u) {
+    for (i in seq_along(t$re)) { z <- .gc_mul(c(t$re[i], t$im[i]), u); t$re[i] <- z[1]; t$im[i] <- z[2] }
+    t
+  }
+  p <- dv(p); q <- dv(q)
+  u <- gmp::as.bigq(.gi_canonical_unit(c(q$re[1L], q$im[1L])))
+  p <- mu(p, u); q <- mu(q, u)
+  .div(.gauss_terms_expr(p, og), .gauss_terms_expr(q, og))
 }
 
 # the noncommutative and Piecewise branch of cancel()

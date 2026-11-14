@@ -96,7 +96,11 @@ test_that("powers of Gaussian rationals keep SymPy's Mul forms", {
 test_that("cancel reads I back as a Gaussian coefficient", {
   x <- Symbol("x")
   d <- cancel(-x * exp(-x^2 / (2 * (2 - sym_I)^2)) / (2 - sym_I)^2)
-  expect_identical(sstr(d), "x*(-3 - 4*I)*exp(-3*x^2/50)*exp(-2*I*x^2/25)/25")
+  expect_identical(sstr(d), "-I*x*(4 - 3*I)*exp(-3*x^2/50)*exp(-2*I*x^2/25)/25")
+  y <- Symbol("y"); z <- Symbol("z")
+  got <- vapply(list(x / ((4 * sym_I - 3) * y * z), (6 * x + 3 * sym_I * y) / (4 * z * sym_I + 2 * y),
+                     (2 * x + 2 * sym_I * x) / (x * y)), function(e) sstr(cancel(e)), "")
+  expect_identical(got, c("-I*x*(4 - 3*I)/(25*y*z)", "(6*x + 3*I*y)/(2*y + 4*I*z)", "(2 + 2*I)/y"))
   expect_null(heurisch(exp(-x^2 / (2 * (2 - sym_I)^2)), x, hints = list()))
 })
 
