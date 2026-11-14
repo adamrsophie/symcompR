@@ -250,9 +250,9 @@ c(could_extract_minus_sign(-x - y), could_extract_minus_sign(x - y))
 order of the factors.
 
 ```{r}
-P <- Symbol("P", commutative = FALSE); Q <- Symbol("Q", commutative = FALSE)
+P <- Symbol("P", commutative = FALSE); Qn <- Symbol("Q", commutative = FALSE)
 factor_nc(P * x + P * y)
-factor_nc(x * P * Q + x * Q * P)
+factor_nc(x * P * Qn + x * Qn * P)
 ```
 
 ## Relation constructors
