@@ -308,11 +308,21 @@ ask_fact <- function(e, fact) {
 .float_facts <- function(e) {
   v <- e$value
   if (is.nan(v)) return(c(commutative = TRUE))
+  # the facts of a Float come from its multiprecision value, so a value
+  # beyond the double range is still finite and nonzero
+  if (!is.null(e$extra$mp)) {
+    a <- e$extra$mp
+    sg <- .mp_sign(a)
+    f <- c(commutative = TRUE, real = TRUE, finite = TRUE, positive = sg > 0,
+           negative = sg < 0, zero = sg == 0, imaginary = FALSE, infinite = FALSE)
+    # Float._eval_is_integer: a value that is not int valued is not an integer
+    if (sg != 0 && a$e < 0 && gmp::mod.bigz(a$m, .pow2(-a$e)) != 0) f["integer"] <- FALSE
+    return(f)
+  }
   if (is.infinite(v)) return(c(commutative = TRUE, finite = FALSE,
                                infinite = TRUE, extended_real = TRUE))
   f <- c(commutative = TRUE, real = TRUE, finite = TRUE, positive = v > 0,
          negative = v < 0, zero = v == 0, imaginary = FALSE, infinite = FALSE)
-  # Float._eval_is_integer: a value that is not int valued is not an integer
   if (v != round(v)) f["integer"] <- FALSE
   f
 }

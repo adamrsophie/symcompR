@@ -510,7 +510,13 @@ real_root <- function(x, n) {
   n <- as_sym(n)
   if (is_number_type(x) && num_sign(x) < 0 && n$type == "Integer" && .int_mod(n, 2L) == 1L)
     return(.neg(.pow(.neg(x), .inv(n))))
-  .pow(x, .inv(n))
+  if (is_number_type(x)) return(.pow(x, .inv(n)))
+  # miscellaneous.real_root: the real branch for a real argument and odd n
+  r <- .pow(x, .inv(n))
+  Piecewise(list(r, Or(Eq(n, S_One), Eq(n, S_NegativeOne))),
+            list(.mul(list(fcall("sign", list(x)), .pow(fcall("Abs", list(x)), .inv(n)))),
+                 And(Eq(fcall("im", list(x)), S_Zero), Eq(fcall("Mod", list(n, S_Two)), S_One))),
+            list(r, S_true))
 }
 #' @noRd
 Mod <- function(x, y, ...) {
@@ -633,8 +639,13 @@ def_function("Mod", nargs = 2L,
     if (is_number_type(p)) {
       if (is_exact_number(p) && is_exact_number(q))
         return(make_rational(p$value - q$value * gmp::as.bigq(.bigq_floor(p$value / q$value))))
-      a <- num_value_dbl(p); b <- num_value_dbl(q)
-      return(Float(a - b * floor(a / b)))
+      # Float.__mod__: exact arithmetic on the binary values, rounded to
+      # the larger Float precision
+      ex <- function(z) if (z$type == "Float") .mp_to_q(.float_mp(z)) else gmp::as.bigq(z$value)
+      pr <- max(vapply(Filter(function(z) z$type == "Float", list(p, q)), .float_prec, 0))
+      a <- ex(p); b <- ex(q)
+      r <- a - b * gmp::as.bigq(.bigq_floor(a / b))
+      return(.mp_float(.mp_from_q(r, pr), pr))
     }
     if (q$type == "Integer" && q$value == 2) {
       if (isTRUE(ask_fact(p, "even"))) return(S_Zero)

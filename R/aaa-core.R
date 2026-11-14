@@ -145,14 +145,20 @@ make_rational <- function(q) {
 #' Float("3.14159265358979323846264338327950288", 30)
 #' @export
 Integer <- function(p) {
+  # Integer.__new__ takes int(p): numbers truncate toward zero
+  trunc_q <- function(q) {
+    z <- gmp::numerator(q) %/% gmp::denominator(q)
+    if (q < 0 && z * gmp::denominator(q) != gmp::numerator(q)) z <- z + 1
+    make_rational(gmp::as.bigq(z))
+  }
   if (is_sym(p)) {
     if (p$type == "Integer") return(p)
-    if (p$type == "Float" && p$value == round(p$value))
-      return(make_rational(gmp::as.bigq(round(p$value))))
+    if (p$type == "Float") return(trunc_q(.mp_to_q(.float_mp(p))))
+    if (p$type == "Rational") return(trunc_q(p$value))
     stop("not an integer: ", format(p))
   }
   if (is.character(p)) return(make_rational(gmp::as.bigq(.str_bigz(p))))
-  if (is.numeric(p) && p != round(p)) stop("not an integer: ", p)
+  if (is.numeric(p) && is.finite(p) && p != round(p)) return(make_rational(gmp::as.bigq(trunc(p))))
   make_rational(gmp::as.bigq(p))
 }
 
@@ -171,6 +177,8 @@ Rational <- function(p, q = 1) {
 .to_bigq <- function(x) {
   if (is_sym(x)) {
     if (is_exact_number(x)) return(x$value)
+    # Rational(Float) is the exact binary value of the Float
+    if (x$type == "Float") return(.mp_to_q(.float_mp(x)))
     stop("expected an exact number, got ", format(x))
   }
   if (inherits(x, "bigq")) return(x)

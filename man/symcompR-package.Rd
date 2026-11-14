@@ -33,5 +33,12 @@ Authors:
   \item Adam R Sophie \email{adamrsophie@gmail.com} [copyright holder]
 }
 
+Other contributors:
+\itemize{
+  \item SymPy Development Team (Author of 'SymPy', from which the algorithms are ported) [copyright holder]
+  \item Fredrik Johansson (Author of 'mpmath', from which the multiprecision code is ported) [copyright holder]
+  \item mpmath contributors [copyright holder]
+}
+
 }
 \keyword{internal}

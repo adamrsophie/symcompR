@@ -1,9 +1,14 @@
 Package: symcompR
-Title: Symbolic Computation in R
+Title: Native Symbolic Computation Ported from 'SymPy'
 Version: 0.1.0
 Authors@R:
-    person("Adam R", "Sophie", email = "adamrsophie@gmail.com",
-           role = c("aut", "cre", "cph"))
+    c(person("Adam R", "Sophie", email = "adamrsophie@gmail.com",
+             role = c("aut", "cre", "cph")),
+      person("SymPy Development Team", role = "cph",
+             comment = "Author of 'SymPy', from which the algorithms are ported"),
+      person("Fredrik", "Johansson", role = "cph",
+             comment = "Author of 'mpmath', from which the multiprecision code is ported"),
+      person("mpmath contributors", role = "cph"))
 Description: A native R computer algebra system ported from the Python
     library 'SymPy'. Provides exact integer and rational arithmetic,
     automatically simplified symbolic expressions, assumptions, symbolic
@@ -13,7 +18,10 @@ Description: A native R computer algebra system ported from the Python
     The design and algorithms follow 'SymPy'
     <https://www.sympy.org>; the 'SymPy' Development Team is gratefully
     acknowledged, and its BSD license notice is retained in the package.
+    The multiprecision numerics are ported from 'mpmath'
+    <https://mpmath.org>, whose BSD license notice is also retained.
 License: GPL-3
+Copyright: See the file inst/COPYRIGHTS.
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)

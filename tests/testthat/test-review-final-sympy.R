@@ -40,3 +40,28 @@ test_that("cholesky, LDLdecomposition and dot check their input as SymPy", {
   expect_error(dot(Matrix(list(1, 2, 3)), Matrix(list(1, 2))), "Dimensions incorrect for dot product: (3, 1), (2, 1)", fixed = TRUE)
   expect_equal(sstr(dot(Matrix(list(1, 2, 3)), Matrix(list(list(1, 2, 3))))), "14")
 })
+
+test_that("Floats keep their multiprecision value in facts, Integer, Rational and Mod", {
+  expect_false(ask_fact(Float("1e-400", 30), "zero"))
+  expect_true(ask_fact(Float("1e400", 30), "finite"))
+  expect_equal(sstr(Integer(Float("9007199254740993", 30))), "9007199254740993")
+  expect_equal(sstr(Integer(1.9)), "1")
+  expect_equal(sstr(Integer(-1.9)), "-1")
+  expect_equal(sstr(Integer(Rational(3, 2))), "1")
+  expect_equal(sstr(Integer(Float("-2.5"))), "-2")
+  expect_equal(sstr(Rational(Float("0.5"))), "1/2")
+  expect_equal(sstr(Rational(Float(0.1))), "3602879701896397/36028797018963968")
+  expect_equal(sstr(sym_Mod(Float("1.00000000000000000001", 30), 1)), "9.99999999997452451411988619036e-21")
+  expect_equal(sstr(sym_Mod(Float(5.5), 2)), "1.50000000000000")
+  expect_equal(sstr(sym_Mod(Float("7.25", 30), Rational(1, 2))), "0.250000000000000000000000000000")
+})
+
+test_that("real_root takes the real branch for a symbolic argument", {
+  x <- Symbol("x", real = TRUE); z <- Symbol("z"); n <- Symbol("n", integer = TRUE)
+  expect_equal(sstr(real_root(x, 3)), "Abs(x)^(1/3)*sign(x)")
+  expect_equal(sstr(subs(real_root(x, 3), x, -8)), "-2")
+  expect_equal(sstr(real_root(z, 3)), "Piecewise((Abs(z)^(1/3)*sign(z), Eq(im(z), 0)), (z^(1/3), True))")
+  expect_equal(sstr(real_root(z, n)), "Piecewise((z^(1/n), Eq(n, -1) | Eq(n, 1)), (Abs(z)^(1/n)*sign(z), Eq(im(z), 0) & Eq(Mod(n, 2), 1)), (z^(1/n), True))")
+  expect_equal(sstr(real_root(x, 2)), "sqrt(x)")
+  expect_equal(sstr(real_root(Integer(-8), 3)), "-2")
+})
