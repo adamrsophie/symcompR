@@ -214,6 +214,25 @@ factor_sym(x^5 + x + 1, modulus = 7)
 The first finite field example is irreducible modulo 3. Coefficients
 modulo p are printed in the symmetric range (-p/2, p/2\].
 
+The prime can be as large as needed (pass it as an
+[`Integer()`](https://adamrsophie.github.io/symcompR/reference/Integer.md)
+string so no digit is lost to double precision), and the other
+polynomial functions accept `modulus` too. Unlike SymPy, factorization
+over \mathrm{GF}(p) also works with several variables.
+
+``` r
+
+p <- Integer("2305843009213693951")
+gcd(x^2 - 1, x^2 + 3 * x + 2, modulus = p)
+#> x + 1
+resultant(x^3 + x + 1, x^2 + 3 * x + 7, modulus = p)
+#> 349
+factor_sym(x^2 + y^2, modulus = 5)
+#> (x - 2*y)*(x + 2*y)
+factor_sym(x^2 * y + x, modulus = 5)
+#> x*(x*y + 1)
+```
+
 [`factor_list()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md)
 and
 [`sqf_list()`](https://adamrsophie.github.io/symcompR/reference/sym_factor.md)

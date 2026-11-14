@@ -108,7 +108,18 @@ equations, symbols and starting values.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">nsolve</span><span class="op">(</span><span class="va">f</span>, <span class="va">x</span>, <span class="va">x0</span>, tol <span class="op">=</span> <span class="cn">NULL</span>, maxit <span class="op">=</span> <span class="cn">NULL</span>, prec <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">nsolve</span><span class="op">(</span></span>
+<span>  <span class="va">f</span>,</span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">x0</span>,</span>
+<span>  tol <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  maxit <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  prec <span class="op">=</span> <span class="fl">15</span>,</span>
+<span>  maxsteps <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  verify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  dict <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  solver <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -140,10 +151,29 @@ secant steps, 10 Newton steps).</p></dd>
 <dt id="arg-prec">prec<a class="anchor" aria-label="anchor" href="#arg-prec"></a></dt>
 <dd><p>Number of significant digits.</p></dd>
 
+
+<dt id="arg-maxsteps">maxsteps<a class="anchor" aria-label="anchor" href="#arg-maxsteps"></a></dt>
+<dd><p>SymPy's name for <code>maxit</code>.</p></dd>
+
+
+<dt id="arg-verify">verify<a class="anchor" aria-label="anchor" href="#arg-verify"></a></dt>
+<dd><p>If <code>FALSE</code>, return the last iterate without checking that
+it is a root within the tolerance.</p></dd>
+
+
+<dt id="arg-dict">dict<a class="anchor" aria-label="anchor" href="#arg-dict"></a></dt>
+<dd><p>If <code>TRUE</code>, return a list holding one named list of the
+solution, as SymPy's <code>dict=True</code>.</p></dd>
+
+
+<dt id="arg-solver">solver<a class="anchor" aria-label="anchor" href="#arg-solver"></a></dt>
+<dd><p>The mpmath solver: <code>"secant"</code> (one equation; give <code>x0</code> as
+two values for the two starting points) or <code>"mdnewton"</code> (systems).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A Float or a named list of Floats.</p>
+    <p>A Float, or a named list of Floats (a list of one with <code>dict</code>).</p>
     </div>
 
     <div class="section level2">
@@ -153,6 +183,8 @@ secant steps, 10 Newton steps).</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0.739085133215161</span>
 <span class="r-in"><span><span class="fu">nsolve</span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">2</span>, <span class="va">x</span>, <span class="fl">1</span>, prec <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1.41421356237309504880168872421</span>
+<span class="r-in"><span><span class="fu">nsolve</span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">2</span>, <span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1.41421356237310</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

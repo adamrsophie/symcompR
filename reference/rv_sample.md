@@ -2,10 +2,14 @@
 
 `rv_sample(expr, condition, size)` is SymPy's
 [`sample()`](https://rdrr.io/r/base/sample.html): one realization of a
-random expression, or a vector of `size` of them. Samples use R's random
-number generator; call
-[`set.seed()`](https://rdrr.io/r/base/Random.html) for reproducible
-draws.
+random expression, or a vector of `size` of them. The draws follow the
+exact law of each distribution: R's own generators for the families
+SymPy hands to SciPy (Normal, Exponential, Gamma, Cauchy, Poisson and
+others), and inverse transform sampling of the cdf over the whole
+support for the rest. Samples use R's random number generator, so they
+differ from SciPy's draws for the same seed; call
+[`set.seed()`](https://rdrr.io/r/base/Random.html) (or pass `seed`) for
+reproducible draws.
 
 ## Usage
 

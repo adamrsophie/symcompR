@@ -20,7 +20,7 @@ split_surds(expr)
 
 collect_sqrt(expr, evaluate = TRUE)
 
-sqrtdenest(e)
+sqrtdenest(e, max_iter = 3L)
 ```
 
 ## Arguments
@@ -45,6 +45,10 @@ sqrtdenest(e)
 
   For `collect_sqrt()`: `FALSE` returns the terms and the number of
   radical terms instead of the sum.
+
+- max_iter:
+
+  For `sqrtdenest()`: the largest number of denesting passes.
 
 ## Value
 

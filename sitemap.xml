@@ -151,12 +151,14 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/RandomSymbol.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Range.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/RayTransferMatrix.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/RecursiveSeq.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/ReferenceFrame.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/RewritingSystem.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/RootSum.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/RouthHurwitz.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Routine.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/SOPform.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/SchurNumber.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/SetExpr.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/Sieve.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/StateSpace.html</loc></url>
@@ -244,6 +246,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/collect_const.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/collect_tensor_products.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/combined_tensor_printing.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/common_assumptions.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/compose.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/condition_number.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/connected_components_decomposition.html</loc></url>
@@ -341,8 +344,10 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/get_perm_group.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/get_shape.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/given.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/gosper_normal.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/grad.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/groebner.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/groups_count.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/grover.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/gruntz.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/hadamard_product.html</loc></url>
@@ -364,7 +369,9 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/infinitesimals.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integer-helpers.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integral-transforms.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/integral_as_sum.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/integral_steps.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/integral_transform.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/interactive-session.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/inverse_GE.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/invert_real.html</loc></url>
@@ -436,6 +443,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/multiplicity.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/multiset_enumeration.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/musculotendon.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/nP.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/n_order.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/nc_simplify.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/nest_permutation.html</loc></url>

@@ -178,9 +178,9 @@ return the same domains.</p>
 <span></span>
 <span><span class="fu">RationalField</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">RealField</span><span class="op">(</span>prec <span class="op">=</span> <span class="fl">53</span><span class="op">)</span></span>
+<span><span class="fu">RealField</span><span class="op">(</span>prec <span class="op">=</span> <span class="fl">53</span>, dps <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">ComplexField</span><span class="op">(</span>prec <span class="op">=</span> <span class="fl">53</span><span class="op">)</span></span>
+<span><span class="fu">ComplexField</span><span class="op">(</span>prec <span class="op">=</span> <span class="fl">53</span>, dps <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">ExpressionDomain</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -247,6 +247,10 @@ return the same domains.</p>
 
 <dt id="arg-prec">prec<a class="anchor" aria-label="anchor" href="#arg-prec"></a></dt>
 <dd><p>Precision in bits (kept for SymPy compatibility).</p></dd>
+
+
+<dt id="arg-dps">dps<a class="anchor" aria-label="anchor" href="#arg-dps"></a></dt>
+<dd><p>Precision in decimal digits; when given it sets <code>prec</code>.</p></dd>
 
 
 <dt id="arg-q">q<a class="anchor" aria-label="anchor" href="#arg-q"></a></dt>

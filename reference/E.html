@@ -163,7 +163,9 @@ random expression; <code>P(condition, given_condition)</code> (alias
 
 
 <dt id="arg-numsamples">numsamples<a class="anchor" aria-label="anchor" href="#arg-numsamples"></a></dt>
-<dd><p>Sampling is not supported; must be <code>NULL</code>.</p></dd>
+<dd><p>If given, the value is estimated from this many samples
+drawn with <code><a href="rv_sample.html">rv_sample()</a></code> (SymPy's <code>sampling_E()</code>, <code>sampling_P()</code> and
+<code><a href="sampling_density.html">sampling_density()</a></code>); <code>rv_density()</code> then returns the counts of the values.</p></dd>
 
 
 <dt id="arg-evaluate">evaluate<a class="anchor" aria-label="anchor" href="#arg-evaluate"></a></dt>

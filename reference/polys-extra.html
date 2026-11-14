@@ -153,11 +153,11 @@ must all be positive. <code>poly_from_expr(e)</code> returns <code>list(Poly, ge
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sym_decompose</span><span class="op">(</span><span class="va">f</span>, x <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sym_decompose</span><span class="op">(</span><span class="va">f</span>, x <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">gff_list</span><span class="op">(</span><span class="va">f</span>, x <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">subresultants</span><span class="op">(</span><span class="va">f</span>, <span class="va">g</span>, x <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span><span class="fu">subresultants</span><span class="op">(</span><span class="va">f</span>, <span class="va">g</span>, x <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">sym_trunc</span><span class="op">(</span><span class="va">f</span>, <span class="va">p</span>, x <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
@@ -206,12 +206,12 @@ must all be positive. <code>poly_from_expr(e)</code> returns <code>list(Poly, ge
 <dd><p>The generator.</p></dd>
 
 
-<dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
-<dd><p>Modulus.</p></dd>
-
-
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Generators.</p></dd>
+
+
+<dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
+<dd><p>Modulus.</p></dd>
 
 
 <dt id="arg-formal">formal<a class="anchor" aria-label="anchor" href="#arg-formal"></a></dt>

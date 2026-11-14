@@ -30,11 +30,11 @@ that must all be positive. `poly_from_expr(e)` returns
 ## Usage
 
 ``` r
-sym_decompose(f, x = NULL)
+sym_decompose(f, x = NULL, ...)
 
 gff_list(f, x = NULL)
 
-subresultants(f, g, x = NULL)
+subresultants(f, g, x = NULL, ...)
 
 sym_trunc(f, p, x = NULL)
 
@@ -81,13 +81,13 @@ poly_from_expr(e, ...)
 
   The generator.
 
-- p:
-
-  Modulus.
-
 - ...:
 
   Generators.
+
+- p:
+
+  Modulus.
 
 - formal:
 

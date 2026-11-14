@@ -57,9 +57,9 @@ IntegerRing()
 
 RationalField()
 
-RealField(prec = 53)
+RealField(prec = 53, dps = NULL)
 
-ComplexField(prec = 53)
+ComplexField(prec = 53, dps = NULL)
 
 ExpressionDomain()
 
@@ -125,6 +125,10 @@ from_sympy(K, a)
 - prec:
 
   Precision in bits (kept for SymPy compatibility).
+
+- dps:
+
+  Precision in decimal digits; when given it sets `prec`.
 
 - q:
 

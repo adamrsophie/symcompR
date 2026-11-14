@@ -7,7 +7,7 @@ a list of `c(x, y)` pairs, or for values at `x = 1, 2, ...`.
 ## Usage
 
 ``` r
-compose(f, g, x = NULL)
+compose(f, g, x = NULL, ...)
 
 horner(f, x = NULL)
 

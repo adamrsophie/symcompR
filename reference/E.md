@@ -59,7 +59,11 @@ rv_quantile(expr, evaluate = TRUE, ...)
 
 - numsamples:
 
-  Sampling is not supported; must be `NULL`.
+  If given, the value is estimated from this many samples drawn with
+  [`rv_sample()`](https://adamrsophie.github.io/symcompR/reference/rv_sample.md)
+  (SymPy's `sampling_E()`, `sampling_P()` and
+  [`sampling_density()`](https://adamrsophie.github.io/symcompR/reference/sampling_density.md));
+  `rv_density()` then returns the counts of the values.
 
 - evaluate:
 

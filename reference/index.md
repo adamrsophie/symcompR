@@ -353,6 +353,8 @@ system.
   [`is_extended_real()`](https://adamrsophie.github.io/symcompR/reference/AssumptionsWrapper.md)
   [`is_extended_nonnegative()`](https://adamrsophie.github.io/symcompR/reference/AssumptionsWrapper.md)
   : Query predicates of an expression under assumptions
+- [`common_assumptions()`](https://adamrsophie.github.io/symcompR/reference/common_assumptions.md)
+  : Assumptions shared by expressions
 
 ## Numerical evaluation
 
@@ -695,6 +697,11 @@ system.
 - [`Integral()`](https://adamrsophie.github.io/symcompR/reference/sym_integrate.md)
   [`sym_integrate()`](https://adamrsophie.github.io/symcompR/reference/sym_integrate.md)
   : Integrate an expression
+- [`integral_as_sum()`](https://adamrsophie.github.io/symcompR/reference/integral_as_sum.md)
+  [`principal_value()`](https://adamrsophie.github.io/symcompR/reference/integral_as_sum.md)
+  : Riemann sums and principal values of integrals
+- [`integral_transform()`](https://adamrsophie.github.io/symcompR/reference/integral_transform.md)
+  : Change of variables in an integral
 - [`ratint()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
   [`ratint_ratpart()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
   [`ratint_logpart()`](https://adamrsophie.github.io/symcompR/reference/ratint.md)
@@ -777,6 +784,9 @@ system.
   [`SeqMul()`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
   [`find_linear_recurrence()`](https://adamrsophie.github.io/symcompR/reference/sequences.md)
   : Sequences
+- [`RecursiveSeq()`](https://adamrsophie.github.io/symcompR/reference/RecursiveSeq.md)
+  [`recursive_seq_recurrence()`](https://adamrsophie.github.io/symcompR/reference/RecursiveSeq.md)
+  : Recursively defined sequences
 - [`dominant()`](https://adamrsophie.github.io/symcompR/reference/limit_seq.md)
   [`limit_seq()`](https://adamrsophie.github.io/symcompR/reference/limit_seq.md)
   : Limits of sequences
@@ -1068,6 +1078,13 @@ system.
   [`multinomial_coefficients()`](https://adamrsophie.github.io/symcompR/reference/binomial_coefficients.md)
   [`multinomial_coefficients_iterator()`](https://adamrsophie.github.io/symcompR/reference/binomial_coefficients.md)
   : Binomial and multinomial coefficients
+- [`nP()`](https://adamrsophie.github.io/symcompR/reference/nP.md)
+  [`nC()`](https://adamrsophie.github.io/symcompR/reference/nP.md)
+  [`nD()`](https://adamrsophie.github.io/symcompR/reference/nP.md) :
+  Permutations, combinations and derangements
+- [`gosper_normal()`](https://adamrsophie.github.io/symcompR/reference/gosper_normal.md)
+  [`gosper_term()`](https://adamrsophie.github.io/symcompR/reference/gosper_normal.md)
+  : Gosper's algorithm helpers
 - [`Options()`](https://adamrsophie.github.io/symcompR/reference/Options.md)
   : Polynomial options
 - [`ZZ()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
@@ -1813,6 +1830,15 @@ DomainMatrix layer.
   [`quotient_group()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
   [`group_equals()`](https://adamrsophie.github.io/symcompR/reference/PermutationGroup.md)
   : Permutation groups
+- [`groups_count()`](https://adamrsophie.github.io/symcompR/reference/groups_count.md)
+  [`is_nilpotent_number()`](https://adamrsophie.github.io/symcompR/reference/groups_count.md)
+  [`is_abelian_number()`](https://adamrsophie.github.io/symcompR/reference/groups_count.md)
+  [`is_cyclic_number()`](https://adamrsophie.github.io/symcompR/reference/groups_count.md)
+  : Numbers of groups of a given order
+- [`SchurNumber()`](https://adamrsophie.github.io/symcompR/reference/SchurNumber.md)
+  [`schur_lower_bound()`](https://adamrsophie.github.io/symcompR/reference/SchurNumber.md)
+  [`schur_partition()`](https://adamrsophie.github.io/symcompR/reference/SchurNumber.md)
+  : Schur numbers and sum-free partitions
 - [`SymmetricGroup()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
   [`AlternatingGroup()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)
   [`CyclicGroup()`](https://adamrsophie.github.io/symcompR/reference/SymmetricGroup.md)

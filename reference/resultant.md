@@ -7,9 +7,9 @@ the determinant of the Sylvester matrix. `discriminant(f, x)` is
 ## Usage
 
 ``` r
-resultant(f, g, x = NULL)
+resultant(f, g, x = NULL, ...)
 
-discriminant(f, x = NULL)
+discriminant(f, x = NULL, ...)
 ```
 
 ## Arguments

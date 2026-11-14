@@ -37,19 +37,5 @@ A list of expressions.
 ``` r
 x <- Symbol("x"); y <- Symbol("y")
 groebner(list(x^2 + y^2 - 1, x - y), x, y)
-#> [[1]]
-#> x - y
-#> 
-#> [[2]]
-#> 2*y^2 - 1
-#> 
-#> attr(,"gens")
-#> attr(,"gens")[[1]]
-#> x
-#> 
-#> attr(,"gens")[[2]]
-#> y
-#> 
-#> attr(,"order")
-#> [1] "lex"
+#> GroebnerBasis([x - y, 2*y^2 - 1], x, y, domain='ZZ', order='lex')
 ```

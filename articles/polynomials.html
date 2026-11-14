@@ -306,9 +306,24 @@ multivariate polynomials.</p>
 <p>The first finite field example is irreducible modulo 3. Coefficients
 modulo <span class="math inline">p</span> are printed in the symmetric
 range <span class="math inline">(-p/2, p/2]</span>.</p>
+<p>The prime can be as large as needed (pass it as an
+<code><a href="../reference/Integer.html">Integer()</a></code> string so no digit is lost to double precision),
+and the other polynomial functions accept <code>modulus</code> too.
+Unlike SymPy, factorization over <span class="math inline">\mathrm{GF}(p)</span> also works with several
+variables.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Integer.html">Integer</a></span><span class="op">(</span><span class="st">"2305843009213693951"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/gcd.html">gcd</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">2</span>, modulus <span class="op">=</span> <span class="va">p</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x + 1</span></span>
+<span><span class="fu"><a href="../reference/resultant.html">resultant</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">+</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">1</span>, <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">7</span>, modulus <span class="op">=</span> <span class="va">p</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 349</span></span>
+<span><span class="fu"><a href="../reference/sym_factor.html">factor_sym</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>, modulus <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (x - 2*y)*(x + 2*y)</span></span>
+<span><span class="fu"><a href="../reference/sym_factor.html">factor_sym</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span> <span class="va">y</span> <span class="op">+</span> <span class="va">x</span>, modulus <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x*(x*y + 1)</span></span></code></pre></div>
 <p><code><a href="../reference/sym_factor.html">factor_list()</a></code> and <code><a href="../reference/sym_factor.html">sqf_list()</a></code> return the
 factors with multiplicities.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="../reference/sym_factor.html">sqf_list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">4</span> <span class="op">+</span> <span class="va">x</span><span class="op">^</span><span class="fl">3</span><span class="op">)</span><span class="op">$</span><span class="va">factors</span>,</span>
 <span>           <span class="kw">function</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/sstr.html">sstr</a></span><span class="op">(</span><span class="va">f</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="va">f</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 2</span></span>
@@ -325,7 +340,7 @@ factors with multiplicities.</p>
 <p>The resultant of two polynomials vanishes exactly when they have a
 common root; it eliminates a variable from a system. The discriminant
 vanishes when a polynomial has a repeated root.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/resultant.html">resultant</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span> <span class="op">-</span> <span class="fl">2</span>, <span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 3</span></span>
 <span><span class="fu"><a href="../reference/resultant.html">resultant</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span> <span class="op">-</span> <span class="va">y</span>, <span class="va">x</span><span class="op">)</span></span>
@@ -351,7 +366,7 @@ vanishes when a polynomial has a repeated root.</p>
 Buchberger’s algorithm. With the lexicographic order, the last element
 involves only the last variable, which is how polynomial systems are
 solved.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">G</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/groebner.html">groebner</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span> <span class="op">-</span> <span class="va">y</span><span class="op">)</span>, <span class="va">x</span>, <span class="va">y</span>, order <span class="op">=</span> <span class="st">"lex"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">G</span>, <span class="va">sstr</span>, <span class="st">""</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "x - y"     "2*y^2 - 1"</span></span>
@@ -372,7 +387,7 @@ degree four and special methods for binomials, cyclotomic polynomials,
 and decomposable polynomials. It returns a list of roots with their
 multiplicities stored in the <code>"multiplicity"</code> attribute
 (SymPy returns a dictionary).</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/roots.html">roots</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">2</span>, <span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [[1]]</span></span>
 <span><span class="co">#&gt; 2</span></span>
@@ -417,7 +432,7 @@ as a plain list. <code><a href="../reference/nroots.html">real_roots()</a></code
 exactly, <code><a href="../reference/nroots.html">nroots()</a></code> approximates all roots numerically, and
 <code><a href="../reference/nroots.html">count_roots()</a></code> counts the roots in an interval with Sturm
 sequences.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/poly-aliases.html">all_roots</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">4</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [[1]]</span></span>
 <span><span class="co">#&gt; -1</span></span>
@@ -500,7 +515,7 @@ sequences.</p>
 exact object that can be evaluated numerically. <code><a href="../reference/RootSum.html">RootSum()</a></code>
 sums a function over all roots of a polynomial without computing
 them.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">r0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/CRootOf.html">CRootOf</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">-</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">1</span>, <span class="va">x</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">r0</span></span>
 <span><span class="co">#&gt; CRootOf(x^5 - x + 1, 0)</span></span>
@@ -518,7 +533,7 @@ them.</p>
 <div class="section level2">
 <h2 id="special-polynomials-and-constructions">Special polynomials and constructions<a class="anchor" aria-label="anchor" href="#special-polynomials-and-constructions"></a>
 </h2>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/poly-aliases.html">cyclotomic_poly</a></span><span class="op">(</span><span class="fl">12</span>, <span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x^4 - x^2 + 1</span></span>
 <span><span class="fu"><a href="../reference/poly-aliases.html">legendre_poly</a></span><span class="op">(</span><span class="fl">4</span>, <span class="va">x</span><span class="op">)</span></span>
@@ -535,7 +550,7 @@ decompose polynomials, <code><a href="../reference/compose.html">interpolate()</
 interpolating polynomial through points, and <code><a href="../reference/polys-extra.html">symmetrize()</a></code>
 writes a symmetric polynomial in terms of elementary symmetric
 polynomials.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/compose.html">horner</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">4</span>, <span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x*(x*(x + 2) + 3) + 4</span></span>
 <span><span class="fu"><a href="../reference/compose.html">compose</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">x</span>, <span class="va">x</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span><span class="op">)</span></span>
@@ -577,7 +592,7 @@ Vieta’s formulas: <span class="math inline">r_1 + r_2 = -a</span> and
 <span class="math inline">r_1 r_2 = b</span>.</p>
 <p>More classical polynomials, given by degree and variable, and the
 roots of Chebyshev polynomials:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/poly-aliases.html">chebyshevu_poly</a></span><span class="op">(</span><span class="fl">3</span>, <span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 8*x^3 - 4*x</span></span>
 <span><span class="fu"><a href="../reference/poly-aliases.html">hermite_prob_poly</a></span><span class="op">(</span><span class="fl">3</span>, <span class="va">x</span><span class="op">)</span></span>
@@ -597,7 +612,7 @@ polynomial through given points, <code><a href="../reference/poly-aliases.html">
 monomials up to a total degree, and <code><a href="../reference/poly-aliases.html">random_poly()</a></code> draws
 integer coefficients at random (so its output depends on the R random
 seed).</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/expand.html">expand</a></span><span class="op">(</span><span class="fu"><a href="../reference/poly-aliases.html">interpolating_poly</a></span><span class="op">(</span><span class="fl">3</span>, <span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">4</span>, <span class="fl">9</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x^2</span></span>
 <span><span class="va">show</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">l</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">l</span>, <span class="va">sstr</span>, <span class="st">""</span><span class="op">)</span></span>
@@ -616,7 +631,7 @@ term, <code><a href="../reference/degree.html">degree_list()</a></code> gives th
 <code><a href="../reference/degree.html">poly_terms()</a></code> lists the terms, and <code><a href="../reference/primitive.html">terms_gcd()</a></code>
 pulls out the common monomial. <code><a href="../reference/primitive.html">content()</a></code> and
 <code><a href="../reference/primitive.html">primitive()</a></code> split off the integer content.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/degree.html">LM</a></span><span class="op">(</span><span class="fl">4</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span> <span class="op">*</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">x</span> <span class="op">*</span> <span class="va">y</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">y</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x^2</span></span>
 <span><span class="fu"><a href="../reference/degree.html">LT</a></span><span class="op">(</span><span class="fl">4</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span> <span class="op">*</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">x</span> <span class="op">*</span> <span class="va">y</span> <span class="op">+</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">y</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
@@ -644,7 +659,7 @@ fractions appear, and <code><a href="../reference/poly-aliases.html">pexquo()</a
 quotient. <code><a href="../reference/poly-aliases.html">half_gcdex()</a></code> returns half of the extended
 Euclidean algorithm, and <code><a href="../reference/gcd.html">gcd_list()</a></code> and
 <code><a href="../reference/gcd.html">lcm_list()</a></code> work on lists.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/div.html">exquo</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, <span class="va">x</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x + 1</span></span>
 <span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/div.html">pdiv</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span> <span class="op">-</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
@@ -670,7 +685,7 @@ are the n-th powers of the roots of the input,
 <code><a href="../reference/polys-extra.html">ground_roots()</a></code> the roots in the coefficient domain with
 multiplicities, and <code><a href="../reference/polys-extra.html">sym_trunc()</a></code> reduces the coefficients
 modulo an integer into a symmetric range.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="../reference/polys-extra.html">gff_list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">4</span> <span class="op">-</span> <span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"("</span>, <span class="fu"><a href="../reference/sstr.html">sstr</a></span><span class="op">(</span><span class="va">p</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="st">", "</span>, <span class="va">p</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>, <span class="st">")"</span><span class="op">)</span>, <span class="st">""</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "(x, 1)"     "(x + 2, 4)"</span></span>
@@ -691,7 +706,7 @@ together with their options, <code><a href="../reference/polys-extra.html">hurwi
 <code><a href="../reference/polys-extra.html">schur_conditions()</a></code> give the stability conditions of a
 polynomial, and <code><a href="../reference/poly-aliases.html">rootof()</a></code> indexes the roots of a
 polynomial.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/polys-extra.html">poly_from_expr</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="co">#&gt; Poly(x^2 + 2*x, x, domain='ZZ')</span></span>
 <span><span class="fu"><a href="../reference/misc-helpers.html">parallel_poly_from_expr</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span>, <span class="va">x</span> <span class="op">*</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -713,14 +728,14 @@ root, here around <span class="math inline">\sqrt 3 \approx
 1.732</span>. <code><a href="../reference/misc-helpers.html">gff()</a></code>, the greatest factorial factorization
 as an expression, is not implemented in SymPy either and signals an
 error:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/misc-helpers.html">gff</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">4</span> <span class="op">-</span> <span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, error <span class="op">=</span> <span class="va">conditionMessage</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "symbolic falling factorial"</span></span></code></pre></div>
 <p><code><a href="../reference/apart.html">apart_list()</a></code> returns the structure of a partial fraction
 decomposition, <code><a href="../reference/apart.html">assemble_partfrac_list()</a></code> turns it back into
 an expression, and <code><a href="../reference/fraction.html">numer()</a></code> and <code><a href="../reference/fraction.html">denom()</a></code> take a
 fraction apart.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apart.html">apart_list</a></span><span class="op">(</span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/apart.html">assemble_partfrac_list</a></span><span class="op">(</span><span class="va">pf</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 2*x + 4 + 4/(x - 1)</span></span>
@@ -736,7 +751,7 @@ fraction apart.</p>
 distinct irreducible factors. <code><a href="../reference/gcdex_steps.html">gcdex_steps()</a></code> lists the steps
 of the extended Euclidean algorithm as triples <code>(s, t, r)</code>
 with <code>s f + t g = r</code>.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sym_factor.html">sqf_part</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">-</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">-</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x^2 - x - 2</span></span>
 <span><span class="fu"><a href="../reference/Poly.html">as_expr</a></span><span class="op">(</span><span class="fu"><a href="../reference/sym_factor.html">sqf_part</a></span><span class="op">(</span><span class="fu"><a href="../reference/Poly.html">Poly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">3</span> <span class="op">-</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">x</span> <span class="op">-</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -774,7 +789,7 @@ with <code>s f + t g = r</code>.</p>
 <span><span class="co">#&gt; [[3]][[3]]</span></span>
 <span><span class="co">#&gt; 5*x + 5</span></span></code></pre></div>
 <p>The Appell sequences of <code>sympy.polys.appellseqs</code>:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/bernoulli_poly.html">bernoulli_poly</a></span><span class="op">(</span><span class="fl">4</span>, <span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x^4 - 2*x^3 + x^2 - 1/30</span></span>
 <span><span class="fu"><a href="../reference/bernoulli_poly.html">bernoulli_c_poly</a></span><span class="op">(</span><span class="fl">4</span>, <span class="va">x</span><span class="op">)</span></span>
@@ -787,7 +802,7 @@ with <code>s f + t g = r</code>.</p>
 <span><span class="co">#&gt; x^4 - 6*x^2 + 5</span></span></code></pre></div>
 <p><code><a href="../reference/polys-extra.html">rational_interpolate()</a></code> fits a rational function with a
 numerator of the given degree to data points:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/polys-extra.html">rational_interpolate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; (2*x^2 - 3*x + 1)/(x - 1)</span></span>
 <span><span class="fu"><a href="../reference/polys-extra.html">rational_interpolate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span>, x <span class="op">=</span> <span class="va">y</span><span class="op">)</span></span>
@@ -795,7 +810,7 @@ numerator of the given degree to data points:</p>
 <p><code><a href="../reference/poly-aliases.html">PurePoly()</a></code> is a polynomial that does not depend on the
 names of its generators, and <code><a href="../reference/solver-helpers.html">solve_poly_system()</a></code> solves a
 system of polynomial equations.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/poly-aliases.html">PurePoly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="../reference/poly-aliases.html">PurePoly</a></span><span class="op">(</span><span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="fu"><a href="../reference/Poly.html">as_expr</a></span><span class="op">(</span><span class="fu"><a href="../reference/poly-aliases.html">PurePoly</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
@@ -814,7 +829,7 @@ system of polynomial equations.</p>
 <p><code><a href="../reference/PolyQuintic.html">PolyQuintic()</a></code> holds the resolvents used to solve a
 quintic in radicals, and <code><a href="../reference/PolyQuintic.html">roots_quintic()</a></code> returns the roots,
 or an empty list when the quintic is not solvable in radicals.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/Poly.html">as_expr</a></span><span class="op">(</span><span class="fu"><a href="../reference/PolyQuintic.html">PolyQuintic</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">-</span> <span class="fl">5</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">12</span><span class="op">)</span><span class="op">$</span><span class="va">f20</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x^6 - 40*x^5 + 1000*x^4 - 20000*x^3 + 250000*x^2 - 66400000*x + 976000000</span></span>
 <span><span class="fu"><a href="../reference/PolyQuintic.html">roots_quintic</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">5</span> <span class="op">-</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>

@@ -125,7 +125,7 @@ when possible.</p>
 <span></span>
 <span><span class="fu">collect_sqrt</span><span class="op">(</span><span class="va">expr</span>, evaluate <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">sqrtdenest</span><span class="op">(</span><span class="va">e</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">sqrtdenest</span><span class="op">(</span><span class="va">e</span>, max_iter <span class="op">=</span> <span class="fl">3L</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -151,6 +151,10 @@ when possible.</p>
 <dt id="arg-evaluate">evaluate<a class="anchor" aria-label="anchor" href="#arg-evaluate"></a></dt>
 <dd><p>For <code>collect_sqrt()</code>: <code>FALSE</code> returns the terms and the
 number of radical terms instead of the sum.</p></dd>
+
+
+<dt id="arg-max-iter">max_iter<a class="anchor" aria-label="anchor" href="#arg-max-iter"></a></dt>
+<dd><p>For <code>sqrtdenest()</code>: the largest number of denesting passes.</p></dd>
 
 </dl></div>
     <div class="section level2">
