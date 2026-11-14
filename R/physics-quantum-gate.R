@@ -9,8 +9,8 @@
   cache <- NULL
   function(name, format = "sympy") {
     if (is.null(cache)) {
-      sqrt2_inv <- .pow(S_Two, S_NegativeOne * S_Half)
-      sqrt2_inv <- .pow(.sqrt(S_Two), S_NegativeOne)
+      # Pow(2, Rational(-1, 2), evaluate=False)
+      sqrt2_inv <- new_sym("Pow", list(S_Two, Rational(-1, 2)))
       M <- function(...) Matrix(list(...))
       cache <<- list(
         eye2 = M(list(1, 0), list(0, 1)), op11 = M(list(0, 0), list(0, 1)), op00 = M(list(1, 0), list(0, 0)),

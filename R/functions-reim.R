@@ -130,7 +130,7 @@
     if (is_zero_num(im_e)) return(list(e, S_Zero))
     if (n < 0) {
       mag <- .add(list(.sq(re_e), .sq(im_e)))
-      re_e <- .div(re_e, mag); im_e <- .neg(.div(im_e, mag))
+      re_e <- .div(re_e, mag); im_e <- .div(.neg(im_e), mag)
     }
     if (is_number_type(re_e) && is_number_type(im_e)) {
       base <- if (n >= 0) b else .add(list(re_e, .mul(list(im_e, S_I))))

@@ -242,6 +242,19 @@ as_coeff_mul_split <- function(a) {
       if (a$type == "Mul") a$args else list(a)))
     types <- vapply(args, `[[`, "", "type")
   }
+  # Mul.flatten rebuilds each number power with Pow(b, e), so an
+  # unevaluated Pow(2, -1/2) becomes sqrt(2)/2 once multiplied by -1
+  if (any(types == "Pow")) {
+    re <- FALSE
+    for (k in which(types == "Pow")) {
+      a <- args[[k]]
+      if (a$args[[2L]]$type == "Rational" && a$args[[1L]]$type %in% c("Integer", "Rational") && a$args[[1L]]$value > 0) {
+        v <- .pow(a$args[[1L]], a$args[[2L]])
+        if (!identical(v$key, a$key)) { args[[k]] <- v; re <- TRUE }
+      }
+    }
+    if (re) return(.mul(args, depth))
+  }
   if (any(types == "Order")) return(.mul_with_order(args, types))
   if (any(types == "AccumulationBounds")) {
     # bounds absorb the numbers of the product, as Mul.flatten does

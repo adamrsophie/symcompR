@@ -115,3 +115,15 @@ test_that("a rebuilt power stays a nested Mul as in Mul.flatten", {
                      (1 / (8 * (1 + sym_I)^2))^Rational(1, 3)), sstr, "")
   expect_identical(got, c("sqrt(2)*((2 + I)/5)/2", "sqrt(3)*((2 + I)/5)", "((1 + I)^(-2))^(1/3)/2"))
 })
+
+test_that("Mul rebuilds an unevaluated number power as Mul.flatten does", {
+  a <- new_sym("Pow", list(S_Two, Rational(-1, 2)))
+  expect_identical(sstr(a), "1/sqrt(2)")
+  expect_identical(.k(a * -1), "Mul(Q-1/2,Pow(Z2,Q1/2))")
+  expect_identical(.k(a * sqrt(as_sym(3))), "Mul(Q1/2,Pow(Z6,Q1/2))")
+  m <- represent(HadamardGate(0), nqubits = 1)
+  expect_identical(vapply(m$data, sstr, ""), c("1/sqrt(2)", "1/sqrt(2)", "1/sqrt(2)", "-sqrt(2)/2"))
+  s <- Symbol("s")
+  expect_identical(sstr(phase_margin(TransferFunction(2, s^3 + 2 * s^2 + 2 * s + 1, s))),
+                   "180*(-pi + atan((-2*3^(1/6) + sqrt(3))/(1 - 2*3^(1/3))))/pi + 180")
+})
