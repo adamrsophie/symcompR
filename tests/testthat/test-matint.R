@@ -39,3 +39,12 @@ test_that("Poly with Float coefficients keeps RR coefficients", {
   expect_identical(vapply(all_coeffs(Poly(n * S_Pi - Float(0.5), n)), sstr, ""), c("1.0*pi", "-0.500000000000000"))
   expect_identical(vapply(all_coeffs(Poly(x^2 + Float(1.0), x)), sstr, ""), c("1.00000000000000", "0.0", "1.00000000000000"))
 })
+
+test_that("Poly over RR prints its domain and gives Float coefficients", {
+  x <- Symbol("x")
+  expect_identical(capture.output(print(Poly(Float(0.25) * x^2 + 2 * x + 1, x))),
+                   "Poly(0.25*x^2 + 2.0*x + 1.0, x, domain='RR')")
+  expect_identical(sstr(as_expr(Poly(x^2 / 3 + 1, x, domain = RR))), "0.333333333333333*x^2 + 1.0")
+  expect_identical(.pyfmt(all_coeffs(Poly(x^2 / 4 + 1, x, domain = "RR"))),
+                   "[0.250000000000000, 0.0, 1.00000000000000]")
+})

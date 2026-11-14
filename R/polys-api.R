@@ -43,6 +43,13 @@ Poly <- function(expr, ...) {
   expr <- as_sym(expr)
   pa <- .split_poly_opts(list(...))
   if (length(pa$opts)) {
+    d <- pa$opts$domain
+    if (length(pa$opts) == 1L && (identical(d, "RR") || (inherits(d, "sym_domain") && identical(attr(d, "dom")$kind, "RR")))) {
+      # domain = RR: the coefficients become Floats of 53 bits
+      P <- do.call(Poly, c(list(expr), pa$gens))
+      P$rr_prec <- max(53, P$rr_prec)
+      return(P)
+    }
     if (!is.null(P <- .poly_with_domain(expr, pa))) return(P)
     Fd <- .poly_field(pa$opts, list(expr))
     P <- do.call(Poly, c(list(expr), pa$gens))
@@ -91,7 +98,7 @@ as_expr <- function(p, ...) {
 print.Poly <- function(x, ...) {
   ng <- .poly_ngens(x)
   gens <- vapply(x$gens[seq_len(ng)], .str, "")
-  dom <- if (!is.null(x$dom_str)) x$dom_str else if (ng < length(x$gens)) paste0(.domain_of(x$rep), "[", paste(vapply(x$gens[-seq_len(ng)], .str, ""),
+  dom <- if (!is.null(x$dom_str)) x$dom_str else if (!is.null(x$rr_prec)) "RR" else if (ng < length(x$gens)) paste0(.domain_of(x$rep), "[", paste(vapply(x$gens[-seq_len(ng)], .str, ""),
                                                   collapse = ","), "]")
          else .domain_of(x$rep)
   tail <- if (!is.null(x$modulus)) paste0("modulus=", x$modulus) else paste0("domain='", dom, "'")
