@@ -1,15 +1,16 @@
 # Numerical and real roots
 
-`nroots(f, x)` returns all roots as floating point numbers (via
-[`polyroot()`](https://rdrr.io/r/base/polyroot.html) with Newton
-polishing). `real_roots(f, x)` returns the real roots with multiplicity,
-exact where possible. `count_roots(f, x, a, b)` counts real roots in
-`[a, b]` with a Sturm sequence. `sturm()` returns the Sturm sequence.
+`nroots(f, x)` returns all roots as floating point numbers: for integer
+and rational coefficients by the Durand-Kerner iteration of mpmath's
+`polyroots()`, as SymPy's `Poly.nroots()`. `real_roots(f, x)` returns
+the real roots with multiplicity, exact where possible.
+`count_roots(f, x, a, b)` counts real roots in `[a, b]` with a Sturm
+sequence. `sturm()` returns the Sturm sequence.
 
 ## Usage
 
 ``` r
-nroots(f, x = NULL)
+nroots(f, x = NULL, n = 15, maxsteps = 50, cleanup = TRUE)
 
 real_roots(f, x = NULL)
 
@@ -28,6 +29,18 @@ count_roots(f, x = NULL, a = -Inf, b = Inf)
 
   The variable; when `k` is missing, `x` is the index and the variable
   is the single free symbol of `f`.
+
+- n:
+
+  Number of decimal digits of the roots.
+
+- maxsteps:
+
+  Maximum number of Durand-Kerner iterations.
+
+- cleanup:
+
+  Remove negligible real or imaginary parts.
 
 - a, b:
 
