@@ -4,7 +4,7 @@
 \alias{CRootOf}
 \title{Indexed complex roots of polynomials}
 \usage{
-CRootOf(f, x, k, radicals = TRUE)
+CRootOf(f, x, k, radicals = FALSE)
 }
 \arguments{
 \item{f}{A polynomial.}
@@ -14,11 +14,12 @@ variable is the single free symbol of \code{f}.}
 
 \item{k}{Index of the root, from 0.}
 
-\item{radicals}{Accepted for SymPy compatibility; the root is always kept
-as a CRootOf.}
+\item{radicals}{As in SymPy: when \code{TRUE}, roots of quadratic and binomial
+factors are given by radicals.}
 }
 \value{
-A \code{sym} CRootOf object.
+A \code{sym} CRootOf object, or the root itself when it is rational
+(or a radical, with \code{radicals = TRUE}).
 }
 \description{
 \code{CRootOf(f, x, k)} is the \code{k}-th root (0 based) of the polynomial \code{f} in

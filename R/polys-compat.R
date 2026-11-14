@@ -66,7 +66,7 @@
 # in increasing order; the complex ones follow factor by factor, the factors
 # in SymPy's ordered() order, each by real then imaginary part. NULL when f
 # is not a univariate polynomial with rational coefficients.
-.all_roots_rootof <- function(f, x) {
+.all_roots_rootof <- function(f, x, radicals = TRUE) {
   if (inherits(f, "Poly")) {
     if (is.null(x)) x <- f$gens[[1L]]
     f <- as_expr(f)
@@ -82,7 +82,7 @@
   # CRootOf._get_roots: preprocess_roots scales away an integer basis first
   pp <- .preprocess_roots(f, as_sym(x))
   if (!is_one_num(pp$coeff)) {
-    r <- .all_roots_rootof(pp$poly, x)
+    r <- .all_roots_rootof(pp$poly, x, radicals)
     return(if (is.null(r)) NULL else lapply(r, function(z) .mul(list(pp$coeff, z))))
   }
   q <- do.call(c, lapply(cf, `[[`, "value"))
@@ -95,10 +95,11 @@
     g <- lapply(as.list(pr[[1L]]), function(v) make_rational(gmp::as.bigq(v)))
     n <- length(g) - 1L
     binom <- n > 2L && all(vapply(g[-c(1L, n + 1L)], is_zero_num, TRUE))
-    rs <- if (n <= 2L || binom) .roots_of_coeffs(g) else {
-      xx <- Dummy("x")
-      pe <- .coeffs_to_expr(g, xx)
-      lapply(seq_len(n) - 1L, function(i) CRootOf(pe, xx, i))
+    # CRootOf._postprocess_root: linear factors always, quadratics and
+    # binomials only with radicals, are solved; the rest stay CRootOf
+    rs <- if (n == 1L || (radicals && (n == 2L || binom))) .roots_of_coeffs(g) else {
+      pe <- .coeffs_to_expr(g, Symbol("x"))
+      lapply(seq_len(n) - 1L, function(i) new_sym("CRootOf", list(pe, .int(i))))
     }
     fx[[length(fx) + 1L]] <- .coeffs_to_expr(g, Symbol("x"))
     rts[[length(rts) + 1L]] <- rs

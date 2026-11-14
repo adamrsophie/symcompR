@@ -281,11 +281,12 @@ roots <- function(f, x = NULL, multiple = FALSE, rootof = FALSE, filter = NULL, 
 #' @param x The variable; when `k` is missing, `x` is the index and the
 #'   variable is the single free symbol of `f`.
 #' @param k Index of the root, from 0.
-#' @param radicals Accepted for SymPy compatibility; the root is always kept
-#'   as a CRootOf.
-#' @return A `sym` CRootOf object.
+#' @param radicals As in SymPy: when `TRUE`, roots of quadratic and binomial
+#'   factors are given by radicals.
+#' @return A `sym` CRootOf object, or the root itself when it is rational
+#'   (or a radical, with `radicals = TRUE`).
 #' @export
-CRootOf <- function(f, x, k, radicals = TRUE) {
+CRootOf <- function(f, x, k, radicals = FALSE) {
   f <- as_sym(f)
   # CRootOf(f, k) for a univariate f, as in SymPy
   if (missing(k)) {
@@ -298,7 +299,32 @@ CRootOf <- function(f, x, k, radicals = TRUE) {
   if (is_sym(k)) k <- as.integer(as.character(k$value))
   xx <- Symbol("x")
   pe <- expand(subs(f, x, xx))
+  r <- .crootof_new(pe, xx, k, radicals)
+  if (!is.null(r)) return(r)
   new_sym("CRootOf", list(pe, .int(k)))
+}
+
+# ComplexRootOf.__new__ for rational coefficients: the trivial roots,
+# preprocess_roots scaling, then the lazy root of an irreducible polynomial
+# (primitive, positive leading coefficient) or the indexed root over the
+# factors. NULL for other coefficients.
+.crootof_new <- function(pe, xx, k, radicals) {
+  cf <- tryCatch(.coeff_list(pe, xx), error = function(e) NULL)
+  if (length(cf) < 2L || !all(vapply(cf, is_exact_number, TRUE))) return(NULL)
+  n <- length(cf) - 1L
+  binom <- n > 2L && all(vapply(cf[-c(1L, n + 1L)], is_zero_num, TRUE)) && !is_zero_num(cf[[n + 1L]])
+  if (k < -n || k >= n) stop(.sympy_condition("IndexError", sprintf("root index out of [%d, %d] range, got %d", -n, n - 1L, k)))
+  if (k < 0L) k <- k + n
+  if (n == 1L || (radicals && (n == 2L || binom))) return(.all_roots_rootof(pe, xx, radicals)[[k + 1L]])
+  pp <- .preprocess_roots(pe, xx)
+  if (!is_one_num(pp$coeff)) return(.mul(list(pp$coeff, CRootOf(pp$poly, xx, k, radicals))))
+  q <- do.call(c, lapply(cf, `[[`, "value"))
+  zl <- .zp_factor_list(gmp::numerator(q * gmp::as.bigq(.lcm_den(q))))
+  if (length(zl$factors) == 1L && as.integer(zl$factors[[1L]][[2L]]) == 1L) {
+    g <- lapply(as.list(zl$factors[[1L]][[1L]]), function(v) make_rational(gmp::as.bigq(v)))
+    return(new_sym("CRootOf", list(.coeffs_to_expr(g, Symbol("x")), .int(k))))
+  }
+  .all_roots_rootof(pe, xx, radicals)[[k + 1L]]
 }
 
 register_str_printer("CRootOf", function(e) paste0("CRootOf(", .str(e$args[[1L]]), ", ", .str(e$args[[2L]]), ")"))

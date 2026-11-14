@@ -48,3 +48,16 @@ test_that("Poly over RR prints its domain and gives Float coefficients", {
   expect_identical(.pyfmt(all_coeffs(Poly(x^2 / 4 + 1, x, domain = "RR"))),
                    "[0.250000000000000, 0.0, 1.00000000000000]")
 })
+
+test_that("CRootOf follows ComplexRootOf.__new__", {
+  x <- Symbol("x")
+  got <- vapply(list(CRootOf(x^2 - 2, 0), CRootOf(x^3 - 8, 0), CRootOf(x^3 - 8, 1),
+                     CRootOf((x^3 - x - 1) * (x^2 - 2), 1), CRootOf((x^3 - x - 1) * (x^2 - 2), 3),
+                     CRootOf(2 * x - 1, 0), CRootOf(x^5 - 9 * x^3 + 243, 4), CRootOf(-2 * x^3 + 2 * x + 2, 0),
+                     CRootOf(x^2 - 2, 1, radicals = TRUE), CRootOf(x^3 - x - 1, -1),
+                     CRootOf(x^3 - 2, 0, radicals = TRUE)), sstr, "")
+  expect_identical(got, c("CRootOf(x^2 - 2, 0)", "2", "2*CRootOf(x^2 + x + 1, 0)", "CRootOf(x^3 - x - 1, 0)",
+                          "CRootOf(x^3 - x - 1, 1)", "1/2", "3*CRootOf(x^5 - x^3 + 1, 4)", "CRootOf(x^3 - x - 1, 0)",
+                          "sqrt(2)", "CRootOf(x^3 - x - 1, 2)", "2^(1/3)"))
+  expect_error(CRootOf(x^3 - x - 1, 3), "root index out of \\[-3, 2\\] range, got 3")
+})
