@@ -84,6 +84,8 @@ The transform, or `list(F, cond)` when `noconds = FALSE`.
 
 ``` r
 x <- Symbol("x"); k <- Symbol("k")
+# \donttest{
 fourier_transform(exp(-x^2), x, k)
 #> sqrt(pi)*exp(-pi^2*k^2)
+# }
 ```

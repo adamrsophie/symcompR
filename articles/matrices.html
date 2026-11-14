@@ -229,7 +229,9 @@ ordinary R matrix.</p>
 <p><code>+</code>, <code>-</code>, and multiplication by a scalar work
 as usual. Because <code>*</code> between two R matrices is elementwise,
 the same holds here; the matrix product is <code>%*%</code> and the
-matrix power <code>%^%</code>.</p>
+matrix power <code>%^%</code>. A scalar added to a matrix is added to
+every entry, as in R; SymPy raises a <code>TypeError</code> for
+<code>Matrix + 2</code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">M</span> <span class="op">+</span> <span class="va">M</span></span>
 <span><span class="co">#&gt; Matrix(2, 2)</span></span>

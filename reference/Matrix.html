@@ -4,12 +4,16 @@ matrix, from a vector (a column), or from dimensions and a function
 f(i, j) or a data list in row-major order. zeros(), ones(), eye()
 and diag_matrix() build special matrices. +, - and scalar * work as
 usual; * between two matrices of equal shape is elementwise, %*% is the
-matrix product and %^% the matrix power. [ indexes like R matrices."><meta property="og:description" content="Matrix() builds a matrix of expressions from a list of rows, from an R
+matrix product and %^% the matrix power. [ indexes like R matrices.
+A scalar added to or subtracted from a matrix acts on every entry, as R
+arithmetic does; SymPy raises a TypeError for Matrix + 2 instead."><meta property="og:description" content="Matrix() builds a matrix of expressions from a list of rows, from an R
 matrix, from a vector (a column), or from dimensions and a function
 f(i, j) or a data list in row-major order. zeros(), ones(), eye()
 and diag_matrix() build special matrices. +, - and scalar * work as
 usual; * between two matrices of equal shape is elementwise, %*% is the
-matrix product and %^% the matrix power. [ indexes like R matrices."><meta property="og:image" content="https://adamrsophie.github.io/symcompR/logo.svg"></head><body>
+matrix product and %^% the matrix power. [ indexes like R matrices.
+A scalar added to or subtracted from a matrix acts on every entry, as R
+arithmetic does; SymPy raises a TypeError for Matrix + 2 instead."><meta property="og:image" content="https://adamrsophie.github.io/symcompR/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -106,7 +110,9 @@ matrix, from a vector (a column), or from dimensions and a function
 <code>f(i, j)</code> or a data list in row-major order. <code>zeros()</code>, <code>ones()</code>, <code>eye()</code>
 and <code>diag_matrix()</code> build special matrices. <code>+</code>, <code>-</code> and scalar <code>*</code> work as
 usual; <code>*</code> between two matrices of equal shape is elementwise, <code>%*%</code> is the
-matrix product and <code>%^%</code> the matrix power. <code>[</code> indexes like R matrices.</p>
+matrix product and <code>%^%</code> the matrix power. <code>[</code> indexes like R matrices.
+A scalar added to or subtracted from a matrix acts on every entry, as R
+arithmetic does; SymPy raises a <code>TypeError</code> for <code>Matrix + 2</code> instead.</p>
     </div>
 
     <div class="section level2">

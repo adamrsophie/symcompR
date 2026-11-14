@@ -121,7 +121,9 @@ as.matrix(M)
 
 `+`, `-`, and multiplication by a scalar work as usual. Because `*`
 between two R matrices is elementwise, the same holds here; the matrix
-product is `%*%` and the matrix power `%^%`.
+product is `%*%` and the matrix power `%^%`. A scalar added to a matrix
+is added to every entry, as in R; SymPy raises a `TypeError` for
+`Matrix + 2`.
 
 ``` r
 

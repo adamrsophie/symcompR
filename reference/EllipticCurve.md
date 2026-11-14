@@ -76,6 +76,7 @@ p + q
 #> (35, 207) 
 e$discriminant
 #> [1] -34928
+# \donttest{
 EllipticCurve(0, 1)$torsion_points()
 #> [[1]]
 #> O 
@@ -100,4 +101,5 @@ f$order()
 #> [1] 19
 point_order(f$point(3, 7))
 #> [1] 20
+# }
 ```

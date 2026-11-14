@@ -49,6 +49,8 @@ An expression.
 ``` r
 x <- Symbol("x"); y <- Symbol("y")
 eq <- (x + y^5 + y) / (x - y)
+# \donttest{
 ratsimpmodprime(eq, list(x * y^5 - x - y), x, y, order = "lex")
 #> (-x^2 - x*y - x - y)/(-x^2 + x*y)
+# }
 ```

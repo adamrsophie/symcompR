@@ -15,9 +15,9 @@ GramSchmidt(vlist, orthonormal = FALSE)
 
 QRdecomposition(M)
 
-cholesky(M)
+cholesky(M, hermitian = TRUE)
 
-LDLdecomposition(M)
+LDLdecomposition(M, hermitian = TRUE)
 ```
 
 ## Arguments
@@ -33,6 +33,12 @@ LDLdecomposition(M)
 - orthonormal:
 
   Normalize the vectors.
+
+- hermitian:
+
+  For `cholesky()` and `LDLdecomposition()`: require a Hermitian matrix
+  and use conjugates (SymPy's default); `FALSE` requires a symmetric
+  matrix.
 
 ## Value
 

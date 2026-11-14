@@ -114,9 +114,9 @@ orthogonalizes a list of vectors.</p>
 <span></span>
 <span><span class="fu">QRdecomposition</span><span class="op">(</span><span class="va">M</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">cholesky</span><span class="op">(</span><span class="va">M</span><span class="op">)</span></span>
+<span><span class="fu">cholesky</span><span class="op">(</span><span class="va">M</span>, hermitian <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">LDLdecomposition</span><span class="op">(</span><span class="va">M</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">LDLdecomposition</span><span class="op">(</span><span class="va">M</span>, hermitian <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -133,6 +133,11 @@ orthogonalizes a list of vectors.</p>
 
 <dt id="arg-orthonormal">orthonormal<a class="anchor" aria-label="anchor" href="#arg-orthonormal"></a></dt>
 <dd><p>Normalize the vectors.</p></dd>
+
+
+<dt id="arg-hermitian">hermitian<a class="anchor" aria-label="anchor" href="#arg-hermitian"></a></dt>
+<dd><p>For <code>cholesky()</code> and <code>LDLdecomposition()</code>: require a Hermitian
+matrix and use conjugates (SymPy's default); <code>FALSE</code> requires a symmetric matrix.</p></dd>
 
 </dl></div>
     <div class="section level2">

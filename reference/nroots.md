@@ -4,8 +4,9 @@
 and rational coefficients by the Durand-Kerner iteration of mpmath's
 `polyroots()`, as SymPy's `Poly.nroots()`. `real_roots(f, x)` returns
 the real roots with multiplicity, exact where possible.
-`count_roots(f, x, a, b)` counts real roots in `[a, b]` with a Sturm
-sequence. `sturm()` returns the Sturm sequence.
+`count_roots(f, x, a, b)` (or SymPy's `count_roots(f, a, b)` with
+numeric bounds) counts real roots in `[a, b]` with a Sturm sequence.
+`sturm()` returns the Sturm sequence.
 
 ## Usage
 

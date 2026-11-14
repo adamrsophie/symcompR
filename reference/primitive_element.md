@@ -72,6 +72,7 @@ primitive_element(list(sqrt(Integer(2)), sqrt(Integer(3))), x)
 #> 1
 #> 
 #> 
+# \donttest{
 field_isomorphism(sqrt(Integer(2)), sqrt(Integer(2)) + sqrt(Integer(3)))
 #> [[1]]
 #> 1/2
@@ -87,4 +88,5 @@ field_isomorphism(sqrt(Integer(2)), sqrt(Integer(2)) + sqrt(Integer(3)))
 #> 
 to_number_field(sqrt(Integer(2)), sqrt(Integer(2)) + sqrt(Integer(3)))
 #> sqrt(2)
+# }
 ```

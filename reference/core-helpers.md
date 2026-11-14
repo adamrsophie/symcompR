@@ -21,11 +21,11 @@ compares two numbers within a tolerance. `check_assumptions()` and
 ## Usage
 
 ``` r
-Add(...)
+Add(..., evaluate = TRUE)
 
-Mul(...)
+Mul(..., evaluate = TRUE)
 
-Pow(a, b)
+Pow(a, b, evaluate = TRUE)
 
 Equality(a, b, evaluate = TRUE)
 
@@ -70,13 +70,14 @@ sym_ordered(x, ...)
 
   Expressions, or assumption facts as `name = value`.
 
+- evaluate:
+
+  If `FALSE`, `Equality()` keeps the relation unevaluated and `Add()`,
+  `Mul()` and `Pow()` keep their arguments as given.
+
 - a, b, e:
 
   Expressions.
-
-- evaluate:
-
-  If `FALSE`, `Equality()` keeps the relation unevaluated.
 
 - op:
 

@@ -181,8 +181,10 @@ finite series.</p></dd>
 <span class="r-in"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu">fourier_series</span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/seek.html" class="external-link">truncate</a></span><span class="op">(</span><span class="va">s</span>, <span class="fl">4</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -39.4784176043574*cos(0.318309886183791*pi*x)/pi^2 + 9.86960440108936*cos(0.636619772367581*pi*x)/pi^2 - 4.3864908449286*cos(0.954929658551372*pi*x)/pi^2 + 3.28986813369645</span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="fu">fourier_series</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FiniteFourierSeries(sin(x)^2, (x, -pi, pi), (1/2, {2: -1/2}, {}))</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

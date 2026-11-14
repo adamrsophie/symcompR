@@ -83,6 +83,8 @@ x <- Symbol("x")
 s <- fourier_series(x^2, list(x, -pi, pi))
 truncate(s, 4)
 #> -39.4784176043574*cos(0.318309886183791*pi*x)/pi^2 + 9.86960440108936*cos(0.636619772367581*pi*x)/pi^2 - 4.3864908449286*cos(0.954929658551372*pi*x)/pi^2 + 3.28986813369645
+# \donttest{
 fourier_series(sin(x)^2)
 #> FiniteFourierSeries(sin(x)^2, (x, -pi, pi), (1/2, {2: -1/2}, {}))
+# }
 ```

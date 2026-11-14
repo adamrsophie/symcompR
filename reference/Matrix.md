@@ -6,7 +6,9 @@ matrix, from a vector (a column), or from dimensions and a function
 `eye()` and `diag_matrix()` build special matrices. `+`, `-` and scalar
 `*` work as usual; `*` between two matrices of equal shape is
 elementwise, `%*%` is the matrix product and `%^%` the matrix power. `[`
-indexes like R matrices.
+indexes like R matrices. A scalar added to or subtracted from a matrix
+acts on every entry, as R arithmetic does; SymPy raises a `TypeError`
+for `Matrix + 2` instead.
 
 ## Usage
 
