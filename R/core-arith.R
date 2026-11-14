@@ -213,6 +213,28 @@ as_coeff_mul_split <- function(a) {
   n <- length(args)
   if (n == 0L) return(S_One)
   if (n == 1L) return(args[[1L]])
+  # AssocOp.__new__ drops the identity S.One before flattening, so 1*x is x
+  one <- vapply(args, function(a) identical(a$type, "Integer") && a$value == 1L, NA)
+  if (any(one)) {
+    args <- args[!one]
+    n <- length(args)
+    if (n == 0L) return(S_One)
+    if (n == 1L) return(args[[1L]])
+  }
+  # Mul.flatten's two-argument hack: a Rational times r*Add with a Rational
+  # r other than 1 stays Mul(a*r, Add) without distributing
+  if (n == 2L) {
+    ia <- if (args[[1L]]$type %in% c("Integer", "Rational")) 1L else if (args[[2L]]$type %in% c("Integer", "Rational")) 2L else 0L
+    if (ia > 0L) {
+      a <- args[[ia]]; b <- args[[3L - ia]]
+      if (b$type == "Mul" && length(b$args) == 2L && b$args[[1L]]$type %in% c("Integer", "Rational") &&
+          b$args[[2L]]$type == "Add" && !is_one_num(b$args[[1L]])) {
+        arb <- .mul(list(a, b$args[[1L]]))
+        if (is_one_num(arb)) return(b$args[[2L]])
+        if (!is_zero_num(arb)) return(new_sym("Mul", list(arb, b$args[[2L]])))
+      }
+    }
+  }
   types <- vapply(args, `[[`, "", "type")
   if (any(types %in% .REL_TYPES)) .rel_in_assoc("Mul")
   if (any(types == "Mul")) {
@@ -685,7 +707,9 @@ as_coeff_mul_split <- function(a) {
   parts <- lapply(nonneg, function(f) .pow(f, e))
   if (length(other)) {
     om <- .mul(other)
-    parts[[length(parts) + 1L]] <- if (is_number_type(om)) .pow(om, e) else new_sym("Pow", list(om, e))
+    # Mul.flatten rebuilds each collected power with Pow(b, e), so a single
+    # remaining factor gets its own _eval_power, as (2 - I)^(-2) does
+    parts[[length(parts) + 1L]] <- if (is_number_type(om) || length(other) == 1L) .pow(om, e) else new_sym("Pow", list(om, e))
   }
   .mul(parts)
 }

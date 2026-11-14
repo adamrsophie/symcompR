@@ -83,3 +83,19 @@ test_that("limits on branch cuts take SymPy's one sided values", {
   expect_equal(sstr(limit((1 - x/2)^(3*x), x, oo)), "zoo")
   expect_equal(sstr(limit((-Rational(1, 4))^x, x, oo)), "0")
 })
+
+test_that("powers of Gaussian rationals keep SymPy's Mul forms", {
+  x <- Symbol("x")
+  got <- vapply(list(sqrt((2 - sym_I)^(-2)), sqrt((1 + sym_I)^(-2)), sqrt((-2 - sym_I)^(-2)),
+                     -1 * ((-2 + sym_I) / 5), 5 * ((-2 + sym_I) / 5), 1 / (3 - 4 * sym_I) * 2,
+                     2 * ((x + 1) / 3), 3 * (2 * (x + 1)), sqrt(2 * x * (2 - sym_I)^(-2))), sstr, "")
+  expect_identical(got, c("(2 + I)/5", "(1 - I)/2", "-(-2 + I)/5", "2/5 - I/5", "-2 + I", "2*(3 + 4*I)/25",
+                          "2*x/3 + 2/3", "6*x + 6", "sqrt(2)*sqrt(x/(2 - I)^2)"))
+})
+
+test_that("cancel reads I back as a Gaussian coefficient", {
+  x <- Symbol("x")
+  d <- cancel(-x * exp(-x^2 / (2 * (2 - sym_I)^2)) / (2 - sym_I)^2)
+  expect_identical(sstr(d), "x*(-3 - 4*I)*exp(-3*x^2/50)*exp(-2*I*x^2/25)/25")
+  expect_null(heurisch(exp(-x^2 / (2 * (2 - sym_I)^2)), x, hints = list()))
+})
