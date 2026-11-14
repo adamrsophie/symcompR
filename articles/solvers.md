@@ -457,9 +457,10 @@ show_linprog(c(-1, -2), list(c(1, 1), c(1, 3)), c(4, 6))
 ## Numerical solutions
 
 [`nsolve()`](https://adamrsophie.github.io/symcompR/reference/nsolve.md)
-finds a root numerically with Newton’s method, starting from an initial
-guess. For systems, give lists of equations, unknowns, and starting
-values.
+finds a root numerically from an initial guess, as mpmath’s `findroot()`
+does: the secant method for one equation and multidimensional Newton for
+a system, given as lists of equations, unknowns, and starting values.
+`prec` sets the working precision in digits.
 
 ``` r
 

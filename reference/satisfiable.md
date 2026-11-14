@@ -65,10 +65,10 @@ satisfiable(And(a, Not(a)))
 #> [1] FALSE
 satisfiable(Equivalent(a, b), all_models = TRUE)
 #> [[1]]
-#> [[1]]$a
+#> [[1]]$b
 #> [1] FALSE
 #> 
-#> [[1]]$b
+#> [[1]]$a
 #> [1] FALSE
 #> 
 #> 

@@ -16,7 +16,10 @@ has(e, ...)
 
 - ...:
 
-  Subexpressions to look for. A symbol matches when it is free in `e`.
+  Subexpressions to look for. A symbol matches when it is free in `e`; a
+  function such as `sin` or a
+  [`Function()`](https://adamrsophie.github.io/symcompR/reference/Function.md)
+  class matches any of its applications.
 
 ## Value
 

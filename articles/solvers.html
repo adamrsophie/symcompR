@@ -510,9 +510,11 @@ writes that problem with symbols.</p>
 <div class="section level2">
 <h2 id="numerical-solutions">Numerical solutions<a class="anchor" aria-label="anchor" href="#numerical-solutions"></a>
 </h2>
-<p><code><a href="../reference/nsolve.html">nsolve()</a></code> finds a root numerically with Newton’s method,
-starting from an initial guess. For systems, give lists of equations,
-unknowns, and starting values.</p>
+<p><code><a href="../reference/nsolve.html">nsolve()</a></code> finds a root numerically from an initial guess,
+as mpmath’s <code>findroot()</code> does: the secant method for one
+equation and multidimensional Newton for a system, given as lists of
+equations, unknowns, and starting values. <code>prec</code> sets the
+working precision in digits.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/nsolve.html">nsolve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">-</span> <span class="va">x</span>, <span class="va">x</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 0.739085133215161</span></span>

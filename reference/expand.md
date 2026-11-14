@@ -74,7 +74,8 @@ expand_func(e, deep = TRUE, force = FALSE)
 
 - ...:
 
-  Ignored.
+  Further hints, such as `diracdelta = TRUE` with `wrt` (the variable
+  for the `DiracDelta` expansion).
 
 ## Value
 

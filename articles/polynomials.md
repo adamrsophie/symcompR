@@ -226,10 +226,10 @@ str(lapply(sqf_list(x^5 - 2 * x^4 + x^3)$factors,
 #> List of 2
 #>  $ :List of 2
 #>   ..$ : chr "x - 1"
-#>   ..$ : num 2
+#>   ..$ : int 2
 #>  $ :List of 2
 #>   ..$ : chr "x"
-#>   ..$ : num 3
+#>   ..$ : int 3
 ```
 
 ## Resultants and discriminants

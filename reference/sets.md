@@ -19,9 +19,9 @@ contains(s, x)
 
 is_subset(s, t)
 
-Union(...)
+Union(..., evaluate = TRUE)
 
-Intersection(...)
+Intersection(..., evaluate = TRUE)
 
 Complement(s, t)
 
@@ -88,6 +88,11 @@ ConditionSet(sym, condition, base = UniversalSet)
 
   Elements or sets; for `ImageSet()`, further sets, one for each
   argument of a `Lambda` with several arguments.
+
+- evaluate:
+
+  For `Union()` and `Intersection()`: `FALSE` keeps the arguments
+  unevaluated, as `evaluate=False` in SymPy.
 
 - lam:
 

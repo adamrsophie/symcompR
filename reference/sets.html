@@ -126,9 +126,9 @@ possible. <code>contains()</code> tests membership; <code>measure()</code>, <cod
 <span></span>
 <span><span class="fu">is_subset</span><span class="op">(</span><span class="va">s</span>, <span class="va">t</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">Union</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">Union</span><span class="op">(</span><span class="va">...</span>, evaluate <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">Intersection</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">Intersection</span><span class="op">(</span><span class="va">...</span>, evaluate <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">Complement</span><span class="op">(</span><span class="va">s</span>, <span class="va">t</span><span class="op">)</span></span>
 <span></span>
@@ -196,6 +196,11 @@ possible. <code>contains()</code> tests membership; <code>measure()</code>, <cod
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Elements or sets; for <code>ImageSet()</code>, further sets, one for each
 argument of a <code>Lambda</code> with several arguments.</p></dd>
+
+
+<dt id="arg-evaluate">evaluate<a class="anchor" aria-label="anchor" href="#arg-evaluate"></a></dt>
+<dd><p>For <code>Union()</code> and <code>Intersection()</code>: <code>FALSE</code> keeps the
+arguments unevaluated, as <code>evaluate=False</code> in SymPy.</p></dd>
 
 
 <dt id="arg-lam">lam<a class="anchor" aria-label="anchor" href="#arg-lam"></a></dt>

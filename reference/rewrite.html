@@ -4,12 +4,18 @@ exponentials; &quot;cos&quot;, &quot;sin&quot; and &quot;tan&quot; convert betwe
 functions; &quot;log&quot; writes inverse trigonometric functions as logarithms;
 &quot;gamma&quot; writes factorials and binomials with gamma functions;
 &quot;factorial&quot; does the reverse; &quot;Piecewise&quot; rewrites Abs, sign,
-Heaviside, Max and Min; &quot;erf&quot; rewrites erfc and erfi."><meta property="og:description" content="rewrite(e, &quot;exp&quot;) expresses trigonometric and hyperbolic functions with
+Heaviside, Max and Min; &quot;erf&quot; rewrites erfc and erfi.
+The &quot;erfc&quot;, &quot;sign&quot;, &quot;hyper&quot;, &quot;SingularityFunction&quot;, &quot;asin&quot; and
+&quot;tractable&quot; targets follow the corresponding SymPy methods. A target
+that no function knows returns the expression unchanged, as in SymPy."><meta property="og:description" content="rewrite(e, &quot;exp&quot;) expresses trigonometric and hyperbolic functions with
 exponentials; &quot;cos&quot;, &quot;sin&quot; and &quot;tan&quot; convert between trigonometric
 functions; &quot;log&quot; writes inverse trigonometric functions as logarithms;
 &quot;gamma&quot; writes factorials and binomials with gamma functions;
 &quot;factorial&quot; does the reverse; &quot;Piecewise&quot; rewrites Abs, sign,
-Heaviside, Max and Min; &quot;erf&quot; rewrites erfc and erfi."><meta property="og:image" content="https://adamrsophie.github.io/symcompR/logo.svg"></head><body>
+Heaviside, Max and Min; &quot;erf&quot; rewrites erfc and erfi.
+The &quot;erfc&quot;, &quot;sign&quot;, &quot;hyper&quot;, &quot;SingularityFunction&quot;, &quot;asin&quot; and
+&quot;tractable&quot; targets follow the corresponding SymPy methods. A target
+that no function knows returns the expression unchanged, as in SymPy."><meta property="og:image" content="https://adamrsophie.github.io/symcompR/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -106,7 +112,10 @@ exponentials; <code>"cos"</code>, <code>"sin"</code> and <code>"tan"</code> conv
 functions; <code>"log"</code> writes inverse trigonometric functions as logarithms;
 <code>"gamma"</code> writes factorials and binomials with gamma functions;
 <code>"factorial"</code> does the reverse; <code>"Piecewise"</code> rewrites <code>Abs</code>, <code>sign</code>,
-<code>Heaviside</code>, <code>Max</code> and <code>Min</code>; <code>"erf"</code> rewrites <code>erfc</code> and <code>erfi</code>.</p>
+<code>Heaviside</code>, <code>Max</code> and <code>Min</code>; <code>"erf"</code> rewrites <code>erfc</code> and <code>erfi</code>.
+The <code>"erfc"</code>, <code>"sign"</code>, <code>"hyper"</code>, <code>"SingularityFunction"</code>, <code>"asin"</code> and
+<code>"tractable"</code> targets follow the corresponding SymPy methods. A target
+that no function knows returns the expression unchanged, as in SymPy.</p>
     </div>
 
     <div class="section level2">
@@ -123,7 +132,8 @@ functions; <code>"log"</code> writes inverse trigonometric functions as logarith
 
 
 <dt id="arg-target">target<a class="anchor" aria-label="anchor" href="#arg-target"></a></dt>
-<dd><p>The target family as a string.</p></dd>
+<dd><p>The target family as a string, or a function such as
+<code>sign</code> standing for its class.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

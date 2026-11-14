@@ -100,8 +100,8 @@ factorint(2000)
 #> 2 5 
 #> 4 3 
 factorint(-60)
-#> -1  2  3  5 
-#>  1  2  1  1 
+#>  2  3  5 -1 
+#>  2  1  1  1 
 factorint(2^20 + 1, multiple = TRUE)
 #> [1]    17 61681
 factorint(c("4" = 2, "12" = 3))
