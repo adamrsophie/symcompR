@@ -563,7 +563,9 @@ doit(ArraySum(i * AA, list(i, 1, 3)))
 ```
 
 [`ArrayComprehension()`](https://adamrsophie.github.io/symcompR/reference/ArrayComprehension.md)
-builds an array from an expression in its index variables.
+builds an array from an expression in its index variables;
+[`ArrayComprehensionMap()`](https://adamrsophie.github.io/symcompR/reference/ArrayComprehension.md)
+takes an R function of the index instead.
 
 ``` r
 
@@ -572,6 +574,11 @@ do.call(Tuple, get_shape(ac))
 #> (3, 3)
 doit(ac)
 #> [[2, 3, 4], [4, 6, 8], [6, 9, 12]]
+acm <- ArrayComprehensionMap(function(i) i + 1, list(i, 1, 5))
+acm
+#> ArrayComprehensionMap((i, 1, 5))
+doit(acm)
+#> [2, 3, 4, 5, 6]
 ```
 
 Matrix expressions convert to array expressions and back, and so do
@@ -614,6 +621,9 @@ ArrayDerivative(MX, MX)
 #> Derivative(X, X)
 ArrayDerivative(MX, MX, evaluate = TRUE)
 #> PermuteDims(ArrayTensorProduct(I, I), (3)(1 2))
+tryCatch(ArrayDerivative(ArraySymbol("A", list(2, 2)), ArraySymbol("A", list(2, 2))),
+         error = conditionMessage)
+#> [1] "Can't calculate derivative wrt A."
 ArrayDerivative(Array(list(x^2, x * y)), x)
 #> Derivative([x^2, x*y], x)
 doit(ArrayDerivative(Array(list(x^2, x * y)), x))

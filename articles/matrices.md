@@ -1003,6 +1003,14 @@ do.call(Tuple, mat_eig(Xk))
 #> (EigenValues(X), EigenVectors(X))
 do.call(Tuple, mat_svd(Xk))
 #> (UofSVD(X), SofSVD(X), VofSVD(X))
+shape(EigenVectors(MatrixSymbol("M", 3, 3)))
+#> (3, 3)
+ask(Q$orthogonal(QofQR(Xk)))
+#> [1] TRUE
+ask(Q$upper_triangular(RofQR(Xk)))
+#> [1] TRUE
+ask(Q$diagonal(SofSVD(Xk)))
+#> [1] TRUE
 ```
 
 [`GenericIdentity()`](https://adamrsophie.github.io/symcompR/reference/GenericIdentity.md)

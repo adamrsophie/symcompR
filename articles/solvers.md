@@ -698,8 +698,13 @@ checkinfsol(eq1, infinitesimals(eq1, f(x)), f(x))
 #> [[1]]
 #> (True, 0)
 t <- Symbol("t")
-classify_sysode(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), -f(t))))
+cs <- classify_sysode(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), -f(t))))
+cs
 #> {no_of_equation: 2, eq: [-g(t) + Derivative(f(t), t), f(t) + Derivative(g(t), t)], func: [f(t), g(t)], order: {f(t): 1, g(t): 1}, func_coeff: {(0, f(t), 0): 0, (0, f(t), 1): 1, (0, g(t), 0): -1, (0, g(t), 1): 0, (1, f(t), 0): 1, (1, f(t), 1): 0, (1, g(t), 0): 0, (1, g(t), 1): 1}, is_linear: True, type_of_equation: None}
+cs$is_linear
+#> [1] TRUE
+cs$type_of_equation
+#> NULL
 linear_ode_to_matrix(list(Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), f(t))),
                      list(f(t), g(t)), t, 1)
 #> ([Matrix([[1, 0], [0, 1]]), Matrix([[0, 1], [1, 0]])], Matrix([[0], [0]]))

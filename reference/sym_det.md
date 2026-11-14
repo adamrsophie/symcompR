@@ -13,16 +13,22 @@ curve such as
 ## Usage
 
 ``` r
-inverse(M, method = "GE")
+inverse(M, method = NULL, iszerofunc = NULL, try_block_diag = FALSE)
 
 # S3 method for class 'symmatrix'
 solve(a, b, ...)
 
-rref(M)
+rref(
+  M,
+  iszerofunc = NULL,
+  simplify = FALSE,
+  pivots = TRUE,
+  normalize_last = TRUE
+)
 
 rank_matrix(M)
 
-nullspace(M)
+nullspace(M, simplify = FALSE, iszerofunc = NULL)
 
 columnspace(M)
 
@@ -47,6 +53,15 @@ sym_det(x, ...)
 
   Algorithm name.
 
+- iszerofunc:
+
+  A function returning `TRUE`, `FALSE` or `NA` for an entry that is
+  zero, nonzero or undecided; `NULL` uses the assumptions.
+
+- try_block_diag:
+
+  Invert each diagonal block separately.
+
 - a:
 
   A `symmatrix`.
@@ -58,6 +73,18 @@ sym_det(x, ...)
 - ...:
 
   Further arguments, such as `method`.
+
+- simplify:
+
+  `TRUE`, `FALSE` or a function used to decide pivots.
+
+- pivots:
+
+  Also return the pivot columns.
+
+- normalize_last:
+
+  Scale the pivot rows to 1 at the end, as SymPy does.
 
 - i, j:
 

@@ -723,6 +723,8 @@ sapply(0:7, function(i) sstr(motzkin(i)))
 #> [1] "1"  "1"  "1"  "2"  "4"  "9"  "21" "51"
 subfactorial(5)
 #> 44
+rewrite(subfactorial(n), "uppergamma")
+#> exp(-1)*uppergamma(n + 1, -1)
 ```
 
 ## Polar numbers and branches

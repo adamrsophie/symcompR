@@ -270,6 +270,8 @@ arctangents and logarithms:
 
 log_to_atan(Poly(x, x, domain = "ZZ"), Poly(1, x, domain = "ZZ"))
 #> 2*atan(x)
+log_to_atan(Poly(x + S(1) / 2, x, domain = "QQ"), Poly(sqrt(S(3)) / 2, x, domain = "EX"))
+#> 2*atan(2*sqrt(3)*x/3 + sqrt(3)/3)
 log_to_real(Poly(x + 3 * t / 2 + Rational(1, 2), x, domain = "QQ[t]"),
             Poly(3 * t^2 + 1, t, domain = "ZZ"), x, t)
 #> 2*sqrt(3)*atan(2*sqrt(3)*x/3 + sqrt(3)/3)/3

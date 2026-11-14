@@ -26,7 +26,8 @@ count_roots(f, x = NULL, a = -Inf, b = Inf)
 
 - x:
 
-  The variable.
+  The variable; when `k` is missing, `x` is the index and the variable
+  is the single free symbol of `f`.
 
 - a, b:
 

@@ -52,9 +52,9 @@ A list of the components of the solution.
 t <- Symbol("t")
 linodesolve(Matrix(list(list(1, 0), list(0, 2))), t)
 #> [[1]]
-#> _Dummy_1158*exp(t)
+#> _Dummy_1162*exp(t)
 #> 
 #> [[2]]
-#> _Dummy_1159*exp(2*t)
+#> _Dummy_1163*exp(2*t)
 #> 
 ```

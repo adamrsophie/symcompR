@@ -391,10 +391,10 @@ the factors.
 
 ``` r
 
-P <- Symbol("P", commutative = FALSE); Q <- Symbol("Q", commutative = FALSE)
+P <- Symbol("P", commutative = FALSE); Qn <- Symbol("Q", commutative = FALSE)
 factor_nc(P * x + P * y)
 #> (x + y)*P
-factor_nc(x * P * Q + x * Q * P)
+factor_nc(x * P * Qn + x * Qn * P)
 #> x*(P*Q + Q*P)
 ```
 

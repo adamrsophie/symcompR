@@ -959,7 +959,15 @@ at once.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">Tuple</span>, <span class="fu"><a href="../reference/structured-matrices.html">mat_eig</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; (EigenValues(X), EigenVectors(X))</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">Tuple</span>, <span class="fu"><a href="../reference/structured-matrices.html">mat_svd</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; (UofSVD(X), SofSVD(X), VofSVD(X))</span></span></code></pre></div>
+<span><span class="co">#&gt; (UofSVD(X), SofSVD(X), VofSVD(X))</span></span>
+<span><span class="fu"><a href="../reference/array-aliases.html">shape</a></span><span class="op">(</span><span class="fu"><a href="../reference/structured-matrices.html">EigenVectors</a></span><span class="op">(</span><span class="fu"><a href="../reference/matrix-expressions.html">MatrixSymbol</a></span><span class="op">(</span><span class="st">"M"</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (3, 3)</span></span>
+<span><span class="fu"><a href="../reference/ask.html">ask</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="fu">orthogonal</span><span class="op">(</span><span class="fu"><a href="../reference/structured-matrices.html">QofQR</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/ask.html">ask</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="fu">upper_triangular</span><span class="op">(</span><span class="fu"><a href="../reference/structured-matrices.html">RofQR</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/ask.html">ask</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="fu">diagonal</span><span class="op">(</span><span class="fu"><a href="../reference/structured-matrices.html">SofSVD</a></span><span class="op">(</span><span class="va">Xk</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <p><code><a href="../reference/GenericIdentity.html">GenericIdentity()</a></code> and <code><a href="../reference/GenericIdentity.html">GenericZeroMatrix()</a></code>
 are an identity and a zero matrix of unspecified size.
 <code><a href="../reference/hadamard_product.html">hadamard_power()</a></code> is the elementwise power,

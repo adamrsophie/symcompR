@@ -169,20 +169,20 @@ intpoly_strip(3 * x^2)
 unlist(lapply(intpoly_cross_product(c(0, 0, 0), c(1, 0, 0), c(0, 1, 0)), sstr))
 #> [1] "0" "0" "1"
 intpoly_decompose(x^2 + x * y + x + y + x^3 * y^2 + y^5)
-#> $`5`
-#> x^3*y^2 + y^5
+#> $`1`
+#> x + y
 #> 
 #> $`2`
 #> x^2 + x*y
 #> 
-#> $`1`
-#> x + y
+#> $`5`
+#> x^3*y^2 + y^5
 intpoly_decompose(x^2 + x * y + x + y + x^3 * y^2 + y^5, TRUE)
 #> [[1]]
-#> x^3*y^2
+#> x
 #> 
 #> [[2]]
-#> x*y
+#> y
 #> 
 #> [[3]]
 #> x^2
@@ -191,8 +191,8 @@ intpoly_decompose(x^2 + x * y + x + y + x^3 * y^2 + y^5, TRUE)
 #> y^5
 #> 
 #> [[5]]
-#> x
+#> x*y
 #> 
 #> [[6]]
-#> y
+#> x^3*y^2
 ```

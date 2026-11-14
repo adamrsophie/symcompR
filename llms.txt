@@ -1530,6 +1530,15 @@ DomainMatrix layer.
   [`is_diagonalizable()`](https://adamrsophie.github.io/symcompR/reference/charpoly.md)
   [`diagonalize()`](https://adamrsophie.github.io/symcompR/reference/charpoly.md)
   : Characteristic polynomial, eigenvalues and eigenvectors
+- [`is_positive_definite()`](https://adamrsophie.github.io/symcompR/reference/is_positive_definite.md)
+  [`is_positive_semidefinite()`](https://adamrsophie.github.io/symcompR/reference/is_positive_definite.md)
+  [`is_negative_definite()`](https://adamrsophie.github.io/symcompR/reference/is_positive_definite.md)
+  [`is_negative_semidefinite()`](https://adamrsophie.github.io/symcompR/reference/is_positive_definite.md)
+  [`is_indefinite()`](https://adamrsophie.github.io/symcompR/reference/is_positive_definite.md)
+  : Definiteness of a matrix
+- [`left_eigenvects()`](https://adamrsophie.github.io/symcompR/reference/left_eigenvects.md)
+  [`singular_values()`](https://adamrsophie.github.io/symcompR/reference/left_eigenvects.md)
+  : Left eigenvectors and singular values
 - [`jordan_form()`](https://adamrsophie.github.io/symcompR/reference/jordan_form.md)
   : Jordan normal form
 - [`LUdecomposition()`](https://adamrsophie.github.io/symcompR/reference/LUdecomposition.md)

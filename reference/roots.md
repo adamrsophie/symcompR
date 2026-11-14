@@ -38,7 +38,8 @@ roots(
 
 - x:
 
-  The variable.
+  The variable; when `k` is missing, `x` is the index and the variable
+  is the single free symbol of `f`.
 
 - multiple:
 

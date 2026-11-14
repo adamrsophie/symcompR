@@ -379,6 +379,8 @@ continuous or (with a sampling time) discrete transfer function.</p>
 <span><span class="co">#&gt; Feedback(TransferFunction(1, s + 1, s), TransferFunction(s, s + 2, s), -1)</span></span>
 <span><span class="fu"><a href="../reference/control-interconnections.html">Feedback</a></span><span class="op">(</span><span class="va">G1</span>, <span class="va">G2</span><span class="op">)</span><span class="op">$</span><span class="fu">doit</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; TransferFunction((s + 1)*(s + 2), (s + 1)*(s + (s + 1)*(s + 2)), s)</span></span>
+<span><span class="fu"><a href="../reference/TransferFunction.html">PIDController</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">0</span>, <span class="va">s</span><span class="op">)</span></span>
+<span><span class="co">#&gt; PIDController(1, 2, 3, 0, s)</span></span>
 <span><span class="fu"><a href="../reference/TransferFunction.html">PIDController</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">0</span>, <span class="va">s</span><span class="op">)</span><span class="op">$</span><span class="fu">doit</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; TransferFunction(3*s^2 + s + 2, s, s)</span></span></code></pre></div>
 <p><code>TransferFunctionBase</code> is the abstract base class of the

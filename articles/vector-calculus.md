@@ -242,8 +242,8 @@ rotation_matrix(D, N)
 #> [sin(q1), 0, cos(q1) ]
 vector_equals(express(D$k, N), express(orient_new_axis(N, "D2", q1, N$j)$k, N))
 #> [1] TRUE
-Q <- orient_new_quaternion(N, "Q", 1, 0, 0, 0)
-rotation_matrix(Q, N)
+Dq <- orient_new_quaternion(N, "Q", 1, 0, 0, 0)
+rotation_matrix(Dq, N)
 #> Matrix(3, 3)
 #> [1, 0, 0]
 #> [0, 1, 0]

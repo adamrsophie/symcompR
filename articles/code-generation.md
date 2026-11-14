@@ -636,6 +636,8 @@ sym_optimize(exp(x) - 1 + log(1 + x), list(FuncMinusOneOptim(exp, sym_expm1)))
 w <- Wild("w")
 sym_optimize(log(x + 1) + log(y + 1), list(ReplaceOptim(log(w + 1), sym_log1p(w))))
 #> log1p(x) + log1p(y)
+sym_optimize(sin(x)^2 + cos(x)^2, list(ReplaceOptim(function(e) e$type == "Add", function(e) simplify(e))))
+#> 1
 ```
 
 [`SumApprox()`](https://adamrsophie.github.io/symcompR/reference/SumApprox.md)
@@ -759,6 +761,10 @@ ast_attr(InOutArgument(x, x, x + 1), "expr")
 #> x + 1
 ast_attr(Result(x^2), "expr")
 #> x^2
+ast_attr(Result(x^2), "get_datatype")("C")
+#> [1] "double"
+ast_attr(Result(x^2), "_datatype")[["FORTRAN"]]
+#> [1] "REAL*8"
 ast_attr(Routine("f", list(InputArgument(x)), list(Result(x^2, result_var = Symbol("r"))),
                  list(), list()), "name")
 #> [1] "f"

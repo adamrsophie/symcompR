@@ -127,6 +127,8 @@ coskewness(X, X, X)
 #> 0
 entropy(Normal("N", 0, 2))
 #> 1/2 + log(pi)/2 + 3*log(2)/2
+entropy(Die("D", 6))
+#> log(6)
 ```
 
 The capitalized functions are unevaluated, and evaluate with
@@ -323,6 +325,12 @@ set of integers:
 Xd <- DiscreteRV(s, S(1) / 2^s, set = Naturals)
 Xd
 #> x
+apply_lambda(rv_density(Xd), z)
+#> Piecewise((2^(-z), (z >= 1) & (z < oo) & Eq(z, floor(z))), (0, True))
+E(Xd)
+#> Sum(Piecewise((x/2^x, (x >= 1) & Eq(x, floor(x))), (0, True)), (x, 1, oo))
+P(Xd > 2)
+#> 1/4
 ```
 
 Finite distributions list their values and probabilities:
@@ -365,6 +373,8 @@ apply_lambda(rv_density(M), 1, 2)
 #> 3/8
 rv_getitem(M, 0)
 #> M[0]
+tryCatch(E(rv_getitem(M, 0)), error = conditionMessage)
+#> [1] "use Interval or Relational, not Range"
 apply_lambda(rv_density(Dirichlet("D", list(1, 2))), x1, x2)
 #> 2*x2
 apply_lambda(rv_density(MultivariateBeta("B", 1, 2)), x1, x2)
@@ -382,8 +392,10 @@ apply_lambda(rv_density(NormalGamma("G", 0, 1, 2, 3)), x1, x2)
 MN2 <- MultivariateNormal("A", list(1, 2), list(list(1, 0), list(0, 1)))
 apply_lambda(rv_density(MN2), 1, 2)
 #> 1/(2*pi)
-expand(apply_lambda(rv_density(MN2), x1, x2))
-#> exp(-5/2)*exp(x1)*exp(-x1^2/2)*exp(2*x2)*exp(-x2^2/2)/(2*pi)
+apply_lambda(rv_density(MN2), x1, x2)
+#> exp(-x1^2/2 + x1 - x2^2/2 + 2*x2 - 5/2)/(2*pi)
+apply_lambda(marginal_distribution(MN2, 0), x1)
+#> sqrt(2)*exp(-(x1 - 1)^2/2)/(2*sqrt(pi))
 apply_lambda(rv_density(GeneralizedMultivariateLogGamma("G", S(1) / 2, 1, list(1, 1), list(1, 1))), x1, x2)
 #> Sum((1/2)^n*exp((n + 1)*(x1 + x2) - exp(x1) - exp(x2))/gamma(n + 1)^2, (n, 0, oo))/2
 omega <- Matrix(list(list(1, S(1) / 2), list(S(1) / 2, 1)))
@@ -432,9 +444,21 @@ apply_lambda(rv_density(W), MatrixSymbol("Xm", 2, 2))
 MN <- MatrixNormal("M", list(list(1, 2)), list(1), list(list(1, 0), list(0, 1)))
 rv_attr(rv_attr(rv_attr(MN, "pspace"), "distribution"), "set")
 #> MatrixSet(1, 2, Reals)
+doit(apply_lambda(rv_density(MN), MatrixSymbol("Xm", 1, 2)))
+#> exp(-Trace((Matrix([
+#> [-1],
+#> [-2]]) + Xm.T)*(Matrix([[-1, -2]]) + Xm))/2)/(2*pi)
+doit(apply_lambda(rv_density(MN), Matrix(list(list(3, 4)))))
+#> exp(-4)/(2*pi)
 MT <- MatrixStudentT("M", 2, list(list(1, 2)), list(list(1, 0), list(0, 1)), list(1))
 rv_attr(rv_attr(rv_attr(MT, "pspace"), "distribution"), "set")
 #> MatrixSet(1, 2, Reals)
+doit(apply_lambda(rv_density(MT), MatrixSymbol("Xm", 1, 2)))
+#> 1/(pi^1.0*Determinant((Matrix([[-1, -2]]) + Xm)*(Matrix([
+#> [-1],
+#> [-2]]) + Xm.T) + Matrix([[1]]))^2)
+doit(apply_lambda(rv_density(MT), Matrix(list(list(3, 4)))))
+#> 1/(81*pi^1.0)
 ```
 
 The Gaussian and circular ensembles of random matrix theory, with their

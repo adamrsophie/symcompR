@@ -8,7 +8,7 @@ with [`N()`](https://adamrsophie.github.io/symcompR/reference/N.md).
 ## Usage
 
 ``` r
-CRootOf(f, x, k)
+CRootOf(f, x, k, radicals = FALSE)
 ```
 
 ## Arguments
@@ -19,12 +19,19 @@ CRootOf(f, x, k)
 
 - x:
 
-  The variable.
+  The variable; when `k` is missing, `x` is the index and the variable
+  is the single free symbol of `f`.
 
 - k:
 
   Index of the root, from 0.
 
+- radicals:
+
+  As in SymPy: when `TRUE`, roots of quadratic and binomial factors are
+  given by radicals.
+
 ## Value
 
-A `sym` CRootOf object.
+A `sym` CRootOf object, or the root itself when it is rational (or a
+radical, with `radicals = TRUE`).

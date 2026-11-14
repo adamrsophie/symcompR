@@ -283,6 +283,8 @@ Feedback(G1, G2)
 #> Feedback(TransferFunction(1, s + 1, s), TransferFunction(s, s + 2, s), -1)
 Feedback(G1, G2)$doit()
 #> TransferFunction((s + 1)*(s + 2), (s + 1)*(s + (s + 1)*(s + 2)), s)
+PIDController(1, 2, 3, 0, s)
+#> PIDController(1, 2, 3, 0, s)
 PIDController(1, 2, 3, 0, s)$doit()
 #> TransferFunction(3*s^2 + s + 2, s, s)
 ```

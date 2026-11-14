@@ -3,7 +3,8 @@
 `NDimArray()`, `MutableDenseNDimArray()`, `ImmutableDenseNDimArray()`
 and `DenseNDimArray()` are
 [`Array()`](https://adamrsophie.github.io/symcompR/reference/Array.md),
-and `shape()` its dimensions. Indexed objects are documented in
+and `shape()` its dimensions (the shape tuple of a matrix expression).
+Indexed objects are documented in
 [`Indexed()`](https://adamrsophie.github.io/symcompR/reference/Indexed.md).
 
 ## Usage
@@ -35,7 +36,7 @@ shape(a)
 
 - a:
 
-  An array.
+  An array or a matrix expression.
 
 ## Value
 

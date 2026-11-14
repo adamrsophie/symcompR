@@ -223,6 +223,8 @@ evaluates a linear recurrence with constant coefficients.
 
 show(convolution_fft(c(1, 2, 3), c(4, 5, 6)))
 #> [1] "4"  "13" "28" "27" "18"
+show(convolution_fft(list(1 + 2 * sym_I, 4 + 3 * sym_I), list(S(5) / 4, 6)))
+#> [1] "5/4 + 5*I/2" "11 + 63*I/4" "24 + 18*I"
 show(convolution_ntt(c(2, 3), c(4, 5), prime = 19 * 2^10 + 1))
 #> [1] "8"  "22" "15"
 show(convolution_fwht(c(1, 2, 3), c(4, 5, 6)))

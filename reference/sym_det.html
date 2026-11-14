@@ -114,16 +114,22 @@ its inverse curve, as SymPy's <code>Function.inverse()</code>.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">inverse</span><span class="op">(</span><span class="va">M</span>, method <span class="op">=</span> <span class="st">"GE"</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">inverse</span><span class="op">(</span><span class="va">M</span>, method <span class="op">=</span> <span class="cn">NULL</span>, iszerofunc <span class="op">=</span> <span class="cn">NULL</span>, try_block_diag <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'symmatrix'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/solve.html" class="external-link">solve</a></span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">rref</span><span class="op">(</span><span class="va">M</span><span class="op">)</span></span>
+<span><span class="fu">rref</span><span class="op">(</span></span>
+<span>  <span class="va">M</span>,</span>
+<span>  iszerofunc <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  simplify <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  pivots <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  normalize_last <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">rank_matrix</span><span class="op">(</span><span class="va">M</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">nullspace</span><span class="op">(</span><span class="va">M</span><span class="op">)</span></span>
+<span><span class="fu">nullspace</span><span class="op">(</span><span class="va">M</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span>, iszerofunc <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">columnspace</span><span class="op">(</span><span class="va">M</span><span class="op">)</span></span>
 <span></span>
@@ -150,6 +156,15 @@ its inverse curve, as SymPy's <code>Function.inverse()</code>.</p>
 <dd><p>Algorithm name.</p></dd>
 
 
+<dt id="arg-iszerofunc">iszerofunc<a class="anchor" aria-label="anchor" href="#arg-iszerofunc"></a></dt>
+<dd><p>A function returning <code>TRUE</code>, <code>FALSE</code> or <code>NA</code> for an
+entry that is zero, nonzero or undecided; <code>NULL</code> uses the assumptions.</p></dd>
+
+
+<dt id="arg-try-block-diag">try_block_diag<a class="anchor" aria-label="anchor" href="#arg-try-block-diag"></a></dt>
+<dd><p>Invert each diagonal block separately.</p></dd>
+
+
 <dt id="arg-a">a<a class="anchor" aria-label="anchor" href="#arg-a"></a></dt>
 <dd><p>A <code>symmatrix</code>.</p></dd>
 
@@ -160,6 +175,18 @@ its inverse curve, as SymPy's <code>Function.inverse()</code>.</p>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Further arguments, such as <code>method</code>.</p></dd>
+
+
+<dt id="arg-simplify">simplify<a class="anchor" aria-label="anchor" href="#arg-simplify"></a></dt>
+<dd><p><code>TRUE</code>, <code>FALSE</code> or a function used to decide pivots.</p></dd>
+
+
+<dt id="arg-pivots">pivots<a class="anchor" aria-label="anchor" href="#arg-pivots"></a></dt>
+<dd><p>Also return the pivot columns.</p></dd>
+
+
+<dt id="arg-normalize-last">normalize_last<a class="anchor" aria-label="anchor" href="#arg-normalize-last"></a></dt>
+<dd><p>Scale the pivot rows to 1 at the end, as SymPy does.</p></dd>
 
 
 <dt id="arg-i-j">i, j<a class="anchor" aria-label="anchor" href="#arg-i-j"></a></dt>

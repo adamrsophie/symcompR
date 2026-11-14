@@ -105,7 +105,7 @@ with <code><a href="N.html">N()</a></code>.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">CRootOf</span><span class="op">(</span><span class="va">f</span>, <span class="va">x</span>, <span class="va">k</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">CRootOf</span><span class="op">(</span><span class="va">f</span>, <span class="va">x</span>, <span class="va">k</span>, radicals <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -117,16 +117,23 @@ with <code><a href="N.html">N()</a></code>.</p>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>The variable.</p></dd>
+<dd><p>The variable; when <code>k</code> is missing, <code>x</code> is the index and the
+variable is the single free symbol of <code>f</code>.</p></dd>
 
 
 <dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
 <dd><p>Index of the root, from 0.</p></dd>
 
+
+<dt id="arg-radicals">radicals<a class="anchor" aria-label="anchor" href="#arg-radicals"></a></dt>
+<dd><p>As in SymPy: when <code>TRUE</code>, roots of quadratic and binomial
+factors are given by radicals.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>sym</code> CRootOf object.</p>
+    <p>A <code>sym</code> CRootOf object, or the root itself when it is rational
+(or a radical, with <code>radicals = TRUE</code>).</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

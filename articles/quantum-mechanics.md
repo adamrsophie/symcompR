@@ -218,6 +218,10 @@ qattr(Wavefunction(x^2, x), "expr")
 #> x^2
 qcall(Wavefunction(x^2, list(x, 0, 1)), "normalize")
 #> Wavefunction(sqrt(5)*x^2, (x, 0, 1))
+qcall(Wavefunction(x^2, x), "__call__", 3)
+#> 9
+qcall(Wavefunction(x^2, list(x, 0, 1)), "__call__", 2)
+#> 0
 D <- DifferentialOperator(Derivative(f(x), x), f(x))
 D
 #> DifferentialOperator(Derivative(f(x), x),f(x))
