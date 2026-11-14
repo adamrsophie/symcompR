@@ -339,6 +339,8 @@ reference:
   - dot
   - sym_det
   - charpoly
+  - is_positive_definite
+  - left_eigenvects
   - jordan_form
   - LUdecomposition
   - hermite_normal_form

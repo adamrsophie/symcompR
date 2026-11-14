@@ -16,15 +16,21 @@
 \alias{sym_det}
 \title{Determinant, inverse, trace and friends}
 \usage{
-inverse(M, method = "GE")
+inverse(M, method = NULL, iszerofunc = NULL, try_block_diag = FALSE)
 
 \method{solve}{symmatrix}(a, b, ...)
 
-rref(M)
+rref(
+  M,
+  iszerofunc = NULL,
+  simplify = FALSE,
+  pivots = TRUE,
+  normalize_last = TRUE
+)
 
 rank_matrix(M)
 
-nullspace(M)
+nullspace(M, simplify = FALSE, iszerofunc = NULL)
 
 columnspace(M)
 
@@ -45,11 +51,22 @@ sym_det(x, ...)
 \arguments{
 \item{method}{Algorithm name.}
 
+\item{iszerofunc}{A function returning \code{TRUE}, \code{FALSE} or \code{NA} for an
+entry that is zero, nonzero or undecided; \code{NULL} uses the assumptions.}
+
+\item{try_block_diag}{Invert each diagonal block separately.}
+
 \item{a}{A \code{symmatrix}.}
 
 \item{b}{Optional right hand side.}
 
 \item{...}{Further arguments, such as \code{method}.}
+
+\item{simplify}{\code{TRUE}, \code{FALSE} or a function used to decide pivots.}
+
+\item{pivots}{Also return the pivot columns.}
+
+\item{normalize_last}{Scale the pivot rows to 1 at the end, as SymPy does.}
 
 \item{i, j}{Row and column.}
 

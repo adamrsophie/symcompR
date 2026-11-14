@@ -393,23 +393,15 @@ det <- function(x, ...) {
 }
 
 #' @rdname sym_det
+#' @param iszerofunc A function returning `TRUE`, `FALSE` or `NA` for an
+#'   entry that is zero, nonzero or undecided; `NULL` uses the assumptions.
+#' @param try_block_diag Invert each diagonal block separately.
 #' @export
-inverse <- function(M, method = "GE") {
+inverse <- function(M, method = NULL, iszerofunc = NULL, try_block_diag = FALSE) {
   # Function.inverse() of the characteristic curves
   if (is_sym(M) && M$type == "Function" && !is.null(.FUNS[[M$name]]$inverse)) return(.FUNS[[M$name]]$inverse())
   if (.is_matexpr(M) && !.is_explicit(M)) return(.me_inverse(M))
-  M <- Matrix(M)
-  n <- M$nrow
-  if (n != M$ncol) stop(NonSquareMatrixError("inverse needs a square matrix"))
-  if (method == "ADJ") {
-    d <- det(M)
-    if (is_zero_num(d)) stop(NonInvertibleMatrixError("matrix is not invertible"))
-    return(.mat_map(adjugate(M), function(z) cancel(.div(z, d))))
-  }
-  aug <- cbind.symmatrix(M, eye(n))
-  R <- .rref(aug)
-  if (length(R$pivots) < n || any(R$pivots[seq_len(n)] != seq_len(n))) stop(NonInvertibleMatrixError("matrix is not invertible"))
-  R$M[, (n + 1L):(2L * n), drop = FALSE]
+  .matint_inv(Matrix(M), method, if (is.null(iszerofunc)) .matint_iszero else iszerofunc, try_block_diag)
 }
 
 #' @rdname sym_det
@@ -427,40 +419,17 @@ solve.symmatrix <- function(a, b, ...) {
   R$M[seq_len(n), (n + 1L):(n + b$ncol), drop = FALSE]
 }
 
-.rref <- function(M, simplify_fn = cancel) {
-  A <- .mrows(M)
-  nr <- M$nrow
-  nc <- M$ncol
-  pivots <- integer()
-  r <- 1L
-  for (c in seq_len(nc)) {
-    if (r > nr) break
-    for (i in r:nr) A[[i]][[c]] <- simplify_fn(A[[i]][[c]])
-    fp <- .coremm_find_pivot(lapply(r:nr, function(i) A[[i]][[c]]))
-    for (nd in fp[[3L]]) A[[r + nd[[1L]] - 1L]][[c]] <- nd[[2L]]
-    if (is.na(fp[[1L]])) next
-    pr <- r + fp[[1L]] - 1L
-    if (pr != r) {
-      tmp <- A[[r]]; A[[r]] <- A[[pr]]; A[[pr]] <- tmp
-    }
-    pv <- A[[r]][[c]]
-    A[[r]] <- lapply(A[[r]], function(z) simplify_fn(.div(z, pv)))
-    for (i in seq_len(nr)) {
-      if (i == r) next
-      f <- A[[i]][[c]]
-      if (is_zero_num(f)) next
-      A[[i]] <- lapply(seq_len(nc), function(j) simplify_fn(.sub(A[[i]][[j]], .mul(list(f, A[[r]][[j]])))))
-    }
-    pivots <- c(pivots, c)
-    r <- r + 1L
-  }
-  list(M = .from_rows(A), pivots = pivots)
-}
+# Matrix.rref() with its defaults: list(M = , pivots = ), 1 based pivots
+.rref <- function(M) .matint_rref(M)
 
 #' @rdname sym_det
+#' @param simplify `TRUE`, `FALSE` or a function used to decide pivots.
+#' @param pivots Also return the pivot columns.
+#' @param normalize_last Scale the pivot rows to 1 at the end, as SymPy does.
 #' @export
-rref <- function(M) {
-  r <- .rref(Matrix(M))
+rref <- function(M, iszerofunc = NULL, simplify = FALSE, pivots = TRUE, normalize_last = TRUE) {
+  r <- .matint_rref(Matrix(M), if (is.null(iszerofunc)) .matint_iszero else iszerofunc, simplify, normalize_last)
+  if (!pivots) return(r$M)
   list(matrix = r$M, pivots = r$pivots)
 }
 
@@ -470,9 +439,9 @@ rank_matrix <- function(M) length(.rref(Matrix(M))$pivots)
 
 #' @rdname sym_det
 #' @export
-nullspace <- function(M) {
+nullspace <- function(M, simplify = FALSE, iszerofunc = NULL) {
   M <- Matrix(M)
-  r <- .rref(M)
+  r <- .matint_rref(M, if (is.null(iszerofunc)) .matint_iszero else iszerofunc, simplify, TRUE)
   free <- setdiff(seq_len(M$ncol), r$pivots)
   lapply(free, function(fv) {
     v <- rep(list(S_Zero), M$ncol)
@@ -589,59 +558,42 @@ charpoly <- function(M, lambda = Symbol("lambda")) {
   cf <- .charpoly_coeffs(M)
   lambda <- as_sym(lambda)
   n <- length(cf) - 1L
-  expand(.add(lapply(seq_along(cf), function(k) .mul(list(cf[[k]], .pow(lambda, .int(n - k + 1L)))))))
+  # PurePoly.as_expr(): each coefficient expanded, collected by power
+  .add(lapply(seq_along(cf), function(k) .mul(list(expand(cf[[k]]), .pow(lambda, .int(n - k + 1L))))))
 }
 
 #' @rdname charpoly
+#' @param error_when_incomplete Signal a `MatrixError` when some eigenvalues
+#'   cannot be found.
+#' @param simplify `FALSE`, `TRUE` or a function applied to each result.
+#' @param multiple Return the eigenvalues as a list repeated by multiplicity
+#'   instead of a list with attribute `"multiplicity"`.
+#' @param rational Replace floating point entries by rationals first.
+#' @param ... Flags passed to [roots()].
+#' @param iszerofunc A zero test returning `TRUE`, `FALSE` or `NA`; `NULL`
+#'   uses the default test.
+#' @param chop Accepted for SymPy compatibility; currently not used.
 #' @export
-eigenvals <- function(M) {
-  M <- Matrix(M)
-  lam <- Dummy("lambda")
-  roots(charpoly(M, lam), lam)
-}
+eigenvals <- function(M, error_when_incomplete = TRUE, simplify = FALSE, multiple = FALSE, rational = FALSE, ...)
+  .matint_eigenvals(M, error_when_incomplete, simplify, multiple, rational, list(...))
 
 #' @rdname charpoly
 #' @export
-eigenvects <- function(M) {
-  M <- Matrix(M)
-  ev <- eigenvals(M)
-  # sorted by the default_sort_key of the eigenvalue
-  ord <- unlist(.key_sort(lapply(ev, .sort_key), as.list(seq_along(ev))))
-  lapply(ord, function(k) {
-    val <- ev[[k]]
-    A <- M - .mat_map(eye(M$nrow), function(z) .mul(list(z, val)))
-    ns <- nullspace(.mat_map(A, function(z) simplify(z)))
-    list(value = val, multiplicity = attr(ev, "multiplicity")[k], vectors = ns)
-  })
-}
+eigenvects <- function(M, error_when_incomplete = TRUE, iszerofunc = NULL, simplify = FALSE, chop = FALSE, ...)
+  .matint_eigenvects(M, error_when_incomplete, iszerofunc, simplify, chop, list(...))
 
 #' @rdname charpoly
+#' @param reals_only Treat a matrix with complex eigenvalues as not
+#'   diagonalizable.
 #' @export
-is_diagonalizable <- function(M) {
-  ev <- eigenvects(M)
-  sum(vapply(ev, function(e) length(e$vectors), 0L)) == Matrix(M)$nrow
-}
+is_diagonalizable <- function(M, reals_only = FALSE) .matint_is_diagonalizable(M, reals_only)
 
 #' @rdname charpoly
+#' @param sort Sort the eigenvalues on the diagonal.
+#' @param normalize Scale each column of `P` to unit norm.
 #' @export
-diagonalize <- function(M) {
-  M <- Matrix(M)
-  if (M$nrow != M$ncol) stop(NonSquareMatrixError(""))
-  ev <- eigenvects(M)
-  vecs <- list()
-  vals <- list()
-  for (e in ev) {
-    # eigenvects(simplify=True) divides each vector by the gcd of its entries
-    if (e$multiplicity != length(e$vectors)) stop(MatrixError("Matrix is not diagonalizable"))
-    for (v in e$vectors) {
-      g <- Reduce(gcd, v$data)
-      vecs[[length(vecs) + 1L]] <- .mat_map(v, function(z) simplify(.div(z, g)))
-    }
-    vals <- c(vals, rep(list(e$value), e$multiplicity))
-  }
-  P <- do.call(cbind.symmatrix, vecs)
-  list(P = P, D = diag_matrix(vals))
-}
+diagonalize <- function(M, reals_only = FALSE, sort = FALSE, normalize = FALSE)
+  .matint_diagonalize(M, reals_only, sort, normalize)
 
 # Apply a scalar function to a diagonalizable matrix.
 .matrix_function <- function(M, f) {

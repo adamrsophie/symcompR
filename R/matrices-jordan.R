@@ -182,9 +182,12 @@
     facs[[k]]$eigs <- if (length(cf) == 2L) list(make_rational(gmp::as.bigq(-cf[[2L]], cf[[1L]])))
       else if (length(cf) == 3L) .quad_roots(cf)
       else {
-        # Poly.all_roots: an irreducible factor of degree 3 or more gives CRootOf
+        # factors_to_eigenvals: roots() without the cubic and quartic
+        # formulas, then Poly.all_roots when that does not find them all
         pe <- .add(lapply(seq_along(cf), function(t) .mul(list(.int(cf[[t]]), .pow(l, .int(length(cf) - t))))))
-        lapply(seq_len(length(cf) - 1L) - 1L, function(t) CRootOf(pe, l, t))
+        rf <- tryCatch(roots(pe, l, cubics = FALSE, quartics = FALSE), error = function(e) list())
+        if (length(rf) == length(cf) - 1L) unname(rf[seq_along(rf)])
+        else lapply(seq_len(length(cf) - 1L) - 1L, function(t) CRootOf(pe, l, t))
       }
     facs[[k]]$K <- .af_new(rev(gmp::as.bigq(do.call(base::c, cf))))
   }
@@ -358,7 +361,7 @@
 #' @export
 jordan_form <- function(M, calc_transform = TRUE) {
   M <- Matrix(M)
-  if (M$nrow != M$ncol) stop("Only square matrices have Jordan forms")
+  if (M$nrow != M$ncol) stop(NonSquareMatrixError("Only square matrices have Jordan forms"))
   floats <- any(vapply(M$data, function(z) .has_type(z, "Float"), TRUE))
   dps <- 15L
   if (floats) {

@@ -10,18 +10,56 @@
 \usage{
 charpoly(M, lambda = Symbol("lambda"))
 
-eigenvals(M)
+eigenvals(
+  M,
+  error_when_incomplete = TRUE,
+  simplify = FALSE,
+  multiple = FALSE,
+  rational = FALSE,
+  ...
+)
 
-eigenvects(M)
+eigenvects(
+  M,
+  error_when_incomplete = TRUE,
+  iszerofunc = NULL,
+  simplify = FALSE,
+  chop = FALSE,
+  ...
+)
 
-is_diagonalizable(M)
+is_diagonalizable(M, reals_only = FALSE)
 
-diagonalize(M)
+diagonalize(M, reals_only = FALSE, sort = FALSE, normalize = FALSE)
 }
 \arguments{
 \item{M}{A square \code{symmatrix}.}
 
 \item{lambda}{Symbol for the characteristic polynomial.}
+
+\item{error_when_incomplete}{Signal a \code{MatrixError} when some eigenvalues
+cannot be found.}
+
+\item{simplify}{\code{FALSE}, \code{TRUE} or a function applied to each result.}
+
+\item{multiple}{Return the eigenvalues as a list repeated by multiplicity
+instead of a list with attribute \code{"multiplicity"}.}
+
+\item{rational}{Replace floating point entries by rationals first.}
+
+\item{...}{Flags passed to \code{\link[=roots]{roots()}}.}
+
+\item{iszerofunc}{A zero test returning \code{TRUE}, \code{FALSE} or \code{NA}; \code{NULL}
+uses the default test.}
+
+\item{chop}{Accepted for SymPy compatibility; currently not used.}
+
+\item{reals_only}{Treat a matrix with complex eigenvalues as not
+diagonalizable.}
+
+\item{sort}{Sort the eigenvalues on the diagonal.}
+
+\item{normalize}{Scale each column of \code{P} to unit norm.}
 }
 \value{
 An expression or list.

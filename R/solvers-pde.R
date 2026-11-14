@@ -127,6 +127,7 @@ classify_pde <- function(eq, func = NULL, dict = FALSE) {
     }
   }
   if (order == 1L) {
+    reduced <- collect(reduced, func)
     m <- .pde_linear_parts(reduced, func, fx, fy)
     if (!is.null(m)) {
       const <- !any(vapply(m[c("b", "c", "d")], .has_any, TRUE, vs = list(x, y)))

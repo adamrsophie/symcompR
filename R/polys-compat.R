@@ -79,6 +79,12 @@
   }
   cf <- tryCatch(.coeff_list(f, as_sym(x)), error = function(e) NULL)
   if (length(cf) < 2L || !all(vapply(cf, is_exact_number, TRUE))) return(NULL)
+  # CRootOf._get_roots: preprocess_roots scales away an integer basis first
+  pp <- .preprocess_roots(f, as_sym(x))
+  if (!is_one_num(pp$coeff)) {
+    r <- .all_roots_rootof(pp$poly, x)
+    return(if (is.null(r)) NULL else lapply(r, function(z) .mul(list(pp$coeff, z))))
+  }
   q <- do.call(c, lapply(cf, `[[`, "value"))
   zl <- .zp_factor_list(gmp::numerator(q * gmp::as.bigq(.lcm_den(q))))
   fx <- list()

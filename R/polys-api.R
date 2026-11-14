@@ -60,10 +60,9 @@ Poly <- function(expr, ...) {
   }
   gens <- .gens_of(list(expr), list(...))
   rep <- expr_to_qpoly(expr, gens, strict = TRUE)
-  if (is.null(rep)) {
-    return(.poly_symbolic(expr, gens))
-  }
-  structure(list(rep = rep, gens = gens, coeff_expr = NULL), class = "Poly")
+  P <- if (is.null(rep)) .poly_symbolic(expr, gens)
+       else structure(list(rep = rep, gens = gens, coeff_expr = NULL), class = "Poly")
+  .matint_poly_rr(P, expr)
 }
 
 # Poly whose coefficients involve symbols other than the generators: stored
@@ -82,7 +81,7 @@ Poly <- function(expr, ...) {
 #' @rdname Poly
 #' @export
 as_expr <- function(p, ...) {
-  if (inherits(p, "Poly")) return(qpoly_to_expr(p$rep, p$gens))
+  if (inherits(p, "Poly")) return(if (is.null(p$rr_prec)) qpoly_to_expr(p$rep, p$gens) else .matint_rr_as_expr(p))
   if (is_sym(p) && p$type == "AlgebraicNumber") return(.an_value(p))
   if (inherits(p, "sym_monomial")) return(.monomial_expr(p, list(...)))
   as_sym(p)
@@ -247,6 +246,7 @@ degree_list <- function(f, ...) {
   })
   # FracField.to_sympy: an element of ZZ(...) is its numerator over its denominator
   if (!is.null(p$dom_str) && grepl("^(ZZ|QQ)\\(", p$dom_str)) coeffs <- lapply(coeffs, cancel)
+  if (!is.null(p$rr_prec)) coeffs <- .matint_rr_coeffs(p, u, keys)
   list(monoms = monoms, coeffs = coeffs)
 }
 
@@ -306,7 +306,7 @@ all_coeffs <- function(f, ...) {
   t <- .poly_terms_expr(p)
   if (!length(t$coeffs)) return(list(S_Zero))
   d <- max(t$monoms[, 1L])
-  out <- rep(list(S_Zero), d + 1L)
+  out <- rep(list(.matint_rr_zero(p)), d + 1L)
   for (i in seq_along(t$coeffs)) out[[d - t$monoms[i, 1L] + 1L]] <- t$coeffs[[i]]
   out
 }
