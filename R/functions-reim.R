@@ -109,13 +109,13 @@
       return(list(S_Zero, .mul(list(reco, imco))))
     }
     if (is_zero_num(imco)) return(list(r, i))
-    return(list(.neg(.mul(list(imco, i))), .mul(list(imco, r))))
+    return(list(.mul(list(.neg(imco), i)), .mul(list(imco, r))))
   }
   ai <- .as_real_imag(expand_mul(addterms, deep = FALSE))
   addre <- ai[[1L]]; addim <- ai[[2L]]
   if (is_zero_num(imco))
     return(list(.sub(.mul(list(r, addre)), .mul(list(i, addim))), .add(list(.mul(list(i, addre)), .mul(list(r, addim))))))
-  r2 <- .neg(.mul(list(imco, i))); i2 <- .mul(list(imco, r))
+  r2 <- .mul(list(.neg(imco), i)); i2 <- .mul(list(imco, r))
   list(.sub(.mul(list(r2, addre)), .mul(list(i2, addim))), .add(list(.mul(list(r2, addim)), .mul(list(i2, addre)))))
 }
 

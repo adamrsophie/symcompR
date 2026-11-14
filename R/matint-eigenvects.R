@@ -28,12 +28,13 @@
   list(rows = rows, pivots = piv)
 }
 
-# DomainMatrix.nullspace(divide_last=True) from a field rref
-.matint_nullspace_rows <- function(rr, ncol) {
+# DomainMatrix.nullspace(divide_last=True) from a field rref; the negation
+# happens in the field, so red() brings it back to canonical form
+.matint_nullspace_rows <- function(rr, ncol, red = identity) {
   lapply(setdiff(seq_len(ncol), rr$pivots), function(fv) {
     v <- rep(list(S_Zero), ncol)
     v[[fv]] <- S_One
-    for (k in seq_along(rr$pivots)) v[[rr$pivots[k]]] <- .neg(rr$rows[[k]][[fv]])
+    for (k in seq_along(rr$pivots)) v[[rr$pivots[k]]] <- red(.neg(rr$rows[[k]][[fv]]))
     v
   })
 }
@@ -78,7 +79,7 @@
         r <- rows0[[i]]; r[[i]] <- canon(.sub(r[[i]], ev)); r
       })
       rr <- .matint_field_rref(rows, n, canon, function(z) canon(.pow(z, S_NegativeOne)))
-      vecs <- lapply(.matint_nullspace_rows(rr, n), function(v) .new_mat(v, n, 1L))
+      vecs <- lapply(.matint_nullspace_rows(rr, n, canon), function(v) .new_mat(v, n, 1L))
       res[[length(res) + 1L]] <- list(value = ev, multiplicity = mult, vectors = vecs)
     } else {
       red <- function(z) .matint_fe_reduce(z, base, l)
@@ -87,7 +88,7 @@
         r <- rows0[[i]]; r[[i]] <- .sub(r[[i]], l); r
       })
       rr <- .matint_field_rref(rows, n, red, inv)
-      ns <- .matint_nullspace_rows(rr, n)
+      ns <- .matint_nullspace_rows(rr, n, red)
       evs <- tryCatch(do.call(roots, c(list(base, l), flags)), error = function(e) list())
       if (length(evs) != deg) evs <- .all_roots_rootof(base, l)
       for (ev in evs) {
@@ -135,6 +136,12 @@
   # path; port DomainMatrix over AlgebraicField to follow SymPy there too
   ret <- if (!is.null(dom)) .matint_eigenvects_dom(M, flags, frac = dom == "frac")
          else .matint_eigenvects_sympy(M, iszerofunc, simplify, flags)
+  # over QQ<a> (from_Matrix(extension=True)) the entries come back as
+  # AlgebraicField.to_sympy writes them
+  if (is.null(dom) && M$nrow == M$ncol && .ode_alg_domain(M$data)) ret <- lapply(ret, function(e) {
+    e$vectors <- lapply(e$vectors, function(v) .mat_map(v, .ode_anp))
+    e
+  })
   if (primitive) ret <- lapply(ret, function(e) {
     e$vectors <- lapply(e$vectors, function(v) {
       g <- Reduce(gcd, v$data)

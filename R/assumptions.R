@@ -379,7 +379,7 @@ ask_fact <- function(e, fact) {
     }
   }
   if (.all_true(fs, "real") && .all_true(fs, "finite") &&
-      is.na(out["positive"]) && is.na(out["negative"])) {
+      is.na(out["positive"]) && is.na(out["negative"]) && .evalf2_has_prec(e)) {
     sg <- .numeric_sign(e)
     # no significant digit: SymPy proves zero by the minimal polynomial
     if (is.na(sg) && isTRUE(.root_bound_zero(e))) sg <- 0
@@ -808,7 +808,7 @@ ask_fact <- function(e, fact) {
   } else r <- c(commutative = .all_true(lapply(e$args, .facts), "commutative"))
   # Expr._eval_is_extended_positive_negative: a number decides its sign by
   # evaluation (False for both when it is not real)
-  if ((is.na(r["positive"] %||% NA) || is.na(r["negative"] %||% NA)) && .expr_is_number(e)) {
+  if ((is.na(r["positive"] %||% NA) || is.na(r["negative"] %||% NA)) && .expr_is_number(e) && .evalf2_has_prec(e)) {
     z <- tryCatch(.mpeval_adaptive(e, 20L, list(), maxprec = 4000), error = function(err) NULL)
     if (!is.null(z) && isTRUE(attr(z, "converged"))) {
       if (z$im$m != 0) { r["extended_positive"] <- FALSE; r["extended_negative"] <- FALSE }
@@ -819,6 +819,15 @@ ask_fact <- function(e, fact) {
     }
   }
   r
+}
+
+# The first test of Expr._eval_is_extended_positive_negative: the value of
+# self._eval_evalf(2) must carry a precision, so a sum whose terms round to
+# a zero divisor at two digits (zoo) leaves the sign unknown, as
+# -2/(sqrt(77) + 9) - 2/(sqrt(77) - 9) does in SymPy
+.evalf2_has_prec <- function(e) {
+  n2 <- tryCatch(.ev_eval_evalf(e, 2L), error = function(err) NULL)
+  !is.null(n2) && n2$type != "Constant"
 }
 
 #' Assumption shortcuts

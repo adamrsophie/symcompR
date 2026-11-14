@@ -90,6 +90,15 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
     v <- tryCatch(as.complex(.neval(.mul(num), list())), error = function(e) NA_complex_)
     if (length(v) != 1L) NA_complex_ else v
   }, 0i)
+  # terms whose values agree to rounding are ordered by the bits of
+  # complex(coeff) * complex(factor) * ..., as Expr.as_terms computes them
+  if (n > 1L && !anyNA(cv)) {
+    near <- vapply(seq_len(n), function(i) any(abs(cv[-i] - cv[i]) <= 1e-9 * max(abs(cv[i]), 1e-300)), NA)
+    for (i in which(near)) {
+      v <- .as_terms_complex(args[[i]])
+      if (!is.na(v)) cv[i] <- v
+    }
+  }
   re <- Re(cv); im <- Im(cv)
   ncr <- .nc_rank(lapply(info, `[[`, "nc"))
   # sorted() is stable: tied terms keep their order in Add.args
@@ -99,6 +108,29 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
   if (rev) pos <- -pos
   ord <- do.call(order, c(cols, list(ncr, im != 0, im, re, pos, coefstr), list(method = "radix", decreasing = rev)))
   args[ord]
+}
+
+# complex(x) of a SymPy number: float() of the parts of x.evalf()
+.sympy_complex <- function(x) {
+  if (x$type %in% c("Integer", "Rational", "Float")) return(complex(real = num_value_dbl(x)))
+  n <- tryCatch(N(x), error = function(e) NULL)
+  if (is.null(n)) return(NA_complex_)
+  if (n$type == "Float") return(complex(real = n$value))
+  ri <- tryCatch(list(re(n), im(n)), error = function(e) NULL)
+  if (is.null(ri) || !all(vapply(ri, function(z) z$type %in% c("Float", "Integer", "Rational"), NA))) return(NA_complex_)
+  complex(real = num_value_dbl(ri[[1L]]), imaginary = num_value_dbl(ri[[2L]]))
+}
+
+# coeff_complex of Expr.as_terms for one term
+.as_terms_complex <- function(a) {
+  sp <- as_coeff_mul_split(a)
+  v <- .sympy_complex(sp[[1L]])
+  if (!is_one_num(sp[[2L]])) {
+    # Mul.make_args in SymPy's order of the args (Basic.compare)
+    facs <- if (sp[[2L]]$type == "Mul") .sympy_args(sp[[2L]]) else list(sp[[2L]])
+    for (f in facs) if (.expr_is_number(f) && !.qno_value(f)) v <- v * .sympy_complex(f)
+  }
+  v
 }
 
 # Dense ranks of the noncommutative parts, compared as tuples of sort keys.

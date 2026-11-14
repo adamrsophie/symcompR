@@ -61,3 +61,25 @@ test_that("CRootOf follows ComplexRootOf.__new__", {
                           "sqrt(2)", "CRootOf(x^3 - x - 1, 2)", "2^(1/3)"))
   expect_error(CRootOf(x^3 - x - 1, 3), "root index out of \\[-3, 2\\] range, got 3")
 })
+
+test_that("eigenvects over QQ<a> and matrix_exp follow SymPy's forms", {
+  o <- as_sym(1); s3 <- sqrt(as_sym(3)); h <- Rational(1, 2)
+  M <- Matrix(list(list(o, o, o), list(o, -h - s3 * sym_I / 2, -h + s3 * sym_I / 2),
+                   list(o, -h + s3 * sym_I / 2, -h - s3 * sym_I / 2))) / s3
+  got <- vapply(eigenvects(M), function(e) paste(sstr(e$value), paste(vapply(e$vectors[[1L]]$data, sstr, ""), collapse = ", ")), "")
+  expect_identical(got, c("-1 1 - sqrt(3), 1, 1", "1 1 + sqrt(3), 1, 1", "-I 0, -1, 1"))
+  t <- Symbol("t")
+  A <- Matrix(list(list(5 * t^2 / 2, t^3 / 3), list(-t^3 / 3, 5 * t^2 / 2 + 3 * t^3)))
+  v <- eigenvects(A)[[1L]]$vectors[[1L]]
+  expect_identical(sstr(v$data[[1L]]), "(18*t + 15)/(2*t) - 3*(-sqrt(77)*t^3/6 + t^2*(3*t + 5)/2)/t^3")
+  E <- matrix_exp(A)
+  expect_identical(sstr(E$data[[3L]]), paste0("(77 + 9*sqrt(77))*exp(-sqrt(77)*t^3/6 + t^2*(3*t + 5)/2)/(77*sqrt(77) + 693)",
+                                              " - sqrt(77)*exp(sqrt(77)*t^3/6 + t^2*(3*t + 5)/2)/77"))
+  # Expr._eval_is_extended_positive_negative: _eval_evalf(2) is zoo here
+  s77 <- sqrt(as_sym(77))
+  expect_true(is.na(ask_fact(-2 / (s77 + 9) - 2 / (-9 + s77), "positive")))
+  # Mul.as_real_imag returns (-imco*i, imco*r)
+  s5 <- sqrt(as_sym(5)); r <- sqrt(9 - 4 * s5)
+  a <- (-32 + 16 * s5) * (38 * s5 * sym_I + 85 * sym_I) * exp(2 * sym_I * r) / (1280 * s5 * r + 2880 * r)
+  expect_identical(sstr(re(a)), "(-85 - 38*sqrt(5))*(-32 + 16*sqrt(5))*sin(2*sqrt(9 - 4*sqrt(5)))/(1280*sqrt(5)*sqrt(9 - 4*sqrt(5)) + 2880*sqrt(9 - 4*sqrt(5)))")
+})
