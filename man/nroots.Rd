@@ -7,7 +7,7 @@
 \alias{count_roots}
 \title{Numerical and real roots}
 \usage{
-nroots(f, x = NULL)
+nroots(f, x = NULL, n = 15, maxsteps = 50, cleanup = TRUE)
 
 real_roots(f, x = NULL)
 
@@ -21,14 +21,21 @@ count_roots(f, x = NULL, a = -Inf, b = Inf)
 \item{x}{The variable; when \code{k} is missing, \code{x} is the index and the
 variable is the single free symbol of \code{f}.}
 
+\item{n}{Number of decimal digits of the roots.}
+
+\item{maxsteps}{Maximum number of Durand-Kerner iterations.}
+
+\item{cleanup}{Remove negligible real or imaginary parts.}
+
 \item{a, b}{Interval ends (default the whole line).}
 }
 \value{
 A list of expressions, or an integer.
 }
 \description{
-\code{nroots(f, x)} returns all roots as floating point numbers (via
-\code{\link[=polyroot]{polyroot()}} with Newton polishing). \code{real_roots(f, x)} returns the real
+\code{nroots(f, x)} returns all roots as floating point numbers: for
+integer and rational coefficients by the Durand-Kerner iteration of
+mpmath's \code{polyroots()}, as SymPy's \code{Poly.nroots()}. \code{real_roots(f, x)} returns the real
 roots with multiplicity, exact where possible. \code{count_roots(f, x, a, b)}
 counts real roots in \verb{[a, b]} with a Sturm sequence. \code{sturm()} returns the
 Sturm sequence.

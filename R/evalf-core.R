@@ -887,7 +887,7 @@
   if (is.null(xe)) .ev_nie()
   if (!is_sym(xe)) .ev_nie()
   if (xe$type %in% .ev_set_types()) .ev_nie()
-  ri <- .ev_float_parts(xe)
+  ri <- .ev_float_parts(xe, prec)
   if (is.null(ri)) .ev_nie()
   .ev_res(ri$re, ri$im, if (is.null(ri$re)) NULL else prec, if (is.null(ri$im)) NULL else prec)
 }
@@ -895,18 +895,28 @@
                                "Tuple", .REL_TYPES, .BOOL_TYPES)
 
 # The parts of a number Float, Float*I or Float + Float*I (as_real_imag of
-# the value of _eval_evalf); NULL when it is not such a number
-.ev_float_parts <- function(v) {
+# the value of _eval_evalf); NULL when it is not such a number. With prec,
+# any other number part is converted by _to_mpmath(prec), as evalf's
+# fallback does (pi in log(-1) + 0.1, say)
+.ev_float_parts <- function(v, prec = NULL) {
   part <- function(z) {
     if (z$type == "Integer" && z$value == 0) return(list(ok = TRUE, v = NULL))
     if (z$type == "Float") { f <- .float_mp(z); return(list(ok = TRUE, v = if (f$m == 0) NULL else f)) }
     if (is_exact_number(z)) return(list(ok = TRUE, v = .mp_from_q(z$value, 53)))
     if (z$type == "Constant" && z$name %in% c("oo", "-oo", "nan"))
       return(list(ok = TRUE, v = switch(z$name, oo = .ev_finf, `-oo` = .ev_fninf, .ev_fnan)))
+    if (!is.null(prec) && .expr_is_number(z)) {
+      q <- tryCatch(.ev_evalf(z, prec, .ev_options()), error = function(e) NULL)
+      if (!is.null(q) && is.null(q$im) && !.ev_is_zoo(q)) return(list(ok = TRUE, v = q$re))
+    }
     list(ok = FALSE)
   }
   re <- S_Zero; im <- S_Zero
-  if (v$type == "Constant" && v$name == "I") im <- S_One
+  if (!is.null(prec)) {
+    # xe.as_real_imag(), refused when re() or im() stays unevaluated
+    re <- tryCatch(re(v), error = function(e) NULL); im <- tryCatch(im(v), error = function(e) NULL)
+    if (is.null(re) || is.null(im) || .has_function(re, "re") || .has_function(im, "im")) return(NULL)
+  } else if (v$type == "Constant" && v$name == "I") im <- S_One
   else if (v$type == "Add") {
     if (length(v$args) > 2L) return(NULL)
     for (a in v$args) {

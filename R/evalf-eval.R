@@ -667,8 +667,13 @@
   x <- fs[[1L]]
   d <- degree(f, x)
   lam <- e$args[[2L]]
-  f0 <- subs(f, x, Symbol("x"))
-  rts <- lapply(seq_len(d) - 1L, function(k) .ev_crootof_evalf(new_sym("CRootOf", list(expand(f0), .int(k))), prec))
+  cf <- tryCatch(lapply(all_coeffs(Poly(f, x)), as_sym), error = function(err) NULL)
+  rts <- if (!is.null(cf) && all(vapply(cf, function(c) c$type %in% c("Integer", "Rational"), NA)))
+    .poly_nroots(cf, n = .prec_to_dps(prec))
+  else {
+    f0 <- subs(f, x, Symbol("x"))
+    lapply(seq_len(d) - 1L, function(k) .ev_crootof_evalf(new_sym("CRootOf", list(expand(f0), .int(k))), prec))
+  }
   .add(lapply(rts, function(r) subs(lam$args[[2L]], .rootsum_w, r)))
 }
 

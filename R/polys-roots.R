@@ -384,8 +384,9 @@ register_neval("CRootOf", function(e, env) {
 
 #' Numerical and real roots
 #'
-#' `nroots(f, x)` returns all roots as floating point numbers (via
-#' [polyroot()] with Newton polishing). `real_roots(f, x)` returns the real
+#' `nroots(f, x)` returns all roots as floating point numbers: for
+#' integer and rational coefficients by the Durand-Kerner iteration of
+#' mpmath's `polyroots()`, as SymPy's `Poly.nroots()`. `real_roots(f, x)` returns the real
 #' roots with multiplicity, exact where possible. `count_roots(f, x, a, b)`
 #' counts real roots in `[a, b]` with a Sturm sequence. `sturm()` returns the
 #' Sturm sequence.
@@ -393,6 +394,9 @@ register_neval("CRootOf", function(e, env) {
 #' @param f A polynomial.
 #' @param x The variable; when `k` is missing, `x` is the index and the
 #'   variable is the single free symbol of `f`.
+#' @param n Number of decimal digits of the roots.
+#' @param maxsteps Maximum number of Durand-Kerner iterations.
+#' @param cleanup Remove negligible real or imaginary parts.
 #' @param a,b Interval ends (default the whole line).
 #' @return A list of expressions, or an integer.
 #' @examples
@@ -400,10 +404,133 @@ register_neval("CRootOf", function(e, env) {
 #' nroots(x^5 - x + 1, x)
 #' count_roots(x^3 - 2*x, x)
 #' @export
-nroots <- function(f, x = NULL) {
+nroots <- function(f, x = NULL, n = 15, maxsteps = 50, cleanup = TRUE) {
   f <- as_sym(f)
   if (is.null(x)) x <- free_symbols(f)[[1L]]
-  lapply(.numeric_roots(f, as_sym(x)), function(v) .round_sym(v, 15))
+  x <- as_sym(x)
+  cf <- tryCatch(lapply(all_coeffs(Poly(f, x)), as_sym), error = function(e) NULL)
+  if (!is.null(cf) && all(vapply(cf, function(c) c$type %in% c("Integer", "Rational"), NA)))
+    return(.poly_nroots(cf, n, maxsteps, cleanup))
+  lapply(.numeric_roots(f, x), function(v) .round_sym(v, n))
+}
+
+# Poly.nroots over ZZ and QQ: mpmath.polyroots on the integer coefficients
+# (QQ cleared of denominators) at workdps(n) with extraprec 10*deg, then
+# 15*deg on NoConvergence; real roots first, then by real part, |imag| and
+# the sign of the imaginary part
+.poly_nroots <- function(cf, n = 15, maxsteps = 50, cleanup = TRUE) {
+  deg <- length(cf) - 1L
+  if (deg <= 0L) return(list())
+  q <- lapply(cf, function(c) gmp::as.bigq(c$value))
+  fac <- Reduce(gmp::lcm.bigz, lapply(q, gmp::denominator), gmp::as.bigz(1))
+  ints <- lapply(q, function(v) gmp::as.bigz(v * fac))
+  prec <- .dps_to_prec(n)
+  roots <- NULL
+  for (ep in c(deg * 10L, deg * 15L)) {
+    roots <- .mp_polyroots(rev(ints), prec, ep, maxsteps, cleanup)
+    if (!is.null(roots)) break
+  }
+  if (is.null(roots)) stop(.sympy_condition("NoConvergence", sprintf(
+    "convergence to root failed; try n < %s or maxsteps > %s", n, maxsteps)))
+  key_im <- vapply(roots, function(r) r$im$m != 0, NA)
+  ord <- seq_along(roots)
+  # sorted() with key (1 if imag else 0, real, |imag|, sign(imag)), stable
+  cmp <- function(i, j) {
+    a <- roots[[i]]; b <- roots[[j]]
+    if (key_im[i] != key_im[j]) return(if (key_im[i]) 1 else -1)
+    c1 <- .mp_cmp(a$re, b$re); if (c1 != 0) return(c1)
+    c2 <- .mp_cmp(list(m = abs(a$im$m), e = a$im$e), list(m = abs(b$im$m), e = b$im$e)); if (c2 != 0) return(c2)
+    sign(.mp_sign(a$im) - .mp_sign(b$im))
+  }
+  for (i in seq_along(ord)[-1L]) {
+    j <- i
+    while (j > 1L && cmp(ord[j - 1L], ord[j]) > 0) { ord[c(j - 1L, j)] <- ord[c(j, j - 1L)]; j <- j - 1L }
+  }
+  lapply(roots[ord], function(r) {
+    # sympify(mpf(0)) is Integer(0)
+    if (r$im$m == 0 && isTRUE(attr(r, "real"))) return(if (r$re$m == 0) S_Zero else .mp_float(r$re, prec))
+    .add(list(.mp_float(r$re, prec), .mul(list(.mp_float(r$im, prec), S_I))))
+  })
+}
+
+# mpmath's mpc_div: no shortcut for a real divisor
+.mpc_div_full <- function(a, b, p) {
+  w <- p + 10
+  m <- .mp_add(.mp_xmul(b$re, b$re), .mp_xmul(b$im, b$im), w)
+  .mpc(.mp_div(.mp_add(.mp_xmul(a$re, b$re), .mp_xmul(a$im, b$im), w), m, p),
+       .mp_div(.mp_sub(.mp_xmul(a$im, b$re), .mp_xmul(a$re, b$im), w), m, p))
+}
+
+# (0.4+0.9j)**n in CPython's complex doubles: c_powu by squaring, each
+# product with the fused multiply-adds of _Py_c_prod on this platform
+.cpow_start <- function(n) {
+  rd <- function(e) .bigq_dbl(e)
+  q <- gmp::as.bigq
+  prod <- function(a, b) c(rd(q(a[1]) * q(b[1]) - q(rd(q(a[2]) * q(b[2])))),
+                           rd(q(a[1]) * q(b[2]) + q(rd(q(a[2]) * q(b[1])))))
+  r <- c(1, 0); pw <- c(0.4, 0.9); mask <- 1
+  while (n >= mask) {
+    if (bitwAnd(n, mask)) r <- prod(r, pw)
+    mask <- mask * 2; pw <- prod(pw, pw)
+  }
+  r
+}
+
+# mpmath.polyroots(coeffs, asc=True, error=False) at precision prec with
+# extraprec ep; coeffs are bigz, constant term first. NULL on NoConvergence.
+# The roots come back rounded to prec, with attr "real" for cleaned real ones.
+.mp_polyroots <- function(coeffs, prec, ep, maxsteps = 50, cleanup = TRUE) {
+  deg <- length(coeffs) - 1L
+  wp <- prec + ep
+  tol <- .mpf(1, 1 - prec)
+  lead <- .mp_round(coeffs[[deg + 1L]], 0, wp)
+  cs <- if (lead$m == 1 && lead$e == 0) lapply(coeffs, function(c) .mp_round(c, 0, wp))
+        else lapply(coeffs, function(c) .mp_div(.mp_round(c, 0, wp), lead, wp))
+  cs <- lapply(cs, function(c) .mpc(c))
+  f <- function(x) {
+    p <- cs[[deg + 1L]]
+    for (k in deg:1L) p <- .mpc_add(cs[[k]], .mpc_mul(x, p, wp), wp)
+    p
+  }
+  roots <- lapply(seq_len(deg) - 1L, function(k) { z <- .cpow_start(k); .mpc(.mp_from_dbl(z[1]), .mp_from_dbl(z[2])) })
+  err <- rep(list(.mpf(1, 0)), deg)
+  maxerr <- function() { m <- err[[1L]]; for (e in err[-1L]) if (.mp_cmp(e, m) > 0) m <- e; m }
+  for (step in seq_len(maxsteps)) {
+    if (.mp_cmp(maxerr(), tol) < 0) break
+    for (i in seq_len(deg)) {
+      p <- roots[[i]]
+      x <- f(p)
+      for (j in seq_len(deg)) if (i != j) {
+        d <- .mpc_sub(p, roots[[j]], wp)
+        if (d$re$m == 0 && d$im$m == 0) next
+        x <- .mpc_div_full(x, d, wp)
+      }
+      roots[[i]] <- .mpc_sub(p, x, wp)
+      err[[i]] <- .mpc_abs(x, wp)
+    }
+  }
+  if (.mp_cmp(maxerr(), tol) >= 0) return(NULL)
+  real <- rep(FALSE, deg)
+  if (cleanup) for (i in seq_len(deg)) {
+    r <- roots[[i]]
+    if (.mp_cmp(.mpc_abs(r, wp), tol) < 0) { roots[[i]] <- .mpc(.mp_zero); real[i] <- TRUE }
+    else if (.mp_cmp(list(m = abs(r$im$m), e = r$im$e), tol) < 0) { roots[[i]] <- .mpc(r$re); real[i] <- TRUE }
+    else if (.mp_cmp(list(m = abs(r$re$m), e = r$re$e), tol) < 0) roots[[i]] <- .mpc(.mp_zero, r$im)
+  }
+  # roots.sort(key=lambda x: (abs(im), re)), stable
+  ord <- seq_len(deg)
+  ab <- lapply(roots, function(r) list(m = abs(r$im$m), e = r$im$e))
+  cmp <- function(i, j) { c1 <- .mp_cmp(ab[[i]], ab[[j]]); if (c1 != 0) c1 else .mp_cmp(roots[[i]]$re, roots[[j]]$re) }
+  for (i in seq_len(deg)[-1L]) {
+    j <- i
+    while (j > 1L && cmp(ord[j - 1L], ord[j]) > 0) { ord[c(j - 1L, j)] <- ord[c(j, j - 1L)]; j <- j - 1L }
+  }
+  lapply(ord, function(i) {
+    r <- roots[[i]]
+    out <- .mpc(.mp_round(r$re$m, r$re$e, prec), .mp_round(r$im$m, r$im$e, prec))
+    attr(out, "real") <- real[i]
+    out
+  })
 }
 
 #' @rdname nroots

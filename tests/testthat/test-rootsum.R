@@ -13,9 +13,11 @@ test_that("RootSum evaluates rational sums and keeps the rest as SymPy", {
   expect_equal(sstr(r), "RootSum(w^5 + w + 3, Lambda(w, log(w + 1)))")
   expect_equal(latex(r), "\\operatorname{RootSum} {\\left(w^{5} + w + 3, \\left( w \\mapsto \\log{\\left(w + 1 \\right)} \\right)\\right)}")
   expect_equal(sstr(doit(r)), sstr(r))
-  # the real part is rounding noise from the numerical roots (SymPy prints
-  # -5.55111512312578e-17 there); the imaginary part is pi
-  expect_equal(sstr(im(N(r))), "3.14159265358979")
+  # the real part is the rounding noise of SymPy's nroots(n = 16), bit for bit
+  expect_equal(sstr(N(r)), "-5.55111512312578e-17 + 3.14159265358979*I")
+  expect_equal(sstr(N(RootSum(x^3 - x + 7, Lambda(x, x^2 * exp(x))))), "-17.6929608871154 + 0.e-19*I")
+  expect_equal(vapply(nroots(x^6 - 3 * x^2 + x), sstr, ""), c("-1.38879198440725", "0", "0.334734141943353",
+    "1.21464804269846", "-0.0802951001172802 - 1.32835510982065*I", "-0.0802951001172802 + 1.32835510982065*I"))
   expect_length(free_symbols(r), 0L)
   expect_equal(sstr(diff(RootSum(x^5 + x + 3, Lambda(x, log(x + a))), a)), "(5*a^4 + 1)/(a^5 + a - 3)")
 })
