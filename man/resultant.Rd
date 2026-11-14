@@ -5,9 +5,9 @@
 \alias{discriminant}
 \title{Resultant and discriminant}
 \usage{
-resultant(f, g, x = NULL)
+resultant(f, g, x = NULL, ...)
 
-discriminant(f, x = NULL)
+discriminant(f, x = NULL, ...)
 }
 \arguments{
 \item{f, g}{Expressions.}

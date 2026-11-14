@@ -1,5 +1,7 @@
-# Groebner bases by Buchberger's algorithm with Gebauer-Moeller criteria,
-# after sympy/polys/groebnertools.py.
+# Groebner bases by Buchberger's algorithm, after
+# sympy/polys/groebnertools.py.
+# ponytail: only the product criterion prunes pairs; SymPy's buchberger()
+# also applies the Gebauer-Moeller chain criteria, which matter for speed only
 
 .lcm_mono <- function(a, b) pmax(a, b)
 
@@ -95,9 +97,18 @@ groebner <- function(F, ..., order = "lex") {
   gens <- .gens_of(F, list(...))
   cv <- .to_qpolys(F, gens)
   G <- .gb_sorted(.groebner_qp(cv$polys, order), order)
-  out <- lapply(G, function(g) qpoly_to_expr(qp_primitive(g)$poly, cv$gens))
-  structure(out, gens = cv$gens, order = order)
+  # GroebnerBasis: over ZZ the basis is cleared of denominators
+  # (primitive), over QQ it stays monic
+  zz <- all(vapply(cv$polys, function(p) all(gmp::denominator(p$c) == 1), NA))
+  out <- lapply(G, function(g) qpoly_to_expr(if (zz) qp_primitive(g)$poly else qp_monic(g), cv$gens))
+  structure(out, gens = cv$gens, order = order, domain = if (zz) "ZZ" else "QQ", class = c("GroebnerBasis", "list"))
 }
+
+.gb_sstr <- function(G) paste0("GroebnerBasis([", paste(vapply(unclass(G), .str, ""), collapse = ", "), "], ",
+                               paste(vapply(attr(G, "gens"), .str, ""), collapse = ", "), ", domain='", attr(G, "domain"),
+                               "', order='", attr(G, "order"), "')")
+#' @export
+print.GroebnerBasis <- function(x, ...) { cat(.gb_sstr(x), "\n", sep = ""); invisible(x) }
 
 #' @rdname groebner
 #' @export

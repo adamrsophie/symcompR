@@ -459,6 +459,7 @@ print.HolonomicFunction <- function(x, ...) { cat(format(x), "\n"); invisible(x)
     sol <- list(expand(.mul(list(ann$polys[[1L]], as_sym(n)))), ann$polys[[2L]])
     return(HolonomicFunction(.diffop(sol, ann$parent), self$x, self$x0, y0))
   }
+  if (is_sym(n)) n <- num_value_dbl(n)
   if (n < 0) stop("Negative Power on a Holonomic Function", call. = FALSE)
   Dx <- .diffop(list(S_Zero, S_One), ann$parent)
   result <- HolonomicFunction(Dx, self$x, 0, list(S_One))
@@ -484,7 +485,7 @@ Ops.HolonomicFunction <- function(e1, e2) {
     "-" = if (h1) .h_add(e1, .h_mul(e2, -1)) else .h_add(.h_mul(e2, -1), e1),
     "*" = if (h1) .h_mul(e1, e2) else .h_mul(e2, e1),
     "/" = .h_mul(e1, .inv(as_sym(e2))),
-    "^" = .h_pow(e1, as.integer(e2)),
+    "^" = .h_pow(e1, e2),
     "==" = .h_equal(e1, e2),
     stop("unsupported operator ", .Generic, call. = FALSE))
 }
@@ -1027,7 +1028,7 @@ evalf_holonomic <- function(f, points, method = "RK4", step = 0.05, derivatives 
     if (a > bv) h <- -h
     nst <- as.integer((bv - a) / h)
     pts <- list(a + h)
-    for (i in seq_len(nst - 1L)) pts[[length(pts) + 1L]] <- pts[[length(pts)]] + h
+    for (i in seq_len(max(0L, nst - 1L))) pts[[length(pts) + 1L]] <- pts[[length(pts)]] + h
     points <- pts
   }
   for (r in roots(f$annihilator$polys[[length(f$annihilator$polys)]], f$x)) {

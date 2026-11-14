@@ -76,9 +76,9 @@ IntegerRing()
 
 RationalField()
 
-RealField(prec = 53)
+RealField(prec = 53, dps = NULL)
 
-ComplexField(prec = 53)
+ComplexField(prec = 53, dps = NULL)
 
 ExpressionDomain()
 
@@ -130,6 +130,8 @@ from_sympy(K, a)
 \item{x}{A domain.}
 
 \item{prec}{Precision in bits (kept for SymPy compatibility).}
+
+\item{dps}{Precision in decimal digits; when given it sets \code{prec}.}
 
 \item{q}{The denominator for \code{PythonRational()}.}
 

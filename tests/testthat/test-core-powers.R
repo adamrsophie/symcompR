@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Reference values from SymPy: Mul._eval_power, Integer and Rational
 # _eval_power for negative bases, NegativeOne._eval_power, inverse
 # trigonometric evaluation, and limits on branch cuts.

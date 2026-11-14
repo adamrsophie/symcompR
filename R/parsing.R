@@ -78,7 +78,7 @@ sym_from_call <- function(x, locals = list(), rational = FALSE, from_string = FA
     lit <- args[[1L]]
     if (grepl("[.eE]", lit)) {
       if (rational) return(make_rational(.decimal_to_bigq(lit)))
-      return(Float(as.numeric(lit)))
+      return(Float(lit))
     }
     return(make_rational(gmp::as.bigq(.str_bigz(lit))))
   }

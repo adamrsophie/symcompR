@@ -18,7 +18,9 @@ test_that("the 84 equation key system solves to a unique solution", {
   expect_length(sol, 1L)
   vals <- lapply(sol[[1L]], as_sym)
   expect_true(all(vapply(vals, function(v) v$type == "Integer", TRUE)))
-  for (e in eqs) expect_true(is_zero_num(subs(e, sol[[1L]])))
+  # a tuple of values in the order of xs, as SymPy's list of tuples
+  pairs <- Map(function(s, v) list(s, v), xs, vals)
+  for (e in eqs) expect_true(is_zero_num(subs(e, pairs)))
   key <- intToUtf8(vapply(vals, as.integer, 0L))
   expect_equal(nchar(key), 42L)
 })

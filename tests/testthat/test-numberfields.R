@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Expected strings are SymPy outputs for the same calls.
 
 x <- Symbol("x"); s2 <- sqrt(Integer(2)); s3 <- sqrt(Integer(3)); I <- sym_I

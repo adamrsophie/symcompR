@@ -22,8 +22,13 @@ A numeric vector.
 }
 \description{
 \code{rv_sample(expr, condition, size)} is SymPy's \code{sample()}: one realization
-of a random expression, or a vector of \code{size} of them. Samples use R's
-random number generator; call \code{set.seed()} for reproducible draws.
+of a random expression, or a vector of \code{size} of them. The draws follow
+the exact law of each distribution: R's own generators for the families
+SymPy hands to SciPy (Normal, Exponential, Gamma, Cauchy, Poisson and
+others), and inverse transform sampling of the cdf over the whole
+support for the rest. Samples use R's random number generator, so they
+differ from SciPy's draws for the same seed; call \code{set.seed()} (or pass
+\code{seed}) for reproducible draws.
 }
 \examples{
 set.seed(1)

@@ -529,20 +529,33 @@ simplify_if_cheap <- function(e) {
 #' @param maxit Maximum iterations, or `NULL` for the solver's default (30
 #'   secant steps, 10 Newton steps).
 #' @param prec Number of significant digits.
-#' @return A Float or a named list of Floats.
+#' @param maxsteps SymPy's name for `maxit`.
+#' @param verify If `FALSE`, return the last iterate without checking that
+#'   it is a root within the tolerance.
+#' @param dict If `TRUE`, return a list holding one named list of the
+#'   solution, as SymPy's `dict=True`.
+#' @param solver The mpmath solver: `"secant"` (one equation; give `x0` as
+#'   two values for the two starting points) or `"mdnewton"` (systems).
+#' @return A Float, or a named list of Floats (a list of one with `dict`).
 #' @examples
 #' x <- Symbol("x")
 #' nsolve(cos(x) - x, x, 1)
 #' nsolve(x^2 - 2, x, 1, prec = 30)
+#' nsolve(x^2 - 2, x, c(1, 2))
 #' @export
-nsolve <- function(f, x, x0, tol = NULL, maxit = NULL, prec = 15) {
+nsolve <- function(f, x, x0, tol = NULL, maxit = NULL, prec = 15, maxsteps = NULL, verify = TRUE, dict = FALSE,
+                   solver = NULL) {
+  if (is.null(maxit)) maxit <- maxsteps
+  if (!is.null(solver) && !solver %in% c("secant", "mdnewton"))
+    stop(.sympy_condition("NotImplementedError", paste0("solver '", solver, "' is not available; use 'secant' or 'mdnewton'")))
   if (is.list(f) && !inherits(f, "sym")) {
     fs <- lapply(f, .eq_to_expr)
     xs <- .as_gens(list(x))
     if (length(xs) > length(fs)) stop(.sympy_condition("NotImplementedError", "need at least as many equations as variables"))
     if (length(x0) != length(xs))
       stop(.sympy_condition("TypeError", sprintf("nsolve expected exactly %i guess vectors, got %i", length(xs), length(x0))))
-    return(.fs_nsolve_system(fs, xs, as.list(x0), prec, tol, maxit))
+    r <- .fs_nsolve_system(fs, xs, as.list(x0), prec, tol, maxit, verify)
+    return(if (dict) list(r) else r)
   }
   f <- as_sym(f)
   if (is_relational(f) && f$type != "Equality") stop(.sympy_condition("TypeError", "nsolve cannot accept inequalities"))
@@ -551,7 +564,8 @@ nsolve <- function(f, x, x0, tol = NULL, maxit = NULL, prec = 15) {
   fr <- free_symbols(fe)
   if (length(fr) != 1L || !identical(fr[[1L]]$key, x$key))
     stop(.sympy_condition("ValueError", "expected a one-dimensional and numerical function"))
-  .fs_nsolve1(fe, x, x0, prec, tol, maxit)
+  r <- .fs_nsolve1(fe, x, x0, prec, tol, maxit, verify)
+  if (dict) list(stats::setNames(list(r), x$name)) else r
 }
 
 # Fast path for polynomial systems with rational coefficients: works on

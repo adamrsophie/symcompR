@@ -1,7 +1,7 @@
 # Sequences, after sympy/series/sequences.py: SeqFormula, SeqPer, SeqAdd,
 # SeqMul and EmptySequence as sym nodes.
 
-.SEQ_TYPES <- c("SeqFormula", "SeqPer", "SeqAdd", "SeqMul", "EmptySequence")
+.SEQ_TYPES <- c("SeqFormula", "SeqPer", "SeqAdd", "SeqMul", "EmptySequence", "RecursiveSeq")
 .is_seq <- function(e) is_sym(e) && e$type %in% .SEQ_TYPES
 
 S_EmptySequence <- new_sym("EmptySequence", key = "EmptySequence()")
@@ -14,7 +14,8 @@ S_EmptySequence <- new_sym("EmptySequence", key = "EmptySequence()")
       b <- lapply(s$args, .seq_bounds)
       list(do.call(Max, lapply(b, `[[`, 1L)), do.call(Min, lapply(b, `[[`, 2L)))
     },
-    EmptySequence = list(S_Infinity, S_NegativeInfinity))
+    EmptySequence = list(S_Infinity, S_NegativeInfinity),
+    RecursiveSeq = list(s$args[[5L]], S_Infinity))
 }
 .seq_var <- function(s) s$args[[2L]]$args[[1L]]
 
@@ -119,6 +120,7 @@ EmptySequence <- S_EmptySequence
       idx <- as.integer(as.character(.Z(off) %% k))
       subs(per[[idx + 1L]], .seq_var(s), pt)
     },
+    RecursiveSeq = .rseq_coeff(s, pt),
     SeqAdd = .add(lapply(s$args, .seq_coeff, pt = pt)),
     SeqMul = .mul(lapply(s$args, .seq_coeff, pt = pt)))
 }
@@ -393,4 +395,70 @@ approximants <- function(l, X = Symbol("x"), simplify = FALSE) {
     out[[length(out) + 1L]] <- if (simplify) simplify(r) else r
   }
   out
+}
+
+#' Recursively defined sequences
+#'
+#' `RecursiveSeq(recurrence, yn, n, initial, start)` is the sequence `yn`
+#' (an undefined function applied to the symbol `n`) defined by `yn =
+#' recurrence` for `n >= start`, where `recurrence` uses earlier terms
+#' `y(n - k)`, with the first terms `initial` (default dummy symbols), as
+#' SymPy's `RecursiveSeq`. `coeff(s, i)` and `sequence_terms(s, k)` give
+#' its terms; `recursive_seq_recurrence(s)` is the equation `yn = recurrence`.
+#'
+#' @param recurrence The expression for `yn` in terms of earlier terms.
+#' @param yn The term, an undefined function applied to `n`.
+#' @param n The index symbol.
+#' @param initial A list of the first terms, as many as the largest shift.
+#' @param start The first index.
+#' @param s A `RecursiveSeq`.
+#' @return A `RecursiveSeq` sequence, or an equation.
+#' @examples
+#' n <- Symbol("n"); y <- Function("y")
+#' fib <- RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, list(0, 1))
+#' sequence_terms(fib, 10)
+#' @export
+RecursiveSeq <- function(recurrence, yn, n, initial = NULL, start = 0) {
+  recurrence <- as_sym(recurrence); yn <- as_sym(yn); n <- as_sym(n)
+  if (!(yn$type == "Function" && is.null(.FUNS[[yn$name]])))
+    stop("TypeError: recurrence sequence must be an applied undefined function, found `", .str(yn), "`", call. = FALSE)
+  if (!is_symbol_like(n)) stop("TypeError: recurrence variable must be a symbol, found `", .str(n), "`", call. = FALSE)
+  if (length(yn$args) != 1L || !identical(yn$args[[1L]]$key, n$key))
+    stop("TypeError: recurrence sequence does not match symbol", call. = FALSE)
+  degree <- 0L
+  for (prev in Filter(function(z) z$type == "Function" && identical(z$name, yn$name), .all_subexprs(recurrence))) {
+    if (length(prev$args) != 1L) stop("TypeError: Recurrence should be in a single variable", call. = FALSE)
+    shift <- .sub(prev$args[[1L]], n)
+    if (!(shift$type == "Integer" && shift$value < 0))
+      stop("TypeError: Recurrence should have constant, negative, integer shifts (found ", .str(prev), ")", call. = FALSE)
+    degree <- max(degree, -as.integer(shift$value))
+  }
+  if (!length(initial)) initial <- lapply(seq_len(degree) - 1L, function(k) Dummy(paste0("c_", k)))
+  if (length(initial) != degree) stop("ValueError: Number of initial terms must equal degree", call. = FALSE)
+  init <- do.call(Tuple, lapply(initial, as_sym))
+  new_sym("RecursiveSeq", list(recurrence, yn, n, init, as_sym(start)), extra = list(cache = new.env()))
+}
+
+#' @rdname RecursiveSeq
+#' @export
+recursive_seq_recurrence <- function(s) Eq(s$args[[2L]], s$args[[1L]])
+
+# RecursiveSeq._eval_coeff, as SymPy computes it: the cache maps y(start + k)
+# to its value; the loop runs over absolute indices from len(cache), so a
+# sequence with start != 0 repeats SymPy's own indexing
+.rseq_coeff <- function(s, index) {
+  rec <- s$args[[1L]]; yn <- s$args[[2L]]; n <- s$args[[3L]]; init <- s$args[[4L]]$args; start <- s$args[[5L]]
+  cache <- s$extra$cache
+  y <- function(k) fcall(yn$name, list(as_sym(k)))
+  if (is.null(cache$pairs)) cache$pairs <- lapply(seq_along(init), function(k) list(y(.add(list(start, .int(k - 1L)))), init[[k]]))
+  get <- function(key) { for (p in cache$pairs) if (identical(p[[1L]]$key, key)) return(p[[2L]]); NULL }
+  index <- as_sym(index)
+  if (.int_val(.sub(index, start)) < length(cache$pairs)) return(get(y(index)$key))
+  current <- NA
+  for (current in seq(length(cache$pairs), .int_val(index))) {
+    si <- .add(list(start, .int(current)))
+    term <- xreplace(xreplace(rec, list(list(n, si))), cache$pairs)
+    cache$pairs[[length(cache$pairs) + 1L]] <- list(y(si), term)
+  }
+  get(y(.add(list(start, .int(current))))$key)
 }

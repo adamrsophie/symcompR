@@ -53,8 +53,19 @@ ilcm <- function(...) {
 #' @rdname integer-helpers
 #' @export
 mod_inverse <- function(a, m) {
-  q <- .nt_rat(a)
-  if (!is.null(q)) return(make_rational(1 / q))
+  # intfunc.mod_inverse: integers use igcdex; other numbers give 1/a
+  # when m > 1
+  is_int <- function(v) (is_sym(v) && v$type == "Integer") || inherits(v, "bigz") ||
+    (is.numeric(v) && length(v) == 1L && is.finite(v) && v == round(v))
+  if (!is_int(a) || !is_int(m)) {
+    as <- as_sym(a); ms <- as_sym(m)
+    if (length(free_symbols(as)) || length(free_symbols(ms)))
+      stop("TypeError: Expected numbers for arguments; symbolic `mod_inverse` is not implemented but symbolic expressions can be handled with the similar function, sympy.polys.polytools.invert", call. = FALSE)
+    big <- Gt(ms, S_One)
+    if (!(is_sym(big) && big$type == "BooleanAtom")) stop("ValueError: m > 1 did not evaluate; try to simplify ", sstr(ms), call. = FALSE)
+    if (big$name == "true") return(.div(S_One, as))
+    stop("ValueError: inverse of ", sstr(as), " (mod ", sstr(ms), ") does not exist", call. = FALSE)
+  }
   a <- .nt_int(a)
   m <- .nt_int(m)
   am <- abs(m)

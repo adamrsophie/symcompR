@@ -20,11 +20,11 @@
 \alias{poly_from_expr}
 \title{More polynomial functions}
 \usage{
-sym_decompose(f, x = NULL)
+sym_decompose(f, x = NULL, ...)
 
 gff_list(f, x = NULL)
 
-subresultants(f, g, x = NULL)
+subresultants(f, g, x = NULL, ...)
 
 sym_trunc(f, p, x = NULL)
 
@@ -65,9 +65,9 @@ poly_from_expr(e, ...)
 
 \item{x}{The generator.}
 
-\item{p}{Modulus.}
-
 \item{...}{Generators.}
+
+\item{p}{Modulus.}
 
 \item{formal}{Return symbols for the elementary polynomials.}
 

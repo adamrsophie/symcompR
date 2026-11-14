@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Expected values are the outputs in the docstrings of sympy/simplify/fu.py
 # (powers written with ^).
 x <- Symbol("x"); y <- Symbol("y"); a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c"); z <- Symbol("z")

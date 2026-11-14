@@ -16,7 +16,7 @@ split_surds(expr)
 
 collect_sqrt(expr, evaluate = TRUE)
 
-sqrtdenest(e)
+sqrtdenest(e, max_iter = 3L)
 }
 \arguments{
 \item{e, expr}{An expression.}
@@ -29,6 +29,8 @@ sqrtdenest(e)
 
 \item{evaluate}{For \code{collect_sqrt()}: \code{FALSE} returns the terms and the
 number of radical terms instead of the sum.}
+
+\item{max_iter}{For \code{sqrtdenest()}: the largest number of denesting passes.}
 }
 \value{
 An expression, or a list.

@@ -19,10 +19,10 @@
 # The ground field asked for: list(kind = "QQ"), list(kind = "GF", p, symmetric)
 # or list(kind = "NF", exts); the Gaussian domains add gauss = "ZZ_I" or
 # "QQ_I" (gaussian = TRUE is QQ_I, extension = I the algebraic field QQ<I>).
-.poly_field <- function(opts, exprs = list()) {
+.poly_field <- function(opts, exprs = list(), ring = FALSE) {
   if (!is.null(opts$modulus)) {
     p <- gmp::as.bigz(as.character(as_sym(opts$modulus)$value))
-    return(.gf_field(p, !isFALSE(opts$symmetric)))
+    return(.gf_field(p, !isFALSE(opts$symmetric), ring))
   }
   d <- opts$domain
   if (!is.null(d)) {
@@ -62,10 +62,16 @@
   list(kind = "QQ")
 }
 
-.gf_field <- function(p, symmetric = TRUE) {
+.gf_field <- function(p, symmetric = TRUE, ring = FALSE) {
+  # ring = TRUE: Poly construction and arithmetic, which SymPy allows over
+  # any ZZ/nZZ and done here in exact integers
+  if (ring) {
+    if (p < 2) stop("modulus must be a positive integer, got ", as.character(p), call. = FALSE)
+    return(list(kind = "GF", p = p, symmetric = symmetric))
+  }
   if (p < 2 || !gmp::isprime(p)) stop("modulus must be a positive prime number, got ", as.character(p), call. = FALSE)
-  if (p >= 2^25) stop("moduli at or above 2^25 are not supported", call. = FALSE)
-  list(kind = "GF", p = as.numeric(p), symmetric = symmetric)
+  # below 2^25 the coefficients are doubles, otherwise bigz (R/polys-galois.R)
+  list(kind = "GF", p = if (p < 2^25) as.numeric(p) else gmp::as.bigz(p), symmetric = symmetric)
 }
 
 # Algebraic irrationals (I and rational powers of rationals) in expressions.
@@ -108,9 +114,9 @@
     }
     if (sqf) break
     # f = g(x^p): take the p-th root
-    d <- (length(f) - 1L) %/% p
-    f <- f[(0:d) * p + 1L]
-    n <- n * p
+    d <- (length(f) - 1L) %/% as.numeric(p)
+    f <- f[(0:d) * as.numeric(p) + 1L]
+    n <- n * as.numeric(p)
   }
   list(lc = lc, factors = factors)
 }
@@ -180,17 +186,29 @@
 # residues (1/2 is the inverse of 2).
 .gf_from_expr <- function(e, x, p) {
   cl <- .coeff_list(expand(e), x)
-  vapply(cl, function(c) {
-    if (!(c$type %in% c("Integer", "Rational"))) stop("expression is not a polynomial over GF(", p, "): ", .str(e), call. = FALSE)
-    q <- gmp::as.bigq(c$value)
-    nu <- as.numeric(gmp::mod.bigz(gmp::numerator(q), p)); de <- as.numeric(gmp::mod.bigz(gmp::denominator(q), p))
-    (nu * .gf_inv(de, p)) %% p
-  }, 0)
+  .gf_from_q(lapply(cl, function(c) {
+    if (!(c$type %in% c("Integer", "Rational"))) stop("expression is not a polynomial over GF(", as.character(p), "): ", .str(e), call. = FALSE)
+    gmp::as.bigq(c$value)
+  }), p)
+}
+
+# rationals (a list of bigq) as residues modulo p; 1/2 is the inverse of 2
+.gf_from_q <- function(qs, p) {
+  P <- gmp::as.bigz(p)
+  v <- lapply(qs, function(q) {
+    q <- gmp::as.bigq(q)
+    d <- gmp::denominator(q) %% P
+    inv <- suppressWarnings(gmp::inv.bigz(d, P))
+    if (is.na(inv)) stop("NotInvertible: zero divisor", call. = FALSE)
+    (gmp::numerator(q) %% P) * inv %% P
+  })
+  v <- do.call(c, c(list(gmp::as.bigz(integer())), v))
+  if (.gf_big(p)) v else as.numeric(v)
 }
 
 .gf_univariate_gen <- function(exprs, gens) {
   g <- .gens_of(exprs, gens)
-  if (length(g) > 1L) stop("multivariate polynomials over finite fields are not supported", call. = FALSE)
+  if (length(g) > 1L) stop("NotImplementedError: multivariate polynomials over finite fields", call. = FALSE)
   if (!length(g)) return(NULL)
   g[[1L]]
 }
@@ -406,8 +424,102 @@
 # factor_list or sqf_list of a polynomial expression over a finite or
 # algebraic field: list(coeff, factors = list(list(expr, k))).
 .field_factor_list <- function(e, Fd, gens, method = "factor") {
+  if (Fd$kind == "GF") return(.gf_symbolic_factor_list(as_sym(e), Fd, gens, method))
   e <- expand(as_sym(e))
-  if (Fd$kind == "GF") {
+  .nf_field_factor_list(e, Fd, gens, method)
+}
+
+# _symbolic_factor_list over GF(p): each factor of a product on its own
+# (numbers multiply the coefficient as rationals), then _sorted_factors and,
+# for sqf, the factors of equal multiplicity multiplied together
+.gf_symbolic_factor_list <- function(e0, Fd, gens, method) {
+  args <- if (e0$type == "Mul") e0$args else list(e0)
+  coeff <- S_One; fl <- list()
+  for (a in args) {
+    if (is_number_type(a)) { coeff <- .mul(list(coeff, a)); next }
+    base <- a; k <- S_One
+    if (a$type == "Pow" && !is_const(a$args[[1L]], "E")) {
+      base <- a$args[[1L]]; k <- a$args[[2L]]
+      if (is_number_type(base) && is_number_type(k)) { coeff <- .mul(list(coeff, a)); next }
+      if (is_number_type(base)) { fl[[length(fl) + 1L]] <- list(base, k); next }
+    }
+    r <- .gf_poly_factor_list(expand(base), Fd, gens, method)
+    fs <- r$factors
+    if (!is_one_num(r$coeff)) {
+      if (k$type == "Integer") coeff <- .mul(list(coeff, .pow(r$coeff, k)))
+      else if (isTRUE(ask_fact(r$coeff, "positive"))) fl[[length(fl) + 1L]] <- list(r$coeff, k)
+      else fs <- c(fs, list(list(r$coeff, S_One)))
+    }
+    if (is_one_num(k)) fl <- c(fl, fs)
+    else if (isTRUE(ask_fact(k, "integer"))) fl <- c(fl, lapply(fs, function(fk) list(fk[[1L]], .mul(list(fk[[2L]], k)))))
+    else {
+      other <- list()
+      for (fk in fs) {
+        if (isTRUE(ask_fact(fk[[1L]], "positive"))) fl[[length(fl) + 1L]] <- list(fk[[1L]], .mul(list(fk[[2L]], k)))
+        else other[[length(other) + 1L]] <- fk
+      }
+      fl[[length(fl) + 1L]] <- list(.mul(lapply(other, function(fk) .pow(fk[[1L]], fk[[2L]]))), k)
+    }
+  }
+  if (method == "sqf" && length(fl)) {
+    ks <- vapply(fl, function(fk) .str(fk[[2L]]), "")
+    fl <- lapply(unique(ks), function(kk) {
+      grp <- fl[ks == kk]
+      list(expand(.mul(lapply(grp, `[[`, 1L))), grp[[1L]][[2L]])
+    })
+  }
+  list(coeff = coeff, factors = .gf_sorted_factors(fl, Fd$p, method))
+}
+
+# _sorted_factors: sqf by (exp, len(rep), number of gens, rep), factor by
+# (len(rep), number of gens, exp, rep), with rep the dense recursive list of
+# coefficients in [0, p) and lists compared as Python compares them
+.gf_sorted_factors <- function(fl, p, method) {
+  if (length(fl) < 2L) return(fl)
+  num <- vapply(fl, function(fk) is_number_type(fk[[1L]]), NA)
+  P <- gmp::as.bigz(p)
+  info <- lapply(fl[!num], function(fk) {
+    gs <- .gens_of(list(fk[[1L]]), NULL)
+    rep <- .gd_from_expr(fk[[1L]], gs, P)
+    list(f = fk, rep = rep, ng = length(gs), k = as.numeric(fk[[2L]]$value))
+  })
+  key <- function(a) if (method == "sqf") list(a$k, length(a$rep), a$ng, a$rep) else list(length(a$rep), a$ng, a$k, a$rep)
+  cmp <- function(a, b) .gd_pycmp(key(a), key(b))
+  out <- list()
+  for (it in info) {
+    i <- length(out) + 1L
+    while (i > 1L && cmp(out[[i - 1L]], it) > 0) i <- i - 1L
+    out <- append(out, list(it), i - 1L)
+  }
+  c(fl[num], lapply(out, `[[`, "f"))
+}
+# Python's comparison of nested lists and integers
+.gd_pycmp <- function(a, b) {
+  if (!is.list(a) && !is.list(b)) return(if (a < b) -1L else if (a > b) 1L else 0L)
+  n <- min(length(a), length(b))
+  for (i in seq_len(n)) { c <- .gd_pycmp(a[[i]], b[[i]]); if (c != 0L) return(c) }
+  sign(length(a) - length(b))
+}
+
+# factor_list or sqf_list of one polynomial (expanded) over GF(p)
+.gf_poly_factor_list <- function(e, Fd, gens, method) {
+  gs <- .gens_of(list(e), gens)
+  if (length(gs) > 1L) {
+    # beyond SymPy: multivariate factorization over GF(p); sqf_list groups
+    # the irreducible factors of equal multiplicity
+    P <- gmp::as.bigz(Fd$p); u <- length(gs) - 1L
+    .gf_check_coeffs(e, gs)
+    r <- .gd_factor_list(.gd_from_expr(e, gs, P), u, Fd$p)
+    fs <- r$factors
+    if (method == "sqf" && length(fs)) {
+      ks <- vapply(fs, `[[`, 0L, 2L)
+      fs <- lapply(sort(unique(ks)), function(k)
+        list(Reduce(function(a, b) .gd_mul(a, b, u, P), lapply(fs[ks == k], `[[`, 1L)), k))
+    }
+    return(list(coeff = .int(.gf_int(r$lc, P, Fd$symmetric)),
+                factors = lapply(fs, function(fk) list(.gd_to_expr(fk[[1L]], gs, u, P, Fd$symmetric), .int(fk[[2L]])))))
+  }
+  {
     x <- .gf_univariate_gen(list(e), gens)
     if (is.null(x)) return(list(coeff = e, factors = list()))
     p <- Fd$p
@@ -417,6 +529,9 @@
     return(list(coeff = .int(.gf_int(r$lc, p, Fd$symmetric)),
                 factors = lapply(fs, function(fk) list(.gf_to_expr(fk[[1L]], x, p, Fd$symmetric), .int(fk[[2L]])))))
   }
+}
+
+.nf_field_factor_list <- function(e, Fd, gens, method) {
   K <- .kd_field(Fd$exts)
   # over ZZ_I or QQ_I the radicals of the expression are generators, as in
   # SymPy's construct_domain; only an extension field absorbs them

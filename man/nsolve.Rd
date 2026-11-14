@@ -4,7 +4,18 @@
 \alias{nsolve}
 \title{Numerical solution of equations}
 \usage{
-nsolve(f, x, x0, tol = NULL, maxit = NULL, prec = 15)
+nsolve(
+  f,
+  x,
+  x0,
+  tol = NULL,
+  maxit = NULL,
+  prec = 15,
+  maxsteps = NULL,
+  verify = TRUE,
+  dict = FALSE,
+  solver = NULL
+)
 }
 \arguments{
 \item{f}{An equation or list of equations.}
@@ -20,9 +31,20 @@ working machine epsilon.}
 secant steps, 10 Newton steps).}
 
 \item{prec}{Number of significant digits.}
+
+\item{maxsteps}{SymPy's name for \code{maxit}.}
+
+\item{verify}{If \code{FALSE}, return the last iterate without checking that
+it is a root within the tolerance.}
+
+\item{dict}{If \code{TRUE}, return a list holding one named list of the
+solution, as SymPy's \code{dict=True}.}
+
+\item{solver}{The mpmath solver: \code{"secant"} (one equation; give \code{x0} as
+two values for the two starting points) or \code{"mdnewton"} (systems).}
 }
 \value{
-A Float or a named list of Floats.
+A Float, or a named list of Floats (a list of one with \code{dict}).
 }
 \description{
 \code{nsolve(f, x, x0)} finds a root near \code{x0} as SymPy's \code{nsolve()}: mpmath's
@@ -35,4 +57,5 @@ equations, symbols and starting values.
 x <- Symbol("x")
 nsolve(cos(x) - x, x, 1)
 nsolve(x^2 - 2, x, 1, prec = 30)
+nsolve(x^2 - 2, x, c(1, 2))
 }

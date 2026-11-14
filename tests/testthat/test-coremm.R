@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Core fixes behind solveset and ODE results (expected values from SymPy)
 
 test_that("arg and atan2 follow SymPy's eval", {

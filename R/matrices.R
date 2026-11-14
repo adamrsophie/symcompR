@@ -52,6 +52,7 @@ Matrix <- function(data, ncol = NULL, f = NULL) {
       return(.new_mat(d, nr, nc))
     }
     if (is.null(f)) return(zeros(nr, nc))
+    if (length(f) != nr * nc) stop("ValueError: List length should be equal to rows*columns", call. = FALSE)
     return(.new_mat(lapply(as.list(f), as_sym), nr, nc))
   }
   if (is.matrix(data)) {
@@ -818,7 +819,14 @@ is_symmetric <- function(M) {
 
 #' @rdname dot
 #' @export
-is_zero_matrix <- function(M) all(vapply(Matrix(M)$data, function(z) is_zero_num(simplify(z)), TRUE))
+is_zero_matrix <- function(M) {
+  # MatrixBase._eval_is_zero_matrix: FALSE if an entry is known nonzero,
+  # NA (SymPy's None) if an entry is undecided
+  z <- vapply(Matrix(M)$data, function(e) as.logical(ask_fact(e, "zero")), NA)
+  if (any(z %in% FALSE)) return(FALSE)
+  if (anyNA(z)) return(NA)
+  TRUE
+}
 
 #' @rdname dot
 #' @export

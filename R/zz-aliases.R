@@ -422,6 +422,7 @@ grevlex <- "grevlex"
 #' @rdname poly-aliases
 #' @export
 monic <- function(f, ...) {
+  if (!is.null(r <- .gf_hook("monic", list(f), list(...)))) return(r)
   f <- as_sym(f)
   if (is_zero_num(f)) return(S_Zero)
   lc <- LC(f, ...)
@@ -431,6 +432,7 @@ monic <- function(f, ...) {
 #' @rdname poly-aliases
 #' @export
 cofactors <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("cofactors", list(f, g), list(...)))) return(r)
   h <- gcd(f, g, ...)
   list(h = h, cff = cancel(.div(as_sym(f), h)), cfg = cancel(.div(as_sym(g), h)))
 }
@@ -438,6 +440,7 @@ cofactors <- function(f, g, ...) {
 #' @rdname poly-aliases
 #' @export
 half_gcdex <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("half_gcdex", list(f, g), list(...)))) return(r)
   r <- gcdex(f, g, ...)
   list(s = r$s, h = r$h)
 }
@@ -445,9 +448,10 @@ half_gcdex <- function(f, g, ...) {
 #' @rdname poly-aliases
 #' @export
 pexquo <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("pexquo", list(f, g), list(...)))) return(r)
   d <- pdiv(f, g, ...)
   r <- if (inherits(d$r, "Poly")) as_expr(d$r) else d$r
-  if (!is_zero_num(r)) stop("pseudo division is not exact")
+  if (!is_zero_num(r)) stop(ExactQuotientFailed(paste0(.str(as_expr(g)), " does not divide ", .str(as_expr(f)))))
   d$q
 }
 

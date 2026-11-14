@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 s <- function(e) sstr(e)
 
 test_that("sieve and prime generation follow SymPy", {

@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Expected strings come from SymPy (commit 86150a81) with ** written as ^.
 
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")

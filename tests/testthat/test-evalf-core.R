@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # N() through the port of sympy/core/evalf.py: the evalf_table dispatch,
 # complex accuracy tracking and the options. Expected strings are SymPy's.
 

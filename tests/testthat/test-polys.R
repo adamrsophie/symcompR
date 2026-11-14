@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); a <- Symbol("a")
 s <- function(e) sstr(e)
 
@@ -80,7 +83,7 @@ test_that("polys review regressions stay fixed", {
   expect_length(solve(list(x / y, y), list(x, y)), 0L)
   expect_equal(s(powdenest(sqrt(exp(x)))), "sqrt(exp(x))")
   expect_equal(s(nroots(x - sym_I, x)[[1]]), "1.0*I")
-  expect_equal(s(sqrtdenest(sqrt(-3 + 2 * sqrt(S(2))))), "sqrt(-3 + 2*sqrt(2))")
+  expect_equal(s(sqrtdenest(sqrt(-3 + 2 * sqrt(S(2))))), "-I + sqrt(2)*I")
   expect_equal(vapply(solve(sinh(x), x), sstr, ""), c("0", "I*pi"))
   expect_true(is_zero_dimensional(list(x^2 - y, y^2 - x), x, y))
 })

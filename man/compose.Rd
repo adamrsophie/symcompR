@@ -6,7 +6,7 @@
 \alias{interpolate}
 \title{Polynomial composition, Horner form and interpolation}
 \usage{
-compose(f, g, x = NULL)
+compose(f, g, x = NULL, ...)
 
 horner(f, x = NULL)
 

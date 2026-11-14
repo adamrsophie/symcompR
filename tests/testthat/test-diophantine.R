@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Reference values from SymPy.
 x <- Symbol("x", integer = TRUE); y <- Symbol("y", integer = TRUE)
 z <- Symbol("z", integer = TRUE); w <- Symbol("w", integer = TRUE)

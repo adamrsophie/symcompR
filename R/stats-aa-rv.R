@@ -631,7 +631,9 @@ where <- function(condition, given_condition = NULL, ...) {
 #' @param expr A random expression.
 #' @param condition An optional condition (Relational or Boolean).
 #' @param given_condition An optional condition for `P()`.
-#' @param numsamples Sampling is not supported; must be `NULL`.
+#' @param numsamples If given, the value is estimated from this many samples
+#'   drawn with [rv_sample()] (SymPy's `sampling_E()`, `sampling_P()` and
+#'   `sampling_density()`); `rv_density()` then returns the counts of the values.
 #' @param evaluate `FALSE` keeps integrals and sums unevaluated.
 #' @param ... Ignored, except by `Density()`: further `list(state, probability)`
 #'   pairs of a quantum density operator ([density-operators]).
@@ -648,7 +650,7 @@ where <- function(condition, given_condition = NULL, ...) {
 #' @export
 E <- function(expr, condition = NULL, numsamples = NULL, evaluate = TRUE, ...) {
   if (!is_random(expr)) return(if (is.numeric(expr) || is.logical(expr)) as_sym(expr) else expr)
-  if (!is.null(numsamples)) .serr("NotImplementedError", "sampling is not supported")
+  if (!is.null(numsamples)) return(.sampling_E(expr, condition, numsamples, evaluate))
   e <- Expectation(expr, condition)
   if (evaluate) return(.expectation_doit(e))
   e
@@ -661,7 +663,7 @@ expectation <- E
 #' @rdname E
 #' @export
 P <- function(condition, given_condition = NULL, numsamples = NULL, evaluate = TRUE, ...) {
-  if (!is.null(numsamples)) .serr("NotImplementedError", "sampling is not supported")
+  if (!is.null(numsamples)) return(.sampling_P(condition, given_condition, numsamples, evaluate))
   p <- Probability(condition, given_condition)
   if (evaluate) return(.probability_doit(p, evaluate = evaluate))
   p
@@ -679,7 +681,7 @@ probability <- P
 #' @rdname E
 #' @export
 rv_density <- function(expr, condition = NULL, evaluate = TRUE, numsamples = NULL, ...) {
-  if (!is.null(numsamples)) .serr("NotImplementedError", "sampling is not supported")
+  if (!is.null(numsamples)) return(.sampling_density(expr, condition, numsamples))
   if (!is.null(condition) && !.is_cond(condition)) return(apply_lambda(rv_density(expr), condition))
   .density_doit(expr, condition, evaluate = evaluate, ...)
 }
@@ -764,8 +766,13 @@ rv_quantile <- function(expr, evaluate = TRUE, ...) {
 #' Draw random samples
 #'
 #' `rv_sample(expr, condition, size)` is SymPy's `sample()`: one realization
-#' of a random expression, or a vector of `size` of them. Samples use R's
-#' random number generator; call `set.seed()` for reproducible draws.
+#' of a random expression, or a vector of `size` of them. The draws follow
+#' the exact law of each distribution: R's own generators for the families
+#' SymPy hands to SciPy (Normal, Exponential, Gamma, Cauchy, Poisson and
+#' others), and inverse transform sampling of the cdf over the whole
+#' support for the rest. Samples use R's random number generator, so they
+#' differ from SciPy's draws for the same seed; call `set.seed()` (or pass
+#' `seed`) for reproducible draws.
 #'
 #' @param expr A random expression.
 #' @param condition An optional condition the draws must satisfy; a number here is taken as `size`.
@@ -780,62 +787,121 @@ rv_quantile <- function(expr, evaluate = TRUE, ...) {
 rv_sample <- function(expr, condition = NULL, size = 1, seed = NULL, ...) {
   # earlier versions took the size second: rv_sample(X, 10)
   if (is.numeric(condition)) { size <- condition; condition <- NULL }
+  vapply(.rv_sample_syms(expr, condition, size, seed), function(v) as.numeric(N(v)), 0)
+}
+
+# sample_iter: size values of expr (as sym objects), redrawing until the
+# condition holds
+.rv_sample_syms <- function(expr, condition, size, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   rvs <- if (is.null(condition)) .ps_values(pspace(expr)) else .ps_values(pspace(Tuple(expr, condition)))
   rvs <- Filter(function(r) .has1(as_sym(expr), r) || (!is.null(condition) && .has1(as_sym(condition), r)), rvs)
-  out <- numeric(0)
+  out <- list()
   while (length(out) < size) {
     draws <- lapply(rvs, function(rv) .rv_draw(rv, size))
     for (i in seq_len(size)) {
-      vals <- lapply(draws, function(d) as_sym(d[i]))
-      rep <- Map(function(r, v) list(r, v), rvs, vals)
+      rep <- Map(function(r, d) list(r, as_sym(d[[i]])), rvs, draws)
       if (!is.null(condition)) {
         ok <- subs(as_sym(condition), rep)
         if (!(is_sym(ok) && ok$type == "BooleanAtom")) .serr("ValueError", "Conditions must not contain free symbols")
         if (!.is_true(ok)) next
       }
-      out <- c(out, as.numeric(N(subs(as_sym(expr), rep))))
+      out[[length(out) + 1L]] <- subs(as_sym(expr), rep)
       if (length(out) >= size) break
     }
   }
   out[seq_len(size)]
 }
 
+.rv_par <- function(d, i) num_value_dbl(N(d$args[[i]]))
+
+# Draws from the law of the distribution, with R's random number streams
+# (they differ from SciPy's, so seeds do not reproduce SymPy's numbers):
+# R's own generators for the families sample_scipy.py names, and inverse
+# transform sampling of the true cdf, on the whole support, for the others.
 .rv_draw <- function(rv, size) {
   ps <- .rs_pspace(rv)
   d <- .callm(ps, "distribution")
   f <- .findm(d, "rsample")
   if (!is.null(f)) return(f(d, size))
   if (.isa(d, "SingleFiniteDistribution")) {
+    # symbolic outcomes are kept as they are
     dd <- .fdist_items(d)
-    vals <- vapply(dd, function(p) as.numeric(N(p[[1L]])), 0)
     probs <- vapply(dd, function(p) as.numeric(N(p[[2L]])), 0)
-    return(vals[sample.int(length(vals), size, replace = TRUE, prob = probs)])
+    return(lapply(dd, `[[`, 1L)[sample.int(length(dd), size, replace = TRUE, prob = probs)])
   }
-  # inverse transform on a numeric grid of the cdf
+  pr <- function(i) .rv_par(d, i)
+  r <- switch(d$type,
+    NormalDistribution = stats::rnorm(size, pr(1), pr(2)),
+    ExponentialDistribution = stats::rexp(size, pr(1)),
+    GammaDistribution = stats::rgamma(size, shape = pr(1), scale = pr(2)),
+    LogNormalDistribution = stats::rlnorm(size, pr(1), pr(2)),
+    ChiSquaredDistribution = stats::rchisq(size, pr(1)),
+    ParetoDistribution = pr(1) * stats::runif(size)^(-1 / pr(2)),
+    StudentTDistribution = stats::rt(size, pr(1)),
+    UniformDistribution = stats::runif(size, pr(1), pr(2)),
+    BetaDistribution = stats::rbeta(size, pr(1), pr(2)),
+    CauchyDistribution = stats::rcauchy(size, pr(1), pr(2)),
+    GeometricDistribution = stats::rgeom(size, pr(1)) + 1,
+    # SymPy's pmf binomial(x + r - 1, x)*(1 - p)^r*p^x: R's prob is 1 - p
+    NegativeBinomialDistribution = stats::rnbinom(size, size = pr(1), prob = 1 - pr(2)),
+    PoissonDistribution = stats::rpois(size, pr(1)),
+    SkellamDistribution = stats::rpois(size, pr(1)) - stats::rpois(size, pr(2)),
+    NULL)
+  if (!is.null(r)) return(r)
   z <- Dummy("z", real = TRUE)
-  cdf <- tryCatch(.dist_cdf(d, z), error = function(e) NULL)
-  pdf <- .dist_pdf(d, z)
   s <- .dist_set(d)
   lo <- tryCatch(as.numeric(N(set_inf(s))), error = function(e) -Inf)
   hi <- tryCatch(as.numeric(N(set_sup(s))), error = function(e) Inf)
+  pdf <- lambdify(z, .dist_pdf(d, z))
+  pf <- function(v) { r <- tryCatch(as.numeric(pdf(v)), error = function(e) 0); if (length(r) == 1L && is.finite(r)) max(r, 0) else 0 }
+  u <- stats::runif(size)
   if (.isa(d, "SingleDiscreteDistribution")) {
-    a <- if (is.finite(lo)) lo else -200; b <- if (is.finite(hi)) hi else a + 2000
-    k <- seq(a, b)
-    f <- lambdify(z, pdf)
-    w <- vapply(k, function(v) { r <- tryCatch(as.numeric(f(v)), error = function(e) 0); if (is.finite(r)) r else 0 }, 0)
-    return(k[sample.int(length(k), size, replace = TRUE, prob = pmax(w, 0))])
+    # walk the cdf up from the lower end of the support
+    start <- if (is.finite(lo)) lo else .sx_discrete_start(pf)
+    return(vapply(u, function(ui) {
+      k <- start; acc <- pf(k)
+      while (acc < ui && k < hi) { k <- k + 1; acc <- acc + pf(k) }
+      k
+    }, 0))
   }
-  # a grid 40 standard deviations wide around the mean, inside the support
-  m <- tryCatch(as.numeric(N(E(rv))), error = function(e) NA)
-  sd <- tryCatch(as.numeric(N(std(rv))), error = function(e) NA)
-  if (length(m) != 1L || !is.finite(m)) m <- 0
-  if (length(sd) != 1L || !is.finite(sd) || sd <= 0) sd <- 3
-  a <- max(lo, m - 20 * sd); b <- min(hi, m + 20 * sd)
-  grid <- seq(a, b, length.out = 20001L)
-  f <- lambdify(z, pdf)
-  w <- vapply(grid, function(v) { r <- tryCatch(as.numeric(f(v)), error = function(e) 0); if (length(r) == 1L && is.finite(r)) r else 0 }, 0)
-  grid[sample.int(length(grid), size, replace = TRUE, prob = pmax(w, 0))]
+  cdf <- tryCatch(lambdify(z, .dist_cdf(d, z)), error = function(e) NULL)
+  Fc <- function(x) {
+    if (!is.null(cdf)) {
+      v <- tryCatch(as.numeric(cdf(x)), error = function(e) NA)
+      if (length(v) == 1L && is.finite(v)) return(v)
+    }
+    stats::integrate(Vectorize(pf), lo, x, stop.on.error = FALSE)$value
+  }
+  vapply(u, function(ui) {
+    a <- if (is.finite(lo)) lo else -1; b <- if (is.finite(hi)) hi else 1
+    while (!is.finite(lo) && Fc(a) > ui) a <- 2 * a - 1
+    while (!is.finite(hi) && Fc(b) < ui) b <- 2 * b + 1
+    stats::uniroot(function(x) Fc(x) - ui, c(a, b), tol = 1e-12)$root
+  }, 0)
+}
+# the smallest point of an unbounded discrete support carrying mass
+.sx_discrete_start <- function(pf) {
+  k <- 0
+  while (pf(k - 1) > 1e-300 && k > -1e6) k <- k - 1
+  k
+}
+
+# sampling_E, sampling_P and sampling_density of sympy/stats/rv.py
+.sampling_E <- function(expr, condition, numsamples, evaluate = TRUE) {
+  r <- .div(.add(.rv_sample_syms(expr, condition, numsamples)), .int(numsamples))
+  if (evaluate) N(r) else r
+}
+.sampling_P <- function(condition, given, numsamples, evaluate = TRUE) {
+  vals <- .rv_sample_syms(condition, given, numsamples)
+  r <- .rat(sum(vapply(vals, .is_true, NA)), numsamples)
+  if (evaluate) N(r) else r
+}
+.sampling_density <- function(expr, condition, numsamples) {
+  vals <- .rv_sample_syms(expr, condition, numsamples)
+  k <- vapply(vals, sstr, "")
+  tab <- table(factor(k, levels = unique(k)))
+  stats::setNames(as.list(as.integer(tab)), names(tab))
 }
 
 # ---------------------------------------------------------------------------

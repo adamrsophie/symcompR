@@ -129,7 +129,14 @@ null_safe <- function(rule) { force(rule); function(expr) { r <- rule(expr); if 
 
 #' @rdname strategies
 #' @export
-tryit <- function(rule, exception = NULL) { force(rule); function(expr) tryCatch(rule(expr), error = function(err) expr) }
+tryit <- function(rule, exception = NULL) {
+  force(rule)
+  # core.tryit catches only the given exception: an R condition class or a
+  # SymPy exception name that starts the error message ("ValueError: ...")
+  caught <- function(err) is.null(exception) || any(vapply(exception, function(ex)
+    inherits(err, ex) || startsWith(conditionMessage(err), paste0(ex, ":")), NA))
+  function(expr) tryCatch(rule(expr), error = function(err) if (caught(err)) expr else stop(err))
+}
 
 #' @rdname strategies
 #' @export

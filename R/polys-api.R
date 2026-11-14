@@ -51,18 +51,24 @@ Poly <- function(expr, ...) {
       return(P)
     }
     if (!is.null(P <- .poly_with_domain(expr, pa))) return(P)
-    Fd <- .poly_field(pa$opts, list(expr))
+    Fd <- .poly_field(pa$opts, list(expr), ring = TRUE)
     P <- do.call(Poly, c(list(expr), pa$gens))
     if (Fd$kind != "GF") return(P)
-    # coefficients in GF(p), stored in the symmetric representation
-    p <- Fd$p
-    cs <- vapply(seq_along(P$rep$c), function(i) {
+    # coefficients in ZZ/pZZ in exact integers, stored in the symmetric
+    # representation unless symmetric = FALSE
+    p <- gmp::as.bigz(Fd$p)
+    cs <- lapply(seq_along(P$rep$c), function(i) {
       q <- P$rep$c[i]
-      v <- (as.numeric(gmp::mod.bigz(gmp::numerator(q), p)) * .gf_inv(as.numeric(gmp::mod.bigz(gmp::denominator(q), p)), p)) %% p
-      .gf_int(v, p, Fd$symmetric)
-    }, 0)
-    P$rep <- qp_norm(P$rep$e, gmp::as.bigq(cs))
-    P$modulus <- p
+      d <- gmp::denominator(q) %% p
+      inv <- if (d == 1) gmp::as.bigz(1) else suppressWarnings(gmp::inv.bigz(d, p))
+      if (is.na(inv)) stop("NotInvertible: zero divisor", call. = FALSE)
+      v <- (gmp::numerator(q) %% p) * inv %% p
+      if (Fd$symmetric && v > p %/% 2) v <- v - p
+      v
+    })
+    P$rep <- qp_norm(P$rep$e, gmp::as.bigq(do.call(c, c(list(gmp::as.bigz(integer())), cs))))
+    P$modulus <- if (p < 2^53) as.numeric(p) else as.character(p)
+    if (!Fd$symmetric) P$symmetric <- FALSE
     return(P)
   }
   gens <- .gens_of(list(expr), list(...))
@@ -95,15 +101,15 @@ as_expr <- function(p, ...) {
 }
 
 #' @export
-print.Poly <- function(x, ...) {
+print.Poly <- function(x, ...) { cat(.poly_sstr(x), "\n", sep = ""); invisible(x) }
+.poly_sstr <- function(x) {
   ng <- .poly_ngens(x)
   gens <- vapply(x$gens[seq_len(ng)], .str, "")
   dom <- if (!is.null(x$dom_str)) x$dom_str else if (!is.null(x$rr_prec)) "RR" else if (ng < length(x$gens)) paste0(.domain_of(x$rep), "[", paste(vapply(x$gens[-seq_len(ng)], .str, ""),
                                                   collapse = ","), "]")
          else .domain_of(x$rep)
   tail <- if (!is.null(x$modulus)) paste0("modulus=", x$modulus) else paste0("domain='", dom, "'")
-  cat("Poly(", .poly_terms_str(x), ", ", paste(gens, collapse = ", "), ", ", tail, ")\n", sep = "")
-  invisible(x)
+  paste0("Poly(", .poly_terms_str(x), ", ", paste(gens, collapse = ", "), ", ", tail, ")")
 }
 
 # SymPy's StrPrinter._print_Poly: terms in lex order, each monomial written
@@ -148,10 +154,23 @@ Ops.Poly <- function(e1, e2) {
   }
   g <- if (inherits(e1, "Poly")) e1$gens else e2$gens
   a <- if (inherits(e1, "Poly")) as_expr(e1) else as_sym(e1)
-  if (missing(e2)) return(Poly(get(.Generic)(a), g))
+  # Poly._unify: the result keeps the modulus (or explicit domain) of the operands
+  ps <- Filter(function(z) inherits(z, "Poly"), if (missing(e2)) list(e1) else list(e1, e2))
+  mods <- unique(unlist(lapply(ps, `[[`, "modulus")))
+  if (length(mods) > 1L) stop("UnificationFailed: Cannot unify GF(", mods[1L], ") with GF(", mods[2L], ")", call. = FALSE)
+  if (length(mods) && length(ps) == 2L && is.null(ps[[1L]]$modulus) != is.null(ps[[2L]]$modulus)) {
+    other <- Filter(function(z) is.null(z$modulus), ps)[[1L]]
+    stop("UnificationFailed: Cannot unify GF(", mods, ") with ", if (!is.null(other$dom_str)) other$dom_str else .domain_of(other$rep), call. = FALSE)
+  }
+  opts <- if (length(mods)) c(list(modulus = mods), if (any(vapply(ps, function(z) isFALSE(z$symmetric), NA))) list(symmetric = FALSE)) else {
+    ds <- unique(unlist(lapply(ps, `[[`, "dom_str")))
+    if (length(ds) == 1L) list(domain = ds) else list()
+  }
+  if (missing(e2)) return(do.call(Poly, c(list(get(.Generic)(a)), g, opts)))
   b <- if (inherits(e2, "Poly")) as_expr(e2) else as_sym(e2)
   r <- get(.Generic)(a, b)
   if (.Generic %in% c("==", "!=")) return(r)
+  if (length(opts) && .Generic != "/") return(do.call(Poly, c(list(expand(r)), g, opts)))
   if (.Generic == "/") {
     q <- qp_exquo(Poly(a, g)$rep, Poly(b, g)$rep)
     if (!is.null(q)) return(structure(list(rep = q, gens = g), class = "Poly"))
@@ -522,6 +541,7 @@ coeff <- function(f, x, n = 1) {
 #' rem(x^4 + 1, x^2 + 1)
 #' @export
 div <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("div", list(f, g), list(...)))) return(r)
   pa <- .split_poly_opts(list(...))
   if (length(pa$opts)) {
     Fd <- .poly_field(pa$opts, list(f, g))
@@ -551,15 +571,22 @@ div <- function(f, g, ...) {
 
 #' @rdname div
 #' @export
-quo <- function(f, g, ...) div(f, g, ...)$q
+quo <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("quo", list(f, g), list(...)))) return(r)
+  div(f, g, ...)$q
+}
 
 #' @rdname div
 #' @export
-rem <- function(f, g, ...) div(f, g, ...)$r
+rem <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("rem", list(f, g), list(...)))) return(r)
+  div(f, g, ...)$r
+}
 
 #' @rdname div
 #' @export
 exquo <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("exquo", list(f, g), list(...)))) return(r)
   d <- div(f, g, ...)
   r <- if (inherits(d$r, "Poly")) as_expr(d$r) else d$r
   if (!is_zero_num(r)) stop(ExactQuotientFailed(paste0(.str(as_expr(g)), " does not divide ", .str(as_expr(f)))))
@@ -569,6 +596,7 @@ exquo <- function(f, g, ...) {
 #' @rdname div
 #' @export
 pdiv <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("pdiv", list(f, g), list(...)))) return(r)
   cp <- .common_polys(f, g, list(...))
   i <- 1L
   dg <- qp_degree(cp$g, i)
@@ -582,11 +610,17 @@ pdiv <- function(f, g, ...) {
 
 #' @rdname div
 #' @export
-prem <- function(f, g, ...) pdiv(f, g, ...)$r
+prem <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("prem", list(f, g), list(...)))) return(r)
+  pdiv(f, g, ...)$r
+}
 
 #' @rdname div
 #' @export
-pquo <- function(f, g, ...) pdiv(f, g, ...)$q
+pquo <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("pquo", list(f, g), list(...)))) return(r)
+  pdiv(f, g, ...)$q
+}
 
 #' @rdname div
 #' @param G A list of polynomials.
@@ -643,6 +677,7 @@ gcd <- function(f, g, ...) {
   fs <- as_sym(if (inherits(f, "Poly")) as_expr(f) else f)
   gs <- as_sym(if (inherits(g, "Poly")) as_expr(g) else g)
   if (is_exact_number(fs) && is_exact_number(gs)) return(.num_gcd(fs, gs))
+  if (!is.null(r <- .gf_hook("gcd", list(f, g), list(...)))) return(r)
   if (!is.null(P <- .poly_mod_gcd(f, g, list(...)))) return(P)
   pa <- .split_poly_opts(list(...))
   if (length(pa$opts)) {
@@ -736,6 +771,7 @@ lcm <- function(f, g, ...) {
     if (is_zero_num(fs) || is_zero_num(gs)) return(S_Zero)
     return(make_rational(abs(fs$value * gs$value)) / .num_gcd(fs, gs))
   }
+  if (!is.null(r <- .gf_hook("lcm", list(f, g), list(...)))) return(r)
   pa <- .split_poly_opts(list(...))
   if (length(pa$opts)) {
     Fd <- .poly_field(pa$opts, list(fs, gs))
@@ -767,6 +803,7 @@ lcm_list <- function(seq, ...) Reduce(function(a, b) lcm(a, b, ...), seq)
 #' @rdname gcd
 #' @export
 gcdex <- function(f, g, ...) {
+  if (!is.null(r <- .gf_hook("gcdex", list(f, g), list(...)))) return(r)
   x <- .ex_coeff_mode(f, g, list(...))
   if (!is.null(x)) {
     a <- .ex_trim(.coeff_list(as_sym(f), x)); b <- .ex_trim(.coeff_list(as_sym(g), x))
@@ -807,6 +844,7 @@ invert <- function(f, g, ...) {
   if (fs$type == "Integer" && gs$type == "Integer") {
     return(make_rational(gmp::as.bigq(gmp::inv.bigz(gmp::numerator(fs$value), gmp::numerator(gs$value)))))
   }
+  if (!is.null(r <- .gf_hook("invert", list(f, g), list(...)))) return(r)
   r <- gcdex(f, g, ...)
   if (!is_one_num(r$h)) stop("polynomial is not invertible modulo g")
   r$s
@@ -822,6 +860,7 @@ invert <- function(f, g, ...) {
 #' @return A list or an expression.
 #' @export
 primitive <- function(f, ...) {
+  if (!is.null(r <- .gf_hook("primitive", list(f), list(...)))) return(r)
   f <- as_sym(f)
   gens <- .gens_of(list(f), list(...))
   p <- expr_to_qpoly(f, gens, strict = FALSE)
@@ -831,11 +870,15 @@ primitive <- function(f, ...) {
 
 #' @rdname primitive
 #' @export
-content <- function(f, ...) primitive(f, ...)$content
+content <- function(f, ...) {
+  if (!is.null(r <- .gf_hook("content", list(f), list(...)))) return(r)
+  primitive(f, ...)$content
+}
 
 #' @rdname primitive
 #' @export
 terms_gcd <- function(f, ...) {
+  if (!is.null(r <- .gf_hook("terms_gcd", list(f), list(...)))) return(r)
   f <- as_sym(f)
   gens <- .gens_of(list(f), list(...))
   p <- expr_to_qpoly(f, gens, strict = FALSE)
@@ -1166,6 +1209,7 @@ sqf <- function(f, ...) {
 #' @rdname sym_factor
 #' @export
 sqf_part <- function(f, ...) {
+  if (!is.null(r <- .gf_hook("sqf_part", list(f), list(...)))) return(r)
   if (inherits(f, "Poly")) return(.sqf_part_poly(f, list(...)))
   fe <- as_sym(if (inherits(f, "Poly")) as_expr(f) else f)
   if (is_zero_num(fe)) return(S_Zero)
@@ -1195,7 +1239,8 @@ sqf_part <- function(f, ...) {
 #' discriminant(a * x^2 + b * x + c, x)
 #' resultant(x^2 - 1, x - 2, x)
 #' @export
-resultant <- function(f, g, x = NULL) {
+resultant <- function(f, g, x = NULL, ...) {
+  if (!is.null(r <- .gf_hook("resultant", list(f, g), c(if (!is.null(x)) list(x), list(...))))) return(r)
   f <- as_sym(f)
   g <- as_sym(g)
   if (is.null(x)) x <- free_symbols(.add(list(f, g)))[[1L]]
@@ -1224,7 +1269,8 @@ resultant <- function(f, g, x = NULL) {
 
 #' @rdname resultant
 #' @export
-discriminant <- function(f, x = NULL) {
+discriminant <- function(f, x = NULL, ...) {
+  if (!is.null(r <- .gf_hook("discriminant", list(f), c(if (!is.null(x)) list(x), list(...))))) return(r)
   f <- as_sym(f)
   if (is.null(x)) x <- free_symbols(f)[[1L]]
   x <- as_sym(x)
@@ -1308,7 +1354,8 @@ is_polynomial <- function(f, ...) {
 #' horner(x^3 + 2*x^2 + 3*x + 4, x)
 #' interpolate(list(c(1, 1), c(2, 4), c(3, 9)), x)
 #' @export
-compose <- function(f, g, x = NULL) {
+compose <- function(f, g, x = NULL, ...) {
+  if (!is.null(r <- .gf_hook("compose", list(f, g), c(if (!is.null(x)) list(x), list(...))))) return(r)
   f <- as_sym(f)
   if (is.null(x)) x <- free_symbols(f)[[1L]]
   expand(subs(f, as_sym(x), as_sym(g)))

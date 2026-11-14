@@ -347,6 +347,16 @@ def_function("binomial", nargs = 2L,
   },
   latex = function(a) paste0("{\\binom{", a[1], "}{", a[2], "}}"))
 
+# prod(x + j) for j from a to b (stepping by one toward b), exact; its
+# reciprocal when inv, which is zoo for a zero factor as 1/0 is
+.ff_exact_prod <- function(xq, a, b, inv) {
+  js <- seq(a, b)
+  terms <- gmp::as.bigq(xq) + gmp::as.bigq(js)
+  if (any(terms == 0)) return(if (inv) S_ComplexInfinity else S_Zero)
+  p <- prod(terms)
+  make_rational(if (inv) 1 / p else p)
+}
+
 def_function("RisingFactorial", nargs = 2L,
   # RisingFactorial.eval
   eval = function(args) {
@@ -356,14 +366,17 @@ def_function("RisingFactorial", nargs = 2L,
     if (k$type == "Integer") {
       kv <- .int_val(k)
       if (kv == 0) return(S_One)
-      # ponytail: products stop at |k| = 5000, larger k stay unevaluated
-      if (abs(kv) > 5000) return(NULL)
       if (kv > 0) {
         if (is_const(x, "oo")) return(S_Infinity)
         if (is_const(x, "-oo")) return(if (kv %% 2 == 1) S_NegativeInfinity else S_Infinity)
+        if (is_exact_number(x)) return(.ff_exact_prod(x$value, 0, kv - 1, FALSE))
+        # ponytail: symbolic products stop at k = 5000 (SymPy has no limit)
+        if (kv > 5000) return(NULL)
         return(.mul(lapply(0:(kv - 1), function(j) .add(list(x, .int(j))))))
       }
       if (is_inf_const(x)) return(S_Infinity)
+      if (is_exact_number(x)) return(.ff_exact_prod(x$value, -1, kv, TRUE))
+      if (-kv > 5000) return(NULL)
       return(.inv(.mul(lapply(1:(-kv), function(j) .sub(x, .int(j))))))
     }
     if (isFALSE(ask_fact(k, "integer")) && isTRUE(ask_fact(x, "integer")) && isTRUE(ask_fact(x, "negative"))) return(S_Zero)
@@ -373,13 +386,26 @@ def_function("RisingFactorial", nargs = 2L,
   str = function(e) paste0("RisingFactorial(", .str(e$args[[1L]]), ", ", .str(e$args[[2L]]), ")"))
 
 def_function("FallingFactorial", nargs = 2L,
+  # FallingFactorial.eval
   eval = function(args) {
     x <- args[[1L]]; k <- args[[2L]]
+    if (is_nan(x) || is_nan(k)) return(S_NaN)
+    if (isTRUE(ask_fact(k, "integer")) && identical(x$key, k$key)) return(fcall("factorial", list(x)))
     if (k$type == "Integer") {
       kv <- .int_val(k)
       if (kv == 0) return(S_One)
-      if (kv > 0 && kv <= 100) return(.mul(lapply(0:(kv - 1), function(j) .sub(x, .int(j)))))
-      if (kv < 0 && kv >= -100) return(.inv(.mul(lapply(1:(-kv), function(j) .add(list(x, .int(j)))))))
+      if (kv > 0) {
+        if (is_const(x, "oo")) return(S_Infinity)
+        if (is_const(x, "-oo")) return(if (kv %% 2 == 1) S_NegativeInfinity else S_Infinity)
+        if (is_exact_number(x)) return(.ff_exact_prod(x$value, 0, -(kv - 1), FALSE))
+        # ponytail: symbolic products stop at k = 5000 (SymPy has no limit)
+        if (kv > 5000) return(NULL)
+        return(.mul(lapply(0:(kv - 1), function(j) .sub(x, .int(j)))))
+      }
+      if (is_inf_const(x)) return(S_Infinity)
+      if (is_exact_number(x)) return(.ff_exact_prod(x$value, 1, -kv, TRUE))
+      if (-kv > 5000) return(NULL)
+      return(.inv(.mul(lapply(1:(-kv), function(j) .add(list(x, .int(j)))))))
     }
     NULL
   },

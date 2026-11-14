@@ -89,7 +89,15 @@ register_str_printer("CoordSystem", function(e) e$name)
 
 #' @rdname diffgeom
 #' @export
-coord_symbols <- function(cs) cs$extra$symbols
+coord_symbols <- function(cs) {
+  # CoordSystem.symbols: CoordinateSymbol objects, symbols tied to their
+  # coordinate system and index, distinct from the plain symbols given
+  Map(function(s, i) {
+    new_sym(s$type, s$args, name = s$name, value = s$value,
+            extra = c(s$extra, list(coord_sys = cs$name, index = i)),
+            key = paste0(s$key, "|CoordinateSymbol:", cs$key, ":", i))
+  }, cs$extra$symbols, seq_along(cs$extra$symbols) - 1L)
+}
 
 .dg_rel <- function(cs, from, to) {
   for (r in cs$extra$relations) if (r$from == from && r$to == to) return(r)

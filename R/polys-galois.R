@@ -1,14 +1,26 @@
-# Polynomials over GF(p) for small odd primes p < 2^25, stored as double
-# vectors (highest degree first), after sympy/polys/galoistools.py.
+# Polynomials over GF(p), after sympy/polys/galoistools.py: coefficient
+# vectors, highest degree first. For p < 2^25 they are doubles (a product
+# of two residues stays below 2^53, so arithmetic is exact); for a larger
+# prime p is a bigz and so are the coefficients.
+
+.gf_big <- function(p) inherits(p, "bigz")
+# zero vector and coercion of a constant vector to the representation of p
+.gf_zero <- function(n, p) if (.gf_big(p)) gmp::as.bigz(integer(n)) else numeric(n)
+.gf_v <- function(a, p) if (.gf_big(p)) { if (inherits(a, "bigz")) a else gmp::as.bigz(a) } else a
 
 .gf_trim <- function(a) {
   nz <- which(a != 0)
-  if (!length(nz)) return(numeric(0))
+  if (!length(nz)) return(a[0])
   a[nz[1L]:length(a)]
 }
 
 .gf_inv <- function(a, p) {
   # modular inverse by extended Euclid
+  if (.gf_big(p)) {
+    r <- suppressWarnings(gmp::inv.bigz(gmp::as.bigz(a) %% p, p))
+    if (is.na(r)) stop("not invertible modulo p")
+    return(r)
+  }
   a <- a %% p
   t0 <- 0
   t1 <- 1
@@ -33,20 +45,22 @@
 }
 
 .gf_add <- function(a, b, p) {
+  a <- .gf_v(a, p); b <- .gf_v(b, p)
   la <- length(a)
   lb <- length(b)
-  if (la < lb) a <- c(numeric(lb - la), a)
-  if (lb < la) b <- c(numeric(la - lb), b)
+  if (la < lb) a <- c(.gf_zero(lb - la, p), a)
+  if (lb < la) b <- c(.gf_zero(la - lb, p), b)
   .gf_trim((a + b) %% p)
 }
 
 .gf_sub <- function(a, b, p) .gf_add(a, (p - b) %% p, p)
 
 .gf_mul <- function(a, b, p) {
+  a <- .gf_v(a, p); b <- .gf_v(b, p)
   la <- length(a)
   lb <- length(b)
-  if (!la || !lb) return(numeric(0))
-  out <- numeric(la + lb - 1L)
+  if (!la || !lb) return(.gf_zero(0L, p))
+  out <- .gf_zero(la + lb - 1L, p)
   for (j in seq_len(lb)) {
     if (b[j] == 0) next
     idx <- j:(j + la - 1L)
@@ -62,15 +76,15 @@
 }
 
 .gf_divmod <- function(a, b, p) {
-  b <- .gf_trim(b)
-  a <- .gf_trim(a)
+  b <- .gf_trim(.gf_v(b, p))
+  a <- .gf_trim(.gf_v(a, p))
   db <- length(b) - 1L
   if (db < 0L) stop("division by zero polynomial")
-  if (length(a) - 1L < db) return(list(q = numeric(0), r = a))
+  if (length(a) - 1L < db) return(list(q = .gf_zero(0L, p), r = a))
   inv <- .gf_inv(b[1L], p)
   r <- a
   nq <- length(a) - db
-  q <- numeric(nq)
+  q <- .gf_zero(nq, p)
   for (i in seq_len(nq)) {
     cf <- (r[i] * inv) %% p
     q[i] <- cf
@@ -79,7 +93,7 @@
       r[idx] <- (r[idx] - (b * cf) %% p) %% p
     }
   }
-  rr <- if (db > 0L) r[(length(r) - db + 1L):length(r)] else numeric(0)
+  rr <- if (db > 0L) r[(length(r) - db + 1L):length(r)] else r[0]
   list(q = .gf_trim(q), r = .gf_trim(rr))
 }
 
@@ -98,12 +112,12 @@
 
 # Extended Euclid: returns s, t, g with s*a + t*b = g (monic).
 .gf_gcdex <- function(a, b, p) {
-  r0 <- .gf_trim(a)
-  r1 <- .gf_trim(b)
-  s0 <- 1
-  s1 <- numeric(0)
-  t0 <- numeric(0)
-  t1 <- 1
+  r0 <- .gf_trim(.gf_v(a, p))
+  r1 <- .gf_trim(.gf_v(b, p))
+  s0 <- .gf_v(1, p)
+  s1 <- .gf_zero(0L, p)
+  t0 <- .gf_zero(0L, p)
+  t1 <- .gf_v(1, p)
   while (length(r1)) {
     qr <- .gf_divmod(r0, r1, p)
     r0 <- r1
@@ -122,14 +136,14 @@
 
 .gf_diff <- function(a, p) {
   n <- length(a) - 1L
-  if (n <= 0L) return(numeric(0))
+  if (n <= 0L) return(.gf_zero(0L, p))
   .gf_trim(((a[-length(a)] %% p) * ((n:1) %% p)) %% p)
 }
 
 # a^e mod f where e is a bigz or number.
 .gf_powmod <- function(a, e, f, p) {
   bits <- as.character(gmp::as.bigz(e), b = 2)
-  res <- 1
+  res <- .gf_v(1, p)
   base <- .gf_rem(a, f, p)
   for (ch in rev(strsplit(bits, "")[[1L]])) {
     if (ch == "1") res <- .gf_rem(.gf_mul(res, base, p), f, p)
@@ -139,7 +153,8 @@
 }
 
 .gf_from_bigz <- function(a, p) {
-  .gf_trim(as.numeric(gmp::mod.bigz(gmp::as.bigz(a), p)))
+  r <- gmp::mod.bigz(gmp::as.bigz(a), p)
+  .gf_trim(if (.gf_big(p)) r else as.numeric(r))
 }
 
 .gf_sqf_p <- function(f, p) {
@@ -152,10 +167,10 @@
 .gf_rng$state <- 12345
 
 .gf_random <- function(n, p) {
-  out <- numeric(n)
+  out <- .gf_zero(n, p)
   for (i in seq_len(n)) {
     .gf_rng$state <- (.gf_rng$state * 1103515245 + 12345) %% 2147483648
-    out[i] <- floor(.gf_rng$state / 2147483648 * p)
+    out[i] <- if (.gf_big(p)) (gmp::as.bigz(.gf_rng$state) * p) %/% 2147483648 else floor(.gf_rng$state / 2147483648 * p)
   }
   out
 }

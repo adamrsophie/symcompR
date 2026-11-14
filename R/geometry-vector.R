@@ -68,7 +68,7 @@ laplacian <- function(f, vars = .xyz()) {
 is_conservative <- function(v, vars = .xyz()) {
   if (.pv_dispatch(v) || .pv_is0(v)) return(.pv_is_conservative(v))
   if (is_sym(v)) return(.vec_is_conservative(v))
-  is_zero_matrix(curl(v, vars))
+  all(vapply(Matrix(curl(v, vars))$data, function(z) is_zero_num(simplify(z)), TRUE))
 }
 
 #' @rdname grad

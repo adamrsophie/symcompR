@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Expected values are SymPy's outputs for the same calls.
 
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); a <- Symbol("a"); I <- sym_I

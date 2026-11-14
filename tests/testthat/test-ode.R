@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 x <- Symbol("x"); f <- Function("f"); y <- Function("y")
 n <- Symbol("n", integer = TRUE)
 D1 <- Derivative(f(x), x); D2 <- Derivative(f(x), x, 2)

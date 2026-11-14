@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Reference values from SymPy's RootSum, symmetrize and Poly printing.
 test_that("RootSum evaluates rational sums and keeps the rest as SymPy", {
   x <- Symbol("x"); a <- Symbol("a")

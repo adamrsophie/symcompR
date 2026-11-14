@@ -18,6 +18,7 @@
   if (inherits(v, c("bigz", "bigq", "PolyElement", "FracElement", "EXElement", "sym_modint", "sym_gaussian", "ANP")))
     return(.de_str(v))
   if (is_sym(v)) return(gsub("^", "**", sstr(v), fixed = TRUE))
+  if (inherits(v, "GroebnerBasis")) v <- unclass(v)
   if (inherits(v, "symmatrix")) return(gsub("^", "**", sstr(v), fixed = TRUE))
   if (is.character(v) && length(v) == 1L) return(v)
   .dmpy_repr(v)

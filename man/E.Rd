@@ -44,7 +44,9 @@ rv_quantile(expr, evaluate = TRUE, ...)
 
 \item{condition}{An optional condition (Relational or Boolean).}
 
-\item{numsamples}{Sampling is not supported; must be \code{NULL}.}
+\item{numsamples}{If given, the value is estimated from this many samples
+drawn with \code{\link[=rv_sample]{rv_sample()}} (SymPy's \code{sampling_E()}, \code{sampling_P()} and
+\code{sampling_density()}); \code{rv_density()} then returns the counts of the values.}
 
 \item{evaluate}{\code{FALSE} keeps integrals and sums unevaluated.}
 

@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Fast checks of the solveset port (sympy/solvers/solveset.py); the expected
 # strings are SymPy's outputs for the same calls.
 

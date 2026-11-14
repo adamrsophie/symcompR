@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Fast checks of the special functions evaluated through the mpmath port.
 # Expected strings are SymPy's str(N(expr, 15)); the full battery lives in
 # test-evalf-mp-sympy.R.

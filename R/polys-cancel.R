@@ -37,7 +37,7 @@
 .cancel_opts <- function(p, q, opts) {
   if (inherits(p, "Poly")) p <- as_expr(p)
   if (inherits(q, "Poly")) q <- as_expr(q)
-  if (!is.null(opts$modulus)) return(.cancel_mod(p, q, opts$modulus))
+  if (!is.null(opts$modulus)) return(.cancel_mod(p, q, opts))
   if (isFALSE(opts$greedy) || isTRUE(opts$extension)) return(.cancel_ex(p, q, isTRUE(opts$extension)))
   NULL
 }
@@ -51,19 +51,9 @@
 
 # dmp_cancel over GF(p) (a field with no associated ring), coefficients in
 # the symmetric representation
-.cancel_mod <- function(p, q, m) {
-  p <- expand(as_sym(p)); q <- expand(as_sym(q))
-  g <- .find_gens(list(p, q))
-  if (length(g) != 1L) return(NULL)
-  x <- g[[1L]]
-  gfv <- function(e) .gf_trim(vapply(.coeff_list(e, x), function(c) {
-    v <- .as_q(c)
-    (as.numeric(gmp::mod.bigz(gmp::numerator(v), m)) * .gf_inv(as.numeric(gmp::mod.bigz(gmp::denominator(v), m)), m)) %% m
-  }, 0))
-  a <- gfv(p); b <- gfv(q)
-  if (!length(b)) return(NULL)
-  h <- .gf_gcd(a, b, m)
-  list(.gf_to_expr(.gf_divmod(a, h, m)$q, x, m), .gf_to_expr(.gf_divmod(b, h, m)$q, x, m))
+.cancel_mod <- function(p, q, opts) {
+  r <- .gf_hook("cancel", list(p, q), opts)
+  if (is.null(r)) NULL else r
 }
 
 # Fraction field domains of Polys. A Poly over ZZ(a) keeps its coefficients
@@ -166,7 +156,7 @@
     P
   }
   if (!is.null(f$modulus)) {
-    r <- .cancel_mod(as_expr(f), as_expr(g), f$modulus)
+    r <- .cancel_mod(as_expr(f), as_expr(g), list(modulus = f$modulus))
     if (!is.null(r)) return(.pytuple(list(S_One, mk(r[[1L]]), mk(r[[2L]]))))
   }
   fd <- if (ng == 1L) .poly_frac_dom(f, g)

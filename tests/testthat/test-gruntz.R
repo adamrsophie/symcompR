@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Reference values from SymPy's gruntz() on cases from its test_gruntz.py.
 test_that("gruntz matches SymPy on nested exponential and logarithmic limits", {
   x <- Symbol("x"); a <- Symbol("a", positive = TRUE)

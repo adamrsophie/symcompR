@@ -162,10 +162,6 @@
       return(NULL)
     }
   }
-  # ponytail: the noncommutative branch of Mul._eval_subs is not ported for
-  # an old product with noncommutative factors; it falls back to argument-wise
-  # subs. Noncommutative factors of self are kept as they are.
-  if (!.is_comm(old)) return(NULL)
   rv <- NULL
   fr <- fraction(e)
   self2 <- e
@@ -181,8 +177,7 @@
     if (!identical(co_old$key, co_self$key)) co_xmul <- extract_multiplicatively(co_self, co_old)
   } else if (.subs_is_rat(co_old)) return(rv)
   c_ <- .subs_breakup(self2); old_c <- .subs_breakup(old)
-  if (length(attr(old_c, "nc"))) return(rv)
-  nc <- attr(c_, "nc"); attr(c_, "nc") <- NULL; attr(old_c, "nc") <- NULL
+  nc <- attr(c_, "nc"); old_nc <- attr(old_c, "nc"); attr(c_, "nc") <- NULL; attr(old_c, "nc") <- NULL
   co_residual <- S_One
   if (!is.null(co_xmul) && .subs_is_rat(co_xmul) && !is_one_num(abs(co_old))) {
     mult <- as_sym(multiplicity(abs(co_old), co_self))
@@ -191,25 +186,82 @@
     c_[[k]] <- if (is.null(c_[[k]])) list(co_old, mult) else list(co_old, .add(list(c_[[k]][[2L]], mult)))
     co_residual <- .div(co_self, .pow(co_old, mult))
   }
-  if (length(old_c) > length(c_)) return(rv)
+  if (length(old_nc) > length(nc) || length(old_c) > length(c_)) return(rv)
+  nc_bases <- vapply(nc, function(p) p[[1L]]$key, "")
+  if (length(setdiff(vapply(old_nc, function(p) p[[1L]]$key, ""), nc_bases))) return(rv)
   if (length(setdiff(names(old_c), names(c_)))) return(rv)
   for (k in names(old_c)) if (!identical(sign(c_[[k]][[2L]])$key, sign(old_c[[k]][[2L]])$key)) return(rv)
-  rat <- integer()
-  for (k in names(old_c)) {
-    r <- .subs_ndiv(c_[[k]][[2L]], old_c[[k]][[2L]])
-    if (!r) return(rv)
-    rat <- c(rat, r)
+  cdid <- NULL
+  if (length(old_c)) {
+    rat <- integer()
+    for (k in names(old_c)) {
+      r <- .subs_ndiv(c_[[k]][[2L]], old_c[[k]][[2L]])
+      if (!r) return(rv)
+      rat <- c(rat, r)
+    }
+    cdid <- min(rat)
   }
-  cdid <- min(rat)
+  # nc holds (base, exponent) pairs until a factor is replaced by an expression
+  ncdid <- NULL
+  if (!length(old_nc)) {
+    nc <- lapply(nc, function(p) .subs_rejoin(p[[1L]], p[[2L]]))
+  } else {
+    ncdid <- 0L
+    take <- length(old_nc)
+    limit <- if (is.null(cdid) || cdid == 0L) Inf else cdid
+    failed <- integer()
+    i <- 1L
+    while (limit > 0 && i + take - 1L <= length(nc)) {
+      hit <- FALSE
+      rat <- integer(); matched <- TRUE
+      for (j in seq_len(take)) {
+        f <- nc[[i + j - 1L]]
+        if (is_sym(f) || !identical(f[[1L]]$key, old_nc[[j]][[1L]]$key)) { matched <- FALSE; break }
+        if (j == 1L || j == take) rat <- c(rat, .subs_ndiv(f[[2L]], old_nc[[j]][[2L]]))
+        else if (!identical(f[[2L]]$key, old_nc[[j]][[2L]]$key)) { matched <- FALSE; break }
+        else rat <- c(rat, 1L)
+      }
+      if (matched) {
+        ndo <- min(rat)
+        if (ndo) {
+          if (take == 1L) {
+            if (!is.null(cdid) && cdid) ndo <- min(cdid, ndo)
+            nc[[i]] <- .mul(list(.pow(new, .int(ndo)), .subs_rejoin(nc[[i]][[1L]], .sub(nc[[i]][[2L]], .mul(list(.int(ndo), old_nc[[1L]][[2L]]))))))
+          } else {
+            ndo <- 1L
+            l <- .subs_rejoin(nc[[i]][[1L]], .sub(nc[[i]][[2L]], old_nc[[1L]][[2L]]))
+            ir <- i + take - 1L
+            r <- list(nc[[ir]][[1L]], .sub(nc[[ir]][[2L]], old_nc[[take]][[2L]]))
+            lm <- .mul(list(l, new))
+            repl <- if (!is_zero_num(r[[2L]])) {
+              if (ir < length(nc)) list(lm, r) else list(.mul(list(lm, .subs_rejoin(r[[1L]], r[[2L]]))))
+            } else list(lm)
+            nc <- c(nc[seq_len(i - 1L)], repl, nc[seq_along(nc) > ir])
+          }
+          limit <- limit - ndo
+          ncdid <- ncdid + ndo
+          hit <- TRUE
+        }
+      }
+      if (!hit) failed <- c(failed, i)
+      i <- i + 1L
+    }
+    if (!ncdid) return(rv)
+    failed <- c(failed, seq_len(length(nc))[seq_len(length(nc)) >= i])
+    for (fi in failed) {
+      f <- nc[[fi]]
+      nc[[fi]] <- if (is_sym(f)) .subs1(f, old, new) else .subs1(.subs_rejoin(f[[1L]], f[[2L]]), old, new)
+    }
+  }
+  do <- if (is.null(cdid)) ncdid else if (is.null(ncdid)) cdid else min(ncdid, cdid)
   margs <- list()
   for (k in names(c_)) {
     b <- c_[[k]][[1L]]; ce <- c_[[k]][[2L]]
-    margs[[length(margs) + 1L]] <- if (k %in% names(old_c)) .subs_rejoin(b, .sub(ce, .mul(list(old_c[[k]][[2L]], .int(cdid)))))
+    margs[[length(margs) + 1L]] <- if (k %in% names(old_c)) .subs_rejoin(b, .sub(ce, .mul(list(old_c[[k]][[2L]], .int(do)))))
                                    else .subs_rejoin(.subs1(b, old, new), ce)
   }
-  margs <- c(list(.pow(new, .int(cdid))), margs)
-  ncs <- lapply(nc, function(p) .subs_rejoin(p[[1L]], p[[2L]]))
-  .mul(list(.mul(list(co_residual, .mul(margs))), .mul(ncs)))
+  if (!is.null(cdid) && cdid && !(!is.null(ncdid) && ncdid)) margs <- c(list(.pow(new, .int(cdid))), margs)
+  .mul(list(.mul(list(co_residual, .mul(margs))), .mul(nc)))
 }
 
 # ---------------------------------------------------------------------------

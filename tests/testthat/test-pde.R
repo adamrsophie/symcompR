@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Reference values from SymPy.
 x <- Symbol("x"); y <- Symbol("y"); t <- Symbol("t")
 f <- Function("f"); u <- Function("u"); F <- Function("F")

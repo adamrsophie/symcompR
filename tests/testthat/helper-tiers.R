@@ -3,7 +3,9 @@
 # when the environment variable SYMCOMPR_FULL_TESTS is "true": the weekly
 # full check (.github/workflows/full-check.yaml) sets it, and so can a local
 # run, for example Sys.setenv(SYMCOMPR_FULL_TESTS = "true") before
-# devtools::test(). Pushes, pull requests and CRAN run the fast tier.
+# devtools::test(). Pushes, pull requests and CRAN run the fast tier; the
+# slowest fast-tier files also call testthat::skip_on_cran() at their top,
+# so R CMD check on CRAN stays within its time budget.
 skip_unless_full_tests <- function() {
   if (!identical(Sys.getenv("SYMCOMPR_FULL_TESTS"), "true"))
     testthat::skip("full test tier; set SYMCOMPR_FULL_TESTS=true to run it")

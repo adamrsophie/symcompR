@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Regression tests for the p16 review findings; values from SymPy.
 test_that("trig reduction is exact for huge multiples of pi", {
   x <- Symbol("x")

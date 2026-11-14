@@ -136,6 +136,7 @@ reference:
   - Predicate
   - register_predicate
   - AssumptionsWrapper
+  - common_assumptions
 - title: Numerical evaluation
   contents:
   - 'N'
@@ -219,6 +220,8 @@ reference:
   - gauss_legendre
   - polytope_integrate
   - sym_integrate
+  - integral_as_sum
+  - integral_transform
   - ratint
   - heurisch
   - risch_integrate
@@ -237,6 +240,7 @@ reference:
   - richardson
   - recurrence_memo
   - sequences
+  - RecursiveSeq
   - limit_seq
   - fourier_series
   - fps
@@ -306,6 +310,8 @@ reference:
   - is_polynomial
   - Monomial
   - binomial_coefficients
+  - nP
+  - gosper_normal
   - Options
   - domains
   - construct_domain
@@ -408,6 +414,8 @@ reference:
   - Permutation
   - Cycle
   - PermutationGroup
+  - groups_count
+  - SchurNumber
   - SymmetricGroup
   - Coset
   - TransitiveSubgroups

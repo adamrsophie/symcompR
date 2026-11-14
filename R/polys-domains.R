@@ -39,6 +39,7 @@
 #' @param K A domain.
 #' @param ... Generators, extensions or values.
 #' @param prec Precision in bits (kept for SymPy compatibility).
+#' @param dps Precision in decimal digits; when given it sets `prec`.
 #' @param n The order of the root of unity.
 #' @param a An element or expression.
 #' @param x A domain.
@@ -120,7 +121,9 @@ format.sym_domain <- function(x, ...) .dom(x)$name
 print.sym_domain <- function(x, ...) { cat(format(x), "\n", sep = ""); invisible(x) }
 #' @export
 Ops.sym_domain <- function(e1, e2) {
-  eq <- inherits(e1, "sym_domain") && inherits(e2, "sym_domain") && identical(format(e1), format(e2))
+  # RealField and ComplexField compare their precision too, as SymPy
+  eq <- inherits(e1, "sym_domain") && inherits(e2, "sym_domain") && identical(format(e1), format(e2)) &&
+    identical(.dom(e1)$prec, .dom(e2)$prec)
   switch(.Generic, `==` = eq, `!=` = !eq, stop("operator ", .Generic, " is not defined for domains", call. = FALSE))
 }
 
@@ -135,10 +138,16 @@ IntegerRing <- function() ZZ
 RationalField <- function() QQ
 #' @rdname domains
 #' @export
-RealField <- function(prec = 53) RR
+RealField <- function(prec = 53, dps = NULL) {
+  if (!is.null(dps)) prec <- max(1, round((dps + 1) * 3.3219280948873622))
+  if (prec == 53) RR else .new_domain("RR", "RR", prec = as.integer(prec))
+}
 #' @rdname domains
 #' @export
-ComplexField <- function(prec = 53) CC
+ComplexField <- function(prec = 53, dps = NULL) {
+  if (!is.null(dps)) prec <- max(1, round((dps + 1) * 3.3219280948873622))
+  if (prec == 53) CC else .new_domain("CC", "CC", prec = as.integer(prec))
+}
 #' @rdname domains
 #' @export
 ExpressionDomain <- function() EX
@@ -224,9 +233,57 @@ PythonRational <- function(p, q = 1) gmp::as.bigq(p, q)
       structure(list(re = re, im = im, kind = d$kind), class = "sym_gaussian")
     },
     GF = .modint(.as_q(a[[1L]]), d$mod),
-    PolyRing = do.call(Poly, c(list(as_sym(a[[1L]])), d$gens)),
-    FracField = cancel(as_sym(a[[1L]])),
-    Algebraic = expand(radsimp(as_sym(a[[1L]]))))
+    PolyRing = {
+      e <- as_sym(a[[1L]])
+      .dom_check_expr(e, d, field = FALSE)
+      do.call(Poly, c(list(e), d$gens))
+    },
+    FracField = {
+      e <- as_sym(a[[1L]])
+      .dom_check_expr(e, d, field = TRUE)
+      cancel(e)
+    },
+    Algebraic = {
+      e <- as_sym(a[[1L]])
+      # AlgebraicField.from_sympy: a rational, or an element of QQ<ext>
+      # found by to_number_field
+      if (!e$type %in% c("Integer", "Rational")) {
+        ok <- tryCatch({ to_number_field(e, .add(d$ext)); TRUE }, error = function(err) FALSE)
+        if (!ok) stop(CoercionFailed(paste0(.str(e), " is not a valid algebraic number in ", d$name)))
+      }
+      expand(radsimp(e))
+    })
+}
+
+# PolyRing.from_expr / FracField.from_expr (_rebuild_expr): generators,
+# sums, products, integer powers (negative ones in a field) and
+# coefficients of the ground domain (or its field, for a field)
+.dom_check_expr <- function(e, d, field) {
+  gk <- vapply(d$gens, `[[`, "", "key")
+  K <- .dom(d$dom)
+  coeff_ok <- function(z) {
+    ok <- tryCatch({ .dom_convert(K, z); TRUE }, error = function(err) FALSE)
+    if (!ok && field && K$kind == "ZZ") ok <- tryCatch({ .dom_convert(.dom(QQ), z); TRUE }, error = function(err) FALSE)
+    ok
+  }
+  # generators may be any expression (Indexed A[0], f(x)), so look for them
+  # as subtrees rather than among the free symbols
+  has_gen <- function(z) z$key %in% gk || (length(z$args) && any(vapply(z$args, has_gen, NA)))
+  rec <- function(z) {
+    if (z$key %in% gk) return(TRUE)
+    if (z$type %in% c("Add", "Mul")) return(all(vapply(z$args, rec, NA)))
+    if (z$type == "Pow" && z$args[[2L]]$type == "Integer" && (field || z$args[[2L]]$value >= 0) &&
+        has_gen(z$args[[1L]])) return(rec(z$args[[1L]]))
+    if (field && z$type == "Rational") return(TRUE)
+    if (has_gen(z)) return(FALSE)
+    coeff_ok(z)
+  }
+  if (!rec(e)) {
+    what <- if (field) "a rational function in Rational function field" else "a polynomial in Polynomial ring"
+    stop("ValueError: expected an expression convertible to ", what, " in ",
+         paste(vapply(d$gens, .str, ""), collapse = ", "), " over ", K$name, " with lex order, got ", .str(e), call. = FALSE)
+  }
+  invisible(TRUE)
 }
 
 .modint <- function(q, p) {

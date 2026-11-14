@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
 s <- function(e) sstr(e)
 

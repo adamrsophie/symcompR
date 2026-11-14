@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Reference values from SymPy.
 t <- Symbol("t", positive = TRUE); s <- Symbol("s", positive = TRUE)
 x <- Symbol("x", positive = TRUE); k <- Symbol("k", positive = TRUE)

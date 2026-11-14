@@ -105,7 +105,8 @@ NULL
 
 #' @rdname polys-extra
 #' @export
-sym_decompose <- function(f, x = NULL) {
+sym_decompose <- function(f, x = NULL, ...) {
+  if (!is.null(r <- .gf_hook("decompose", list(f), c(if (!is.null(x)) list(x), list(...))))) return(r)
   v <- .px(f, x); x <- v$x
   fl <- .cl(v$f, x)
   comps <- list()
@@ -150,7 +151,8 @@ gff_list <- function(f, x = NULL) {
 
 #' @rdname polys-extra
 #' @export
-subresultants <- function(f, g, x = NULL) {
+subresultants <- function(f, g, x = NULL, ...) {
+  if (!is.null(r <- .gf_hook("subresultants", list(f, g), c(if (!is.null(x)) list(x), list(...))))) return(r)
   f <- as_sym(f); g <- as_sym(g)
   if (is.null(x)) x <- unique_syms(list(free_symbols(f), free_symbols(g)))[[1L]]
   x <- as_sym(x)

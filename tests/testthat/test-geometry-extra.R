@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Reference values from SymPy.
 x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); t <- Symbol("t")
 F <- function(v) if (inherits(v, "GeoEntity")) format(v) else if (is_sym(v)) sstr(v) else

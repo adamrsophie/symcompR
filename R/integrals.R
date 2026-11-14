@@ -31,7 +31,7 @@ integrate <- function(f, ..., meijerg = NULL, conds = "piecewise", risch = NULL,
   if (length(specs)) lims <- lapply(specs, .lim_tuple)
   else {
     fs <- free_symbols(f)
-    if (length(fs) != 1L) stop("specify dummy variables for ", .str(f), call. = FALSE)
+    if (length(fs) != 1L) stop("ValueError: specify dummy variables for ", .str(f), call. = FALSE)
     lims <- list(Tuple(fs[[1L]]))
   }
   while (f$type == "Integral") { lims <- c(f$args[-1L], lims); f <- f$args[[1L]] }
@@ -50,11 +50,7 @@ integrate <- function(f, ..., meijerg = NULL, conds = "piecewise", risch = NULL,
 Integral <- function(f, ...) {
   f <- as_sym(f)
   if (.is_bd(f)) return(.bd_integral(f, ...))
-  specs <- list(...)
-  # Integral(f) of a single free symbol integrates with respect to it
-  if (!length(specs) && length(free_symbols(f)) == 1L) specs <- free_symbols(f)
-  lims <- lapply(specs, .lim_tuple)
-  new_sym("Integral", c(list(f), lims))
+  .integral_new(f, list(...))
 }
 
 .lim_tuple <- function(sp) {

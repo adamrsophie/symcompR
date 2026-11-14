@@ -2061,8 +2061,17 @@
   if (is.null(best)) S_Zero else best$coeff
 }
 
+# minsolve_linear_system: a particular solution with few nonzero variables
+# ponytail: rational coefficients only (.lin_solve_rat); symbolic
+# coefficients raise NotImplementedError
 .sp_minsolve_linear <- function(polys, symbols, flags) {
-  .sp_stop("NotImplementedError", "particular=True is not supported")
+  exprs <- lapply(polys, function(p) .sp_poly_expr(structure(list(terms = p$terms, gens = symbols), class = "sp_poly")))
+  sol <- tryCatch(if (isTRUE(flags$quick)) .minsolve_quick(exprs, symbols) else .minsolve_exhaustive(exprs, symbols),
+                  error = function(e) .sp_stop("NotImplementedError", "particular=True needs rational coefficients"))
+  if (is.null(sol)) return(NULL)
+  ord <- order(vapply(sol, function(p) match(p$sym$key, vapply(symbols, `[[`, "", "key")), 0L))
+  sol <- sol[ord]
+  list(k = lapply(sol, `[[`, "sym"), v = lapply(sol, `[[`, "val"))
 }
 
 # ---------------------------------------------------------------------------

@@ -1,3 +1,6 @@
+# Slow on one core: skipped on CRAN, run by devtools::test() and CI.
+testthat::skip_on_cran()
+
 # Reference values from SymPy.
 s <- function(e) if (is.null(e)) "NULL" else vapply(e, function(v) if (is_sym(v)) sstr(v) else
   paste0("(", paste(vapply(v, sstr, ""), collapse = ", "), ")"), "")

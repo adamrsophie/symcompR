@@ -39,7 +39,9 @@
     "Could not find root within given tolerance. (%s > %s)\nTry another starting point or tweak arguments.",
     .fs_mp_str(res2, wp), .fs_mp_str(tol, wp))))
 
-.fs_nsolve1 <- function(fe, x, x0, prec, tol, maxsteps) {
+.fs_nsolve1 <- function(fe, x, x0, prec, tol, maxsteps, verify = TRUE) {
+  # two starting points: findroot's secant from (x0, x1)
+  x1s <- if (!is_sym(x0) && (is.list(x0) || length(x0) == 2L)) { v <- as.list(x0); x0 <- v[[1L]]; v[[2L]] } else NULL
   p <- .dps_to_prec(prec)
   wp <- p + 20L
   tol <- if (is.null(tol)) .mpf(1, 11L - wp) else .fs_tol_mp(tol, wp)
@@ -50,7 +52,7 @@
   if (is.null(maxsteps)) maxsteps <- 30L
   # Secant: x1 = x0 + 0.25
   x0m <- a0
-  x1m <- .mpc_add(a0, .mpc(.mpf(1, -2L)), wp)
+  x1m <- if (is.null(x1s)) .mpc_add(a0, .mpc(.mpf(1, -2L)), wp) else .fs_mpc_from(x1s, wp)
   f0 <- fx0
   i <- 0L
   xr <- NULL
@@ -74,7 +76,7 @@
     stop(.sympy_condition("ValueError", "Could not find root using the given solver.\nTry another starting point or tweak arguments."))
   r <- .mpc_abs(f(xr), wp)
   r2 <- .mp_mul(r, r, wp)
-  if (.fs_mp_cmp(r2, tol) > 0) .fs_findroot_fail(r2, tol, wp)
+  if (verify && .fs_mp_cmp(r2, tol) > 0) .fs_findroot_fail(r2, tol, wp)
   .mpc_sym(.mpc(.mp_round(xr$re$m, xr$re$e, p), .mp_round(xr$im$m, xr$im$e, p)), p)
 }
 
@@ -83,11 +85,24 @@
 # mpmath's lu_solve at wp + 10 bits: LU with partial pivoting by modulus
 .fs_lu_solve <- function(A, b, wp) {
   w <- wp + 10L
-  n <- length(b)
+  n <- length(A[[1L]])
+  if (length(A) > n) {
+    # overdetermined: the normal equations A^H A x = A^H b
+    # ponytail: solved by LU, where mpmath uses cholesky_solve; both run
+    # at wp + 10 bits, so the rounded root agrees except in ill-conditioned cases
+    conj <- function(z) .mpc(z$re, .mp_neg(z$im))
+    dotc <- function(u, v) Reduce(function(a, c) .mpc_add(a, c, w), Map(function(a, c) .mpc_mul(conj(a), c, w), u, v))
+    cols <- lapply(seq_len(n), function(j) lapply(A, `[[`, j))
+    A <- lapply(seq_len(n), function(i) lapply(seq_len(n), function(j) dotc(cols[[i]], cols[[j]])))
+    b <- lapply(seq_len(n), function(i) dotc(cols[[i]], b))
+  }
   for (k in seq_len(n)) {
-    mods <- vapply(k:n, function(i) .mp_to_dbl(.mpc_abs(A[[i]][[k]], 53L)), 0)
-    pk <- k - 1L + which.max(mods)
-    if (mods[pk - k + 1L] == 0) stop(.sympy_condition("ZeroDivisionError", "matrix is numerically singular"))
+    # partial pivoting by modulus, compared in multiprecision
+    mods <- lapply(k:n, function(i) .mpc_abs(A[[i]][[k]], w))
+    best <- 1L
+    for (i in seq_along(mods)[-1L]) if (.fs_mp_lt(mods[[best]], mods[[i]])) best <- i
+    pk <- k - 1L + best
+    if (mods[[best]]$m == 0) stop(.sympy_condition("ZeroDivisionError", "matrix is numerically singular"))
     if (pk != k) {
       tA <- A[[k]]; A[[k]] <- A[[pk]]; A[[pk]] <- tA
       tb <- b[[k]]; b[[k]] <- b[[pk]]; b[[pk]] <- tb
@@ -107,7 +122,7 @@
   lapply(xs, function(z) .mpc(.mp_round(z$re$m, z$re$e, wp), .mp_round(z$im$m, z$im$e, wp)))
 }
 
-.fs_nsolve_system <- function(fs, xs, x0, prec, tol, maxsteps) {
+.fs_nsolve_system <- function(fs, xs, x0, prec, tol, maxsteps, verify = TRUE) {
   p <- .dps_to_prec(prec)
   wp <- p + 20L
   tol <- if (is.null(tol)) .mpf(1, 11L - wp) else .fs_tol_mp(tol, wp)
@@ -151,6 +166,6 @@
   }
   r <- norm(fvec(x0m))
   r2 <- .mp_mul(r, r, wp)
-  if (.fs_mp_cmp(r2, tol) > 0) .fs_findroot_fail(r2, tol, wp)
+  if (verify && .fs_mp_cmp(r2, tol) > 0) .fs_findroot_fail(r2, tol, wp)
   fin(x0m)
 }

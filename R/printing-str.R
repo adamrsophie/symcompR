@@ -451,6 +451,8 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
 #' @export
 sstr <- function(e) {
   if (inherits(e, "physics_obj")) return(format(e))
+  if (inherits(e, "Poly")) return(.poly_sstr(e))
+  if (inherits(e, "GroebnerBasis")) return(.gb_sstr(e))
   if (inherits(e, "TensExpr")) return(.tn_str(e))
   # free group words, fp groups, coset tables and polyhedra print as their str()
   if (inherits(e, c("FreeGroupElement", "FreeGroup", "FpGroup", "FpSubgroup", "CosetTable", "Polyhedron")))
