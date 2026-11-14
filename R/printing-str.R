@@ -486,6 +486,10 @@ sstr <- function(e) {
 srepr <- function(e) {
   # ReprPrinter.emptyPrinter: an object that is not Basic prints as its str()
   if (inherits(e, c("VarBosonicBasis", "FixedBosonicBasis"))) return(format(e))
+  # ReprPrinter._print_MatrixBase and Poly (args: the expression, then the gens)
+  if (inherits(e, "symmatrix")) return(.srepr_matrix(e))
+  if (inherits(e, "Poly"))
+    return(paste0("Poly(", paste(vapply(c(list(as_expr(e)), e$gens), srepr, ""), collapse = ", "), ")"))
   e <- as_sym(e)
   t <- e$type
   # codegen nodes print through their own repr (R/codegen-ast.R)
@@ -501,10 +505,9 @@ srepr <- function(e) {
            paste0("Idx(Symbol('", e$name, "', integer=True)",
                   if (!is.null(r)) paste0(", Tuple(", srepr(r[[1L]]), ", ", srepr(r[[2L]]), ")") else "", ")")
          } else {
-           # the assumptions as given, sorted, as SymPy's srepr
+           # the assumptions in the order given, as SymPy's _assumptions_orig
            given <- if (!is.null(e$extra$given)) e$extra$given else { f <- e$extra$facts; f[!is.na(f) & names(f) != "commutative"] }
            given <- c(given, e$extra$other)
-           if (length(given)) given <- given[order(names(given), method = "radix")]
            if (length(given)) paste0("Symbol('", e$name, "', ",
                                      paste0(names(given), "=", ifelse(given, "True", "False"), collapse = ", "), ")")
            else paste0("Symbol('", e$name, "')")
@@ -517,9 +520,8 @@ srepr <- function(e) {
          # an undefined function prints its class, Function('f')
          Function = paste0(if (.is_undefined_application(e)) paste0("Function('", e$name, "')") else e$name,
                            "(", paste(vapply(e$args, srepr, ""), collapse = ", "), ")"),
-         # a noncommutative Add in the order of as_ordered_terms
-         Add = paste0("Add(", paste(vapply(if (all(vapply(e$args, .is_comm, NA))) e$args else .add_print_order(e$args),
-                                          srepr, ""), collapse = ", "), ")"),
+         # ReprPrinter._print_Add and _print_Mul print expr.args
+         Add = , Mul = paste0(t, "(", paste(vapply(.args_sympy(e), srepr, ""), collapse = ", "), ")"),
          paste0(t, "(", paste(vapply(e$args, srepr, ""), collapse = ", "), ")"))
 }
 

@@ -9,7 +9,7 @@ test_that("Indexed objects print as in SymPy", {
   expect_equal(sstr(Indexed("A", i, j)), "A[i, j]")
   expect_equal(sstr(A(i + 1)), "A[i + 1]")
   expect_equal(sstr(x(i) * A(i, i)), "A[i, i]*x[i]")
-  expect_equal(srepr(Symbol("x", positive = TRUE, integer = TRUE)), "Symbol('x', integer=True, positive=True)")
+  expect_equal(srepr(Symbol("x", positive = TRUE, integer = TRUE)), "Symbol('x', positive=True, integer=True)")
 })
 
 test_that("get_indices and get_contraction_structure follow SymPy", {

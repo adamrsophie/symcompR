@@ -296,7 +296,10 @@
 #' encoding is UTF-8. `pager_print()` shows the result in the pager.
 #'
 #' @param e,x An expression.
-#' @param ... Unused.
+#' @param ... Printer settings of SymPy's `PrettyPrinter` for `pretty()` of an
+#'   expression: `order` (`"lex"`, `"rev-lex"` or `"none"`), `full_prec`,
+#'   `use_unicode_sqrt_char`, `root_notation`, `mat_symbol_style` (`"plain"`
+#'   or `"bold"`), `imaginary_unit` and `perm_cyclic`; unused otherwise.
 #' @param use_unicode Unicode or ASCII; the session default when `NULL`.
 #' @param flag `TRUE`, `FALSE`, or `NULL` to only query.
 #' @return A character scalar; the printing functions return `NULL`
@@ -305,6 +308,8 @@
 #' x <- Symbol("x"); y <- Symbol("y")
 #' cat(pretty((x + 1)/(y - 2), use_unicode = FALSE), "\n")
 #' pprint(sqrt(x^2 + 1), use_unicode = FALSE)
+#' cat(pretty(Symbol("theta") + Symbol("x1"), use_unicode = TRUE), "\n")
+#' cat(pretty(Integral(x^2, list(x, 0, 1)), use_unicode = FALSE), "\n")
 #' @name pretty
 NULL
 
@@ -316,17 +321,11 @@ NULL
 
 #' @rdname pretty
 #' @export
-pretty.sym <- function(x, use_unicode = NULL, ...) {
-  b <- .pp(as_sym(x), .pp_unicode(use_unicode))
-  paste(b$lines, collapse = "\n")
-}
+pretty.sym <- function(x, use_unicode = NULL, ...) .pp2_doprint(as_sym(x), .pp_unicode(use_unicode), list(...))
 
 #' @rdname pretty
 #' @export
-pretty.symmatrix <- function(x, use_unicode = NULL, ...) {
-  b <- .pp_matrix(x, .pp_unicode(use_unicode))
-  paste(b$lines, collapse = "\n")
-}
+pretty.symmatrix <- function(x, use_unicode = NULL, ...) .pp2_doprint(x, .pp_unicode(use_unicode))
 
 #' @rdname pretty
 #' @export

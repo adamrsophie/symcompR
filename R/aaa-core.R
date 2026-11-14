@@ -219,7 +219,13 @@ Rational <- function(p, q = 1) {
 #' @export
 Float <- function(x, dps = NULL, precision = NULL) {
   # SymPy's Float(x, dps): a decimal string is read exactly, a double keeps
-  # its binary value, both rounded to the precision
+  # its binary value, both rounded to the precision. An integer valued
+  # string without a decimal point keeps all its digits: SymPy takes
+  # dps = max(15, mantissa digits, digits of the integer).
+  if (is.null(dps) && is.null(precision) && is.character(x) && grepl("^\\s*[-+]?[0-9]+([eE][+]?[0-9]+)?\\s*$", x)) {
+    nd <- nchar(as.character(abs(gmp::numerator(.decimal_to_bigq(trimws(x))))))
+    if (nd > 15) dps <- nd
+  }
   if (!is.null(dps) || !is.null(precision) || (is.character(x) && nchar(gsub("[^0-9]", "", sub("[eE].*$", "", x))) > 15)) {
     prec <- if (!is.null(precision)) precision else if (!is.null(dps)) .dps_to_prec(dps)
             else .dps_to_prec(nchar(sub("^0+", "", gsub("[^0-9]", "", sub("[eE].*$", "", x)))))

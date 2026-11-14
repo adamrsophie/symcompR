@@ -28,7 +28,10 @@ pager_print(e, use_unicode = NULL)
 \arguments{
 \item{use_unicode}{Unicode or ASCII; the session default when \code{NULL}.}
 
-\item{...}{Unused.}
+\item{...}{Printer settings of SymPy's \code{PrettyPrinter} for \code{pretty()} of an
+expression: \code{order} (\code{"lex"}, \code{"rev-lex"} or \code{"none"}), \code{full_prec},
+\code{use_unicode_sqrt_char}, \code{root_notation}, \code{mat_symbol_style} (\code{"plain"}
+or \code{"bold"}), \code{imaginary_unit} and \code{perm_cyclic}; unused otherwise.}
 
 \item{e, x}{An expression.}
 
@@ -50,4 +53,6 @@ encoding is UTF-8. \code{pager_print()} shows the result in the pager.
 x <- Symbol("x"); y <- Symbol("y")
 cat(pretty((x + 1)/(y - 2), use_unicode = FALSE), "\n")
 pprint(sqrt(x^2 + 1), use_unicode = FALSE)
+cat(pretty(Symbol("theta") + Symbol("x1"), use_unicode = TRUE), "\n")
+cat(pretty(Integral(x^2, list(x, 0, 1)), use_unicode = FALSE), "\n")
 }

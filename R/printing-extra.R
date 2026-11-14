@@ -136,7 +136,7 @@ rust_code <- function(e, assign_to = NULL, ...) .cg_rust_code(e, assign_to, ...)
 #' @export
 glsl_code <- function(e, assign_to = NULL) {
   consts <- new.env()
-  s <- .glsl(as_sym(e), consts)
+  s <- if (inherits(e, "symmatrix")) .glsl_matrix(e, consts) else .glsl(as_sym(e), consts)
   if (!is.null(assign_to)) s <- paste0(assign_to, " = ", s, ";")
   decl <- vapply(sort(ls(consts)), function(k) paste0("float ", k, " = ", consts[[k]], ";\n"), "")
   paste0(paste(decl, collapse = ""), s)
@@ -324,6 +324,7 @@ multiline_latex <- function(lhs, rhs, terms_per_line = 1, environment = "align*"
                       paste(vapply(e$args, .mml_content, ""), collapse = ""), "</apply>"),
     Equality = ap("eq", e$args), Unequality = ap("neq", e$args), StrictLessThan = ap("lt", e$args),
     LessThan = ap("leq", e$args), StrictGreaterThan = ap("gt", e$args), GreaterThan = ap("geq", e$args),
+    Integral = .mml_integral(e, "int"), Sum = .mml_integral(e, "sum"),
     stop("cannot print ", e$type, " in MathML", call. = FALSE))
 }
 
@@ -385,6 +386,7 @@ multiline_latex <- function(lhs, rhs, terms_per_line = 1, environment = "align*"
 #' cat(dotprint(x + 2))
 #' @export
 mathml <- function(e, printer = "content") {
+  if (inherits(e, "symmatrix") && identical(printer, "presentation")) return(.mml_pres_matrix(e))
   e <- as_sym(e)
   if (identical(printer, "presentation")) {
     s <- .mml_pres(e)

@@ -146,6 +146,8 @@ reference:
   - sstr
   - pretty
   - latex
+  - latex_escape
+  - latex_translate
   - mathml
   - TableForm
   - printing-helpers
