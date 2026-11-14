@@ -485,7 +485,8 @@ is_subset <- function(s, t) .is_subset(as_sym(s), as_sym(t))
 
 #' @rdname sets
 #' @export
-Union <- function(...) {
+Union <- function(..., evaluate = TRUE) {
+  if (!isTRUE(evaluate)) return(.union_raw(lapply(list(...), as_sym)))
   flat <- list()
   for (a in lapply(list(...), as_sym)) {
     if (is_set(a) && .set_eq(a, UniversalSet)) return(UniversalSet)
@@ -591,7 +592,8 @@ Union <- function(...) {
 
 #' @rdname sets
 #' @export
-Intersection <- function(...) {
+Intersection <- function(..., evaluate = TRUE) {
+  if (!isTRUE(evaluate)) return(.intersection_raw(.uniq_sets(lapply(list(...), as_sym))))
   args <- .bool_print_order(.uniq_sets(lapply(list(...), as_sym)))
   flat <- list()
   for (a in args) {

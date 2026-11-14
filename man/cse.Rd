@@ -4,22 +4,52 @@
 \alias{cse}
 \title{Common subexpression elimination}
 \usage{
-cse(exprs, prefix = "x")
+cse(
+  exprs,
+  prefix = "x",
+  symbols = NULL,
+  optimizations = NULL,
+  postprocess = NULL,
+  order = "canonical",
+  ignore = list(),
+  list = TRUE
+)
 }
 \arguments{
-\item{exprs}{An expression or list of expressions.}
+\item{exprs}{An expression, a matrix, or a list of them.}
 
-\item{prefix}{Prefix of the new symbols.}
+\item{prefix}{Prefix of the new symbols when \code{symbols} is \code{NULL}.}
+
+\item{symbols}{A list of symbols to use for the replacements, such as
+\code{numbered_symbols("t")}, or \code{NULL} for \code{prefix} followed by a number.}
+
+\item{optimizations}{A list of \code{list(pre, post)} pairs of functions
+applied to each expression before and after the elimination, or \code{NULL}.}
+
+\item{postprocess}{A function of the replacements and the reduced
+expressions whose value is returned, or \code{NULL}.}
+
+\item{order}{\code{"canonical"} to visit the arguments of sums and products
+in sorted order, or \code{"none"}.}
+
+\item{ignore}{Symbols; subexpressions containing any of them are not
+replaced.}
+
+\item{list}{If \code{FALSE}, a single expression gives a single reduced
+expression rather than a list.}
 }
 \value{
 A list.
 }
 \description{
-\code{cse(exprs)} finds repeated subexpressions and returns a list with
-\code{replacements} (a list of \code{list(symbol, expression)} pairs) and \code{reduced}
-(the rewritten expressions), like SymPy's \code{cse()}.
+\code{cse(exprs)} finds common subexpressions as SymPy's \code{cse()}: repeated
+subtrees, negated terms, negative powers, and the common arguments of
+sums and products. It returns a list with \code{replacements} (a list of
+\code{list(symbol, expression)} pairs) and \code{reduced} (the rewritten
+expressions).
 }
 \examples{
-x <- Symbol("x"); y <- Symbol("y")
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); t <- Symbol("t")
 cse(list((x + y)^2 + sin(x + y), (x + y) * 3))
+cse(list(x*y*z, x*y*t))
 }

@@ -20,7 +20,8 @@
 #' @param force Apply `log` and `power_base` regardless of assumptions.
 #' @param basic The `basic` hint, as in SymPy.
 #' @param factor For the `log` hint: factor integer arguments of logarithms.
-#' @param ... Ignored.
+#' @param ... Further hints, such as `diracdelta = TRUE` with `wrt` (the
+#'   variable for the `DiracDelta` expansion).
 #' @return A `sym` expression.
 #' @examples
 #' x <- Symbol("x"); y <- Symbol("y")
@@ -51,6 +52,7 @@ expand <- function(e, deep = TRUE, mul = TRUE, multinomial = TRUE,
             trig = trig, complex = complex, func = func, force = force, basic = basic, factor = factor)
   # hints registered in .expand_custom, such as commutator and tensorproduct
   extra <- list(...)
+  h$wrt <- extra[["wrt"]]
   extra <- names(extra)[vapply(extra, isTRUE, NA) & names(extra) %in% ls(.expand_custom)]
   hs <- c("basic", "complex", "func", "log", "multinomial", "mul", "power_base", "power_exp", "trig", extra)
   # Expr.expand: one pass per hint in sorted order (mul after multinomial),
@@ -119,7 +121,7 @@ expand <- function(e, deep = TRUE, mul = TRUE, multinomial = TRUE,
       NULL
     },
     trig = if (t == "Function" && e$name %in% c("sin", "cos", "tan", "cot", "sec", "csc", "sinh", "cosh", "tanh", "coth", "sech", "csch")) .expand_trig1(e, h) else NULL,
-    { f <- .expand_custom[[hint]]; if (is.null(f)) NULL else f(e) })
+    { f <- .expand_custom[[hint]]; if (is.null(f)) NULL else if (length(formals(f)) > 1L) f(e, h) else f(e) })
 }
 
 # Mul._eval_expand_mul (hints carry no `deep`, so new products of sums are

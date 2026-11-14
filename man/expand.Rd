@@ -58,7 +58,8 @@ expand_func(e, deep = TRUE, force = FALSE)
 
 \item{factor}{For the \code{log} hint: factor integer arguments of logarithms.}
 
-\item{...}{Ignored.}
+\item{...}{Further hints, such as \code{diracdelta = TRUE} with \code{wrt} (the
+variable for the \code{DiracDelta} expansion).}
 }
 \value{
 A \code{sym} expression.

@@ -167,13 +167,18 @@ postorder_traversal <- function(e) {
 #'
 #' @param e A `sym` expression.
 #' @param ... Subexpressions to look for. A symbol matches when it is free in
-#'   `e`.
+#'   `e`; a function such as `sin` or a `Function()` class matches any of
+#'   its applications.
 #' @return `TRUE` or `FALSE`.
 #' @export
 has <- function(e, ...) {
   e <- as_sym(e)
-  targets <- lapply(list(...), as_sym)
-  for (tg in targets) if (.has1(e, tg)) return(TRUE)
+  for (tg in list(...)) {
+    cls <- .fs_fn_class(tg)
+    if (!is.null(cls)) {
+      if (.fs_has_head(e, cls)) return(TRUE)
+    } else if (.has1(e, as_sym(tg))) return(TRUE)
+  }
   FALSE
 }
 

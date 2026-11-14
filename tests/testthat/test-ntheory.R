@@ -40,7 +40,7 @@ test_that("primality tests", {
 test_that("factorint and divisors match SymPy", {
   expect_equal(factorint(0), c("0" = 1))
   expect_equal(factorint(1), stats::setNames(numeric(), character()))
-  expect_equal(factorint(-16), c("-1" = 1, "2" = 4))
+  expect_equal(factorint(-16), c("2" = 4, "-1" = 1))
   expect_equal(factorint(5951757), c("3" = 1, "7" = 1, "29" = 2, "337" = 1))
   expect_equal(factorint("18446744073709551617"), c("274177" = 1, "67280421310721" = 1))
   expect_equal(factorint(30, limit = 2), c("2" = 1, "15" = 1))

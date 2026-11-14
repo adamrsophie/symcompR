@@ -1005,7 +1005,7 @@
     Integer = , Rational = .mpc(.mp_from_q(e$value, p)),
     Float = .mpc(.float_mp(e)),
     AlgebraicNumber = .mpeval(.an_value(e), p, env),
-    Symbol = , Dummy = { v <- env[[e$name]]; if (is.null(v)) NULL else .mpeval(as_sym(v), p, env) },
+    Symbol = , Dummy = { v <- env[[e$name]]; if (is.null(v)) NULL else if (.fs_is_mpc(v)) v else .mpeval(as_sym(v), p, env) },
     Constant = if (e$name == "I") .mpc_I else { c <- .mp_const(e$name, p); if (is.null(c)) NULL else .mpc(c) },
     Add = {
       # evalf_add: a sum that cancels below the target accuracy is redone with

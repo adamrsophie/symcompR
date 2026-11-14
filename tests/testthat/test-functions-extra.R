@@ -51,7 +51,7 @@ test_that("third review round fixes", {
   expect_equal(s(Eq(Rational("1e-400"), 0)), "False")
   expect_equal(s(expand_power_exp(A^(B + C))), "A^(B + C)")
   expect_equal(s(A^(-1) * B), "A^(-1)*B")
-  expect_error(nsolve(exp(10^16 * x), x, 0), "did not converge")
+  expect_error(nsolve(exp(10^16 * x), x, 0), "Could not find root within given tolerance")
   expect_equal(s(Eq(Float(NaN), Float(NaN))), "False")
   expect_equal(s(FiniteSet(0, oo)), "{0, oo}")
   ev <- Symbol("e", even = TRUE)

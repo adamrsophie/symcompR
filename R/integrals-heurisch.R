@@ -432,7 +432,7 @@ heurisch <- function(f, x, rewrite = FALSE, hints = NULL, mappings = NULL, retri
     w <- match(n + 1L, r$j)
     if (!is.na(w)) sol[[rr$piv[k]]] <- r$v[[w]]
   }
-  sol
+  lapply(sol, .fs_heur_canon)
 }
 
 # The same rows through expand(); FALSE when raw_numer is not a polynomial
@@ -502,6 +502,8 @@ heurisch_wrapper <- function(f, x, rewrite = FALSE, hints = NULL, mappings = NUL
   k0 <- vapply(slns0, .heur_dict_key, "")
   slns <- Filter(function(s) !(.heur_dict_key(s) %in% k0), slns)
   if (!length(slns)) return(res)
+  # the cases together: solve(eqs, dict=True, exclude=(x,)) + slns
+  if (length(slns) > 1L) slns <- c(.fs_heur_solve_system(slns, x), slns)
   pairs <- list()
   for (sd in slns) {
     fe <- f; for (kv in sd) fe <- subs(fe, kv[[1L]], kv[[2L]])

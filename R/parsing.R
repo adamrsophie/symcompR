@@ -42,8 +42,14 @@ sympify <- function(s, locals = list(), rational = FALSE) {
   txt <- gsub("**", "^", s, fixed = TRUE)
   txt <- .mark_tuples(txt)
   txt <- gsub(perl = TRUE, .NUM_PATTERN, ".symnum('\\1')", txt)
-  ex <- tryCatch(parse(text = txt, keep.source = FALSE),
-                 error = function(e) stop(SympifyError(paste0("could not parse '", s, "': ", conditionMessage(e)))))
+  ex <- tryCatch(parse(text = txt, keep.source = FALSE), error = function(e) e)
+  # Python syntax beyond R's (method calls, lambda): sympify's own route,
+  # parse_expr with the standard transformations
+  if (inherits(ex, "error")) {
+    r <- .fs_sympify_python(s, locals, rational)
+    if (!is.null(r)) return(r)
+    stop(SympifyError(paste0("could not parse '", s, "': ", conditionMessage(ex))))
+  }
   if (length(ex) != 1L) stop(SympifyError(paste0("expected a single expression in '", s, "'")))
   sym_from_call(ex[[1L]], locals = locals, rational = rational, from_string = TRUE)
 }

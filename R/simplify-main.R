@@ -201,6 +201,7 @@ simplify <- function(e, ratio = 1.7, measure = count_ops, rational = FALSE, inve
   if (t == "FiniteSet") return(do.call(FiniteSet, lapply(e$args, sub)))
   if (t == "Tuple") return(sym_rebuild(e, lapply(e$args, sub)))
   if (is_relational(e)) return(.relational_simplify(e, kw))
+  if (t == "And") return(.fs_and_simplify(e, kw))
   if (t %in% .BOOL_TYPES) return(.boolean_simplify(e, kw))
   NULL
 }

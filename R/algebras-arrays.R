@@ -4,18 +4,26 @@
 #' Quaternions
 #'
 #' `Quaternion(a, b, c, d)` is `a + b*i + c*j + d*k`. `+`, `-`, `*` (Hamilton
-#' product) and `/` by a scalar work; `quat_conjugate()`, `quat_norm()`,
-#' `quat_inverse()` and `quat_to_rotation_matrix()` follow SymPy.
+#' product), `/` and `^` with an integer power work; over the real field a
+#' complex scalar `z` acts as the quaternion `re(z) + im(z)*i`, as in SymPy.
+#' `quat_conjugate()`, `quat_norm()`, `quat_inverse()` and
+#' `quat_to_rotation_matrix()` follow SymPy.
 #'
 #' @param a,b,c,d Components.
+#' @param real_field `TRUE` for a quaternion over the reals, `FALSE` for
+#'   components that are complex.
 #' @param q A quaternion.
 #' @return A `Quaternion`, expression or matrix.
 #' @examples
 #' Quaternion(1, 2, 3, 4) * Quaternion(5, 6, 7, 8)
+#' Quaternion(1, 2, 3, 4)^2
 #' @export
-Quaternion <- function(a = 0, b = 0, c = 0, d = 0) {
-  structure(list(c = lapply(list(a, b, c, d), as_sym)), class = "Quaternion")
+Quaternion <- function(a = 0, b = 0, c = 0, d = 0, real_field = TRUE) {
+  structure(list(c = lapply(list(a, b, c, d), as_sym), real_field = real_field), class = "Quaternion")
 }
+
+#' @export
+chooseOpsMethod.Quaternion <- function(x, y, mx, my, cl, reverse) TRUE
 
 #' @export
 format.Quaternion <- function(x, ...) {
@@ -38,6 +46,15 @@ Ops.Quaternion <- function(e1, e2) {
     if (.Generic == "-") return(structure(list(c = lapply(e1$c, .neg)), class = "Quaternion"))
     return(e1)
   }
+  if (.Generic == "^") return(.fs_quat_pow(e1, e2))
+  if (.Generic %in% c("+", "*") && !(inherits(e1, "Quaternion") && inherits(e2, "Quaternion"))) {
+    r <- .fs_quat_scalar(.Generic, e1, e2)
+    if (!is.null(r)) return(r)
+  }
+  if (.Generic == "/") {
+    if (inherits(e2, "Quaternion")) return(as_sym(e1) * .fs_quat_pow(e2, -1L))
+    return(e1 * .pow(as_sym(e2), S_NegativeOne))
+  }
   a <- .q_lift(e1)$c
   b <- .q_lift(e2)$c
   ex <- function(z) expand(z)
@@ -53,10 +70,6 @@ Ops.Quaternion <- function(e1, e2) {
                       ex(.add(list(p(1, 2), p(2, 1), p(3, 4), p(4, 3, -1L)))),
                       ex(.add(list(p(1, 3), p(2, 4, -1L), p(3, 1), p(4, 2)))),
                       ex(.add(list(p(1, 4), p(2, 3), p(3, 2, -1L), p(4, 1)))))
-         },
-         "/" = {
-           if (inherits(e2, "Quaternion")) return(e1 * quat_inverse(e2))
-           do.call(Quaternion, lapply(a, function(u) .div(u, as_sym(e2))))
          },
          "==" = all(vapply(seq_len(4L), function(i) identical(expand(a[[i]])$key, expand(b[[i]])$key), TRUE)),
          "!=" = !all(vapply(seq_len(4L), function(i) identical(expand(a[[i]])$key, expand(b[[i]])$key), TRUE)),

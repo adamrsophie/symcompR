@@ -39,17 +39,29 @@ add_primitive <- function(e) {
     if (num_sign(sp[[1L]]) < 0) return(list(.neg(sp[[1L]]), .neg(sp[[2L]])))
     return(list(sp[[1L]], sp[[2L]]))
   }
-  terms <- lapply(e$args, function(a) {
+  # Add.primitive: terms with a complex infinity keep their coefficient
+  # out of the gcd and lcm
+  inf <- FALSE
+  terms <- lapply(.sympy_args(e), function(a) {
     sp <- as_coeff_mul_split(a)
-    if (!(sp[[1L]]$type %in% c("Integer", "Rational"))) return(list(q = gmp::as.bigq(1), m = a))
-    list(q = gmp::as.bigq(sp[[1L]]$value), m = sp[[2L]])
+    if (!(sp[[1L]]$type %in% c("Integer", "Rational"))) sp <- list(S_One, a)
+    if (is_const(sp[[2L]], "zoo")) inf <<- TRUE
+    q <- gmp::as.bigq(sp[[1L]]$value)
+    list(p = gmp::numerator(q), q = gmp::denominator(q), m = sp[[2L]], zoo = is_const(sp[[2L]], "zoo"))
   })
-  num <- Reduce(gmp::gcd.bigz, lapply(terms, function(t) abs(gmp::numerator(t$q))), gmp::as.bigz(0))
-  den <- Reduce(gmp::lcm.bigz, lapply(terms, function(t) gmp::denominator(t$q)), gmp::as.bigz(1))
+  use <- if (inf) !vapply(terms, `[[`, NA, "zoo") else rep(TRUE, length(terms))
+  num <- Reduce(gmp::gcd.bigz, lapply(terms[use], function(t) abs(t$p)), gmp::as.bigz(0))
+  den <- Reduce(gmp::lcm.bigz, lapply(terms[use], `[[`, "q"), gmp::as.bigz(1))
   if (num == 1 && den == 1) return(list(S_One, e))
-  r <- gmp::as.bigq(num, den)
-  newt <- lapply(terms, function(t) .keep_coeff(make_rational(t$q / r), t$m))
-  list(make_rational(r), .add(newt))
+  # a gcd of zero comes only from zero coefficients, which a canonical Add
+  # never holds; SymPy would divide by it
+  if (num == 0) return(list(S_One, e))
+  newt <- lapply(seq_along(terms), function(i) {
+    t <- terms[[i]]
+    if (!use[i]) return(.keep_coeff(make_rational(gmp::as.bigq(t$p, t$q)), t$m))
+    .keep_coeff(make_rational(gmp::as.bigq((t$p %/% num) * (den %/% t$q))), t$m)
+  })
+  list(make_rational(gmp::as.bigq(num, den)), .add(newt))
 }
 
 #' @rdname extract-methods

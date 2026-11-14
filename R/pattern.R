@@ -302,6 +302,12 @@ sym_replace <- function(e, pattern, value, exact = NULL) {
       if (z$type == "Function" && identical(z$name, nm)) as_sym(do.call(value, z$args)) else z
     }))
   }
+  # a function standing for a class (sin, Add): as the sym_function case
+  cls <- .fs_fn_class(pattern)
+  if (!is.null(cls)) {
+    if (!is.function(value)) stop(.sympy_condition("TypeError", "given a type, replace() expects another type or a callable"))
+    return(.cg_replace(e, cls, value))
+  }
   # a predicate query: value(node) replaces each node it accepts
   if (is.function(pattern)) return(.cg_replace(e, pattern, value))
   pattern <- as_sym(pattern)

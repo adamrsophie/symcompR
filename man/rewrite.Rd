@@ -9,7 +9,8 @@ rewrite(e, target, ...)
 \arguments{
 \item{e}{An expression.}
 
-\item{target}{The target family as a string.}
+\item{target}{The target family as a string, or a function such as
+\code{sign} standing for its class.}
 
 \item{...}{Options for the rewrite methods of quantum objects.}
 }
@@ -23,6 +24,9 @@ functions; \code{"log"} writes inverse trigonometric functions as logarithms;
 \code{"gamma"} writes factorials and binomials with gamma functions;
 \code{"factorial"} does the reverse; \code{"Piecewise"} rewrites \code{Abs}, \code{sign},
 \code{Heaviside}, \code{Max} and \code{Min}; \code{"erf"} rewrites \code{erfc} and \code{erfi}.
+The \code{"erfc"}, \code{"sign"}, \code{"hyper"}, \code{"SingularityFunction"}, \code{"asin"} and
+\code{"tractable"} targets follow the corresponding SymPy methods. A target
+that no function knows returns the expression unchanged, as in SymPy.
 }
 \examples{
 x <- Symbol("x")

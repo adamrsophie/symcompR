@@ -53,9 +53,9 @@
   if (t == "Rational") return(list(as.double(gmp::numerator(e$value)), as.double(gmp::denominator(e$value))))
   if (t == "Float") return(list(as.double(e$value)))
   # a BaseScalar hashes its index and system; a CoordSys3D its name first
-  if (t %in% c("Symbol", "Wild")) return(if (isTRUE(e$extra$base_scalar)) list(.int(e$extra$index), e$extra$system) else list(e$name))
+  if (t %in% c("Symbol", "Wild")) return(if (isTRUE(e$extra$base_scalar)) list(.int(e$extra$index), e$extra$system) else if (t == "Symbol") c(list(e$name), .fs_assumption_items(e)) else list(e$name))
   if (t == "CoordSys3D") return(list(e$name))
-  if (t == "Dummy") return(list(e$name, e$key))
+  if (t == "Dummy") return(c(list(e$name), .fs_assumption_items(e), list(e$key)))
   # Quantity args are its name and abbreviation
   if (t == "Quantity") return(list(Symbol(e$name), e$extra$abbrev))
   if (t %in% c("Add", "Mul")) return(.sympy_args(e))

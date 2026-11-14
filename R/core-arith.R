@@ -417,6 +417,7 @@ as_coeff_mul_split <- function(a) {
 .combine_rational_radicals <- function(fs) {
   if (length(fs) < 2L) return(fs)
   fs <- .combine_rr_positive(fs)
+  fs <- .fs_neg1e(fs)
   # Mul.flatten: (-1)^r joins a positive number raised to the same r
   neg <- which(vapply(fs, function(f) f$type == "Pow" && is_negone_num(f$args[[1L]]) && f$args[[2L]]$type == "Rational", TRUE))
   if (length(neg) == 1L) {

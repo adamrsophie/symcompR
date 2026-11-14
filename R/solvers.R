@@ -515,75 +515,43 @@ simplify_if_cheap <- function(e) {
 
 #' Numerical solution of equations
 #'
-#' `nsolve(f, x, x0)` finds a root near `x0` by Newton's method (secant
-#' fallback); for systems give lists of equations, symbols and starting
-#' values.
+#' `nsolve(f, x, x0)` finds a root near `x0` as SymPy's `nsolve()`: mpmath's
+#' secant method for one equation and its damped Newton method for systems,
+#' at `prec` significant digits plus a guard of 20 bits, with the root
+#' verified and rounded to `prec` digits. For systems give lists of
+#' equations, symbols and starting values.
 #'
 #' @param f An equation or list of equations.
 #' @param x A symbol or list of symbols.
 #' @param x0 Starting value(s).
-#' @param tol Tolerance.
-#' @param maxit Maximum iterations.
+#' @param tol Tolerance, or `NULL` for mpmath's default of `2^10` times the
+#'   working machine epsilon.
+#' @param maxit Maximum iterations, or `NULL` for the solver's default (30
+#'   secant steps, 10 Newton steps).
+#' @param prec Number of significant digits.
 #' @return A Float or a named list of Floats.
 #' @examples
 #' x <- Symbol("x")
 #' nsolve(cos(x) - x, x, 1)
+#' nsolve(x^2 - 2, x, 1, prec = 30)
 #' @export
-nsolve <- function(f, x, x0, tol = 1e-14, maxit = 100) {
+nsolve <- function(f, x, x0, tol = NULL, maxit = NULL, prec = 15) {
   if (is.list(f) && !inherits(f, "sym")) {
     fs <- lapply(f, .eq_to_expr)
     xs <- .as_gens(list(x))
-    J <- lapply(fs, function(fi) lapply(xs, function(v) .diff1(fi, v)))
-    cur <- as.complex(unlist(lapply(x0, function(v) if (is_sym(v)) .neval(v, list()) else v)))
-    nm <- vapply(xs, function(v) v$name, "")
-    ok <- FALSE
-    for (it in seq_len(maxit)) {
-      env <- stats::setNames(as.list(cur), nm)
-      Fv <- vapply(fs, function(fi) as.complex(.neval(fi, env)), 0i)
-      Jv <- matrix(vapply(unlist(J, recursive = FALSE), function(d) as.complex(.neval(d, env)), 0i),
-                   length(fs), length(xs), byrow = TRUE)
-      step <- base::solve(Jv, Fv)
-      cur <- cur - step
-      if (max(base::Mod(step)) < tol * max(1, max(base::Mod(cur)))) {
-        ok <- TRUE
-        break
-      }
-    }
-    # as mpmath's findroot(verify = TRUE): the squared residual norm must
-    # not exceed tol
-    if (ok) {
-      env <- stats::setNames(as.list(cur), nm)
-      Fv <- vapply(fs, function(fi) as.complex(.neval(fi, env)), 0i)
-      ok <- all(is.finite(Fv)) && sum(base::Mod(Fv)^2) <= tol
-    }
-    if (!ok) stop("nsolve() did not converge in ", maxit, " iterations; try another start point", call. = FALSE)
-    return(stats::setNames(lapply(cur, function(v) .round_sym(.cplx_clean(v), 17)), nm))
+    if (length(xs) > length(fs)) stop(.sympy_condition("NotImplementedError", "need at least as many equations as variables"))
+    if (length(x0) != length(xs))
+      stop(.sympy_condition("TypeError", sprintf("nsolve expected exactly %i guess vectors, got %i", length(xs), length(x0))))
+    return(.fs_nsolve_system(fs, xs, as.list(x0), prec, tol, maxit))
   }
+  f <- as_sym(f)
+  if (is_relational(f) && f$type != "Equality") stop(.sympy_condition("TypeError", "nsolve cannot accept inequalities"))
   fe <- .eq_to_expr(f)
   x <- as_sym(x)
-  df <- .diff1(fe, x)
-  cur <- if (is.complex(x0)) x0 else if (is_sym(x0)) .neval(x0, list()) else as.numeric(x0)
-  ok <- FALSE
-  for (it in seq_len(maxit)) {
-    env <- stats::setNames(list(cur), x$name)
-    fv <- .neval(fe, env)
-    dv <- .neval(df, env)
-    if (!is.finite(dv) || dv == 0) break
-    step <- fv / dv
-    cur <- cur - step
-    if (base::Mod(step) < tol * max(1, base::Mod(cur))) {
-      ok <- TRUE
-      break
-    }
-  }
-  # a small step is not enough: as mpmath's findroot(verify = TRUE), the
-  # squared residual must not exceed tol
-  if (ok) {
-    r <- base::Mod(.neval(fe, stats::setNames(list(cur), x$name)))
-    ok <- is.finite(r) && r^2 <= tol
-  }
-  if (!ok) stop("nsolve() did not converge in ", maxit, " iterations; try another start point", call. = FALSE)
-  .round_sym(.cplx_clean(cur), 17)
+  fr <- free_symbols(fe)
+  if (length(fr) != 1L || !identical(fr[[1L]]$key, x$key))
+    stop(.sympy_condition("ValueError", "expected a one-dimensional and numerical function"))
+  .fs_nsolve1(fe, x, x0, prec, tol, maxit)
 }
 
 # Fast path for polynomial systems with rational coefficients: works on

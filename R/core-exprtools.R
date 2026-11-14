@@ -96,7 +96,8 @@ as_content_primitive <- function(e, radical = FALSE, clear = TRUE) .acp(as_sym(e
     }
     return(list(coef, .mul(args)))
   }
-  if (t == "Pow" || (t == "Function" && e$name == "exp")) return(.acp_pow(e, radical, clear))
+  # exp is a Function in SymPy: Expr.as_content_primitive gives (1, exp(...))
+  if (t == "Pow") return(.acp_pow(e, radical, clear))
   list(S_One, e)
 }
 

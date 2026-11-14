@@ -1144,7 +1144,7 @@ sqf_list <- function(f, ...) {
   facs <- lapply(sort(unique(ks)), function(k) {
     fk <- fl$factors[ks == k]
     pk <- Reduce(qp_mul, lapply(fk, `[[`, 1L))
-    list(qpoly_to_expr(pk, gens), k)
+    list(qpoly_to_expr(pk, gens), as.integer(k))
   })
   list(coeff = make_rational(fl$coef), factors = facs)
 }

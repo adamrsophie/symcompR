@@ -371,9 +371,13 @@ piecewise_fold <- function(e, evaluate = TRUE) {
 #' `"gamma"` writes factorials and binomials with gamma functions;
 #' `"factorial"` does the reverse; `"Piecewise"` rewrites `Abs`, `sign`,
 #' `Heaviside`, `Max` and `Min`; `"erf"` rewrites `erfc` and `erfi`.
+#' The `"erfc"`, `"sign"`, `"hyper"`, `"SingularityFunction"`, `"asin"` and
+#' `"tractable"` targets follow the corresponding SymPy methods. A target
+#' that no function knows returns the expression unchanged, as in SymPy.
 #'
 #' @param e An expression.
-#' @param target The target family as a string.
+#' @param target The target family as a string, or a function such as
+#'   `sign` standing for its class.
 #' @param ... Options for the rewrite methods of quantum objects.
 #' @return An expression.
 #' @examples
@@ -384,12 +388,18 @@ piecewise_fold <- function(e, evaluate = TRUE) {
 rewrite <- function(e, target, ...) {
   if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) rewrite(z, target, ...)))
   e <- as_sym(e)
+  # a class as the target, rewrite(e, sign): its name
+  if (is.function(target)) target <- .fs_fn_class(target)
+  if (!is.character(target) || length(target) != 1L) return(e)
   if (.qhas_node(e)) return(.qrewrite(e, target, ...))
   rules <- .rewrite_rules[[target]]
   # rules of the codegen functions (R/codegen-cfunctions.R)
   extra <- .cg_rewrites[[target]]
   if (!is.null(extra)) rules <- c(rules, extra[setdiff(names(extra), names(rules))])
-  if (is.null(rules)) stop("unknown rewrite target: ", target)
+  extra <- .fs_rewrite_rules()[[target]]
+  if (!is.null(extra)) rules <- c(rules, extra[setdiff(names(extra), names(rules))])
+  # Basic.rewrite: a target that no class knows leaves the expression alone
+  if (is.null(rules) && target != "exp") return(e)
   .map_bottom_up(e, function(z) {
     if (z$type == "Function" && !is.null(rules[[z$name]])) {
       r <- do.call(rules[[z$name]], z$args)

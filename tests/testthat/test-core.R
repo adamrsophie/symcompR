@@ -324,8 +324,8 @@ test_that("composite integration variables bind their symbols", {
 
 test_that("nsolve verifies the residual against tol", {
   x <- Symbol("x")
-  expect_error(nsolve(list(sin(x) + 2), list(x), list(1e20)), "did not converge")
-  expect_error(nsolve(exp(x) * Rational("1e-100") + Rational("1e-10"), x, 0), "did not converge")
+  expect_error(nsolve(list(sin(x) + 2), list(x), list(1e20)), "Could not find root within given tolerance")
+  expect_error(nsolve(exp(x) * Rational("1e-100") + Rational("1e-10"), x, 0), "Could not find root using the given solver")
   expect_equal(num_value_dbl(nsolve(list(x^2 - 2), list(x), list(1))$x), sqrt(2), tolerance = 1e-12)
 })
 

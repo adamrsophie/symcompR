@@ -556,6 +556,8 @@ parse_expr <- function(s, local_dict = NULL, transformations = standard_transfor
       NULL)
     if (!is.null(v)) return(v)
   }
+  v <- .fs_pe_method(obj, attr)
+  if (!is.null(v)) return(v)
   stop(.pe_err("AttributeError", sprintf("'%s' object has no attribute '%s'", .pe_class_name(obj), attr)))
 }
 

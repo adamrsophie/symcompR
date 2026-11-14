@@ -2067,6 +2067,8 @@ factorint <- function(n, limit = NULL, use_trial = TRUE, use_rho = TRUE, use_pm1
                       use_ecm = TRUE, verbose = FALSE, visual = NULL, multiple = FALSE) {
   if (multiple) {
     d <- factorint(n, limit, use_trial, use_rho, use_pm1, use_ecm, verbose, visual = FALSE)
+    # sorted(fac): -1 first
+    if (length(d)) d <- d[order(as.logical(gmp::as.bigz(names(d)) >= 0))]
     return(.fac_multiple(d))
   }
   is_dict <- !is_sym(n) && !is.null(names(n))
@@ -2109,7 +2111,7 @@ factorint <- function(n, limit = NULL, use_trial = TRUE, use_rho = TRUE, use_pm1
                all_methods = use_trial && use_rho && use_pm1 && use_ecm)
   if (n < 0) {
     f <- factorint(-n, limit, use_trial, use_rho, use_pm1, use_ecm, verbose, visual = FALSE)
-    return(c(c("-1" = 1), f))
+    return(c(f, c("-1" = 1)))
   }
   if (!is.null(limit) && limit < 2) {
     if (n == 1) return(stats::setNames(numeric(), character()))
@@ -2127,10 +2129,9 @@ factorrat <- function(rat, limit = NULL, use_trial = TRUE, use_rho = TRUE, use_p
   q <- if (is.null(q)) gmp::as.bigq(.nt_int(rat)) else q
   f1 <- factorint(gmp::numerator(q), limit, use_trial, use_rho, use_pm1, verbose = verbose, visual = FALSE)
   f2 <- factorint(gmp::denominator(q), limit, use_trial, use_rho, use_pm1, verbose = verbose, visual = FALSE)
-  fac <- .fac_new()
-  .fac_merge(fac, f1)
-  .fac_merge(fac, f2, -1)
-  d <- .fac_vec(fac)
+  # the numerator's factors, then the denominator's, in dict insertion order
+  d <- f1
+  for (k in names(f2)) d[[k]] <- if (k %in% names(d)) d[[k]] - f2[[k]] else -f2[[k]]
   if (length(d) > 1 && "1" %in% names(d)) d <- d[names(d) != "1"]
   if (multiple) {
     # sorted by value: keys below 1, then reciprocals 1/p, then the primes

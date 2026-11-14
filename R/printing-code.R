@@ -457,56 +457,32 @@ lambdify <- function(args, e) {
 
 #' Common subexpression elimination
 #'
-#' `cse(exprs)` finds repeated subexpressions and returns a list with
-#' `replacements` (a list of `list(symbol, expression)` pairs) and `reduced`
-#' (the rewritten expressions), like SymPy's `cse()`.
+#' `cse(exprs)` finds common subexpressions as SymPy's `cse()`: repeated
+#' subtrees, negated terms, negative powers, and the common arguments of
+#' sums and products. It returns a list with `replacements` (a list of
+#' `list(symbol, expression)` pairs) and `reduced` (the rewritten
+#' expressions).
 #'
-#' @param exprs An expression or list of expressions.
-#' @param prefix Prefix of the new symbols.
+#' @param exprs An expression, a matrix, or a list of them.
+#' @param prefix Prefix of the new symbols when `symbols` is `NULL`.
+#' @param symbols A list of symbols to use for the replacements, such as
+#'   `numbered_symbols("t")`, or `NULL` for `prefix` followed by a number.
+#' @param optimizations A list of `list(pre, post)` pairs of functions
+#'   applied to each expression before and after the elimination, or `NULL`.
+#' @param postprocess A function of the replacements and the reduced
+#'   expressions whose value is returned, or `NULL`.
+#' @param order `"canonical"` to visit the arguments of sums and products
+#'   in sorted order, or `"none"`.
+#' @param ignore Symbols; subexpressions containing any of them are not
+#'   replaced.
+#' @param list If `FALSE`, a single expression gives a single reduced
+#'   expression rather than a list.
 #' @return A list.
 #' @examples
-#' x <- Symbol("x"); y <- Symbol("y")
+#' x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); t <- Symbol("t")
 #' cse(list((x + y)^2 + sin(x + y), (x + y) * 3))
+#' cse(list(x*y*z, x*y*t))
 #' @export
-cse <- function(exprs, prefix = "x") {
-  if (!is.list(exprs) || inherits(exprs, "sym")) exprs <- list(exprs)
-  exprs <- lapply(exprs, as_sym)
-  counts <- new.env(hash = TRUE)
-  nodes <- list()
-  walk <- function(z) {
-    if (!length(z$args) || nchar(z$key) > 9000L || z$type %in% c("MatrixSymbol", "MatrixElement")) return(invisible())
-    cur <- counts[[z$key]]
-    assign(z$key, if (is.null(cur)) 1L else cur + 1L, envir = counts)
-    if (is.null(cur)) {
-      nodes[[length(nodes) + 1L]] <<- z
-      for (a in z$args) walk(a)
-    }
-  }
-  for (e in exprs) walk(e)
-  taken <- unique(unlist(lapply(exprs, function(e) vapply(atoms(e, c("Symbol", "Dummy")), function(s) s$name, ""))))
-  rep_nodes <- Filter(function(z) counts[[z$key]] > 1L, nodes)
-  # innermost first, so that later replacements use earlier symbols
-  rep_nodes <- rep_nodes[order(vapply(rep_nodes, function(z) nchar(z$key), 0L))]
-  replacements <- list()
-  k <- 0L
-  mapping <- list()
-  apply_map <- function(z) {
-    hit <- mapping[[z$key]]
-    if (!is.null(hit)) return(hit)
-    if (!length(z$args)) return(z)
-    args <- lapply(z$args, apply_map)
-    if (identical(vapply(args, .k, ""), vapply(z$args, .k, ""))) return(z)
-    sym_rebuild(z, args)
-  }
-  for (z in rep_nodes) {
-    repeat {
-      nm <- paste0(prefix, k)
-      k <- k + 1L
-      if (!(nm %in% taken)) break
-    }
-    sy <- Symbol(nm)
-    replacements[[length(replacements) + 1L]] <- list(sy, apply_map(z))
-    mapping[[z$key]] <- sy
-  }
-  list(replacements = replacements, reduced = lapply(exprs, apply_map))
-}
+cse <- function(exprs, prefix = "x", symbols = NULL, optimizations = NULL, postprocess = NULL,
+                order = "canonical", ignore = list(), list = TRUE)
+  .fs_cse(exprs, symbols, optimizations, postprocess, order, ignore, list, prefix)

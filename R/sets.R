@@ -23,6 +23,8 @@ is_set <- function(e) e$type %in% .SET_TYPES
 #'   argument of a `Lambda` with several arguments.
 #' @param s,t Sets.
 #' @param x An element.
+#' @param evaluate For `Union()` and `Intersection()`: `FALSE` keeps the
+#'   arguments unevaluated, as `evaluate=False` in SymPy.
 #' @return A set expression, or a logical/boolean value.
 #' @examples
 #' Interval(0, 1)

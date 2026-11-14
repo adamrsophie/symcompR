@@ -8,7 +8,7 @@
 \alias{quat_to_rotation_matrix}
 \title{Quaternions}
 \usage{
-Quaternion(a = 0, b = 0, c = 0, d = 0)
+Quaternion(a = 0, b = 0, c = 0, d = 0, real_field = TRUE)
 
 quat_conjugate(q)
 
@@ -21,6 +21,9 @@ quat_to_rotation_matrix(q)
 \arguments{
 \item{a, b, c, d}{Components.}
 
+\item{real_field}{\code{TRUE} for a quaternion over the reals, \code{FALSE} for
+components that are complex.}
+
 \item{q}{A quaternion.}
 }
 \value{
@@ -28,9 +31,12 @@ A \code{Quaternion}, expression or matrix.
 }
 \description{
 \code{Quaternion(a, b, c, d)} is \code{a + b*i + c*j + d*k}. \code{+}, \code{-}, \code{*} (Hamilton
-product) and \code{/} by a scalar work; \code{quat_conjugate()}, \code{quat_norm()},
-\code{quat_inverse()} and \code{quat_to_rotation_matrix()} follow SymPy.
+product), \code{/} and \code{^} with an integer power work; over the real field a
+complex scalar \code{z} acts as the quaternion \code{re(z) + im(z)*i}, as in SymPy.
+\code{quat_conjugate()}, \code{quat_norm()}, \code{quat_inverse()} and
+\code{quat_to_rotation_matrix()} follow SymPy.
 }
 \examples{
 Quaternion(1, 2, 3, 4) * Quaternion(5, 6, 7, 8)
+Quaternion(1, 2, 3, 4)^2
 }

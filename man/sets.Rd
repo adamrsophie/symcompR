@@ -36,9 +36,9 @@ contains(s, x)
 
 is_subset(s, t)
 
-Union(...)
+Union(..., evaluate = TRUE)
 
-Intersection(...)
+Intersection(..., evaluate = TRUE)
 
 Complement(s, t)
 
@@ -93,6 +93,9 @@ ConditionSet(sym, condition, base = UniversalSet)
 
 \item{...}{Elements or sets; for \code{ImageSet()}, further sets, one for each
 argument of a \code{Lambda} with several arguments.}
+
+\item{evaluate}{For \code{Union()} and \code{Intersection()}: \code{FALSE} keeps the
+arguments unevaluated, as \code{evaluate=False} in SymPy.}
 
 \item{lam}{A \code{\link[=Lambda]{Lambda()}}.}
 

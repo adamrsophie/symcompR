@@ -100,7 +100,7 @@ test_that("algebra review fixes", {
   expect_length(nroots(x^2, x), 2)
   expect_equal(count_roots(x, x, as_bigq(Rational("-1e-400")), 1), 1L)
   expect_equal(vapply(solve(p^2 - 1, p), sstr, ""), "1")
-  expect_error(nsolve(exp(x), x, 0, maxit = 2), "did not converge")
+  expect_error(nsolve(exp(x), x, 0, maxit = 2), "Could not find root within given tolerance")
   d <- div(x^2, y * x + 1, x)
   expect_equal(vapply(d, sstr, ""), c(q = "x/y - 1/y^2", r = "y^(-2)"))
   expect_equal(sstr(expand_power_exp(S(0)^(x + y))), "0^(x + y)")

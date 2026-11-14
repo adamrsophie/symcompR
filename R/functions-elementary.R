@@ -643,7 +643,7 @@ def_function("acos",
                  if (!is.null(v)) return(.add(list(.mul(list(S_Half, S_Pi)), v)))
                }
                if (!is.null(.imag_coeff(a))) return(.sub(.mul(list(S_Half, S_Pi)), fcall("asin", list(a))))
-               NULL
+               .fs_acos_trig(a)
              },
              diff = function(args, i) .neg(.inv(.sqrt(.sub(S_One, .sq(args[[1L]]))))),
              numeric = function(x) if (is.complex(x) || abs(x) > 1) acos(as.complex(x)) else acos(x),
@@ -662,7 +662,7 @@ def_function("atan",
                }
                ic <- .imag_coeff(a)
                if (!is.null(ic)) return(.mul(list(S_I, fcall("atanh", list(ic)))))
-               NULL
+               .fs_atan_trig("atan", a)
              },
              diff = function(args, i) .inv(.add(list(S_One, .sq(args[[1L]])))),
              numeric = atan,
@@ -693,7 +693,7 @@ def_function("acot",
                }
                ic <- .imag_coeff(a)
                if (!is.null(ic)) return(.mul(list(.neg(S_I), fcall("acoth", list(ic)))))
-               NULL
+               .fs_atan_trig("acot", a)
              },
              diff = function(args, i) .neg(.inv(.add(list(S_One, .sq(args[[1L]]))))),
              numeric = function(x) atan(1 / x))
@@ -1296,8 +1296,9 @@ def_function("arg",
     if (t == "Float") return(.int(rfun(a$value)))
     if (is_inf_const(a) || is_nan(a)) return(a)
     if (isTRUE(ask_fact(a, "integer"))) return(a)
-    if (t == "Function" && a$name %in% c("floor", "ceiling") &&
-        isTRUE(ask_fact(a$args[[1L]], "real"))) return(a)
+    # RoundFunction._eval_number: arg or -arg a floor or ceiling
+    is_rnd <- function(z) z$type == "Function" && z$name %in% c("floor", "ceiling")
+    if (is_rnd(a) || (t == "Mul" && is_rnd(.neg(a)))) return(a)
     if (is_const(a, "I")) return(a)
     if (t == "Add") {
       ints <- list()
@@ -1306,7 +1307,13 @@ def_function("arg",
         if (isTRUE(ask_fact(z, "integer"))) ints[[length(ints) + 1L]] <- z
         else rest[[length(rest) + 1L]] <- z
       }
-      if (length(ints)) return(.add(c(ints, list(fcall(name, list(.add(rest)))))))
+      if (length(ints)) {
+        r <- .add(rest)
+        # ipart + spart for a floor or ceiling spart, else cls(spart, evaluate=False)
+        if (is_rnd(r)) return(.add(c(ints, list(r))))
+        rf <- if (length(free_symbols(r))) fnode(name, list(r)) else fcall(name, list(r))
+        return(.add(c(ints, list(rf))))
+      }
     }
     if (length(free_symbols(a)) == 0L) {
       # get_integer_part

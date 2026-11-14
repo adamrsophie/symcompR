@@ -428,19 +428,10 @@ def_function("FallingFactorial", nargs = 2L,
   }))
 }, nargs = 1:2)
 
-.seq_numbers("fibonacci", function(n, args) {
-  a <- gmp::as.bigz(0); b <- gmp::as.bigz(1)
-  if (n == 0) return(S_Zero)
-  for (i in seq_len(n - 1)) { t <- a + b; a <- b; b <- t }
-  make_rational(gmp::as.bigq(b))
-}, numeric = function(n) round(((1 + sqrt(5)) / 2)^Re(n) / sqrt(5)))
+def_function("fibonacci", nargs = 1:2, eval = .fs_fibonacci_eval,
+             numeric = function(n) round(((1 + sqrt(5)) / 2)^Re(n) / sqrt(5)))
 
-.seq_numbers("lucas", function(n, args) {
-  a <- gmp::as.bigz(2); b <- gmp::as.bigz(1)
-  if (n == 0) return(S_Two)
-  for (i in seq_len(n - 1)) { t <- a + b; a <- b; b <- t }
-  make_rational(gmp::as.bigq(b))
-})
+def_function("lucas", eval = .fs_lucas_eval)
 
 .seq_numbers("tribonacci", function(n, args) {
   v <- gmp::as.bigz(c(0, 1, 1))

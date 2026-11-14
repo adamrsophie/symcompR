@@ -10,7 +10,8 @@ has(e, ...)
 \item{e}{A \code{sym} expression.}
 
 \item{...}{Subexpressions to look for. A symbol matches when it is free in
-\code{e}.}
+\code{e}; a function such as \code{sin} or a \code{Function()} class matches any of
+its applications.}
 }
 \value{
 \code{TRUE} or \code{FALSE}.

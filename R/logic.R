@@ -508,10 +508,12 @@ satisfiable <- function(e, algorithm = NULL, all_models = FALSE, minimal = FALSE
   models <- .dpll2_models(ints, length(keys), all_models)
   # an unsatisfiable formula has the single model False, as SymPy's generator
   if (!length(models)) return(if (all_models) list(FALSE) else FALSE)
+  # SATSolver._find_model builds the dict by iterating the var_settings set
   models <- lapply(models, function(m) {
-    m <- unique(m)
-    out <- lapply(seq_along(keys), function(v) v %in% m)
-    names(out) <- vapply(keymap[keys], .str, "")
+    m <- .py_int_set(as.integer(m))
+    m <- c(m, -setdiff(seq_along(keys), abs(m)))
+    out <- lapply(m, function(l) l > 0L)
+    names(out) <- vapply(keymap[keys][abs(m)], .str, "")
     out
   })
   if (all_models) models else models[[1L]]
