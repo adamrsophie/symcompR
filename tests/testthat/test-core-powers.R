@@ -99,3 +99,9 @@ test_that("cancel reads I back as a Gaussian coefficient", {
   expect_identical(sstr(d), "x*(-3 - 4*I)*exp(-3*x^2/50)*exp(-2*I*x^2/25)/25")
   expect_null(heurisch(exp(-x^2 / (2 * (2 - sym_I)^2)), x, hints = list()))
 })
+
+test_that("heurisch visits Bessel functions of higher order first", {
+  x <- Symbol("x"); nu <- Symbol("nu")
+  expect_identical(sstr(heurisch((nu * besselj(nu, x) - x * besselj(nu + 1, x)) / x, x)), "besselj(nu, x)")
+  expect_null(heurisch(besselj(nu, x) * x, x))
+})

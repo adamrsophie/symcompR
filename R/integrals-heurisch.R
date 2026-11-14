@@ -36,6 +36,27 @@
   l[seq_len(n)]
 }
 
+# The order of `for g in set(terms)`: DiffCache.get_diff of f(n, z) also
+# caches f(n - 1, z), so a Bessel function is visited before the ones of
+# lower order by an integer, which then come from the cache (the order the
+# Python sets give in SymPy's test of besselj(nu + 1, x))
+.heur_diff_order <- function(terms) {
+  bes <- which(vapply(terms, function(g) g$type == "Function" && !is.null(.BESSEL_DIFF(g$name, S_One, S_One)), NA))
+  if (length(bes) < 2L) return(terms)
+  ord <- bes
+  for (i in seq_along(ord)[-1L]) {
+    j <- i
+    while (j > 1L) {
+      a <- terms[[ord[j - 1L]]]; b <- terms[[ord[j]]]
+      d <- if (identical(a$name, b$name) && identical(a$args[[2L]]$key, b$args[[2L]]$key)) .sub(b$args[[1L]], a$args[[1L]]) else S_Zero
+      if (!(d$type == "Integer" && d$value > 0L)) break
+      ord[c(j - 1L, j)] <- ord[c(j, j - 1L)]
+      j <- j - 1L
+    }
+  }
+  c(terms[ord], terms[-bes])
+}
+
 .BESSEL_DIFF <- function(name, n, z) {
   f <- function(a, b) fcall(name, list(a, b))
   switch(name,
@@ -142,7 +163,7 @@ heurisch <- function(f, x, rewrite = FALSE, hints = NULL, mappings = NULL, retri
       }
     } else terms <- .hset_union(terms, lapply(hints, as_sym))
   }
-  for (g in terms) terms <- .hset_union(terms, .heur_components(dcache$get(g), x))
+  for (g in .heur_diff_order(terms)) terms <- .hset_union(terms, .heur_components(dcache$get(g), x))
   V <- .hsymbols("x", length(terms))
   pairs <- Map(function(tm, v) list(tm, v), terms, V)
   keyed <- lapply(pairs, function(p) list(.mul(.as_coeff_mul_dep(p[[1L]], x)[[2L]]), p))
