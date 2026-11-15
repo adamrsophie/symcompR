@@ -84,3 +84,10 @@ test_that("constantsimp factors a Gaussian rational content", {
                c("Eq(f(x), (C1*exp(3/x) - 1)^(1/3))", "Eq(f(x), (-1 - sqrt(3)*I)*(C1*exp(3/x) - 1)^(1/3)/2)",
                  "Eq(f(x), (-1 + sqrt(3)*I)*(C1*exp(3/x) - 1)^(1/3)/2)"))
 })
+
+test_that("an equation keeps lhs before rhs when the functions are extracted", {
+  x <- Symbol("x"); f <- Function("f"); g <- Function("g")
+  eqs <- list(Eq(Derivative(f(x), list(x, 2)), -2 * g(x) + 2 * x * diff(g(x), x)),
+              Eq(Derivative(g(x), list(x, 2)), 2 * f(x) - 2 * x * diff(f(x), x)))
+  expect_equal(vapply(symcompR:::.ode_extract_funcs(eqs), sstr, ""), c("f(x)", "g(x)"))
+})

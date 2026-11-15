@@ -82,6 +82,8 @@
 .sympy_args <- function(e) {
   args <- e$args
   if (length(args) < 2L) return(args)
+  # a relational keeps (lhs, rhs)
+  if (e$type %in% .REL_TYPES) return(args)
   # Mul: the commutative part sorted, the noncommutative part in order
   if (e$type == "Mul") {
     comm <- vapply(args, .is_comm, TRUE)
