@@ -248,6 +248,13 @@ print.TensorIndexType <- function(x, ...) {
             class = "TensorIndex")
 }
 
+# a new index of the same class (and wild options) as `old`, as
+# old_index.func(name, index_type, *old_index.args[2:]) does
+.ti_like <- function(old, name, is_up) {
+  if (inherits(old, "WildTensorIndex")) return(.wti_new(name, old$tensor_index_type, is_up, old$ignore_updown))
+  .ti_new(name, old$tensor_index_type, is_up)
+}
+
 .ti_autogen <- new.env()
 
 #' @rdname tensor-indices
@@ -270,7 +277,7 @@ TensorIndex <- function(name, tensor_index_type, is_up = TRUE) {
 #' @export
 Ops.TensorIndex <- function(e1, e2) {
   if (missing(e2)) {
-    if (.Generic == "-") return(.ti_new(e1$name, e1$tensor_index_type, !e1$is_up))
+    if (.Generic == "-") return(.ti_like(e1, e1$name, !e1$is_up))
     if (.Generic == "+") return(e1)
   }
   if (.Generic %in% c("==", "!=")) {
@@ -550,8 +557,9 @@ tensor_heads <- function(s, index_types, symmetry = NULL, comm = 0) {
   for (d in dum) {
     typ1 <- indices[[d[1L] + 1L]]$tensor_index_type
     nm <- gen(typ1)
-    indices[[d[1L] + 1L]] <- .ti_new(nm, typ1, TRUE)
-    indices[[d[2L] + 1L]] <- .ti_new(nm, typ1, FALSE)
+    old <- indices[[d[1L] + 1L]]
+    indices[[d[1L] + 1L]] <- .ti_like(old, nm, TRUE)
+    indices[[d[2L] + 1L]] <- .ti_like(old, nm, FALSE)
   }
   indices
 }
@@ -763,6 +771,7 @@ tensor_heads <- function(s, index_types, symmetry = NULL, comm = 0) {
 
 .tensor_new <- function(d, indices, is_canon_bp = FALSE) {
   d <- .th(d)
+  if (isTRUE(d$wild)) return(.wt_new(d, indices))
   indices <- .tn_parse_indices(d, indices)
   is <- .tis_from_indices(indices)
   if (.th_rank(d) != length(indices)) .tn_error("ValueError", "wrong number of indices")
@@ -931,7 +940,7 @@ tensor_heads <- function(s, index_types, symmetry = NULL, comm = 0) {
         dummy_name <- gen(index_type)
         if (!(dummy_name %in% r$free_names)) break
       }
-      dummy <- .ti_new(dummy_name, index_type, old_index$is_up)
+      dummy <- .ti_like(old_index, dummy_name, old_index$is_up)
       replacements[[dd[[2L]] + 1L]][[old_index$key]] <- dummy
       replacements[[dd[[3L]] + 1L]][[(-old_index)$key]] <- -dummy
     }
@@ -959,7 +968,7 @@ tensor_heads <- function(s, index_types, symmetry = NULL, comm = 0) {
   for (d in conflicts) {
     if ((-d)$key %in% names(repl)) next
     newname <- gen(d$tensor_index_type)
-    new_d <- .ti_new(newname, d$tensor_index_type, d$is_up)
+    new_d <- .ti_like(d, newname, d$is_up)
     repl[[d$key]] <- new_d
     repl[[(-d)$key]] <- -new_d
   }

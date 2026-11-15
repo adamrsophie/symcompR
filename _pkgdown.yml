@@ -520,6 +520,7 @@ reference:
   - TensorHead
   - tensor-indices
   - tensor-expressions
+  - wild-tensors
   - PartialDerivative
   - replace_with_arrays
   - TensorManager

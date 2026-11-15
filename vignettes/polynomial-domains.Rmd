@@ -213,3 +213,24 @@ Rq <- PythonPowerSeriesRingQQ(4)
 Rq$pretty(Rq$exp(Rq$gen))
 Rq$pretty(Rq$log(Rq(c(1, 1))))
 ```
+
+`power_series_ring(symbol, K, prec)` is SymPy's `sympy.polys.series`
+ring in a named variable over `ZZ` or `QQ`. It returns the ring and its
+generator; series combine with the usual operators, and an exact
+polynomial gets an `O()` term only when it grows past the ring precision.
+The ring holds the composition, inversion and elementary functions.
+
+```{r}
+rs <- power_series_ring("x", QQ, 6)
+R <- rs[[1]]; xs <- rs[[2]]
+R
+(1 + xs + xs^2)^3
+1 / (1 - xs)
+R$inverse(1 + xs + xs^2)
+R$reversion(R$sin(xs))
+R$compose(R$exp(xs) - 1, xs + xs^2)
+R$tan(xs)
+R$sqrt(4 + xs)
+R$to_expr(R$atan(xs))
+R$from_expr(Symbol("x")^2 + 3 * Symbol("x") + O(Symbol("x")^3))
+```

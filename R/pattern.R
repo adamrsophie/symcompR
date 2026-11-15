@@ -284,6 +284,7 @@
 #' sym_replace(sin(x)^2 + 1, sin(Wild("u")), cos(Wild("u")))
 #' @export
 sym_match <- function(e, pattern, old = FALSE) {
+  if (.tn_is(e) || .tn_is(pattern) || inherits(pattern, "TensorIndex")) return(.tn_match_named(e, pattern))
   d <- .matches(as_sym(pattern), as_sym(e), list(), old)
   if (is.null(d)) return(NULL)
   out <- list()
@@ -294,6 +295,7 @@ sym_match <- function(e, pattern, old = FALSE) {
 #' @rdname sym_match
 #' @export
 sym_replace <- function(e, pattern, value, exact = NULL) {
+  if (.tn_is(e) || .tn_is(pattern)) return(.tn_replace(e, pattern, value, exact))
   # a function class: replace every application, value(*expr.args)
   if (inherits(pattern, "sym_function")) {
     if (!is.function(value)) stop(.sympy_condition("TypeError", "given a type, replace() expects another type or a callable"))

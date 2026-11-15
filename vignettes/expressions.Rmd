@@ -145,6 +145,31 @@ x * UnevaluatedExpr(1 / x)
 doit(x * UnevaluatedExpr(1 / x))
 ```
 
+`evaluate(FALSE, expr)` evaluates `expr` with automatic evaluation turned
+off, as SymPy's `evaluate(False)` context manager: sums, products, powers,
+relations and function calls stay as written.
+
+```{r}
+evaluate(FALSE, x + x)
+evaluate(FALSE, (x + 1) + 2)
+evaluate(FALSE, sin(Integer(0)))
+```
+
+## Kinds and classes
+
+`expr_kind()` is SymPy's `.kind`: the mathematical kind of an object,
+whatever its class. `isinstance()` tests an expression against SymPy class
+names, following SymPy's class hierarchy.
+
+```{r}
+expr_kind(x + 1)
+expr_kind(x > 1)
+expr_kind(Matrix(list(1, x)))
+expr_kind(FiniteSet(1, x))
+isinstance(x, "Atom")
+isinstance(x + 1, c("Number", "Add"))
+```
+
 ## Anonymous functions
 
 `Lambda()` creates a symbolic function; `rcall()` applies it.

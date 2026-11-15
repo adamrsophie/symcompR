@@ -318,6 +318,17 @@ SetExpr(Interval(0, 1)) + 1
 SetExpr(Interval(1, 2)) * SetExpr(Interval(10, 20))
 ```
 
+`closure()`, `interior()` and `boundary()` give the topological parts of a
+set; `powerset()` lists the subsets of a finite set, and
+`symmetric_difference()` is SymPy's `SymmetricDifference`.
+
+```{r}
+closure(Interval(0, 1, TRUE, TRUE))
+interior(Interval(0, 1))
+powerset(FiniteSet(1, 2))
+symmetric_difference(Interval(0, 2), Interval(1, 3))
+```
+
 ## Ordinals
 
 symcompR implements ordinal numbers below $\varepsilon_0$ in Cantor normal
