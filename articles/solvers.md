@@ -721,10 +721,10 @@ matrix_exp_jordan_form(Matrix(list(list(1, 1), list(0, 1))), t)
 #> (Matrix([[1, 0], [0, 1]]), Matrix([[exp(t), t*exp(t)], [0, exp(t)]]))
 linodesolve(Matrix(list(list(1, 0), list(0, 2))), t)
 #> [[1]]
-#> _Dummy_618*exp(t)
+#> _Dummy_615*exp(t)
 #> 
 #> [[2]]
-#> _Dummy_619*exp(2*t)
+#> _Dummy_616*exp(2*t)
 C1 <- Symbol("C1"); C2 <- Symbol("C2")
 constantsimp(2 * C1 * x, list(C1))
 #> C1*x
