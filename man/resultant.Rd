@@ -13,6 +13,8 @@ discriminant(f, x = NULL, ...)
 \item{f, g}{Expressions.}
 
 \item{x}{The variable.}
+
+\item{...}{Options; \code{modulus = p} works over GF(p).}
 }
 \value{
 An expression.

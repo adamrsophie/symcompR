@@ -278,7 +278,7 @@ latex_escape <- function(s) {
 }
 
 .lp_Constant <- function(e, exp = NULL) {
-  switch(e$name, pi = "\\pi", E = "e", I = .lp_s("imaginary_unit_latex"), oo = "\\infty",
+  switch(EXPR = e$name, pi = "\\pi", E = "e", I = .lp_s("imaginary_unit_latex"), oo = "\\infty",
          `-oo` = "-\\infty", zoo = "\\tilde{\\infty}", nan = "\\text{NaN}", EulerGamma = "\\gamma",
          GoldenRatio = "\\phi", TribonacciConstant = "\\text{TribonacciConstant}", Catalan = "G",
          .lp_symbol_name(e$name))

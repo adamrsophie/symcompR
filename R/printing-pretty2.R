@@ -321,7 +321,7 @@
     a <- .pp2_atom(name)
     .pp2_pf(if (is.null(a)) default else a)
   }
-  switch(e$name,
+  switch(EXPR = e$name,
     pi = atom("Pi"), E = atom("Exp1", "e"), I = atom("ImaginaryUnit"), oo = atom("Infinity"),
     `-oo` = atom("NegativeInfinity"),
     EulerGamma = if (.pp2_u()) .pp2_pf(.pp2_symbol("gamma")) else .pp2_pf("EulerGamma"),

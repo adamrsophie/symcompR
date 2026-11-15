@@ -17,6 +17,8 @@ interpolate(points, x)
 
 \item{x}{The variable.}
 
+\item{...}{Options; \code{modulus = p} works over GF(p).}
+
 \item{points}{A list of \code{c(x, y)} pairs, or a vector of values.}
 }
 \value{

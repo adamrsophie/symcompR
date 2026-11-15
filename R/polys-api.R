@@ -1233,6 +1233,7 @@ sqf_part <- function(f, ...) {
 #'
 #' @param f,g Expressions.
 #' @param x The variable.
+#' @param ... Options; `modulus = p` works over GF(p).
 #' @return An expression.
 #' @examples
 #' x <- Symbol("x"); a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c")
@@ -1347,6 +1348,7 @@ is_polynomial <- function(f, ...) {
 #'
 #' @param f,g Expressions.
 #' @param x The variable.
+#' @param ... Options; `modulus = p` works over GF(p).
 #' @param points A list of `c(x, y)` pairs, or a vector of values.
 #' @return An expression.
 #' @examples

@@ -48,6 +48,6 @@
 # The Python class name SymPy shows for a non integer exponent
 .fs_py_class <- function(e) {
   if (e$type == "Rational" && identical(e$key, S_Half$key)) return("Half")
-  if (e$type == "Constant") return(switch(e$name, pi = "Pi", E = "Exp1", I = "ImaginaryUnit", e$name))
+  if (e$type == "Constant") return(switch(EXPR = e$name, pi = "Pi", E = "Exp1", I = "ImaginaryUnit", e$name))
   e$type
 }
