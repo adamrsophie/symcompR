@@ -118,6 +118,6 @@ inverse(f)
 #> function (fl_T, c0, c1, c2, c3) 
 #> .bm_curve("TendonForceLengthInverseDeGroote2016", list(fl_T, 
 #>     c0, c1, c2, c3))
-#> <bytecode: 0x5e3b1f2921b8>
+#> <bytecode: 0x599f9e0718b8>
 #> <environment: namespace:symcompR>
 ```
