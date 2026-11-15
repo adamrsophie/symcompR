@@ -360,7 +360,7 @@
 #' jordan_form(Matrix(list(list(1, 1, 0), list(0, 1, 0), list(0, 0, 2))))
 #' @export
 jordan_form <- function(M, calc_transform = TRUE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) stop(NonSquareMatrixError("Only square matrices have Jordan forms"))
   floats <- any(vapply(M$data, function(z) .has_type(z, "Float"), TRUE))
   dps <- 15L

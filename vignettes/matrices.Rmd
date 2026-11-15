@@ -380,6 +380,22 @@ MutableSparseMatrix(2, 2, list(list(1, 0, 7)))
 banded(3, list("0" = 1, "-1" = c(2, 3)))
 ```
 
+As in SymPy, the four matrix classes (mutable or immutable, dense or
+sparse) are kept by methods and combined by priority in arithmetic. An
+immutable matrix refuses assignment, and a sparse one lists its nonzero
+entries with zero based indices.
+
+```{r}
+I2 <- ImmutableMatrix(list(list(1, 2), list(3, 4)))
+S2 <- SparseMatrix(2, 2, list(list(0, 1, x)))
+srepr(t(I2))
+srepr(I2 + S2)
+tryCatch(I2[1, 1] <- 0, error = conditionMessage)
+row_list(S2)[[1]][1:2]
+nnz(S2)
+srepr(as_mutable(I2))
+```
+
 Rotation matrices: `rot_axis1()` to `rot_axis3()` rotate the coordinate
 frame, `rot_ccw_axis1()` to `rot_ccw_axis3()` rotate vectors
 counterclockwise, and `rot_givens()` is a Givens rotation in a coordinate

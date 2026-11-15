@@ -509,7 +509,7 @@ InnerProduct <- function(bra, ket) .qfunc("InnerProduct", list(bra, ket))
 
 .matrix_tensor_product <- function(mats) {
   r <- Matrix(mats[[1L]])
-  for (m in mats[-1L]) r <- kronecker_product(r, Matrix(m))
+  for (m in mats[-1L]) r <- kronecker_product(r, .as_mat(m))
   r
 }
 

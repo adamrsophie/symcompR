@@ -920,7 +920,7 @@ equals <- function(a, b) {
   if (inherits(a, "GeoPlane")) return(.mg_plane_equals(a, b))
   if (inherits(a, "GeoEntity")) return(.mg_geo_eq(a, b))
   if (inherits(a, "symmatrix")) {
-    b <- Matrix(b)
+    b <- .as_mat(b)
     if (a$nrow != b$nrow || a$ncol != b$ncol) return(FALSE)
     r <- Map(.expr_equals, a$data, b$data)
     if (any(vapply(r, isFALSE, TRUE))) return(FALSE)

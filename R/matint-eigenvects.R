@@ -123,7 +123,7 @@
 # _eigenvects
 .matint_eigenvects <- function(M, error_when_incomplete = TRUE, iszerofunc = NULL, simplify = FALSE,
                                chop = FALSE, flags = list()) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (is.null(iszerofunc)) iszerofunc <- .matint_iszero
   primitive <- !isFALSE(simplify)
   simpfunc <- if (is.function(simplify)) simplify else if (isTRUE(simplify)) .simplify_default else identity
@@ -172,7 +172,7 @@
 
 # _is_diagonalizable
 .matint_is_diagonalizable <- function(M, reals_only = FALSE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) return(FALSE)
   if (.matint_all_fact(M, "real") && isTRUE(is_symmetric(M))) return(TRUE)
   if (.matint_all_fact(M, "complex") && isTRUE(.matint_hermitian(M))) return(TRUE)
@@ -181,7 +181,7 @@
 
 # _diagonalize
 .matint_diagonalize <- function(M, reals_only = FALSE, sort = FALSE, normalize = FALSE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) stop(NonSquareMatrixError(""))
   de <- .matint_diag_with_eigen(M, reals_only)
   if (!de[[1L]]) stop(MatrixError("Matrix is not diagonalizable"))
@@ -214,14 +214,14 @@
 #' singular_values(Matrix(list(list(1, 0), list(0, 2))))
 #' @export
 left_eigenvects <- function(M, ...) {
-  ev <- eigenvects(transpose(Matrix(M)), ...)
+  ev <- eigenvects(transpose(.as_mat(M)), ...)
   lapply(ev, function(e) { e$vectors <- lapply(e$vectors, transpose); e })
 }
 
 #' @rdname left_eigenvects
 #' @export
 singular_values <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   H <- transpose(.mat_map(M, conjugate))
   vp <- if (M$nrow >= M$ncol) eigenvals(.matmul(H, M)) else eigenvals(.matmul(M, H))
   vals <- list()

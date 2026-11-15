@@ -1047,15 +1047,30 @@ rot_givens <- function(i, j, theta, dim = 3) {
 
 #' @rdname matrix-builders
 #' @export
-SparseMatrix <- function(r, c = NULL, entries = NULL) {
-  if (is.null(entries)) return(Matrix(r, c))
-  data <- rep(list(S_Zero), r * c)
-  for (en in entries) data[[en[[1L]] * c + en[[2L]] + 1L]] <- as_sym(en[[3L]])
-  .new_mat(data, r, c)
-}
+SparseMatrix <- function(r, c = NULL, entries = NULL) .set_mclass(.sparse_build(r, c, entries), "MutableSparseMatrix")
 #' @rdname matrix-builders
 #' @export
 MutableSparseMatrix <- SparseMatrix
 #' @rdname matrix-builders
 #' @export
-ImmutableSparseMatrix <- SparseMatrix
+ImmutableSparseMatrix <- function(r, c = NULL, entries = NULL) .set_mclass(.sparse_build(r, c, entries), "ImmutableSparseMatrix")
+
+# SparseMatrix(r, c, entries) with entries a list of (i, j, value) triples
+# (zero based, as the keys of SymPy's dict), a function of (i, j), or a flat
+# list; any other form goes to Matrix()
+.sparse_build <- function(r, c, entries) {
+  if (is.null(c) && is.null(entries)) return(Matrix(r))
+  if (is.list(entries) && !is_sym(entries) && length(entries) &&
+      all(vapply(entries, function(en) is.list(en) && !is_sym(en) && length(en) == 3L, NA))) {
+    data <- rep(list(S_Zero), r * c)
+    for (en in entries) {
+      i <- as.integer(as_sym(en[[1L]])$value); j <- as.integer(as_sym(en[[2L]])$value)
+      if (i < 0L || i >= r || j < 0L || j >= c) stop("ValueError: The location ", sprintf("(%d, %d)", i, j), " is out of designated range: ", sprintf("(%d, %d)", r - 1L, c - 1L), call. = FALSE)
+      data[[i * c + j + 1L]] <- as_sym(en[[3L]])
+    }
+    return(.new_mat(data, r, c))
+  }
+  if (is.function(entries)) return(Matrix(r, c, function(i, j) entries(i - 1L, j - 1L)))
+  if (is.null(entries)) return(Matrix(r, c))
+  Matrix(r, c, entries)
+}

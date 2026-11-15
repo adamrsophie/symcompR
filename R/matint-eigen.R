@@ -106,7 +106,7 @@
 # _eigenvals
 .matint_eigenvals <- function(M, error_when_incomplete = TRUE, simplify = FALSE, multiple = FALSE,
                               rational = FALSE, flags = list()) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow == 0L || M$ncol == 0L) return(if (multiple) list() else structure(list(), multiplicity = integer()))
   if (M$nrow != M$ncol) stop(NonSquareMatrixError(paste0(.matint_mat_str(M), " must be a square matrix.")))
   if (rational) M <- .mat_map(M, function(z) if (.has_type(z, "Float")) nsimplify(z, rational = TRUE) else z)

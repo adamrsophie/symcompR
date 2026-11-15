@@ -207,7 +207,11 @@ rm(.cg_n)
 
 .cgp_mro <- function(e, full = FALSE) {
   if (!is_sym(e)) {
-    if (inherits(e, "symmatrix")) return(c("MutableDenseMatrix", "DenseMatrix", "MutableRepMatrix", "RepMatrix", "MatrixBase"))
+    if (inherits(e, "symmatrix")) return(switch(EXPR = .mclass(e),
+      ImmutableDenseMatrix = c("ImmutableDenseMatrix", "DenseMatrix", "ImmutableRepMatrix", "RepMatrix", "MatrixBase", "MatrixExpr"),
+      MutableSparseMatrix = c("MutableSparseMatrix", "SparseRepMatrix", "MutableRepMatrix", "RepMatrix", "MatrixBase"),
+      ImmutableSparseMatrix = c("ImmutableSparseMatrix", "SparseRepMatrix", "ImmutableRepMatrix", "RepMatrix", "MatrixBase", "MatrixExpr"),
+      c("MutableDenseMatrix", "DenseMatrix", "MutableRepMatrix", "RepMatrix", "MatrixBase")))
     if (inherits(e, "SymArray")) return(c("ImmutableDenseNDimArray", "DenseNDimArray", "ImmutableNDimArray", "NDimArray", "Basic"))
     if (inherits(e, "cg_dict")) return("dict")
     if (inherits(e, "pytuple")) return("tuple")

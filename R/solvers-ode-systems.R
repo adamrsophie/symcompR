@@ -243,7 +243,7 @@ linear_ode_to_matrix <- function(eqs, funcs, t, order) {
 #' matrix_exp_jordan_form(Matrix(list(list(1, 1), list(0, 1))), t)
 #' @export
 matrix_exp_jordan_form <- function(A, t) {
-  A <- Matrix(A)
+  A <- .as_mat(A)
   t <- as_sym(t)
   N <- A$nrow
   M <- A$ncol

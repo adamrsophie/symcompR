@@ -10,7 +10,7 @@
 .jarg <- function(a) {
   if (is.function(a) && !is.null(attr(a, "base"))) return(attr(a, "base"))
   if (inherits(a, "symmatrix")) return(.as_block(a))
-  if (is.list(a) && !is_sym(a)) return(.as_block(Matrix(a)))
+  if (is.list(a) && !is_sym(a)) return(.as_block(.as_mat(a)))
   as_sym(a)
 }
 # explicit matrix of an argument (or the matrix expression itself)

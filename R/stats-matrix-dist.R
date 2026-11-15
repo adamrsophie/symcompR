@@ -16,7 +16,7 @@
       lens <- vapply(a, function(r) if (is.list(r) && !is_sym(r)) length(r) else 1L, 0L)
       if (!all(nested) || length(unique(lens)) != 1L) .serr("ValueError", "mismatched dimensions")
     }
-    return(.as_block(Matrix(a)))
+    return(.as_block(.as_mat(a)))
   }
   as_sym(a)
 }

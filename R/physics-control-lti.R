@@ -37,7 +37,7 @@
 # repr(type(x)) as in SymPy's error messages
 .lti_type_repr <- function(x) {
   if (inherits(x, c("pyobj", "pyenv"))) return(sprintf("<class '%s.%s'>", .LTI_MOD, class(x)[1L]))
-  if (inherits(x, "symmatrix")) return("<class 'sympy.matrices.dense.MutableDenseMatrix'>")
+  if (inherits(x, "symmatrix")) return(sprintf("<class 'sympy.matrices.%s.%s'>", switch(EXPR = .mclass(x), MutableDenseMatrix = "dense", MutableSparseMatrix = "sparse", "immutable"), .mclass(x)))
   if (is_sym(x)) {
     cls <- .sympy_class(x)
     mod <- switch(cls, Integer = , Rational = , Float = , Zero = , One = , NegativeOne = , Half = ,

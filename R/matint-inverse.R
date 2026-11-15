@@ -170,7 +170,7 @@
 
 # _rref: list(M = , pivots = ) with 1 based pivots
 .matint_rref <- function(M, iszerofunc = .matint_iszero, simplify = FALSE, normalize_last = TRUE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (.matint_is_qq(M)) return(.matint_rref_qq(M))
   simpfunc <- if (is.function(simplify)) simplify else function(e) simplify(e)
   r <- .matint_row_reduce_list(M$data, M$nrow, M$ncol, iszerofunc, simpfunc, normalize_last)

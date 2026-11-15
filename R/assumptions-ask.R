@@ -17,7 +17,7 @@
   if (!is_sym(e)) {
     if (is.logical(e)) return("bool")
     if (is.numeric(e)) return("int")
-    if (inherits(e, "symmatrix")) return("MutableDenseMatrix")
+    if (inherits(e, "symmatrix")) return(.mclass(e))
     return("object")
   }
   t <- e$type

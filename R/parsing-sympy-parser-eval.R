@@ -92,7 +92,7 @@ parse_expr <- function(s, local_dict = NULL, transformations = standard_transfor
                                             "-oo" = "NegativeInfinity", zoo = "ComplexInfinity", nan = "NaN", v$name))
     return(v$type)
   }
-  if (inherits(v, "symmatrix")) return("MutableDenseMatrix")
+  if (inherits(v, "symmatrix")) return(.mclass(v))
   if (inherits(v, "pe_int")) return("int")
   if (inherits(v, "pe_float")) return("float")
   if (inherits(v, "pe_str") || is.character(v)) return("str")

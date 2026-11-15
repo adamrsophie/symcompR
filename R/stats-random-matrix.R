@@ -162,7 +162,7 @@ level_spacing_distribution <- function(mat) .callm(mat$extra$pspace$args[[2L]], 
 #' @export
 JointEigenDistribution <- function(mat) {
   lam <- Dummy("lambda")
-  vals <- roots(charpoly(Matrix(mat), lam), lam, multiple = TRUE)
+  vals <- roots(charpoly(.as_mat(mat), lam), lam, multiple = TRUE)
   if (!all(vapply(vals, is_random, NA)))
     .serr("ValueError", "Eigen values do not have any random expression, joint distribution cannot be generated.")
   new_sym("JointDistributionHandmade", vals)

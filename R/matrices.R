@@ -5,7 +5,37 @@
             class = "symmatrix")
 }
 
-.mat_map <- function(M, f) .new_mat(lapply(M$data, f), M$nrow, M$ncol)
+.mat_map <- function(M, f) .keep_mclass(.new_mat(lapply(M$data, f), M$nrow, M$ncol), M)
+
+# SymPy's matrix classes. A symmatrix without the "pyclass" attribute is a
+# MutableDenseMatrix; methods keep the class of self, and binary operations
+# take the class of higher _class_priority.
+.MCLASS_PRIORITY <- c(MutableSparseMatrix = 3, MutableDenseMatrix = 4,
+                      ImmutableDenseMatrix = 8, ImmutableSparseMatrix = 9)
+.mclass <- function(M) {
+  k <- attr(M, "pyclass")
+  if (is.null(k) || !k %in% names(.MCLASS_PRIORITY)) "MutableDenseMatrix" else k
+}
+.set_mclass <- function(M, k) {
+  attr(M, "pyclass") <- if (identical(k, "MutableDenseMatrix")) NULL else k
+  M
+}
+# R gets the class of M (a matrix argument of the call that made R)
+.keep_mclass <- function(R, M) {
+  if (inherits(R, "symmatrix") && inherits(M, "symmatrix") && .mclass(M) != "MutableDenseMatrix" && is.null(attr(R, "pyclass")))
+    attr(R, "pyclass") <- .mclass(M)
+  R
+}
+.join_mclass <- function(R, A, B) {
+  if (!inherits(R, "symmatrix") || !is.null(attr(R, "pyclass"))) return(R)
+  ks <- c(if (inherits(A, "symmatrix")) .mclass(A), if (inherits(B, "symmatrix")) .mclass(B))
+  .set_mclass(R, ks[which.max(.MCLASS_PRIORITY[ks])])
+}
+.is_immutable_mat <- function(M) .mclass(M) %in% c("ImmutableDenseMatrix", "ImmutableSparseMatrix")
+.is_sparse_mat <- function(M) .mclass(M) %in% c("MutableSparseMatrix", "ImmutableSparseMatrix")
+
+# internal coercion to a symmatrix, keeping a matrix (and its class) as is
+.as_mat <- function(x) if (inherits(x, "symmatrix")) x else Matrix(x)
 
 .mget <- function(M, i, j) M$data[[(i - 1L) * M$ncol + j]]
 
@@ -42,7 +72,8 @@
 #' Matrix(2, 2, function(i, j) i + j)
 #' @export
 Matrix <- function(data, ncol = NULL, f = NULL) {
-  if (inherits(data, "symmatrix")) return(data)
+  # Matrix(M) is a new MutableDenseMatrix, whatever the class of M
+  if (inherits(data, "symmatrix")) return(if (.mclass(data) == "MutableDenseMatrix") data else .set_mclass(data, "MutableDenseMatrix"))
   if (is.numeric(data) && length(data) == 1L && !is.null(ncol)) {
     nr <- as.integer(data)
     nc <- as.integer(ncol)
@@ -143,11 +174,13 @@ length.symmatrix <- function(x) x$nrow * x$ncol
     k <- k + 1L
     d[[k]] <- .mget(x, a, b)
   }
-  .new_mat(d, length(ri), length(ci))
+  .keep_mclass(.new_mat(d, length(ri), length(ci)), x)
 }
 
 #' @export
 `[<-.symmatrix` <- function(x, i, j, value) {
+  if (.is_immutable_mat(x))
+    stop("TypeError: Cannot set values of <class 'sympy.matrices.immutable.", .mclass(x), "'>", call. = FALSE)
   nr <- x$nrow
   nc <- x$ncol
   ri <- if (missing(i)) seq_len(nr) else i
@@ -160,7 +193,7 @@ length.symmatrix <- function(x) x$nrow * x$ncol
     k <- k + 1L
     data[[(a - 1L) * nc + b]] <- vals[[(k - 1L) %% length(vals) + 1L]]
   }
-  .new_mat(data, nr, nc)
+  .keep_mclass(.new_mat(data, nr, nc), x)
 }
 
 #' @export
@@ -205,7 +238,7 @@ as.list.symmatrix <- function(x, ...) x$data
 t.symmatrix <- function(x) {
   d <- vector("list", length(x$data))
   for (i in seq_len(x$nrow)) for (j in seq_len(x$ncol)) d[[(j - 1L) * x$nrow + i]] <- .mget(x, i, j)
-  .new_mat(d, x$ncol, x$nrow)
+  .keep_mclass(.new_mat(d, x$ncol, x$nrow), x)
 }
 
 #' @export
@@ -231,7 +264,7 @@ Ops.symmatrix <- function(e1, e2) {
     op <- switch(.Generic, "+" = function(a, b) .add(list(a, b)), "-" = .sub,
                  "*" = function(a, b) .mul(list(a, b)), "/" = .div,
                  stop("unsupported matrix operator ", .Generic))
-    return(.new_mat(Map(op, e1$data, e2$data), e1$nrow, e1$ncol))
+    return(.join_mclass(.new_mat(Map(op, e1$data, e2$data), e1$nrow, e1$ncol), e1, e2))
   }
   M <- if (m1) e1 else e2
   s <- as_sym(if (m1) e2 else e1)
@@ -280,9 +313,9 @@ Ops.symmatrix <- function(e1, e2) {
 matrixOps.symmatrix <- function(x, y) {
   if (.Generic == "%*%" && (.is_matexpr(x) || .is_matexpr(y))) return(doit(MatMul(x, y)))
   if (.Generic == "%*%") {
-    x <- Matrix(x)
-    y <- Matrix(y)
-    return(.matmul(x, y))
+    x <- .as_mat(x)
+    y <- .as_mat(y)
+    return(.join_mclass(.matmul(x, y), x, y))
   }
   stop("unsupported operator ", .Generic)
 }
@@ -294,16 +327,16 @@ matrixOps.symmatrix <- function(x, y) {
 
 #' @export
 cbind.symmatrix <- function(..., deparse.level = 1) {
-  ms <- lapply(list(...), Matrix)
+  ms <- lapply(list(...), .as_mat)
   nr <- ms[[1L]]$nrow
   rows <- lapply(seq_len(nr), function(i) unlist(lapply(ms, function(M) .mrows(M)[[i]]), recursive = FALSE))
-  .from_rows(rows)
+  .keep_mclass(.from_rows(rows), ms[[1L]])
 }
 
 #' @export
 rbind.symmatrix <- function(..., deparse.level = 1) {
-  ms <- lapply(list(...), Matrix)
-  .from_rows(unlist(lapply(ms, .mrows), recursive = FALSE))
+  ms <- lapply(list(...), .as_mat)
+  .keep_mclass(.from_rows(unlist(lapply(ms, .mrows), recursive = FALSE)), ms[[1L]])
 }
 
 # ---------------------------------------------------------------------------
@@ -393,7 +426,7 @@ inverse <- function(M, method = NULL, iszerofunc = NULL, try_block_diag = FALSE)
   # Function.inverse() of the characteristic curves
   if (is_sym(M) && M$type == "Function" && !is.null(.FUNS[[M$name]]$inverse)) return(.FUNS[[M$name]]$inverse())
   if (.is_matexpr(M) && !.is_explicit(M)) return(.me_inverse(M))
-  .matint_inv(Matrix(M), method, if (is.null(iszerofunc)) .matint_iszero else iszerofunc, try_block_diag)
+  .keep_mclass(.matint_inv(.as_mat(M), method, if (is.null(iszerofunc)) .matint_iszero else iszerofunc, try_block_diag), M)
 }
 
 #' @rdname sym_det
@@ -402,7 +435,7 @@ inverse <- function(M, method = NULL, iszerofunc = NULL, try_block_diag = FALSE)
 #' @export
 solve.symmatrix <- function(a, b, ...) {
   if (missing(b)) return(inverse(a))
-  b <- Matrix(b)
+  b <- .as_mat(b)
   n <- a$ncol
   aug <- cbind.symmatrix(a, b)
   R <- .rref(aug)
@@ -420,19 +453,19 @@ solve.symmatrix <- function(a, b, ...) {
 #' @param normalize_last Scale the pivot rows to 1 at the end, as SymPy does.
 #' @export
 rref <- function(M, iszerofunc = NULL, simplify = FALSE, pivots = TRUE, normalize_last = TRUE) {
-  r <- .matint_rref(Matrix(M), if (is.null(iszerofunc)) .matint_iszero else iszerofunc, simplify, normalize_last)
+  r <- .matint_rref(.as_mat(M), if (is.null(iszerofunc)) .matint_iszero else iszerofunc, simplify, normalize_last)
   if (!pivots) return(r$M)
   list(matrix = r$M, pivots = r$pivots)
 }
 
 #' @rdname sym_det
 #' @export
-rank_matrix <- function(M) length(.rref(Matrix(M))$pivots)
+rank_matrix <- function(M) length(.rref(.as_mat(M))$pivots)
 
 #' @rdname sym_det
 #' @export
 nullspace <- function(M, simplify = FALSE, iszerofunc = NULL) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   r <- .matint_rref(M, if (is.null(iszerofunc)) .matint_iszero else iszerofunc, simplify, TRUE)
   free <- setdiff(seq_len(M$ncol), r$pivots)
   lapply(free, function(fv) {
@@ -446,7 +479,7 @@ nullspace <- function(M, simplify = FALSE, iszerofunc = NULL) {
 #' @rdname sym_det
 #' @export
 columnspace <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   r <- .rref(M)
   lapply(r$pivots, function(c) M[, c, drop = FALSE])
 }
@@ -454,7 +487,7 @@ columnspace <- function(M) {
 #' @rdname sym_det
 #' @export
 rowspace <- function(M) {
-  r <- .rref(Matrix(M))
+  r <- .rref(.as_mat(M))
   lapply(seq_along(r$pivots), function(k) r$M[k, , drop = FALSE])
 }
 
@@ -462,7 +495,7 @@ rowspace <- function(M) {
 #' @export
 minor <- function(M, i, j, method = "berkowitz") {
   if (inherits(M, "GeoEllipse")) return(.ellipse_minor(M))
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol || M$nrow < 1L) stop(NonSquareMatrixError(""))
   if (i < 1L || i > M$nrow || j < 1L || j > M$ncol)
     stop(.sympy_condition("ValueError", sprintf("`i` and `j` must satisfy 1 <= i <= ``M.rows`` (%d)and 1 <= j <= ``M.cols`` (%d).", M$nrow, M$ncol)))
@@ -479,19 +512,19 @@ cofactor <- function(M, i, j, method = "berkowitz") {
 #' @rdname sym_det
 #' @export
 cofactor_matrix <- function(M, method = "berkowitz") {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) stop(NonSquareMatrixError(""))
   Matrix(M$nrow, M$ncol, function(i, j) cofactor(M, i, j, method))
 }
 
 #' @rdname sym_det
 #' @export
-adjugate <- function(M, method = "berkowitz") t(cofactor_matrix(M, method))
+adjugate <- function(M, method = "berkowitz") .keep_mclass(t(cofactor_matrix(M, method)), M)
 
 #' @rdname sym_det
 #' @export
 trace_matrix <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .add(lapply(seq_len(min(M$nrow, M$ncol)), function(i) .mget(M, i, i)))
 }
 
@@ -551,7 +584,7 @@ trace_matrix <- function(M) {
 #' eigenvals(M)
 #' @export
 charpoly <- function(M, lambda = Symbol("lambda")) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   cf <- .charpoly_coeffs(M)
   lambda <- as_sym(lambda)
   n <- length(cf) - 1L
@@ -609,7 +642,7 @@ diagonalize <- function(M, reals_only = FALSE, sort = FALSE, normalize = FALSE)
 #' @return A `symmatrix`.
 #' @export
 matrix_exp <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) stop(NonSquareMatrixError("Exponentiation is valid only for square matrices"))
   jf <- tryCatch(jordan_form(M), MatrixError = function(e)
     stop(.sympy_condition("NotImplementedError", "Exponentiation is implemented only for matrices for which the Jordan normal form can be computed")))
@@ -654,7 +687,7 @@ matrix_exp <- function(M) {
 #' @return A list of matrices.
 #' @export
 LUdecomposition <- function(M, iszerofunc = NULL, simpfunc = NULL, rankcheck = FALSE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   r <- .mg_lu(M, iszerofunc, simpfunc, rankcheck)
   cm <- r$lu
   L <- .mg_new(cm$nrow, cm$nrow, function(i, j) if (i < j) S_Zero else if (i == j) S_One else if (j <= cm$ncol) .mget(cm, i, j) else S_Zero)
@@ -670,12 +703,12 @@ GramSchmidt <- function(vlist, orthonormal = FALSE) .mg_orthogonalize(vlist, nor
 
 #' @rdname LUdecomposition
 #' @export
-QRdecomposition <- function(M) .mg_qr(Matrix(M), normalize = TRUE)
+QRdecomposition <- function(M) .mg_qr(.as_mat(M), normalize = TRUE)
 
 #' @rdname LUdecomposition
 #' @export
 cholesky <- function(M, hermitian = TRUE) {
-  M <- .ldl_check(Matrix(M), hermitian)
+  M <- .ldl_check(.as_mat(M), hermitian)
   n <- M$nrow
   L <- .mrows(zeros(n))
   cj <- if (hermitian) function(z) fcall("conjugate", list(z)) else identity
@@ -708,7 +741,7 @@ cholesky <- function(M, hermitian = TRUE) {
 #' @rdname LUdecomposition
 #' @export
 LDLdecomposition <- function(M, hermitian = TRUE) {
-  M <- .ldl_check(Matrix(M), hermitian)
+  M <- .ldl_check(.as_mat(M), hermitian)
   n <- M$nrow
   L <- .mrows(eye(n))
   D <- rep(list(S_Zero), n)
@@ -753,8 +786,8 @@ dot <- function(a, b, doit = FALSE, hermitian = NULL, conjugate_convention = NUL
   if (.pv_dispatch(a, b)) return(.pv_dot_dispatch(a, b))
   if (inherits(a, "Del")) return(.vec_divergence(b, doit = doit))
   if (.is_bd(a) || .is_bd(b)) return(.bd_dot_method(a, b))
-  a <- Matrix(a)
-  b <- Matrix(b)
+  a <- .as_mat(a)
+  b <- .as_mat(b)
   # MatrixBase.dot: two vectors of equal length
   if (!(1L %in% c(a$nrow, a$ncol)) || !(1L %in% c(b$nrow, b$ncol)) || length(a$data) != length(b$data))
     stop(sprintf("ShapeError: Dimensions incorrect for dot product: (%d, %d), (%d, %d)", a$nrow, a$ncol, b$nrow, b$ncol), call. = FALSE)
@@ -774,8 +807,8 @@ cross <- function(a, b, doit = FALSE) {
   if (.pv_dispatch(a, b)) return(.pv_cross_dispatch(a, b))
   if (inherits(a, "Del")) return(.vec_curl(b, doit = doit))
   if (.is_bd(a) || .is_bd(b)) return(.vec_cross_method(as_sym(a), b))
-  a <- Matrix(a)$data
-  b <- Matrix(b)$data
+  a <- .as_mat(a)$data
+  b <- .as_mat(b)$data
   if (length(a) != 3L || length(b) != 3L) stop("cross product needs 3-vectors")
   Matrix(list(.sub(.mul(list(a[[2]], b[[3]])), .mul(list(a[[3]], b[[2]]))),
               .sub(.mul(list(a[[3]], b[[1]])), .mul(list(a[[1]], b[[3]]))),
@@ -785,7 +818,7 @@ cross <- function(a, b, doit = FALSE) {
 #' @rdname dot
 #' @export
 norm_matrix <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .sqrt(.add(lapply(M$data, function(z) .sq(fcall("Abs", list(z))))))
 }
 
@@ -793,7 +826,11 @@ norm_matrix <- function(M) {
 #' @export
 applyfunc <- function(M, f) {
   if (.is_matexpr(M) && !.is_explicit(M)) return(ElementwiseApplyFunction(f, M))
-  .mat_map(Matrix(M), function(z) as_sym(if (is.function(f)) f(z) else apply_lambda(f, z)))
+  M <- .as_mat(M)
+  g <- function(z) as_sym(if (is.function(f)) f(z) else apply_lambda(f, z))
+  # SparseRepMatrix.applyfunc maps only the stored (nonzero) entries
+  if (.is_sparse_mat(M)) return(.mat_map(M, function(z) if (is_zero_num(z)) z else g(z)))
+  .mat_map(M, g)
 }
 
 #' @rdname dot
@@ -803,13 +840,13 @@ is_square <- function(M) {
     (is.numeric(M) && length(M) == 1L && is.null(dim(M))) ||
     (is.character(M) && length(M) == 1L && grepl("^\\s*[-+]?[0-9]+\\s*$", M))
   if (int_like) return(.is_square_int(M))
-  Matrix(M)$nrow == Matrix(M)$ncol
+  .as_mat(M)$nrow == .as_mat(M)$ncol
 }
 
 #' @rdname dot
 #' @export
 is_symmetric <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   is_square(M) && all(vapply(seq_along(M$data), function(k) {
     i <- (k - 1L) %/% M$ncol + 1L
     j <- (k - 1L) %% M$ncol + 1L
@@ -822,7 +859,7 @@ is_symmetric <- function(M) {
 is_zero_matrix <- function(M) {
   # MatrixBase._eval_is_zero_matrix: FALSE if an entry is known nonzero,
   # NA (SymPy's None) if an entry is undecided
-  z <- vapply(Matrix(M)$data, function(e) as.logical(ask_fact(e, "zero")), NA)
+  z <- vapply(.as_mat(M)$data, function(e) as.logical(ask_fact(e, "zero")), NA)
   if (any(z %in% FALSE)) return(FALSE)
   if (anyNA(z)) return(NA)
   TRUE
@@ -831,7 +868,7 @@ is_zero_matrix <- function(M) {
 #' @rdname dot
 #' @export
 vec <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .new_mat(t(M)$data, M$nrow * M$ncol, 1L)
 }
 
@@ -839,7 +876,7 @@ vec <- function(M) {
 #' @export
 pinv <- function(M) {
   # _pinv_rank_decomposition of sympy/matrices/inverse.py
-  M <- Matrix(M)
+  M <- .as_mat(M)
   H <- .mat_h(M)
   if (all(vapply(M$data, is_zero_num, TRUE))) return(H)
   if (M$nrow == 1L || M$ncol == 1L)

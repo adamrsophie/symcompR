@@ -161,7 +161,7 @@ homogeneous_order <- function(eq, ...) {
 #' @rdname more-solvers
 #' @export
 solve_linear_system_LU <- function(M, syms) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol - 1L) stop("Rows should be equal to columns - 1", call. = FALSE)
   syms <- .as_gens(list(syms))
   rows <- .mrows(M)

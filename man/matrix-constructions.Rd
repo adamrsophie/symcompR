@@ -19,6 +19,14 @@
 \alias{MutableMatrix}
 \alias{MutableDenseMatrix}
 \alias{ImmutableDenseMatrix}
+\alias{as_immutable}
+\alias{as_mutable}
+\alias{todok}
+\alias{row_list}
+\alias{col_list}
+\alias{RL}
+\alias{CL}
+\alias{nnz}
 \title{Matrix constructions}
 \usage{
 rot_axis1(theta)
@@ -54,6 +62,22 @@ MutableMatrix(...)
 MutableDenseMatrix(...)
 
 ImmutableDenseMatrix(...)
+
+as_immutable(M)
+
+as_mutable(M)
+
+todok(M)
+
+row_list(M)
+
+col_list(M)
+
+RL(M)
+
+CL(M)
+
+nnz(M)
 }
 \arguments{
 \item{theta}{Angle.}

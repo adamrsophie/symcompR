@@ -1552,9 +1552,9 @@ rm(.n)
 
 # ReprPrinter._print_MatrixBase for a mutable matrix
 .srepr_matrix <- function(m) {
-  if (xor(m$nrow == 0L, m$ncol == 0L)) return(sprintf("MutableDenseMatrix(%d, %d, [])", m$nrow, m$ncol))
+  if (xor(m$nrow == 0L, m$ncol == 0L)) return(sprintf("%s(%d, %d, [])", .mclass(m), m$nrow, m$ncol))
   rows <- vapply(.mrows(m), function(r) paste0("[", paste(vapply(r, srepr, ""), collapse = ", "), "]"), "")
-  paste0("MutableDenseMatrix([", paste(rows, collapse = ", "), "])")
+  paste0(.mclass(m), "([", paste(rows, collapse = ", "), "])")
 }
 
 # GLSLPrinter._print_MatrixBase with the default settings (mat_nested

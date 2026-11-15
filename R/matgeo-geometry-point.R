@@ -499,7 +499,7 @@ orthogonal_direction <- function(p) {
 #' @export
 project <- function(a, b) {
   if (inherits(a, "symmatrix")) {
-    b <- Matrix(b)
+    b <- .as_mat(b)
     return(applyfunc(b, function(z) .mul(list(z, .div(dot(a, b), dot(b, b))))))
   }
   pr <- .mg_normdim(list(.mg_as_pt(a), .mg_as_pt(b)))

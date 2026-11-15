@@ -98,7 +98,7 @@
 }
 
 .matint_is_pd <- function(M, semi) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (!isTRUE(.matint_hermitian(M))) {
     if (M$nrow != M$ncol) return(FALSE)
     M <- M + .matint_H(M)
@@ -108,7 +108,7 @@
   if (semi) .matint_psd_cholesky(M) else .matint_pd_ge(M)
 }
 
-.matint_neg <- function(M) .mat_map(Matrix(M), .neg)
+.matint_neg <- function(M) .mat_map(.as_mat(M), .neg)
 
 #' Definiteness of a matrix
 #'
@@ -139,7 +139,7 @@ is_negative_semidefinite <- function(M) .matint_is_pd(.matint_neg(M), TRUE)
 #' @rdname is_positive_definite
 #' @export
 is_indefinite <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (isTRUE(.matint_hermitian(M))) {
     ev <- eigenvals(M)
     pos <- .matint_fuzzy_or(lapply(ev, .matint_fact, fact = "positive"))

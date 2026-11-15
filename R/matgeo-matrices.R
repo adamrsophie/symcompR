@@ -32,7 +32,7 @@
 
 .mg_mat <- function(M) {
   if (.is_matexpr(M) && !.is_explicit(M)) return(M)
-  Matrix(M)
+  .as_mat(M)
 }
 
 .mg_stop <- function(cls, msg = "") stop(.sympy_condition(cls, msg))
@@ -61,42 +61,42 @@
 #' is_diagonal(M)
 #' @export
 is_upper <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .mg_all_zero(M, function(i, j) i > j)
 }
 
 #' @rdname is_upper
 #' @export
 is_lower <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .mg_all_zero(M, function(i, j) i < j)
 }
 
 #' @rdname is_upper
 #' @export
 is_upper_hessenberg <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .mg_all_zero(M, function(i, j) i > j + 1L)
 }
 
 #' @rdname is_upper
 #' @export
 is_lower_hessenberg <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .mg_all_zero(M, function(i, j) i + 1L < j)
 }
 
 #' @rdname is_upper
 #' @export
 is_diagonal <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .matint_fuzzy_and(lapply(Filter(function(it) it$i != it$j, .mg_items(M)), function(it) .mg_iszero(it$v)))
 }
 
 #' @rdname is_upper
 #' @export
 is_hermitian <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) return(FALSE)
   .matint_fuzzy_and(lapply(.mg_items(M), function(it)
     .matint_fact(simplify(.sub(.mget(M, it$i, it$j), conjugate(.mget(M, it$j, it$i)))), "zero")))
@@ -105,7 +105,7 @@ is_hermitian <- function(M) {
 #' @rdname is_upper
 #' @export
 is_anti_symmetric <- function(M, simplify = TRUE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   sf <- if (is.function(simplify)) simplify else if (isTRUE(simplify)) .mg_simplify else identity
   if (M$nrow != M$ncol) return(FALSE)
   .matint_fuzzy_and(lapply(.mg_items(M), function(it)
@@ -114,16 +114,16 @@ is_anti_symmetric <- function(M, simplify = TRUE) {
 
 #' @rdname is_upper
 #' @export
-is_weakly_diagonally_dominant <- function(M) .matint_diag_dominant(Matrix(M), "nonnegative")
+is_weakly_diagonally_dominant <- function(M) .matint_diag_dominant(.as_mat(M), "nonnegative")
 
 #' @rdname is_upper
 #' @export
-is_strongly_diagonally_dominant <- function(M) .matint_diag_dominant(Matrix(M), "positive")
+is_strongly_diagonally_dominant <- function(M) .matint_diag_dominant(.as_mat(M), "positive")
 
 #' @rdname is_upper
 #' @export
 is_Identity <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) return(FALSE)
   for (i in seq_len(M$nrow)) for (j in seq_len(M$ncol)) {
     v <- .mget(M, i, j)
@@ -135,12 +135,12 @@ is_Identity <- function(M) {
 
 #' @rdname is_upper
 #' @export
-is_symbolic <- function(M) any(vapply(Matrix(M)$data, function(v) length(free_symbols(v)) > 0L, TRUE))
+is_symbolic <- function(M) any(vapply(.as_mat(M)$data, function(v) length(free_symbols(v)) > 0L, TRUE))
 
 #' @rdname is_upper
 #' @export
 is_echelon <- function(M, iszerofunc = NULL) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   iz <- if (is.null(iszerofunc)) .mg_iszero else iszerofunc
   rec <- function(A) {
     if (A$nrow <= 0L || A$ncol <= 0L) return(TRUE)
@@ -174,52 +174,54 @@ is_echelon <- function(M, iszerofunc = NULL) {
 #' Matrix(list(list(2, 1), list(0, 2))) %^% n
 #' @export
 matrix_pow <- function(M, n, method = NULL) {
-  if (!is.null(method) && !(method %in% c("multiply", "mulsimp", "jordan", "cayley")))
-    .mg_stop("TypeError", "No such method")
-  a <- Matrix(M)
-  if (a$nrow != a$ncol) stop(NonSquareMatrixError())
-  e <- as_sym(n)
-  if (isTRUE(.mg_iszero(e))) return(eye(a$nrow))
-  if (identical(e$key, S_One$key)) return(a)
-  if (isTRUE(is_diagonal(a))) {
-    out <- a
-    for (i in seq_len(a$nrow)) for (j in seq_len(a$ncol))
-      out$data[[(i - 1L) * a$ncol + j]] <- if (i == j) .pow(.mget(a, i, j), e) else S_Zero
-    return(out)
-  }
-  is_int_num <- (e$type %in% c("Integer", "Rational") && gmp::denominator(e$value) == 1) ||
-    (e$type == "Float" && .mg_float_is_int(e))
-  if (is_int_num) {
-    if (a$nrow == 1L) return(.new_mat(list(.pow(.mget(a, 1L, 1L), e)), 1L, 1L))
-    if (.mg_num(e) < 0) {
-      e <- .neg(e)
-      a <- inverse(a)
+  .keep_mclass((function() {
+    if (!is.null(method) && !(method %in% c("multiply", "mulsimp", "jordan", "cayley")))
+      .mg_stop("TypeError", "No such method")
+    a <- .as_mat(M)
+    if (a$nrow != a$ncol) stop(NonSquareMatrixError())
+    e <- as_sym(n)
+    if (isTRUE(.mg_iszero(e))) return(eye(a$nrow))
+    if (identical(e$key, S_One$key)) return(a)
+    if (isTRUE(is_diagonal(a))) {
+      out <- a
+      for (i in seq_len(a$nrow)) for (j in seq_len(a$ncol))
+        out$data[[(i - 1L) * a$ncol + j]] <- if (i == j) .pow(.mget(a, i, j), e) else S_Zero
+      return(out)
     }
-  }
-  if (identical(method, "jordan")) return(.mg_pow_jordan(a, e))
-  if (identical(method, "cayley")) {
-    if (e$type != "Integer") .mg_stop("ValueError", "cayley method is only valid for integer powers")
-    return(.mg_pow_cayley(a, gmp::numerator(e$value)))
-  }
-  if (identical(method, "mulsimp")) {
-    if (e$type != "Integer") .mg_stop("ValueError", "mulsimp method is only valid for integer powers")
-    return(.mg_pow_dotprodsimp(a, gmp::numerator(e$value)))
-  }
-  if (identical(method, "multiply")) {
-    if (e$type != "Integer") .mg_stop("ValueError", "multiply method is only valid for integer powers")
-    return(.mg_pow_recursion(a, gmp::numerator(e$value)))
-  }
-  if (is.null(method) && e$type %in% c("Integer", "Float") && is_int_num) {
-    k <- if (e$type == "Float") gmp::as.bigz(round(.mg_num(e))) else gmp::numerator(e$value)
-    if (a$nrow == 2L && k > 100000) return(.mg_pow_jordan(a, .int(k)))
-    return(.mg_pow_dotprodsimp(a, k))
-  }
-  r <- tryCatch(.mg_pow_jordan(a, e), NonInvertibleMatrixError = function(err) {
-    if (isFALSE(.matint_fact(e, "integer")) || isFALSE(.matint_fact(e, "nonnegative"))) stop(err)
-    NULL
-  })
-  if (!is.null(r)) return(r)
-  MatPow(a, e)
+    is_int_num <- (e$type %in% c("Integer", "Rational") && gmp::denominator(e$value) == 1) ||
+      (e$type == "Float" && .mg_float_is_int(e))
+    if (is_int_num) {
+      if (a$nrow == 1L) return(.new_mat(list(.pow(.mget(a, 1L, 1L), e)), 1L, 1L))
+      if (.mg_num(e) < 0) {
+        e <- .neg(e)
+        a <- inverse(a)
+      }
+    }
+    if (identical(method, "jordan")) return(.mg_pow_jordan(a, e))
+    if (identical(method, "cayley")) {
+      if (e$type != "Integer") .mg_stop("ValueError", "cayley method is only valid for integer powers")
+      return(.mg_pow_cayley(a, gmp::numerator(e$value)))
+    }
+    if (identical(method, "mulsimp")) {
+      if (e$type != "Integer") .mg_stop("ValueError", "mulsimp method is only valid for integer powers")
+      return(.mg_pow_dotprodsimp(a, gmp::numerator(e$value)))
+    }
+    if (identical(method, "multiply")) {
+      if (e$type != "Integer") .mg_stop("ValueError", "multiply method is only valid for integer powers")
+      return(.mg_pow_recursion(a, gmp::numerator(e$value)))
+    }
+    if (is.null(method) && e$type %in% c("Integer", "Float") && is_int_num) {
+      k <- if (e$type == "Float") gmp::as.bigz(round(.mg_num(e))) else gmp::numerator(e$value)
+      if (a$nrow == 2L && k > 100000) return(.mg_pow_jordan(a, .int(k)))
+      return(.mg_pow_dotprodsimp(a, k))
+    }
+    r <- tryCatch(.mg_pow_jordan(a, e), NonInvertibleMatrixError = function(err) {
+      if (isFALSE(.matint_fact(e, "integer")) || isFALSE(.matint_fact(e, "nonnegative"))) stop(err)
+      NULL
+    })
+    if (!is.null(r)) return(r)
+    MatPow(a, e)
+  })(), M)
 }
 
 .mg_num <- function(e) as.numeric(.neval(e, list()))
@@ -373,76 +375,88 @@ matrix_pow <- function(M, n, method = NULL) {
 #' diagonal(M)
 #' @export
 row_insert <- function(M, pos, other) {
-  M <- Matrix(M); other <- Matrix(other)
-  if (!length(M$data)) return(other)
-  pos <- as.integer(pos) - 1L
-  if (pos < 0L) pos <- M$nrow + pos + 1L
-  if (pos < 0L) pos <- 0L else if (pos > M$nrow) pos <- M$nrow
-  if (M$ncol != other$ncol)
-    .mg_stop("ShapeError", sprintf("The matrices have incompatible number of columns (%d and %d)", M$ncol, other$ncol))
-  ins <- pos * M$ncol
-  .new_mat(append(M$data, other$data, after = ins), M$nrow + other$nrow, M$ncol)
+  .keep_mclass((function() {
+    M <- .as_mat(M); other <- .as_mat(other)
+    if (!length(M$data)) return(other)
+    pos <- as.integer(pos) - 1L
+    if (pos < 0L) pos <- M$nrow + pos + 1L
+    if (pos < 0L) pos <- 0L else if (pos > M$nrow) pos <- M$nrow
+    if (M$ncol != other$ncol)
+      .mg_stop("ShapeError", sprintf("The matrices have incompatible number of columns (%d and %d)", M$ncol, other$ncol))
+    ins <- pos * M$ncol
+    .new_mat(append(M$data, other$data, after = ins), M$nrow + other$nrow, M$ncol)
+  })(), M)
 }
 
 #' @rdname row_insert
 #' @export
 col_insert <- function(M, pos, other) {
-  M <- Matrix(M); other <- Matrix(other)
-  if (!length(M$data)) return(other)
-  pos <- as.integer(pos) - 1L
-  if (pos < 0L) pos <- M$ncol + pos + 1L
-  if (pos < 0L) pos <- 0L else if (pos > M$ncol) pos <- M$ncol
-  if (M$nrow != other$nrow)
-    .mg_stop("ShapeError", sprintf("The matrices have incompatible number of rows (%d and %d)", M$nrow, other$nrow))
-  .mg_new(M$nrow, M$ncol + other$ncol, function(i, j) {
-    if (j <= pos) .mget(M, i, j) else if (j <= pos + other$ncol) .mget(other, i, j - pos) else .mget(M, i, j - other$ncol)
-  })
+  .keep_mclass((function() {
+    M <- .as_mat(M); other <- .as_mat(other)
+    if (!length(M$data)) return(other)
+    pos <- as.integer(pos) - 1L
+    if (pos < 0L) pos <- M$ncol + pos + 1L
+    if (pos < 0L) pos <- 0L else if (pos > M$ncol) pos <- M$ncol
+    if (M$nrow != other$nrow)
+      .mg_stop("ShapeError", sprintf("The matrices have incompatible number of rows (%d and %d)", M$nrow, other$nrow))
+    .mg_new(M$nrow, M$ncol + other$ncol, function(i, j) {
+      if (j <= pos) .mget(M, i, j) else if (j <= pos + other$ncol) .mget(other, i, j - pos) else .mget(M, i, j - other$ncol)
+    })
+  })(), M)
 }
 
 #' @rdname row_insert
 #' @export
 row_del <- function(M, i) {
-  M <- Matrix(M)
-  i <- as.integer(i)
-  if (i < 0L) i <- i + M$nrow + 1L
-  if (i < 1L || i > M$nrow) .mg_stop("IndexError", sprintf("Row %d is out of range.", i))
-  M[-i, , drop = FALSE]
+  .keep_mclass((function() {
+    M <- .as_mat(M)
+    i <- as.integer(i)
+    if (i < 0L) i <- i + M$nrow + 1L
+    if (i < 1L || i > M$nrow) .mg_stop("IndexError", sprintf("Row %d is out of range.", i))
+    M[-i, , drop = FALSE]
+  })(), M)
 }
 
 #' @rdname row_insert
 #' @export
 col_del <- function(M, j) {
-  M <- Matrix(M)
-  j <- as.integer(j)
-  if (j < 0L) j <- j + M$ncol + 1L
-  if (j < 1L || j > M$ncol) .mg_stop("IndexError", sprintf("Column %d is out of range.", j))
-  M[, -j, drop = FALSE]
+  .keep_mclass((function() {
+    M <- .as_mat(M)
+    j <- as.integer(j)
+    if (j < 0L) j <- j + M$ncol + 1L
+    if (j < 1L || j > M$ncol) .mg_stop("IndexError", sprintf("Column %d is out of range.", j))
+    M[, -j, drop = FALSE]
+  })(), M)
 }
 
 #' @rdname row_insert
 #' @export
 row_join <- function(M, other) {
-  M <- Matrix(M); other <- Matrix(other)
-  if (M$ncol == 0L && M$nrow != other$nrow) return(other)
-  if (M$nrow != other$nrow)
-    .mg_stop("ShapeError", sprintf("The matrices have incompatible number of rows (%d and %d)", M$nrow, other$nrow))
-  cbind.symmatrix(M, other)
+  .keep_mclass((function() {
+    M <- .as_mat(M); other <- .as_mat(other)
+    if (M$ncol == 0L && M$nrow != other$nrow) return(other)
+    if (M$nrow != other$nrow)
+      .mg_stop("ShapeError", sprintf("The matrices have incompatible number of rows (%d and %d)", M$nrow, other$nrow))
+    cbind.symmatrix(M, other)
+  })(), M)
 }
 
 #' @rdname row_insert
 #' @export
 col_join <- function(M, other) {
-  M <- Matrix(M); other <- Matrix(other)
-  if (M$nrow == 0L && M$ncol != other$ncol) return(other)
-  if (M$ncol != other$ncol)
-    .mg_stop("ShapeError", sprintf("The matrices have incompatible number of columns (%d and %d)", M$ncol, other$ncol))
-  rbind.symmatrix(M, other)
+  .keep_mclass((function() {
+    M <- .as_mat(M); other <- .as_mat(other)
+    if (M$nrow == 0L && M$ncol != other$ncol) return(other)
+    if (M$ncol != other$ncol)
+      .mg_stop("ShapeError", sprintf("The matrices have incompatible number of columns (%d and %d)", M$ncol, other$ncol))
+    rbind.symmatrix(M, other)
+  })(), M)
 }
 
 #' @rdname row_insert
 #' @export
 extract <- function(M, rows, cols) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   idx <- function(v, n) {
     v <- unlist(v)
     if (is.logical(v)) return(which(v))
@@ -458,7 +472,7 @@ extract <- function(M, rows, cols) {
 #' @rdname row_insert
 #' @export
 permute <- function(M, perm, orientation = "rows", direction = "forward") {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (identical(direction, "forwards")) direction <- "forward"
   if (identical(direction, "backwards")) direction <- "backward"
   if (identical(orientation, "columns")) orientation <- "cols"
@@ -527,7 +541,7 @@ permute_cols <- function(M, perm, direction = "forward") permute(M, perm, "cols"
 #' @rdname row_insert
 #' @export
 elementary_row_op <- function(M, op = "n->kn", row = NULL, k = NULL, row1 = NULL, row2 = NULL) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   a <- .mg_op_args(M, op, row, k, row1, row2, "row")
   switch(op,
     "n->kn" = .mg_new(M$nrow, M$ncol, function(i, j) if (i == a$col) .mul(list(as_sym(a$k), .mget(M, i, j))) else .mget(M, i, j)),
@@ -540,7 +554,7 @@ elementary_row_op <- function(M, op = "n->kn", row = NULL, k = NULL, row1 = NULL
 #' @rdname row_insert
 #' @export
 elementary_col_op <- function(M, op = "n->kn", col = NULL, k = NULL, col1 = NULL, col2 = NULL) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   a <- .mg_op_args(M, op, col, k, col1, col2, "col")
   switch(op,
     "n->kn" = .mg_new(M$nrow, M$ncol, function(i, j) if (j == a$col) .mul(list(as_sym(a$k), .mget(M, i, j))) else .mget(M, i, j)),
@@ -561,7 +575,7 @@ col_swap <- function(M, i1, i2) elementary_col_op(M, "n<->m", col1 = i1, col2 = 
 #' @rdname row_insert
 #' @export
 diagonal <- function(M, k = 0) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   k <- as.integer(k)
   r <- if (max(0L, -k) < min(M$nrow, M$ncol - k)) seq(max(0L, -k), min(M$nrow, M$ncol - k) - 1L) else integer()
   .new_mat(lapply(r, function(i) .mget(M, i + 1L, i + k + 1L)), 1L, length(r))
@@ -570,21 +584,21 @@ diagonal <- function(M, k = 0) {
 #' @rdname row_insert
 #' @export
 upper_triangular <- function(M, k = 0) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .mg_new(M$nrow, M$ncol, function(i, j) if (i + k <= j) .mget(M, i, j) else S_Zero)
 }
 
 #' @rdname row_insert
 #' @export
 lower_triangular <- function(M, k = 0) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   .mg_new(M$nrow, M$ncol, function(i, j) if (i + k >= j) .mget(M, i, j) else S_Zero)
 }
 
 #' @rdname row_insert
 #' @export
 vech <- function(M, diagonal = TRUE, check_symmetry = TRUE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) stop(NonSquareMatrixError())
   if (check_symmetry && !isTRUE(is_symmetric(M))) .mg_stop("ValueError", "The matrix is not symmetric.")
   n <- M$ncol
@@ -596,7 +610,7 @@ vech <- function(M, diagonal = TRUE, check_symmetry = TRUE) {
 #' @rdname row_insert
 #' @export
 rot90 <- function(M, k = 1) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   switch(as.character(k %% 4),
     "0" = M,
     "1" = t(M[rev(seq_len(M$nrow)), , drop = FALSE]),
@@ -606,24 +620,24 @@ rot90 <- function(M, k = 1) {
 
 #' @rdname row_insert
 #' @export
-mat_row <- function(M, i) Matrix(M)[i, , drop = FALSE]
+mat_row <- function(M, i) .as_mat(M)[i, , drop = FALSE]
 
 #' @rdname row_insert
 #' @export
-mat_col <- function(M, j) Matrix(M)[, j, drop = FALSE]
+mat_col <- function(M, j) .as_mat(M)[, j, drop = FALSE]
 
 #' @rdname row_insert
 #' @export
-tolist <- function(M) .mrows(Matrix(M))
+tolist <- function(M) .mrows(.as_mat(M))
 
 #' @rdname row_insert
 #' @export
-matrix_values <- function(M) lapply(.mg_items(Matrix(M)), function(it) it$v)
+matrix_values <- function(M) lapply(.mg_items(.as_mat(M)), function(it) it$v)
 
 #' @rdname row_insert
 #' @export
 multiply_elementwise <- function(M, other) {
-  M <- Matrix(M); other <- Matrix(other)
+  M <- .as_mat(M); other <- .as_mat(other)
   if (M$nrow != other$nrow || M$ncol != other$ncol)
     .mg_stop("ShapeError", sprintf("Matrix shapes must agree (%d, %d) != (%d, %d)", M$nrow, M$ncol, other$nrow, other$ncol))
   .new_mat(Map(function(a, b) .mul(list(a, b)), M$data, other$data), M$nrow, M$ncol)
@@ -693,7 +707,7 @@ wilkinson <- function(n) {
 
 #' @rdname jordan_block
 #' @export
-get_diag_blocks <- function(M) .matint_get_diag_blocks(Matrix(M))
+get_diag_blocks <- function(M) .matint_get_diag_blocks(.as_mat(M))
 
 # ---------------------------------------------------------------------------
 # Decompositions
@@ -766,7 +780,7 @@ get_diag_blocks <- function(M) .matint_get_diag_blocks(Matrix(M))
 }
 
 .mg_lu <- function(M, iszerofunc = NULL, simpfunc = NULL, rankcheck = FALSE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   iz <- if (is.null(iszerofunc)) .matint_iszero else iszerofunc
   r <- .matint_lu_simple(M, iz, simpfunc, rankcheck)
   list(lu = .new_mat(r$lu, M$nrow, M$ncol), swaps = lapply(r$swaps, function(s) as.integer(s) + 1L))
@@ -804,7 +818,7 @@ LUdecomposition_Simple <- function(M, iszerofunc = NULL, simpfunc = NULL, rankch
 #' @rdname LUdecomposition_Simple
 #' @export
 LUdecompositionFF <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   n <- M$nrow; m <- M$ncol
   U <- .mrows(M); L <- .mrows(eye(n)); P <- .mrows(eye(n))
   DD <- .mrows(zeros(n, n))
@@ -837,7 +851,7 @@ LUdecompositionFF <- function(M) {
 #' @rdname LUdecomposition_Simple
 #' @export
 rank_decomposition <- function(M, iszerofunc = NULL, simplify = FALSE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   r <- .matint_rref(M, if (is.null(iszerofunc)) .matint_iszero else iszerofunc, simplify)
   rank <- length(r$pivots)
   C <- M[seq_len(M$nrow), r$pivots, drop = FALSE]
@@ -848,7 +862,7 @@ rank_decomposition <- function(M, iszerofunc = NULL, simplify = FALSE) {
 #' @rdname LUdecomposition_Simple
 #' @export
 singular_value_decomposition <- function(M) {
-  A <- Matrix(M)
+  A <- .as_mat(M)
   AH <- .matint_H(A)
   half <- function(X) {
     d <- diagonalize(X)
@@ -872,7 +886,7 @@ singular_value_decomposition <- function(M) {
 #' @rdname LUdecomposition_Simple
 #' @export
 upper_hessenberg_decomposition <- function(M) {
-  H <- Matrix(M)
+  H <- .as_mat(M)
   if (H$nrow != H$ncol) stop(NonSquareMatrixError("Matrix must be square."))
   n <- H$ncol
   P <- eye(n)
@@ -940,7 +954,7 @@ upper_hessenberg_decomposition <- function(M) {
 #' @export
 bidiagonal_decomposition <- function(M, upper = TRUE) {
   if (!is.logical(upper)) .mg_stop("ValueError", "upper must be a boolean")
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (upper) return(.mg_bidiag(M, TRUE))
   X <- .mg_bidiag(.matint_H(M), TRUE)
   list(.matint_H(X[[3L]]), .matint_H(X[[2L]]), .matint_H(X[[1L]]))
@@ -950,7 +964,7 @@ bidiagonal_decomposition <- function(M, upper = TRUE) {
 #' @export
 bidiagonalize <- function(M, upper = TRUE) {
   if (!is.logical(upper)) .mg_stop("ValueError", "upper must be a boolean")
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (upper) return(.mg_bidiag(M, FALSE))
   .matint_H(.mg_bidiag(.matint_H(M), FALSE))
 }
@@ -966,7 +980,7 @@ bidiagonalize <- function(M, upper = TRUE) {
 #' condition_number(Matrix(list(list(1, 0), list(0, 10))))
 #' @export
 condition_number <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (!length(M$data)) return(S_Zero)
   sv <- singular_values(M)
   .div(do.call(Max, sv), do.call(Min, sv))
@@ -1002,7 +1016,7 @@ condition_number <- function(M) {
 #' gauss_jordan_solve(Matrix(list(list(1, 2), list(2, 4))), Matrix(list(3, 6)))
 #' @export
 diagonal_solve <- function(M, rhs) {
-  M <- Matrix(M); rhs <- Matrix(rhs)
+  M <- .as_mat(M); rhs <- .as_mat(rhs)
   if (!isTRUE(is_diagonal(M))) .mg_stop("TypeError", "Matrix should be diagonal")
   if (rhs$nrow != M$nrow) .mg_stop("TypeError", "Size mismatch")
   .mg_new(rhs$nrow, rhs$ncol, function(i, j) .div(.mget(rhs, i, j), .mget(M, i, i)))
@@ -1011,7 +1025,7 @@ diagonal_solve <- function(M, rhs) {
 #' @rdname diagonal_solve
 #' @export
 lower_triangular_solve <- function(M, rhs) {
-  M <- Matrix(M); rhs <- Matrix(rhs)
+  M <- .as_mat(M); rhs <- .as_mat(rhs)
   if (M$nrow != M$ncol) stop(NonSquareMatrixError("Matrix must be square."))
   if (rhs$nrow != M$nrow) .mg_stop("ShapeError", "Matrices size mismatch.")
   if (!is_lower(M)) .mg_stop("ValueError", "Matrix must be lower triangular.")
@@ -1027,7 +1041,7 @@ lower_triangular_solve <- function(M, rhs) {
 #' @rdname diagonal_solve
 #' @export
 upper_triangular_solve <- function(M, rhs) {
-  M <- Matrix(M); rhs <- Matrix(rhs)
+  M <- .as_mat(M); rhs <- .as_mat(rhs)
   if (M$nrow != M$ncol) stop(NonSquareMatrixError("Matrix must be square."))
   if (rhs$nrow != M$nrow) .mg_stop("ShapeError", "Matrix size mismatch.")
   if (!is_upper(M)) .mg_stop("TypeError", "Matrix is not upper triangular.")
@@ -1061,7 +1075,7 @@ upper_triangular_solve <- function(M, rhs) {
 #' @rdname diagonal_solve
 #' @export
 cholesky_solve <- function(M, rhs) {
-  p <- .mg_ch_prepare(Matrix(M), Matrix(rhs))
+  p <- .mg_ch_prepare(.as_mat(M), .as_mat(rhs))
   L <- cholesky(p$M, hermitian = p$hermitian)
   Y <- lower_triangular_solve(L, p$rhs)
   upper_triangular_solve(if (p$hermitian) .matint_H(L) else t(L), Y)
@@ -1070,7 +1084,7 @@ cholesky_solve <- function(M, rhs) {
 #' @rdname diagonal_solve
 #' @export
 LDLsolve <- function(M, rhs) {
-  p <- .mg_ch_prepare(Matrix(M), Matrix(rhs))
+  p <- .mg_ch_prepare(.as_mat(M), .as_mat(rhs))
   ld <- LDLdecomposition(p$M, hermitian = p$hermitian)
   Y <- lower_triangular_solve(ld$L, p$rhs)
   Z <- diagonal_solve(ld$D, Y)
@@ -1080,13 +1094,17 @@ LDLsolve <- function(M, rhs) {
 #' @rdname diagonal_solve
 #' @export
 LUsolve <- function(M, rhs, iszerofunc = NULL) {
-  .matint_lusolve(Matrix(M), Matrix(rhs), if (is.null(iszerofunc)) .matint_iszero else iszerofunc)
+  # SymPy builds the solution with the class of rhs
+  rc <- if (inherits(rhs, "symmatrix")) .mclass(rhs) else "MutableDenseMatrix"
+  .set_mclass((function() {
+    .matint_lusolve(.as_mat(M), .as_mat(rhs), if (is.null(iszerofunc)) .matint_iszero else iszerofunc)
+  })(), rc)
 }
 
 #' @rdname diagonal_solve
 #' @export
 QRsolve <- function(M, B) {
-  M <- Matrix(M); B <- Matrix(B)
+  M <- .as_mat(M); B <- .as_mat(B)
   qr <- .mg_qr(M)
   y <- .matmul(t(qr$Q), B)
   n <- qr$R$nrow
@@ -1104,7 +1122,7 @@ QRsolve <- function(M, B) {
 #' @rdname diagonal_solve
 #' @export
 gauss_jordan_solve <- function(M, B, freevar = FALSE) {
-  M <- Matrix(M); B <- Matrix(B)
+  M <- .as_mat(M); B <- .as_mat(B)
   aug <- cbind.symmatrix(M, B)
   bc <- B$ncol
   row <- M$nrow; col <- M$ncol
@@ -1142,7 +1160,7 @@ gauss_jordan_solve <- function(M, B, freevar = FALSE) {
 #' @rdname diagonal_solve
 #' @export
 pinv_solve <- function(M, B, arbitrary_matrix = NULL) {
-  M <- Matrix(M); B <- Matrix(B)
+  M <- .as_mat(M); B <- .as_mat(B)
   Ap <- pinv(M)
   if (is.null(arbitrary_matrix)) {
     rows <- M$ncol; cols <- B$ncol
@@ -1156,7 +1174,7 @@ pinv_solve <- function(M, B, arbitrary_matrix = NULL) {
 #' @rdname diagonal_solve
 #' @export
 cramer_solve <- function(M, rhs, det_method = "laplace") {
-  M <- Matrix(M); rhs <- Matrix(rhs)
+  M <- .as_mat(M); rhs <- .as_mat(rhs)
   dfun <- if (is.function(det_method)) det_method else function(X) .det(X, method = det_method)
   dM <- dfun(M)
   x <- zeros(rhs$nrow, rhs$ncol)
@@ -1170,7 +1188,7 @@ cramer_solve <- function(M, rhs, det_method = "laplace") {
 #' @rdname diagonal_solve
 #' @export
 matrix_solve <- function(M, rhs, method = "GJ") {
-  M <- Matrix(M); rhs <- Matrix(rhs)
+  M <- .as_mat(M); rhs <- .as_mat(rhs)
   if (method %in% c("GJ", "GE")) {
     r <- tryCatch(gauss_jordan_solve(M, rhs), ValueError = function(e)
       stop(NonInvertibleMatrixError("Matrix det == 0; not invertible.")))
@@ -1187,7 +1205,7 @@ matrix_solve <- function(M, rhs, method = "GJ") {
 #' @rdname diagonal_solve
 #' @export
 solve_least_squares <- function(M, rhs, method = "CH") {
-  M <- Matrix(M); rhs <- Matrix(rhs)
+  M <- .as_mat(M); rhs <- .as_mat(rhs)
   switch(method,
     CH = cholesky_solve(M, rhs), QR = QRsolve(M, rhs), LDL = LDLsolve(M, rhs), PINV = pinv_solve(M, rhs), {
       tt <- .matint_H(M)
@@ -1273,7 +1291,7 @@ inverse_BLOCK <- function(M, iszerofunc = NULL) inverse(M, method = "BLOCK", isz
 #' rref_rhs(Matrix(list(list(1, 2), list(3, 4))), Matrix(list(5, 6)))
 #' @export
 echelon_form <- function(M, iszerofunc = NULL, simplify = FALSE, with_pivots = FALSE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   iz <- if (is.null(iszerofunc)) .matint_iszero else iszerofunc
   sf <- if (is.function(simplify)) simplify else .mg_simplify
   r <- .matint_row_reduce_list(M$data, M$nrow, M$ncol, iz, sf, normalize_last = TRUE, normalize = FALSE, zero_above = FALSE)
@@ -1285,7 +1303,7 @@ echelon_form <- function(M, iszerofunc = NULL, simplify = FALSE, with_pivots = F
 #' @rdname echelon_form
 #' @export
 rref_rhs <- function(M, rhs) {
-  M <- Matrix(M); rhs <- Matrix(rhs)
+  M <- .as_mat(M); rhs <- .as_mat(rhs)
   r <- .matint_rref(do.call(cbind.symmatrix, list(M, eye(M$nrow), rhs)))$M
   list(r[, seq_len(M$ncol), drop = FALSE], r[, (r$ncol - rhs$ncol + 1L):r$ncol, drop = FALSE])
 }
@@ -1341,7 +1359,7 @@ rref_rhs <- function(M, rhs) {
 #' minor_submatrix(Matrix(list(list(1, 2, 3), list(4, 5, 6), list(7, 8, 9))), 2, 2)
 #' @export
 minor_submatrix <- function(M, i, j) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   i <- as.integer(i); j <- as.integer(j)
   if (i < 0L) i <- i + M$nrow + 1L
   if (j < 0L) j <- j + M$ncol + 1L
@@ -1371,7 +1389,7 @@ minor_submatrix <- function(M, i, j) {
 #' analytic_func(Matrix(list(list(2, 1), list(0, 2))), exp(x), x)
 #' @export
 matrix_log <- function(M, simplify = cancel) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) stop(NonSquareMatrixError("Logarithm is valid only for square matrices"))
   sf <- if (is.function(simplify)) function(X) .mat_map(X, simplify) else NULL
   jf <- tryCatch(jordan_form(if (is.null(sf)) M else sf(M)), MatrixError = function(e)
@@ -1395,7 +1413,7 @@ matrix_log <- function(M, simplify = cancel) {
 #' @rdname matrix_log
 #' @export
 analytic_func <- function(M, f, x) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   f <- as_sym(f); x <- as_sym(x)
   if (M$nrow != M$ncol) stop(NonSquareMatrixError())
   if (!(x$type %in% c("Symbol", "Dummy"))) .mg_stop("ValueError", sprintf("%s must be a symbol.", sstr(x)))
@@ -1468,7 +1486,7 @@ analytic_func <- function(M, f, x) {
 }
 
 .mg_components <- function(M, strong) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   g <- .mg_graph(M)
   cc <- if (strong) strongly_connected_components(g) else connected_components(g)
   lapply(cc, function(b) as.integer(unlist(b)))
@@ -1489,7 +1507,7 @@ analytic_func <- function(M, f, x) {
 #' connected_components_decomposition(A)
 #' @export
 connected_components_decomposition <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   ib <- .mg_components(M, FALSE)
   P <- PermutationMatrix(Permutation(unlist(ib) - 1L))
   B <- do.call(BlockDiagMatrix, lapply(ib, function(b) M[b, b, drop = FALSE]))
@@ -1499,7 +1517,7 @@ connected_components_decomposition <- function(M) {
 #' @rdname connected_components_decomposition
 #' @export
 strongly_connected_components_decomposition <- function(M, lower = TRUE) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   ib <- .mg_components(M, TRUE)
   if (!lower) ib <- rev(ib)
   P <- PermutationMatrix(Permutation(unlist(ib) - 1L))
@@ -1534,7 +1552,7 @@ normalized_vector <- function(v, iszerofunc = NULL) {
 #' @rdname normalized_vector
 #' @export
 print_nonzero <- function(M, symb = "X") {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   for (i in seq_len(M$nrow))
     cat("[", paste(vapply(seq_len(M$ncol), function(j) if (is_zero_num(.mget(M, i, j))) " " else symb, ""), collapse = ""), "]\n", sep = "")
   invisible(M)

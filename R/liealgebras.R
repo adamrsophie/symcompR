@@ -197,7 +197,7 @@ cartan_matrix <- function(ct) {
           set(n - 2L, n - 3L, -1); set(n - 3L, n - 1L, -1); set(n - 1L, n - 3L, -1); set(0, 1, -1) },
     E = { if (n > 4) for (i in 3:(n - 2L)) { set(i, i + 1L, -1); set(i, i - 1L, -1) }
           set(0, 2, -1); set(2, 0, -1); set(1, 3, -1); set(3, 1, -1); set(2, 3, -1); set(n - 1L, n - 2L, -1) })
-  Matrix(m)
+  .as_mat(m)
 }
 
 #' @rdname liealgebras

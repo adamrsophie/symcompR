@@ -666,12 +666,12 @@ chebyshevt_root <- function(n, k) fcall("cos", list(.mul(list(S_Pi, .rat(2L * k 
 chebyshevu_root <- function(n, k) fcall("cos", list(.mul(list(S_Pi, .rat(k + 1L, n + 1L)))))
 #' @rdname function-aliases
 #' @export
-transpose <- function(M) t(Matrix(M))
+transpose <- function(M) t(.as_mat(M))
 #' @rdname function-aliases
 #' @export
 adjoint <- function(M) {
   if (is_sym(M) && .is_matexpr(M)) return(.madjoint(M))
-  t(.mat_map(Matrix(M), function(z) fcall("conjugate", list(z))))
+  t(.mat_map(.as_mat(M), function(z) fcall("conjugate", list(z))))
 }
 
 # ---------------------------------------------------------------------------
@@ -1083,7 +1083,7 @@ NULL
 #' @rdname solver-helpers
 #' @export
 solve_linear_system <- function(M, syms, ...) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   syms <- .as_gens(c(list(syms), list(...)))
   n <- length(syms)
   if (M$ncol != n + 1L) stop("the matrix needs one column per symbol plus one", call. = FALSE)
@@ -1170,10 +1170,10 @@ solve_poly_system <- function(eqs, ..., strict = FALSE) {
 }
 #' @rdname solver-helpers
 #' @export
-det_quick <- function(M) det(Matrix(M))
+det_quick <- function(M) det(.as_mat(M))
 #' @rdname solver-helpers
 #' @export
-inv_quick <- function(M) inverse(Matrix(M))
+inv_quick <- function(M) inverse(.as_mat(M))
 
 # ---------------------------------------------------------------------------
 # Matrix constructions
@@ -1269,7 +1269,7 @@ symarray <- function(prefix, shape) {
 #' @rdname matrix-constructions
 #' @export
 permanent <- function(M) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow > M$ncol) M <- t(M)
   n <- M$nrow
   if (M$ncol > 9L) stop("permanent: matrix too large")
@@ -1284,16 +1284,70 @@ per <- permanent
 matrix_multiply_elementwise <- function(A, B) hadamard_product(A, B)
 #' @rdname matrix-constructions
 #' @export
-ImmutableMatrix <- function(...) Matrix(...)
+ImmutableMatrix <- function(...) .set_mclass(Matrix(...), "ImmutableDenseMatrix")
 #' @rdname matrix-constructions
 #' @export
-MutableMatrix <- ImmutableMatrix
+MutableMatrix <- function(...) Matrix(...)
 #' @rdname matrix-constructions
 #' @export
-MutableDenseMatrix <- ImmutableMatrix
+MutableDenseMatrix <- MutableMatrix
 #' @rdname matrix-constructions
 #' @export
 ImmutableDenseMatrix <- ImmutableMatrix
+#' @rdname matrix-constructions
+#' @export
+as_immutable <- function(M) {
+  M <- .as_mat(M)
+  .set_mclass(M, if (.is_sparse_mat(M)) "ImmutableSparseMatrix" else "ImmutableDenseMatrix")
+}
+#' @rdname matrix-constructions
+#' @export
+as_mutable <- function(M) {
+  M <- .as_mat(M)
+  .set_mclass(M, if (.is_sparse_mat(M)) "MutableSparseMatrix" else "MutableDenseMatrix")
+}
+#' @rdname matrix-constructions
+#' @export
+todok <- function(M) {
+  M <- .as_mat(M)
+  out <- list()
+  for (i in seq_len(M$nrow)) for (j in seq_len(M$ncol)) {
+    v <- .mget(M, i, j)
+    if (!is_zero_num(v)) out[[sprintf("(%d, %d)", i - 1L, j - 1L)]] <- v
+  }
+  out
+}
+#' @rdname matrix-constructions
+#' @export
+row_list <- function(M) {
+  M <- .as_mat(M)
+  out <- list()
+  for (i in seq_len(M$nrow)) for (j in seq_len(M$ncol)) {
+    v <- .mget(M, i, j)
+    if (!is_zero_num(v)) out[[length(out) + 1L]] <- list(i - 1L, j - 1L, v)
+  }
+  out
+}
+#' @rdname matrix-constructions
+#' @export
+col_list <- function(M) {
+  M <- .as_mat(M)
+  out <- list()
+  for (j in seq_len(M$ncol)) for (i in seq_len(M$nrow)) {
+    v <- .mget(M, i, j)
+    if (!is_zero_num(v)) out[[length(out) + 1L]] <- list(i - 1L, j - 1L, v)
+  }
+  out
+}
+#' @rdname matrix-constructions
+#' @export
+RL <- row_list
+#' @rdname matrix-constructions
+#' @export
+CL <- col_list
+#' @rdname matrix-constructions
+#' @export
+nnz <- function(M) length(todok(M))
 
 # ---------------------------------------------------------------------------
 # Arrays, indexed objects, discrete transforms

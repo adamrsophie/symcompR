@@ -211,7 +211,7 @@ decipher_vigenere <- function(msg, key, symbols = NULL) {
 #' @param m A modulus.
 #' @export
 inv_mod <- function(M, m) {
-  M <- Matrix(M)
+  M <- .as_mat(M)
   if (M$nrow != M$ncol) stop("Only square matrices have inverses.", call. = FALSE)
   N <- M$nrow
   dk <- .int_of(det(M))
