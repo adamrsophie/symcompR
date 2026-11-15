@@ -21,6 +21,7 @@
 \alias{hom}
 \alias{is_subdiagram}
 \alias{subdiagram_from_objects}
+\alias{Morphism}
 \title{Categories}
 \usage{
 Object(name)
@@ -60,6 +61,8 @@ hom(x, A, B)
 is_subdiagram(x, diagram)
 
 subdiagram_from_objects(x, objects)
+
+Morphism(domain, codomain)
 }
 \arguments{
 \item{name}{A name.}
@@ -94,6 +97,10 @@ composition and adds identities, as SymPy's \code{Diagram}; premises and
 conclusions are lists of morphisms or named lists (a list of pairs
 \code{list(morphism, properties)}). \code{hom()}, \code{is_subdiagram()} and
 \code{subdiagram_from_objects()} are SymPy's methods.
+}
+\details{
+\code{Morphism()} is SymPy's abstract base class, which cannot be
+instantiated; use \code{NamedMorphism()} and the other derived classes.
 }
 \examples{
 A <- Object("A"); B <- Object("B"); C <- Object("C")

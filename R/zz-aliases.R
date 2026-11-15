@@ -46,7 +46,7 @@ NULL
 
 #' @rdname core-helpers
 #' @export
-Add <- function(..., evaluate = TRUE) {
+Add <- function(..., evaluate = .ev_default()) {
   if (isFALSE(evaluate)) return(new_sym("Add", lapply(list(...), as_sym)))
   if (any(vapply(list(...), .me_is_matrix, NA))) return(.me_postprocess("Add", list(...)))
   a <- lapply(list(...), as_sym)
@@ -56,7 +56,7 @@ Add <- function(..., evaluate = TRUE) {
 }
 #' @rdname core-helpers
 #' @export
-Mul <- function(..., evaluate = TRUE) {
+Mul <- function(..., evaluate = .ev_default()) {
   if (isFALSE(evaluate)) return(new_sym("Mul", lapply(list(...), as_sym)))
   if (any(vapply(list(...), .me_is_matrix, NA))) return(.me_postprocess("Mul", list(...)))
   a <- lapply(list(...), as_sym)
@@ -70,7 +70,7 @@ Mul <- function(..., evaluate = TRUE) {
 }
 #' @rdname core-helpers
 #' @export
-Pow <- function(a, b, evaluate = TRUE) {
+Pow <- function(a, b, evaluate = .ev_default()) {
   if (isFALSE(evaluate)) return(new_sym("Pow", list(as_sym(a), as_sym(b))))
   if (.is_vec(as_sym(a)) || .is_vec(as_sym(b))) .vec_stop("TypeError", "Power operation is not supported for vectors")
   .pow(as_sym(a), as_sym(b))
@@ -1891,4 +1891,192 @@ topological_sort <- function(vertices, edges, key = NULL) {
   }
   if (length(E)) stop(structure(class = c("ValueError", "error", "condition"), list(message = "cycle detected", call = NULL)))
   if (all(vapply(L, function(z) is.atomic(z) && length(z) == 1L, NA))) unlist(L) else L
+}
+
+#' @rdname cartesian-quantum
+#' @format `Px` is SymPy's `Px = PxOp('Px')`, the momentum operator.
+#' @export
+Px <- PxOp("Px")
+
+#' @rdname core-helpers
+#' @export
+Relational <- function(a, b, op = "==") Rel(a, b, op)
+
+#' Assumption names
+#'
+#' `all_assumptions` holds the names of the assumptions a symbol can carry,
+#' as SymPy's `sympy.core.assumptions.all_assumptions`.
+#'
+#' @format A character vector.
+#' @examples
+#' head(all_assumptions)
+#' @export
+all_assumptions <- c("algebraic", "commutative", "complex", "composite", "even", "extended_negative",
+  "extended_nonnegative", "extended_nonpositive", "extended_nonzero", "extended_positive",
+  "extended_real", "finite", "imaginary", "infinite", "integer", "irrational", "negative",
+  "noninteger", "nonnegative", "nonpositive", "nonzero", "odd", "polar", "positive", "prime",
+  "rational", "real", "transcendental", "zero")
+
+#' Predefined manifolds of sympy.diffgeom.rn
+#'
+#' `R2`, `R3`, their patches `R2_origin` and `R3_origin`, the coordinate
+#' systems `R2_r` (rectangular), `R2_p` (polar), `R3_r`, `R3_c`
+#' (cylindrical) and `R3_s` (spherical), and the transformation laws
+#' `relations_2d` and `relations_3d`, as in SymPy; [diffgeom_rn()] returns
+#' them all in a list. `BaseScalarField(cs, i)`, `BaseVectorField(cs, i)`
+#' and `CoordinateSymbol(cs, i)` are SymPy's classes for the coordinate
+#' function, the base vector and the coordinate symbol of index `i`.
+#'
+#' @param coord_sys A coordinate system.
+#' @param index A coordinate index, from 0.
+#' @format Manifolds, patches, coordinate systems and lists.
+#' @examples
+#' R2_r
+#' BaseScalarField(R2_r, 0)
+#' BaseVectorField(R2_p, 1)
+#' @name rn-manifolds
+#' @export
+BaseScalarField <- function(coord_sys, index) base_scalar(coord_sys, index)
+#' @rdname rn-manifolds
+#' @export
+BaseVectorField <- function(coord_sys, index) base_vector(coord_sys, index)
+#' @rdname rn-manifolds
+#' @export
+CoordinateSymbol <- function(coord_sys, index) coord_symbols(coord_sys)[[as.integer(index) + 1L]]
+.RN <- diffgeom_rn()
+#' @rdname rn-manifolds
+#' @export
+R2 <- .RN$R2
+#' @rdname rn-manifolds
+#' @export
+R2_origin <- .RN$R2_origin
+#' @rdname rn-manifolds
+#' @export
+relations_2d <- .RN$relations_2d
+#' @rdname rn-manifolds
+#' @export
+R2_r <- .RN$R2_r
+#' @rdname rn-manifolds
+#' @export
+R2_p <- .RN$R2_p
+#' @rdname rn-manifolds
+#' @export
+R3 <- .RN$R3
+#' @rdname rn-manifolds
+#' @export
+R3_origin <- .RN$R3_origin
+#' @rdname rn-manifolds
+#' @export
+relations_3d <- .RN$relations_3d
+#' @rdname rn-manifolds
+#' @export
+R3_r <- .RN$R3_r
+#' @rdname rn-manifolds
+#' @export
+R3_c <- .RN$R3_c
+#' @rdname rn-manifolds
+#' @export
+R3_s <- .RN$R3_s
+
+#' Class membership in SymPy's hierarchy
+#'
+#' `isinstance(e, cls)` is Python's `isinstance()` for SymPy classes: whether
+#' `cls` (a class name such as `"Expr"`, `"Atom"`, `"Number"`, `"Set"`,
+#' `"MatrixBase"`, or a vector of names, as a tuple of classes) is among the
+#' classes of `e`. `AppliedUndef` is the class of an applied undefined
+#' function, `FunctionClass` the class of a function such as `Function("f")`.
+#' `RealNumber()` is SymPy's alias of [Float()].
+#'
+#' @param e An object.
+#' @param cls A character vector of class names.
+#' @return `TRUE` or `FALSE`.
+#' @examples
+#' x <- Symbol("x")
+#' isinstance(x, "Atom")
+#' isinstance(x + 1, c("Number", "Add"))
+#' isinstance(Function("f")(x), "AppliedUndef")
+#' @export
+isinstance <- function(e, cls) {
+  mro <- if (inherits(e, "sym_function")) c("UndefinedFunction", "FunctionClass")
+         else if (is.function(e)) "FunctionClass"
+         else .cgp_mro(e, full = TRUE)
+  any(cls %in% c(mro, "object"))
+}
+
+#' @rdname isinstance
+#' @param ... Arguments of [Float()].
+#' @export
+RealNumber <- function(...) Float(...)
+
+#' Vectorize a function over nested lists
+#'
+#' SymPy's `vectorize` decorator: `vectorize(0, 1)(f)` returns a function
+#' that maps `f` over the elements of nested lists (or matrices) given as
+#' its first and second arguments (positions count from 0; names select
+#' named arguments), producing nested lists, the outer one following the
+#' first vectorized argument. Without positions every argument is
+#' vectorized.
+#'
+#' @param ... Argument positions (from 0) or names.
+#' @return A function that takes a function and returns the vectorized
+#'   function.
+#' @examples
+#' x <- Symbol("x"); y <- Symbol("y")
+#' vdiff <- vectorize(0, 1)(function(f, v) diff(f, v))
+#' vdiff(list(x^2, x * y), list(x, y))
+#' @export
+vectorize <- function(...) {
+  md <- list(...)
+  function(f) {
+    iterable <- function(v) (is.list(v) && !is_sym(v)) || inherits(v, "symmatrix")
+    as_items <- function(v) if (inherits(v, "symmatrix")) as.list(v$data) else v
+    wrapper <- function(...) {
+      args <- list(...)
+      nms <- names(args); if (is.null(nms)) nms <- rep("", length(args))
+      sel <- if (length(md)) md else as.list(seq_along(args) - 1L)
+      for (n in sel) {
+        i <- if (is.numeric(n)) n + 1L else match(n, nms)
+        if (is.na(i) || i > length(args)) next
+        if (iterable(args[[i]])) {
+          red <- function(v) {
+            if (iterable(v)) return(lapply(as_items(v), red))
+            a <- args; a[[i]] <- v
+            do.call(wrapper, a)
+          }
+          return(lapply(as_items(args[[i]]), red))
+        }
+      }
+      do.call(f, args)
+    }
+    wrapper
+  }
+}
+
+#' Lists and matrices as R arrays
+#'
+#' SymPy's `list2numpy()` and `matrix2numpy()`: a list as an R vector and a
+#' matrix as an R matrix. With the default `dtype = "list"` (SymPy's
+#' `object`) the entries stay expressions, in a list vector or list matrix;
+#' `"complex"` or `"double"` converts them to numbers.
+#'
+#' @param l A list.
+#' @param m A matrix.
+#' @param dtype `"list"`, `"complex"` or `"double"`.
+#' @return An R vector or matrix.
+#' @examples
+#' x <- Symbol("x")
+#' matrix2numpy(Matrix(list(list(1, x), list(x, 2))))
+#' list2numpy(list(1, 2), dtype = "double")
+#' @export
+list2numpy <- function(l, dtype = "list") {
+  conv <- switch(dtype, list = function(e) e, complex = as.complex, double = as.numeric,
+                 stop("ValueError: unknown dtype ", dtype, call. = FALSE))
+  r <- lapply(l, function(e) conv(as_sym(e)))
+  if (dtype == "list") r else unlist(r)
+}
+#' @rdname list2numpy
+#' @export
+matrix2numpy <- function(m, dtype = "list") {
+  d <- dim(m)
+  matrix(list2numpy(as.list(m$data), dtype), d[1L], d[2L], byrow = TRUE)
 }

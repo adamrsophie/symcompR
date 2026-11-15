@@ -954,3 +954,53 @@ gens_products <- function(...) {
   r <- .tc_gens_products(list(...))
   list(as.numeric(r$size), r$base, lapply(r$gens, .tc_af_new))
 }
+
+#' Certificate of a graph
+#'
+#' Port of `sympy.combinatorics.testutil.graph_certificate()`. Each vertex
+#' of an undirected graph becomes a symmetric tensor with one index per
+#' edge, contracted along the edges; the canonical form of the product
+#' (from [canonicalize()]) is the certificate. Isomorphic graphs have equal
+#' certificates.
+#'
+#' @param gr An adjacency list: a list named by the vertices `0, 1, ...`
+#'   whose entries are the neighbors of each vertex.
+#' @return An integer vector.
+#' @examples
+#' gr1 <- list(`0` = c(1, 2, 3, 5), `1` = c(0, 2, 4), `2` = c(0, 1, 3, 4),
+#'             `3` = c(0, 2, 4), `4` = c(1, 2, 3, 5), `5` = c(0, 4))
+#' gr2 <- list(`0` = c(1, 5), `1` = c(0, 2, 3, 4), `2` = c(1, 3, 5),
+#'             `3` = c(1, 2, 4, 5), `4` = c(1, 3, 5), `5` = c(0, 2, 3, 4))
+#' graph_certificate(gr1)
+#' identical(graph_certificate(gr1), graph_certificate(gr2))
+#' @export
+graph_certificate <- function(gr) {
+  keys <- if (is.null(names(gr))) seq_along(gr) - 1L else as.integer(names(gr))
+  ord <- order(-lengths(gr))
+  items_v <- keys[ord]; items_n <- lapply(gr[ord], as.integer)
+  pvert <- .af_invert(items_v)
+  num_indices <- sum(lengths(items_n))
+  vertices <- vector("list", length(items_n))
+  for (k in seq_along(vertices)) vertices[[k]] <- integer()
+  i <- 0L
+  for (k in seq_along(items_v)) {
+    v <- items_v[k]
+    for (v2 in items_n[[k]]) {
+      if (pvert[v + 1L] < pvert[v2 + 1L]) {
+        vertices[[pvert[v + 1L] + 1L]] <- c(vertices[[pvert[v + 1L] + 1L]], i)
+        vertices[[pvert[v2 + 1L] + 1L]] <- c(vertices[[pvert[v2 + 1L] + 1L]], i + 1L)
+        i <- i + 2L
+      }
+    }
+  }
+  g <- c(unlist(vertices), num_indices, num_indices + 1L)
+  vlen <- integer(length(vertices[[1L]]) + 1L)
+  for (nb in vertices) vlen[length(nb) + 1L] <- vlen[length(nb) + 1L] + 1L
+  v <- list()
+  for (d in seq_along(vlen) - 1L) if (vlen[d + 1L]) {
+    sgs <- get_symmetric_group_sgs(d)
+    v[[length(v) + 1L]] <- list(sgs[[1L]], sgs[[2L]], vlen[d + 1L], 0)
+  }
+  v <- rev(v)
+  as.integer(do.call(canonicalize, c(list(Permutation(as.integer(g)), seq_len(num_indices) - 1L, 0), v)))
+}

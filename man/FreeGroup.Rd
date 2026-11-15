@@ -7,6 +7,7 @@
 \alias{fg_slice}
 \alias{fg_index}
 \alias{fp_contains}
+\alias{vfree_group}
 \title{Free groups}
 \usage{
 FreeGroup(symbols)
@@ -20,6 +21,8 @@ fg_slice(G, from = 0L, to = G$rank)
 fg_index(G, gen)
 
 fp_contains(G, gen)
+
+vfree_group(symbols, envir = parent.frame())
 }
 \arguments{
 \item{symbols}{The generator names.}
@@ -29,6 +32,8 @@ fp_contains(G, gen)
 \item{from, to}{Zero based slice limits, as in Python.}
 
 \item{gen}{A generator of \code{G}.}
+
+\item{envir}{The environment that receives the generators.}
 }
 \value{
 A \code{FreeGroup} (an environment), a list, or an integer.

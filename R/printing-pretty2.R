@@ -1249,3 +1249,83 @@
 }
 .pp2_funcs$hyper <- .pp2_hyper
 .pp2_funcs$meijerg <- .pp2_meijerg
+
+# ---------------------------------------------------------------------------
+# The helpers of sympy.printing.pretty.pretty_symbology
+
+.pp2_with_u <- function(u, expr) {
+  old <- .pp2_env$u
+  .pp2_env$u <- isTRUE(u)
+  on.exit(.pp2_env$u <- old)
+  expr
+}
+
+#' Pretty printing symbology
+#'
+#' The helpers of `sympy.printing.pretty.pretty_symbology` that the pretty
+#' printer draws with. `pretty_symbol(name)` renders a symbol name with
+#' Greek letters and Unicode sub- and superscripts; `xsym(s)` gives the
+#' character for an operator such as `"=="` or `"*"`; `hobj(symb, width)`
+#' and `vobj(symb, height)` draw a horizontal or vertical object such as
+#' `"-"` or `"("`; `center_pad(wstring, wtarget)` the padding that centers
+#' a string, `center(string, width)` the centered string; `annotated(letter)`
+#' the stylized `"F"` or `"G"` of hypergeometric and Meijer G functions as
+#' `list(size, top, bottom, add, picture)`. `greek_unicode` maps Greek
+#' letter names to their characters and `sup` characters to their
+#' superscripts.
+#'
+#' @param name A symbol name.
+#' @param bold_name Whether to use bold letters.
+#' @param s An operator name.
+#' @param symb An object name.
+#' @param width,height The size.
+#' @param wstring,wtarget The string width and the target width.
+#' @param string A string.
+#' @param fillchar The padding character.
+#' @param letter `"F"` or `"G"`.
+#' @param use_unicode Whether to use Unicode characters.
+#' @return A string, a pair of strings, or a list.
+#' @examples
+#' pretty_symbol("alpha_1")
+#' xsym("==")
+#' hobj("-", 5)
+#' cat(vobj("(", 3), "\n")
+#' center("ab", 6)
+#' @name pretty_symbology
+#' @export
+pretty_symbol <- function(name, bold_name = FALSE, use_unicode = TRUE) .pp2_with_u(use_unicode, .pp2_symbol(name, bold_name))
+#' @rdname pretty_symbology
+#' @export
+xsym <- function(s, use_unicode = TRUE) .pp2_with_u(use_unicode, .pp2_xsym(s))
+#' @rdname pretty_symbology
+#' @export
+hobj <- function(symb, width, use_unicode = TRUE) .pp2_with_u(use_unicode, .pp2_hobj(symb, as.integer(width)))
+#' @rdname pretty_symbology
+#' @export
+vobj <- function(symb, height, use_unicode = TRUE) .pp2_with_u(use_unicode, paste(.pp2_vobj(symb, as.integer(height)), collapse = "\n"))
+#' @rdname pretty_symbology
+#' @export
+center_pad <- function(wstring, wtarget, fillchar = " ") {
+  if (wstring > wtarget) stop("ValueError: not enough space for string", call. = FALSE)
+  d <- wtarget - wstring; l <- d %/% 2
+  c(strrep(fillchar, l), strrep(fillchar, d - l))
+}
+#' @rdname pretty_symbology
+#' @export
+center <- function(string, width, fillchar = " ") {
+  p <- center_pad(.pp2_lw(string), width, fillchar)
+  paste0(p[1L], string, p[2L])
+}
+#' @rdname pretty_symbology
+#' @export
+annotated <- function(letter, use_unicode = TRUE) {
+  a <- .pp2_with_u(use_unicode, .pp2_annotated(letter))
+  list(a$sz, a$t, a$b, a$add, a$img)
+}
+#' @rdname pretty_symbology
+#' @format `greek_unicode` and `sup` are named lists of strings.
+#' @export
+greek_unicode <- .pp2_greek
+#' @rdname pretty_symbology
+#' @export
+sup <- .pp2_sup

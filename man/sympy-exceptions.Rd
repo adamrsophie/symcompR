@@ -39,6 +39,24 @@
 \alias{PolificationFailed}
 \alias{OptionError}
 \alias{FlagError}
+\alias{DMError}
+\alias{DMBadInputError}
+\alias{DMDomainError}
+\alias{DMFormatError}
+\alias{DMRankError}
+\alias{DMShapeError}
+\alias{DMNotAField}
+\alias{DMNonInvertibleMatrixError}
+\alias{DMNonSquareMatrixError}
+\alias{DMValueError}
+\alias{QuantumError}
+\alias{HilbertSpaceError}
+\alias{ClosureFailure}
+\alias{StructureError}
+\alias{MissingUnityError}
+\alias{SMTLibSyntaxError}
+\alias{UnknownSMTLibCommandError}
+\alias{UnknownSMTLibOperatorError}
 \title{SymPy exceptions}
 \usage{
 SympifyError(message = "")
@@ -114,6 +132,42 @@ PolificationFailed(message = "")
 OptionError(message = "")
 
 FlagError(message = "")
+
+DMError(message = "")
+
+DMBadInputError(message = "")
+
+DMDomainError(message = "")
+
+DMFormatError(message = "")
+
+DMRankError(message = "")
+
+DMShapeError(message = "")
+
+DMNotAField(message = "")
+
+DMNonInvertibleMatrixError(message = "")
+
+DMNonSquareMatrixError(message = "")
+
+DMValueError(message = "")
+
+QuantumError(message = "")
+
+HilbertSpaceError(message = "")
+
+ClosureFailure(message = "")
+
+StructureError(message = "")
+
+MissingUnityError(message = "")
+
+SMTLibSyntaxError(message = "")
+
+UnknownSMTLibCommandError(message = "")
+
+UnknownSMTLibOperatorError(message = "")
 }
 \arguments{
 \item{message}{The error message.}

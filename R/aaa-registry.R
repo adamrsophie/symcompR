@@ -40,7 +40,13 @@ register_parse_function <- function(name, fn) assign(name, fn, envir = .parse_fu
 # argument keys (and the assumptions in force), dropped wholesale when the
 # cache fills up. ponytail: no LRU order; a full cache is simply cleared.
 .cacheit_store <- new.env(hash = TRUE, parent = emptyenv())
+# global_parameters.evaluate: evaluate(FALSE, expr) turns it off
+.EVAL <- new.env()
+.EVAL$off <- FALSE
+.ev_default <- function() !isTRUE(.EVAL$off)
+
 .cacheit <- function(name, key, expr) {
+  if (isTRUE(.EVAL$off)) return(expr)
   ctx <- global_assumptions$preds
   k <- paste(name, key, if (length(ctx)) paste(vapply(ctx, function(p) if (is.null(p$key)) "?" else p$key, ""), collapse = "&"), sep = "\r")
   hit <- .cacheit_store[[k]]
@@ -69,4 +75,43 @@ def_function <- function(name, nargs = 1L, eval = NULL, diff = NULL,
                     numeric = numeric, facts = facts, latex = latex,
                     str = str, ...), envir = .FUNS)
   invisible(name)
+}
+
+#' Clear the caches
+#'
+#' SymPy's `clear_cache()`: empties the caches of `as_leading_term`,
+#' `powsimp`, `Order.contains` and the other cached computations.
+#'
+#' @return `NULL`, invisibly.
+#' @examples
+#' clear_cache()
+#' @export
+clear_cache <- function() {
+  rm(list = ls(.cacheit_store, all.names = TRUE), envir = .cacheit_store)
+  invisible(NULL)
+}
+
+.cacheit_ids <- new.env()
+.cacheit_ids$n <- 0L
+
+#' Cache a function
+#'
+#' SymPy's `cacheit` decorator: `cacheit(f)` returns a function that
+#' remembers its results by the arguments, in the cache that
+#' [clear_cache()] empties.
+#'
+#' @param f A function.
+#' @return The caching function.
+#' @examples
+#' slow_square <- function(x) { Sys.sleep(0.1); x^2 }
+#' fast <- cacheit(slow_square)
+#' fast(Symbol("x")); fast(Symbol("x"))
+#' @export
+cacheit <- function(f) {
+  .cacheit_ids$n <- .cacheit_ids$n + 1L
+  id <- paste0("cacheit:", .cacheit_ids$n)
+  function(...) {
+    a <- list(...)
+    .cacheit(id, paste(vapply(a, .ckey, ""), names(a), collapse = "\t"), f(...))
+  }
 }

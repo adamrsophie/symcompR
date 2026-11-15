@@ -24,6 +24,17 @@
   "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters_Integral", "Liouville_Integral",
   "2nd_nonlinear_autonomous_conserved", "2nd_nonlinear_autonomous_conserved_Integral")
 
+#' ODE solver hints
+#'
+#' `allhints` lists every hint [classify_ode()] can return, in the order it
+#' tries them, as SymPy's `ode.allhints`.
+#'
+#' @format A character vector.
+#' @examples
+#' head(allhints)
+#' @export
+allhints <- .ODE_ALLHINTS
+
 # ---------------------------------------------------------------------------
 # Numbered constants
 

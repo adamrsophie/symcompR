@@ -1158,8 +1158,15 @@ format.cg_pysetobj <- function(x, ...) {
 NULL
 
 #' @rdname code-printer-objects
+#' @details `StrPrinter()` is the printer of [sstr()], for use with
+#'   `printer_doprint()`.
+#' @export
+StrPrinter <- function(settings = NULL) structure(list(settings = settings), class = "StrPrinter")
+
+#' @rdname code-printer-objects
 #' @export
 printer_doprint <- function(p, e, assign_to = NULL) {
+  if (inherits(p, "StrPrinter")) return(sstr(e))
   f <- .cgp_get(p, "doprint")
   if (length(formals(f)) >= 3L) f(p, e, assign_to = assign_to) else f(p, e)
 }

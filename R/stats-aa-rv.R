@@ -1016,3 +1016,22 @@ rv_getitem <- function(x, i, ...) {
 }
 
 .defm("Distribution", "call", function(d, ...) .callm(d, "pdf", ...))
+
+#' Draw samples as expressions
+#'
+#' SymPy's `sample_iter()`: `numsamples` values of `expr`, each an exact
+#' expression, drawn subject to `condition`. R has no iterators, so the
+#' values come back as a list.
+#'
+#' @param expr An expression with random variables.
+#' @param condition An optional condition on them.
+#' @param numsamples The number of samples.
+#' @param seed An optional random seed.
+#' @param ... Ignored (SymPy's `library` and `size`).
+#' @return A list of expressions.
+#' @examples
+#' X <- Die("X", 6)
+#' sample_iter(X, numsamples = 3, seed = 1)
+#' @export
+sample_iter <- function(expr, condition = NULL, numsamples = 1, seed = NULL, ...)
+  .rv_sample_syms(expr, condition, numsamples, seed)

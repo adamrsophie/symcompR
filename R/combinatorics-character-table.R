@@ -448,3 +448,8 @@ print.CharacterTable <- function(x, ...) {
   cat(format(x), "\n", sep = "")
   invisible(x)
 }
+
+#' @rdname character_table
+#' @details `CharacterTable(G)` is SymPy's `CharacterTable.from_perm_group(G)`.
+#' @export
+CharacterTable <- function(G) character_table(G)

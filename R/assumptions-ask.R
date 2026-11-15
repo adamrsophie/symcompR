@@ -457,3 +457,24 @@ ask <- function(proposition, assumptions = TRUE, ..., context = global_assumptio
   if (!is.na(res)) return(res)
   .eval_ask(.apply_pred(key, args), assumptions)
 }
+
+#' Closed group test of the assumption handlers
+#'
+#' SymPy's `test_closed_group(expr, assumptions, key)`: whether every
+#' argument of `expr` satisfies the predicate `key` (fuzzy, with SymPy's
+#' rule that at most one argument may fail), as used by the handlers of
+#' [ask()] for sums and products.
+#'
+#' @param expr An expression.
+#' @param assumptions Assumptions, as for [ask()].
+#' @param key A predicate such as `Q$positive`, or its name.
+#' @return `TRUE`, `FALSE` or `NA`.
+#' @examples
+#' x <- Symbol("x")
+#' test_closed_group(x + 1, Q$positive(x), Q$positive)
+#' @export
+test_closed_group <- function(expr, assumptions = TRUE, key) {
+  if (!is.character(key)) key <- sub("^Q\\.", "", format(key))
+  r <- .test_closed_group(as_sym(expr), assumptions, key)
+  if (is.null(r)) NA else r
+}

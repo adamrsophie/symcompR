@@ -240,6 +240,9 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
     t <- terms[[i]]
     if (i == 1L) {
       out[i] <- .str_add_term(t)
+    } else if (t$type == "Add") {
+      # an unevaluated Add term keeps its sign inside the parentheses
+      out[i] <- paste0(" + ", .str_add_term(t))
     } else if (could_extract_minus_sign(t)) {
       nt <- if (t$type == "Mul") .neg_mul_noflat(t) else .neg(t)
       # -1/y^2 prints as a fraction, as SymPy's Mul printer does
@@ -258,7 +261,7 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
 
 .str_add_term <- function(t) {
   # an Add term (a MatAdd inside Add) is parenthesized, as in StrPrinter._print_Add
-  if (.prec(t) < PREC$Add || t$type == "MatAdd") paste0("(", .str(t), ")") else .str(t)
+  if (.prec(t) < PREC$Add || t$type %in% c("MatAdd", "Add")) paste0("(", .str(t), ")") else .str(t)
 }
 
 # -e for a Mul with a negative leading number, without redistributing an

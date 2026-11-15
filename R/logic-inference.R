@@ -459,3 +459,7 @@ dimacs_load <- function(s) {
 #' @rdname dimacs_load
 #' @export
 dimacs_load_file <- function(location) dimacs_load(paste(readLines(location, warn = FALSE), collapse = "\n"))
+
+#' @rdname dimacs_load
+#' @export
+load_file <- function(location) dimacs_load_file(location)

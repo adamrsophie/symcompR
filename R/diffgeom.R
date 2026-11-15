@@ -672,7 +672,8 @@ diffgeom_rn <- function() {
     list(c("spherical", "rectangular"), list(rr, th, phi), list(rr * sin(th) * cos(phi), rr * sin(th) * sin(phi), rr * cos(th))),
     list(c("cylindrical", "spherical"), list(rho, psi, z), list(sqrt(rho^2 + z^2), acos(z / sqrt(rho^2 + z^2)), psi)),
     list(c("spherical", "cylindrical"), list(rr, th, phi), list(rr * sin(th), phi, rr * cos(th))))
-  list(R2 = R2, R2_origin = R2o, R2_r = R2_r, R2_p = R2_p, R3 = R3, R3_origin = R3o,
+  list(R2 = R2, R2_origin = R2o, relations_2d = rel2, R2_r = R2_r, R2_p = R2_p, R3 = R3, R3_origin = R3o,
+       relations_3d = rel3,
        R3_r = CoordSystem("rectangular", R3o, list(x, y, z), rel3),
        R3_c = CoordSystem("cylindrical", R3o, list(rho, psi, z), rel3),
        R3_s = CoordSystem("spherical", R3o, list(rr, th, phi), rel3))

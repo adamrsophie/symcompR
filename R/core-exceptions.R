@@ -29,7 +29,27 @@
   MultivariatePolynomialError = c("PolynomialError", "BasePolynomialError"),
   PolificationFailed = c("PolynomialError", "BasePolynomialError"),
   OptionError = "BasePolynomialError", FlagError = c("OptionError", "BasePolynomialError"),
-  BaseHolonomicError = character(), NotHyperSeriesError = "BaseHolonomicError")
+  BaseHolonomicError = character(), NotHyperSeriesError = "BaseHolonomicError",
+  # sympy/polys/matrices/exceptions.py, sympy/physics/quantum,
+  # sympy/polys/numberfields/exceptions.py and sympy/parsing/smtlib.py
+  DMError = character(),
+  DMBadInputError = "DMError",
+  DMDomainError = "DMError",
+  DMFormatError = "DMError",
+  DMRankError = "DMError",
+  DMShapeError = "DMError",
+  DMNotAField = c("DMDomainError", "DMError"),
+  DMNonInvertibleMatrixError = "DMError",
+  DMNonSquareMatrixError = c("DMShapeError", "DMError"),
+  DMValueError = "DMError",
+  QuantumError = character(),
+  HilbertSpaceError = "QuantumError",
+  ClosureFailure = character(),
+  StructureError = character(),
+  MissingUnityError = "StructureError",
+  SMTLibSyntaxError = character(),
+  UnknownSMTLibCommandError = character(),
+  UnknownSMTLibOperatorError = character())
 
 .sympy_condition <- function(name, message) {
   structure(list(message = paste(as.character(message), collapse = ""), call = NULL),
@@ -205,3 +225,75 @@ OptionError <- function(message = "") .sympy_condition("OptionError", message)
 #' @rdname sympy-exceptions
 #' @export
 FlagError <- function(message = "") .sympy_condition("FlagError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMError <- function(message = "") .sympy_condition("DMError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMBadInputError <- function(message = "") .sympy_condition("DMBadInputError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMDomainError <- function(message = "") .sympy_condition("DMDomainError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMFormatError <- function(message = "") .sympy_condition("DMFormatError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMRankError <- function(message = "") .sympy_condition("DMRankError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMShapeError <- function(message = "") .sympy_condition("DMShapeError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMNotAField <- function(message = "") .sympy_condition("DMNotAField", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMNonInvertibleMatrixError <- function(message = "") .sympy_condition("DMNonInvertibleMatrixError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMNonSquareMatrixError <- function(message = "") .sympy_condition("DMNonSquareMatrixError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+DMValueError <- function(message = "") .sympy_condition("DMValueError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+QuantumError <- function(message = "") .sympy_condition("QuantumError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+HilbertSpaceError <- function(message = "") .sympy_condition("HilbertSpaceError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+ClosureFailure <- function(message = "") .sympy_condition("ClosureFailure", message)
+
+#' @rdname sympy-exceptions
+#' @export
+StructureError <- function(message = "") .sympy_condition("StructureError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+MissingUnityError <- function(message = "") .sympy_condition("MissingUnityError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+SMTLibSyntaxError <- function(message = "") .sympy_condition("SMTLibSyntaxError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+UnknownSMTLibCommandError <- function(message = "") .sympy_condition("UnknownSMTLibCommandError", message)
+
+#' @rdname sympy-exceptions
+#' @export
+UnknownSMTLibOperatorError <- function(message = "") .sympy_condition("UnknownSMTLibOperatorError", message)

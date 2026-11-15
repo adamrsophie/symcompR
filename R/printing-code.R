@@ -209,6 +209,13 @@ pycode <- .mk_printer("python", "%s = %s")
 #' f(c(0, 1, 2))
 #' @export
 lambdify <- function(args, e) {
+  # a DeferredVector argument X is one vector; its entries X[i] index it
+  if (inherits(args, "DeferredVector")) args <- list(args)
+  if (is.list(args) && !is_sym(args)) {
+    dv <- vapply(args, function(a) if (inherits(a, "DeferredVector")) a$name else NA_character_, "")
+    args <- lapply(args, function(a) if (inherits(a, "DeferredVector")) Symbol(a$name) else a)
+    old <- .LAMB$dv; .LAMB$dv <- dv[!is.na(dv)]; on.exit(.LAMB$dv <- old)
+  }
   args <- .as_gens(list(args))
   nms <- vapply(args, function(s) s$name, "")
   .cg_imp_namespace(e)
@@ -224,6 +231,34 @@ lambdify <- function(args, e) {
   fn
 }
 
+.LAMB <- new.env()
+.LAMB$dv <- character()
+
+#' Deferred vectors for lambdify
+#'
+#' SymPy's `DeferredVector(name)`: a vector whose entries `X[i]` (from 0)
+#' are symbols named `"X[i]"`; given to [lambdify()] as an argument, the
+#' function takes one vector `X` and reads its entries.
+#'
+#' @param name The vector name.
+#' @param x A deferred vector.
+#' @param i An index, from 0.
+#' @return A deferred vector; indexing gives a symbol.
+#' @examples
+#' X <- DeferredVector("X")
+#' f <- lambdify(X, X[0] + 2 * X[1])
+#' f(c(3, 4))
+#' @export
+DeferredVector <- function(name) structure(list(name = name), class = "DeferredVector")
+#' @rdname DeferredVector
+#' @export
+`[.DeferredVector` <- function(x, i) {
+  if (i < 0) stop("IndexError: DeferredVector index out of range", call. = FALSE)
+  Symbol(paste0(x$name, "[", i, "]"))
+}
+#' @export
+print.DeferredVector <- function(x, ...) { cat(x$name, "\n"); invisible(x) }
+
 .R_FUN_MAP <- c(Abs = "abs", ceiling = "ceiling", floor = "floor", loggamma = "lgamma")
 
 .to_call <- function(e) {
@@ -231,7 +266,13 @@ lambdify <- function(args, e) {
   switch(t,
          Integer = , Rational = as.double(e$value),
          Float = e$value,
-         Symbol = , Dummy = as.name(e$name),
+         Symbol = , Dummy = {
+           if (length(.LAMB$dv) && grepl("\\[[0-9]+\\]$", e$name)) {
+             base <- sub("\\[[0-9]+\\]$", "", e$name)
+             if (base %in% .LAMB$dv) return(call("[[", as.name(base), as.integer(sub("^.*\\[([0-9]+)\\]$", "\\1", e$name)) + 1L))
+           }
+           as.name(e$name)
+         },
          Constant = switch(EXPR = e$name, pi = quote(pi), E = exp(1), I = 1i, oo = Inf, `-oo` = -Inf, nan = NaN,
                            .CONST_VALUES[[e$name]]),
          Add = Reduce(function(a, b) call("+", a, b), lapply(e$args, .to_call)),

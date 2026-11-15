@@ -7,6 +7,9 @@
 \alias{PoissonProcess}
 \alias{WienerProcess}
 \alias{GammaProcess}
+\alias{StochasticProcess}
+\alias{DiscreteTimeStochasticProcess}
+\alias{ContinuousTimeStochasticProcess}
 \title{Stochastic processes}
 \usage{
 RandomIndexedSymbol(idx_obj, pspace = NULL)
@@ -18,6 +21,12 @@ PoissonProcess(sym, lamda)
 WienerProcess(sym)
 
 GammaProcess(sym, lamda, gamma)
+
+StochasticProcess(sym, state_space = NULL)
+
+DiscreteTimeStochasticProcess(sym, state_space = NULL)
+
+ContinuousTimeStochasticProcess(sym, state_space = NULL)
 }
 \arguments{
 \item{idx_obj}{An indexed object or an applied function.}
@@ -29,6 +38,8 @@ GammaProcess(sym, lamda, gamma)
 \item{p, success, failure}{Probability and outcomes of a Bernoulli trial.}
 
 \item{lamda, gamma}{Rate and shape parameters.}
+
+\item{state_space}{The state space: a set, or a vector of states.}
 }
 \value{
 A process (an R function), or a random indexed symbol.

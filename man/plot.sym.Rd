@@ -5,6 +5,10 @@
 \alias{plot_parametric}
 \alias{plot3d}
 \alias{plot_implicit}
+\alias{plot_contour}
+\alias{plot3d_parametric_line}
+\alias{plot3d_parametric_surface}
+\alias{PlotGrid}
 \title{Plot symbolic expressions with base graphics}
 \usage{
 \method{plot}{sym}(x, range = NULL, ..., n = 400)
@@ -14,6 +18,14 @@ plot_parametric(fx, fy, range, ..., n = 400)
 plot3d(e, range1, range2, ..., n = 50)
 
 plot_implicit(e, range1, range2, ..., n = 200)
+
+plot_contour(e, range1, range2, ..., levels = NULL, n = 100)
+
+plot3d_parametric_line(fx, fy, fz, range, ..., n = 300)
+
+plot3d_parametric_surface(fx, fy, fz, range1, range2, ..., n = 30)
+
+PlotGrid(nrows, ncols, ...)
 }
 \arguments{
 \item{x}{A \code{sym} expression, for \code{plot()}.}
@@ -29,6 +41,12 @@ plot_implicit(e, range1, range2, ..., n = 200)
 \item{e}{An expression.}
 
 \item{range1, range2}{Ranges for two variables.}
+
+\item{levels}{Contour levels; by default chosen by \code{\link[graphics:contour]{graphics::contour()}}.}
+
+\item{fz}{The third coordinate expression.}
+
+\item{nrows, ncols}{The grid shape.}
 }
 \value{
 The sampled data, invisibly.
@@ -36,9 +54,15 @@ The sampled data, invisibly.
 \description{
 \code{plot(expr, range)} draws a function of one variable, with \code{range} given
 as \code{list(x, a, b)} (default \code{-10} to \code{10}). \code{plot_parametric()},
-\code{plot3d()} (surface) and \code{plot_implicit()} (zero contour) are the
+\code{plot3d()} (surface), \code{plot_implicit()} (zero contour), \code{plot_contour()},
+\code{plot3d_parametric_line()} and \code{plot3d_parametric_surface()} are the
 analogues of SymPy's plotting functions. Extra arguments go to the base
 graphics functions.
+}
+\details{
+\code{PlotGrid(nrows, ncols, ...)} draws several plots in one
+figure; each argument in \code{...} is a function of no arguments that draws
+one plot, as SymPy's \code{PlotGrid} takes plot objects.
 }
 \examples{
 x <- Symbol("x")

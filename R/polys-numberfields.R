@@ -959,3 +959,88 @@ prime_valuation <- function(I, P) {
   S <- if (inherits(I, "nf_Submodule")) I$S else I
   .nf_prime_valuation(S, P)
 }
+
+#' Powers of an algebraic integer, and a coefficient search
+#'
+#' `AlgIntPowers(T, modulus)` is SymPy's class of that name: given the monic
+#' irreducible integer polynomial `T` of an algebraic integer `theta` of
+#' degree `n`, `p[[e]]` (or `alg_int_power(p, e)`) gives the coefficients of
+#' `theta^e` over `1, theta, ..., theta^(n-1)`, lowest first, from the linear
+#' recurrence that `T` defines, reduced modulo `modulus` when one is given.
+#'
+#' `coeff_search(m, R)` is SymPy's generator of coefficient lists of length
+#' `m`, all with entries bounded by `R` in absolute value before the bound
+#' grows, the leading entry never negative, skipping repeats. R has no
+#' generators, so it returns a function; each call gives the next list.
+#'
+#' @param T A monic `Poly` over the integers.
+#' @param modulus An optional integer modulus.
+#' @param p An `AlgIntPowers` object.
+#' @param e A non-negative exponent.
+#' @param x,i An `AlgIntPowers` object and an exponent.
+#' @param m The length of the coefficient lists.
+#' @param R The initial bound.
+#' @return `AlgIntPowers()` an object; the power a big integer vector;
+#'   `coeff_search()` a function of no arguments returning integer vectors.
+#' @examples
+#' x <- Symbol("x")
+#' zp <- AlgIntPowers(Poly(cyclotomic_poly(5, x)))
+#' zp[[4]]
+#' zp[[24]]
+#' nxt <- coeff_search(2, 1)
+#' t(sapply(1:13, function(i) nxt()))
+#' @name AlgIntPowers
+#' @export
+AlgIntPowers <- function(T, modulus = NULL) {
+  cs <- rev(lapply(all_coeffs(T), function(c) gmp::as.bigz(as.character(as_sym(c)$value))))
+  n <- length(cs) - 1L
+  red <- function(v) if (is.null(modulus)) v else gmp::mod.bigz(v, gmp::as.bigz(modulus))
+  env <- new.env()
+  env$n <- n; env$red <- red
+  env$r <- list(red(-do.call(c, cs[seq_len(n)])))
+  env$max_so_far <- n
+  structure(list(env = env), class = "AlgIntPowers")
+}
+
+#' @rdname AlgIntPowers
+#' @export
+alg_int_power <- function(p, e) {
+  env <- p$env; n <- env$n
+  if (e < 0) stop("ValueError: Exponent must be non-negative.", call. = FALSE)
+  if (e < n) return(gmp::as.bigz(as.integer(seq_len(n) - 1L == e)))
+  if (e > env$max_so_far) {
+    c0 <- env$r[[1L]]
+    for (k in (env$max_so_far + 1L):e) {
+      prev <- env$r[[k - n]]
+      b <- prev[n]
+      nw <- c0 * b
+      if (n > 1L) nw[2:n] <- prev[1:(n - 1L)] + c0[2:n] * b
+      env$r[[k - n + 1L]] <- env$red(nw)
+    }
+    env$max_so_far <- e
+  }
+  env$r[[e - n + 1L]]
+}
+
+#' @rdname AlgIntPowers
+#' @export
+`[[.AlgIntPowers` <- function(x, i) alg_int_power(x, i)
+
+#' @rdname AlgIntPowers
+#' @export
+coeff_search <- function(m, R) {
+  R0 <- R; c <- rep(R, m); first <- TRUE
+  advance <- function() {
+    j <- m
+    while (c[j] == -R) j <- j - 1L
+    c[j] <<- c[j] - 1
+    if (j < m) c[(j + 1L):m] <<- R
+    if (all(c == 0)) { R <<- R + 1; c <<- rep(R, m) }
+  }
+  function() {
+    if (!first) advance()
+    first <<- FALSE
+    while (!(R == R0 || R %in% c || -R %in% c)) advance()
+    c
+  }
+}

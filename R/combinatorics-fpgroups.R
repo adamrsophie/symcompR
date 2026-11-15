@@ -4333,3 +4333,22 @@ constructive_membership_test <- function(C, ipcgs, g) {
   if (.is_identity(h)) return(e)
   FALSE
 }
+
+#' @rdname FreeGroup
+#' @param envir The environment that receives the generators.
+#' @export
+vfree_group <- function(symbols, envir = parent.frame()) {
+  G <- FreeGroup(symbols)
+  for (i in seq_along(G$symbols)) assign(G$symbols[[i]], G$generators[[i]], envir = envir)
+  G
+}
+
+#' @rdname FpGroup
+#' @param envir The environment that receives the generators.
+#' @export
+vfp_group <- function(fr_grp, relators = list(), envir = parent.frame()) {
+  G <- FpGroup(fr_grp, relators)
+  syms <- fr_grp$symbols
+  for (i in seq_along(syms)) assign(syms[[i]], G$generators[[i]], envir = envir)
+  G
+}

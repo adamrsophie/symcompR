@@ -1298,3 +1298,15 @@ expr_to_holonomic <- function(func, x = NULL, x0 = 0, y0 = NULL, lenics = NULL, 
   }
   sol
 }
+
+#' @rdname holonomic
+#' @param list_of_poly The coefficients of the shift operator powers, lowest
+#'   first.
+#' @param parent A recurrence operator algebra.
+#' @details `RecurrenceOperator(list_of_poly, parent)` builds the operator
+#'   `sum p_i Sn^i` directly, as SymPy's class does.
+#' @export
+RecurrenceOperator <- function(list_of_poly, parent) {
+  if (inherits(parent, "list") && !is.null(parent$algebra)) parent <- parent$algebra
+  .recop(as.list(list_of_poly), parent)
+}

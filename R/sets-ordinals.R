@@ -174,3 +174,10 @@ format.sym_omega_power <- function(x, ...) paste0("OmegaPower(", format(x$exp), 
 #' @rdname ordinals
 #' @export
 print.sym_omega_power <- function(x, ...) { cat(format(x), "\n", sep = ""); invisible(x) }
+
+#' @rdname ordinals
+#' @export
+OrdinalZero <- function() ord0
+#' @rdname ordinals
+#' @export
+OrdinalOmega <- function() ord_omega

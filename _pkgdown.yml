@@ -729,3 +729,32 @@ reference:
   - discrete-aliases
   - ntt
   - crypto
+- title: Kinds, dispatch and evaluation control
+  contents:
+  - kinds
+  - isinstance
+  - multipledispatch
+  - evaluate
+  - seterr
+  - cacheit
+  - clear_cache
+  - binary-relations
+  - test_closed_group
+  - all_assumptions
+- title: Power series rings and interval arithmetic
+  contents:
+  - power_series_ring
+  - set-closure
+  - graph_certificate
+  - intervalmath
+  - AlgIntPowers
+- title: Printing, plotting and numeric helpers
+  contents:
+  - pretty_symbology
+  - preview
+  - DeferredVector
+  - list2numpy
+  - vectorize
+  - sample_iter
+  - allhints
+  - rn-manifolds

@@ -15,6 +15,10 @@
 \alias{ZGate}
 \alias{PhaseGate}
 \alias{TGate}
+\alias{X}
+\alias{Y}
+\alias{Z}
+\alias{Phase}
 \alias{CNotGate}
 \alias{CNOT}
 \alias{SwapGate}
@@ -52,6 +56,14 @@ PhaseGate(...)
 
 TGate(...)
 
+X(...)
+
+Y(...)
+
+Z(...)
+
+Phase(...)
+
 CNotGate(...)
 
 CNOT(...)
@@ -88,7 +100,8 @@ random_circuit(
 
 \item{target_matrix}{The matrix of the gate on its targets.}
 
-\item{format}{The matrix format, only \code{"sympy"}.}
+\item{format}{The matrix format: \code{"sympy"}, or \code{"numpy"} for a base R
+complex matrix (SymPy's NumPy format).}
 
 \item{circuit}{A product of gates.}
 

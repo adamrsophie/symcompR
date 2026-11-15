@@ -262,3 +262,59 @@ register_predicate <- function(predicate, types, fn) {
   assign(p$key, h, envir = .ask_custom)
   invisible(predicate)
 }
+
+#' Binary relation predicates
+#'
+#' The classes of SymPy's `Q.eq`, `Q.ne`, `Q.gt`, `Q.ge`, `Q.lt` and `Q.le`:
+#' each constructor returns that predicate, as calling the class does in
+#' SymPy. `AppliedBinaryRelation(p, lhs, rhs)` applies one,
+#' `binrel_properties(p)` gives SymPy's `is_reflexive`, `is_symmetric`,
+#' `reversed` and `negated`, and `BinaryRelation(name)` returns the
+#' predicate of that name.
+#'
+#' @param p A binary relation predicate.
+#' @param lhs,rhs Expressions.
+#' @param name One of `"eq"`, `"ne"`, `"gt"`, `"ge"`, `"lt"`, `"le"`.
+#' @return A predicate, an applied predicate, or a list.
+#' @examples
+#' x <- Symbol("x")
+#' AppliedBinaryRelation(StrictLessThanPredicate(), x, 2)
+#' binrel_properties(Q$gt)
+#' @name binary-relations
+#' @export
+BinaryRelation <- function(name) {
+  if (!name %in% .BINREL_NAMES) stop("ValueError: unknown binary relation ", name, call. = FALSE)
+  Q[[name]]
+}
+#' @rdname binary-relations
+#' @export
+EqualityPredicate <- function() Q$eq
+#' @rdname binary-relations
+#' @export
+UnequalityPredicate <- function() Q$ne
+#' @rdname binary-relations
+#' @export
+StrictGreaterThanPredicate <- function() Q$gt
+#' @rdname binary-relations
+#' @export
+GreaterThanPredicate <- function() Q$ge
+#' @rdname binary-relations
+#' @export
+StrictLessThanPredicate <- function() Q$lt
+#' @rdname binary-relations
+#' @export
+LessThanPredicate <- function() Q$le
+#' @rdname binary-relations
+#' @export
+AppliedBinaryRelation <- function(p, lhs, rhs) p(lhs, rhs)
+#' @rdname binary-relations
+#' @export
+binrel_properties <- function(p) {
+  nm <- sub("^Q\\.", "", format(p))
+  tab <- list(eq = list(TRUE, TRUE, "eq", "ne"), ne = list(FALSE, TRUE, "ne", "eq"),
+              gt = list(FALSE, FALSE, "lt", "le"), ge = list(TRUE, FALSE, "le", "lt"),
+              lt = list(FALSE, FALSE, "gt", "ge"), le = list(TRUE, FALSE, "ge", "gt"))
+  r <- tab[[nm]]
+  if (is.null(r)) stop("ValueError: not a binary relation predicate", call. = FALSE)
+  list(is_reflexive = r[[1L]], is_symmetric = r[[2L]], reversed = Q[[r[[3L]]]], negated = Q[[r[[4L]]]])
+}

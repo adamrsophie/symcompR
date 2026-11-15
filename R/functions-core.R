@@ -17,6 +17,7 @@
        atanh = function() .mul(list(S_I, AccumBounds(.neg(.div(S_Pi, S_Two)), .div(S_Pi, S_Two)))))
 )
 fcall <- function(name, args) {
+  if (isTRUE(.EVAL$off)) return(new_sym("Function", args, name = name))
   # SymPy's elementary functions return nan at nan
   if (length(args) == 1L && args[[1L]]$type == "Constant" && args[[1L]]$name == "nan" && name %in% .NAN_FUNS) return(S_NaN)
   # the eval methods at complex infinity

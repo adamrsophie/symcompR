@@ -406,3 +406,21 @@ GammaProcess <- function(sym, lamda, gamma) {
   .value_check(gamma > 0, "gamma should be a positive number")
   .mkproc(new_sym("GammaProcess", list(.symbol_converter(sym), lamda, gamma)))
 }
+
+# The base classes themselves, as SymPy lets them be built directly:
+# StochasticProcess(sym, state_space = Reals)
+.defm("StochasticProcess", "state_space", function(p) if (length(p$args) >= 2L) p$args[[2L]] else Reals)
+.sp_base <- function(type, sym, state_space) {
+  ss <- if (is.null(state_space)) Reals else if (is_sym(state_space)) state_space else do.call(FiniteSet, as.list(state_space))
+  .mkproc(new_sym(type, list(.symbol_converter(sym), ss)))
+}
+#' @rdname stochastic_process
+#' @param state_space The state space: a set, or a vector of states.
+#' @export
+StochasticProcess <- function(sym, state_space = NULL) .sp_base("StochasticProcess", sym, state_space)
+#' @rdname stochastic_process
+#' @export
+DiscreteTimeStochasticProcess <- function(sym, state_space = NULL) .sp_base("DiscreteTimeStochasticProcess", sym, state_space)
+#' @rdname stochastic_process
+#' @export
+ContinuousTimeStochasticProcess <- function(sym, state_space = NULL) .sp_base("ContinuousTimeStochasticProcess", sym, state_space)

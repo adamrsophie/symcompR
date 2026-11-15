@@ -15,6 +15,7 @@
 \alias{fp_most_frequent_generator}
 \alias{fp_random}
 \alias{fp_index}
+\alias{vfp_group}
 \title{Finitely presented groups}
 \usage{
 FpGroup(fr_grp, relators)
@@ -58,6 +59,8 @@ fp_most_frequent_generator(G)
 fp_random(G)
 
 fp_index(G, H, strategy = "relator_based")
+
+vfp_group(fr_grp, relators = list(), envir = parent.frame())
 }
 \arguments{
 \item{fr_grp}{A free group.}
@@ -79,6 +82,8 @@ fp_index(G, H, strategy = "relator_based")
 \item{strategy}{\code{"relator_based"} (HLT) or \code{"coset_table_based"} (Felsch).}
 
 \item{max_cosets, draft, incomplete}{Passed to the coset enumeration.}
+
+\item{envir}{The environment that receives the generators.}
 }
 \value{
 An \code{FpGroup} (an environment), a list, a word, an integer, \code{oo}

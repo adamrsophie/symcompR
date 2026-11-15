@@ -1523,3 +1523,36 @@ register_str_printer("ConditionSet", function(e) {
     return(paste0("ConditionSet(", .str(e$args[[1L]]), ", ", .str(e$args[[2L]]), ")"))
   paste0("ConditionSet(", .str(e$args[[1L]]), ", ", .str(e$args[[2L]]), ", ", .str(b), ")")
 })
+
+#' Closure, interior and power set of a set
+#'
+#' The set methods `closure`, `interior`, `powerset` and
+#' `symmetric_difference` of SymPy's `Set`: the closure is the union of the
+#' set with its [boundary()], the interior is the set without its
+#' boundary, the power set of a finite set is the finite set of its subsets
+#' (any other set gives an unevaluated `PowerSet`), and the symmetric
+#' difference is [SymmetricDifference()].
+#'
+#' @param s,t Sets.
+#' @return A set.
+#' @examples
+#' closure(Interval(0, 1, TRUE, TRUE))
+#' interior(Interval(0, 1))
+#' powerset(FiniteSet(1, 2))
+#' symmetric_difference(Interval(0, 2), Interval(1, 3))
+#' @name set-closure
+#' @export
+closure <- function(s) Union(as_sym(s), boundary(s))
+#' @rdname set-closure
+#' @export
+interior <- function(s) Complement(as_sym(s), boundary(s))
+#' @rdname set-closure
+#' @export
+powerset <- function(s) {
+  s <- as_sym(s)
+  r <- .powerset_finite(s)
+  if (is.null(r)) PowerSet(s) else r
+}
+#' @rdname set-closure
+#' @export
+symmetric_difference <- function(s, t) SymmetricDifference(s, t)

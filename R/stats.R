@@ -6,7 +6,8 @@
 #'
 #' `plot(expr, range)` draws a function of one variable, with `range` given
 #' as `list(x, a, b)` (default `-10` to `10`). `plot_parametric()`,
-#' `plot3d()` (surface) and `plot_implicit()` (zero contour) are the
+#' `plot3d()` (surface), `plot_implicit()` (zero contour), `plot_contour()`,
+#' `plot3d_parametric_line()` and `plot3d_parametric_surface()` are the
 #' analogues of SymPy's plotting functions. Extra arguments go to the base
 #' graphics functions.
 #'
@@ -91,4 +92,60 @@ plot_implicit <- function(e, range1, range2, ..., n = 200) {
   graphics::contour(g$x, g$y, g$z, levels = 0, drawlabels = FALSE,
                     xlab = .str(as_sym(range1[[1L]])), ylab = .str(as_sym(range2[[1L]])), ...)
   invisible(g)
+}
+
+#' @rdname plot.sym
+#' @param levels Contour levels; by default chosen by [graphics::contour()].
+#' @export
+plot_contour <- function(e, range1, range2, ..., levels = NULL, n = 100) {
+  g <- .grid2(e, range1, range2, n)
+  args <- list(g$x, g$y, g$z, xlab = .str(as_sym(range1[[1L]])), ylab = .str(as_sym(range2[[1L]])), ...)
+  if (!is.null(levels)) args$levels <- levels
+  do.call(graphics::contour, args)
+  invisible(g)
+}
+
+# an empty perspective box around the points, for drawing 3D lines and facets
+.persp_box <- function(xs, ys, zs, labs, ...) {
+  rg <- function(v) { r <- range(v, finite = TRUE); if (diff(r) == 0) r + c(-1, 1) else r }
+  graphics::persp(rg(xs), rg(ys), matrix(NA_real_, 2, 2), zlim = rg(zs), xlab = labs[1L], ylab = labs[2L],
+                  zlab = labs[3L], theta = 30, phi = 25, ...)
+}
+
+#' @rdname plot.sym
+#' @param fz The third coordinate expression.
+#' @export
+plot3d_parametric_line <- function(fx, fy, fz, range, ..., n = 300) {
+  v <- as_sym(range[[1L]])
+  ts <- seq(as.numeric(N(as_sym(range[[2L]]))), as.numeric(N(as_sym(range[[3L]]))), length.out = n)
+  xyz <- lapply(list(fx, fy, fz), function(f) .eval_grid(as_sym(f), list(v), list(ts)))
+  pm <- .persp_box(xyz[[1L]], xyz[[2L]], xyz[[3L]], vapply(list(fx, fy, fz), function(f) .str(as_sym(f)), ""), ...)
+  graphics::lines(grDevices::trans3d(xyz[[1L]], xyz[[2L]], xyz[[3L]], pm))
+  invisible(data.frame(t = ts, x = xyz[[1L]], y = xyz[[2L]], z = xyz[[3L]]))
+}
+
+#' @rdname plot.sym
+#' @export
+plot3d_parametric_surface <- function(fx, fy, fz, range1, range2, ..., n = 30) {
+  gs <- lapply(list(fx, fy, fz), function(f) .grid2(f, range1, range2, n))
+  X <- gs[[1L]]$z; Y <- gs[[2L]]$z; Z <- gs[[3L]]$z
+  pm <- .persp_box(X, Y, Z, vapply(list(fx, fy, fz), function(f) .str(as_sym(f)), ""), ...)
+  # facets drawn back to front would need depth sorting; a wire mesh needs none
+  for (i in seq_len(n)) {
+    graphics::lines(grDevices::trans3d(X[i, ], Y[i, ], Z[i, ], pm))
+    graphics::lines(grDevices::trans3d(X[, i], Y[, i], Z[, i], pm))
+  }
+  invisible(list(u = gs[[1L]]$x, v = gs[[1L]]$y, x = X, y = Y, z = Z))
+}
+
+#' @rdname plot.sym
+#' @param nrows,ncols The grid shape.
+#' @details `PlotGrid(nrows, ncols, ...)` draws several plots in one
+#'   figure; each argument in `...` is a function of no arguments that draws
+#'   one plot, as SymPy's `PlotGrid` takes plot objects.
+#' @export
+PlotGrid <- function(nrows, ncols, ...) {
+  old <- graphics::par(mfrow = c(nrows, ncols))
+  on.exit(graphics::par(old))
+  invisible(lapply(list(...), function(f) if (is.function(f)) f() else f))
 }

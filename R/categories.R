@@ -233,3 +233,9 @@ subdiagram_from_objects <- function(x, objects) {
   Diagram(np, nc)
 }
 register_str_printer("Class", function(e) paste0("Class(", .str(e$args[[1L]]), ")"))
+
+#' @rdname categories
+#' @details `Morphism()` is SymPy's abstract base class, which cannot be
+#'   instantiated; use `NamedMorphism()` and the other derived classes.
+#' @export
+Morphism <- function(domain, codomain) stop("NotImplementedError: Cannot instantiate Morphism.  Use derived classes instead.", call. = FALSE)

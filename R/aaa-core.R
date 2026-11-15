@@ -168,10 +168,40 @@ Rational <- function(p, q = 1) {
   pq <- .to_bigq(p)
   qq <- .to_bigq(q)
   if (qq == 0) {
-    if (pq == 0) return(S_NaN)
+    if (pq == 0) {
+      if (isTRUE(.ERRDICT$divide)) stop("ValueError: Indeterminate 0/0", call. = FALSE)
+      return(S_NaN)
+    }
     return(S_ComplexInfinity)
   }
   make_rational(pq / qq)
+}
+
+# numbers._errdict and seterr()
+.ERRDICT <- new.env()
+.ERRDICT$divide <- FALSE
+
+#' Raise an error on 0/0
+#'
+#' SymPy's `seterr(divide)`: with `divide = TRUE`, `Rational(0, 0)` raises
+#' an error instead of returning `nan`. Changing the setting clears the
+#' cache.
+#'
+#' @param divide `TRUE` to raise, `FALSE` to return `nan`.
+#' @return The previous setting, invisibly.
+#' @examples
+#' seterr(TRUE)
+#' tryCatch(Rational(0, 0), error = conditionMessage)
+#' seterr(FALSE)
+#' Rational(0, 0)
+#' @export
+seterr <- function(divide = FALSE) {
+  old <- .ERRDICT$divide
+  if (!identical(old, divide)) {
+    clear_cache()
+    .ERRDICT$divide <- isTRUE(divide)
+  }
+  invisible(old)
 }
 
 .to_bigq <- function(x) {

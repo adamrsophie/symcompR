@@ -7,6 +7,8 @@
 \alias{b_interval}
 \alias{complex_region_from_real}
 \alias{normalize_theta_set}
+\alias{CartesianComplexRegion}
+\alias{PolarComplexRegion}
 \title{Regions of the complex plane}
 \usage{
 ComplexRegion(sets, polar = FALSE)
@@ -20,6 +22,10 @@ b_interval(region)
 complex_region_from_real(s)
 
 normalize_theta_set(theta)
+
+CartesianComplexRegion(sets)
+
+PolarComplexRegion(sets)
 }
 \arguments{
 \item{sets}{A product of two real sets, or a union of products.}

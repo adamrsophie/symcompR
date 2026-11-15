@@ -7,6 +7,7 @@
 \alias{ArrowStringDescription}
 \alias{XypicDiagramDrawer}
 \alias{xypic_draw_diagram}
+\alias{preview_diagram}
 \title{Drawing diagrams}
 \usage{
 DiagramGrid(diagram, groups = NULL, layout = NULL, transpose = FALSE)
@@ -34,6 +35,17 @@ xypic_draw_diagram(
   groups = NULL,
   ...
 )
+
+preview_diagram(
+  diagram,
+  masked = NULL,
+  diagram_format = "",
+  groups = NULL,
+  output = "pdf",
+  viewer = NULL,
+  euler = TRUE,
+  ...
+)
 }
 \arguments{
 \item{diagram}{A diagram.}
@@ -55,6 +67,8 @@ xypic_draw_diagram(
 \item{diagram_format}{Xy-pic format options.}
 
 \item{...}{Hints for \code{DiagramGrid()}.}
+
+\item{output, viewer, euler}{As for \code{\link[=preview]{preview()}}.}
 }
 \value{
 A grid, a string or a drawer.
@@ -66,6 +80,11 @@ cell (from 0) and \code{g$width}, \code{g$height}, \code{g$morphisms} describe i
 \code{xypic_draw_diagram(diagram, masked, diagram_format, groups, ...)} returns
 the Xy-pic code of a diagram. \code{ArrowStringDescription()} and
 \code{XypicDiagramDrawer()} are SymPy's building blocks.
+}
+\details{
+\code{preview_diagram()} draws the diagram with
+\code{xypic_draw_diagram()} and renders it with \code{\link[=preview]{preview()}} and the LaTeX
+package \code{xypic}.
 }
 \examples{
 A <- Object("A"); B <- Object("B"); C <- Object("C")

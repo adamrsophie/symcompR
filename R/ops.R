@@ -2,7 +2,7 @@
 
 #' @export
 chooseOpsMethod.sym <- function(x, y, mx, my, cl, reverse)
-  !inherits(y, c("sym_ordinal", "sym_omega_power", "DifferentialOperator", "HolonomicFunction", "RecurrenceOperator", "physics_obj", "sym_ring_element", "pyobj", "Quaternion", "GeoEntity"))
+  !inherits(y, c("sym_ordinal", "sym_omega_power", "DifferentialOperator", "HolonomicFunction", "RecurrenceOperator", "physics_obj", "sym_ring_element", "pyobj", "Quaternion", "GeoEntity", "PowerSeriesElement"))
 
 
 #' Arithmetic, comparison and logic operators for symbolic expressions
@@ -23,6 +23,7 @@ chooseOpsMethod.sym <- function(x, y, mx, my, cl, reverse)
 #' Symbol("p", positive = TRUE) > 0
 #' @export
 Ops.sym <- function(e1, e2) {
+  if (isTRUE(.EVAL$off) && .Generic %in% c("+", "-", "*", "/", "^")) return(.uneval_op(.Generic, e1, e2))
   if (missing(e2)) {
     a <- as_sym(e1)
     if (.Generic == "-" && .is_seq(a)) return(.seq_coeff_mul(a, S_NegativeOne))
@@ -97,6 +98,7 @@ Ops.sym <- function(e1, e2) {
 #' @export
 Math.sym <- function(x, ...) {
   x <- as_sym(x)
+  if (isTRUE(.EVAL$off) && .Generic == "sqrt") return(new_sym("Pow", list(x, S_Half)))
   switch(.Generic,
          abs = fcall("Abs", list(x)),
          sign = fcall("sign", list(x)),
@@ -344,22 +346,22 @@ rm(.t)
 #' Eq(x^2, 4)
 #' Lt(1, 2)
 #' @export
-Eq <- function(a, b = 0, evaluate = TRUE) .make_rel("Equality", a, b, evaluate)
+Eq <- function(a, b = 0, evaluate = .ev_default()) .make_rel("Equality", a, b, evaluate)
 #' @rdname Eq
 #' @export
-Ne <- function(a, b, evaluate = TRUE) .make_rel("Unequality", a, b, evaluate)
+Ne <- function(a, b, evaluate = .ev_default()) .make_rel("Unequality", a, b, evaluate)
 #' @rdname Eq
 #' @export
-Lt <- function(a, b, evaluate = TRUE) .make_rel("StrictLessThan", a, b, evaluate)
+Lt <- function(a, b, evaluate = .ev_default()) .make_rel("StrictLessThan", a, b, evaluate)
 #' @rdname Eq
 #' @export
-Le <- function(a, b, evaluate = TRUE) .make_rel("LessThan", a, b, evaluate)
+Le <- function(a, b, evaluate = .ev_default()) .make_rel("LessThan", a, b, evaluate)
 #' @rdname Eq
 #' @export
-Gt <- function(a, b, evaluate = TRUE) .make_rel("StrictGreaterThan", a, b, evaluate)
+Gt <- function(a, b, evaluate = .ev_default()) .make_rel("StrictGreaterThan", a, b, evaluate)
 #' @rdname Eq
 #' @export
-Ge <- function(a, b, evaluate = TRUE) .make_rel("GreaterThan", a, b, evaluate)
+Ge <- function(a, b, evaluate = .ev_default()) .make_rel("GreaterThan", a, b, evaluate)
 #' @rdname Eq
 #' @export
 lhs <- function(e) as_sym(e)$args[[1L]]
@@ -758,3 +760,44 @@ def_function("Mod", nargs = 2L,
 
 # gmp's divq.bigz already rounds toward minus infinity.
 .bigq_floor <- function(q) gmp::divq.bigz(gmp::numerator(q), gmp::denominator(q))
+
+# the arithmetic operators under evaluate(FALSE): Add, Mul and Pow nodes
+# as Expr.__add__ and the others build them, with x - y = x + (-1)*y and
+# x/y = x*y**-1; a number is negated directly
+.uneval_neg <- function(b) if (is_number_type(b)) .neg(b) else new_sym("Mul", list(S_NegativeOne, b))
+.uneval_op <- function(op, e1, e2) {
+  a <- as_sym(e1)
+  if (missing(e2)) return(if (op == "-") .uneval_neg(a) else a)
+  b <- as_sym(e2)
+  switch(op,
+    "+" = new_sym("Add", list(a, b)),
+    "-" = new_sym("Add", list(a, .uneval_neg(b))),
+    "*" = new_sym("Mul", list(a, b)),
+    "/" = new_sym("Mul", list(a, new_sym("Pow", list(b, S_NegativeOne)))),
+    "^" = new_sym("Pow", list(a, b)))
+}
+
+#' Turn evaluation off
+#'
+#' SymPy's `with evaluate(False):` context. `evaluate(FALSE, expr)`
+#' evaluates the R expression `expr` with automatic simplification off: the
+#' arithmetic operators build unevaluated `Add`, `Mul` and `Pow` nodes,
+#' functions stay unevaluated (`sin(0)`), and the constructors `Add()`,
+#' `Mul()`, `Pow()`, `Eq()` and the other relations default to
+#' `evaluate = FALSE`.
+#'
+#' @param x `FALSE` to turn evaluation off, `TRUE` to turn it on.
+#' @param expr An R expression.
+#' @return The value of `expr`.
+#' @examples
+#' x <- Symbol("x")
+#' evaluate(FALSE, x + x)
+#' evaluate(FALSE, sin(Integer(0)))
+#' x + x
+#' @export
+evaluate <- function(x, expr) {
+  old <- .EVAL$off
+  .EVAL$off <- !isTRUE(x)
+  on.exit(.EVAL$off <- old)
+  expr
+}

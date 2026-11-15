@@ -621,3 +621,15 @@ xypic_draw_diagram <- function(diagram, masked = NULL, diagram_format = "", grou
   }
   g
 }
+
+#' @rdname diagram_drawing
+#' @param output,viewer,euler As for [preview()].
+#' @details `preview_diagram()` draws the diagram with
+#'   `xypic_draw_diagram()` and renders it with [preview()] and the LaTeX
+#'   package `xypic`.
+#' @export
+preview_diagram <- function(diagram, masked = NULL, diagram_format = "", groups = NULL, output = "pdf",
+                            viewer = NULL, euler = TRUE, ...) {
+  src <- xypic_draw_diagram(diagram, masked, diagram_format, groups, ...)
+  preview(src, output = output, viewer = viewer, euler = euler, packages = "xypic")
+}

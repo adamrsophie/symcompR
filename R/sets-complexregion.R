@@ -196,3 +196,10 @@ register_latex_printer("CartesianComplexRegion", function(e)
 register_latex_printer("PolarComplexRegion", function(e)
   paste0("\\left\\{r \\left(i \\sin{\\left(\\theta \\right)} + \\cos{\\left(\\theta \\right)}\\right)\\; \\middle|\\; r, \\theta \\in ",
          .latex_set_product(e$args[[1L]]), " \\right\\}"))
+
+#' @rdname ComplexRegion
+#' @export
+CartesianComplexRegion <- function(sets) ComplexRegion(sets, polar = FALSE)
+#' @rdname ComplexRegion
+#' @export
+PolarComplexRegion <- function(sets) ComplexRegion(sets, polar = TRUE)

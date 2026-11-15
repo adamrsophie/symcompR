@@ -16,6 +16,8 @@
 \alias{print.sym_ordinal}
 \alias{format.sym_omega_power}
 \alias{print.sym_omega_power}
+\alias{OrdinalZero}
+\alias{OrdinalOmega}
 \title{Ordinals}
 \usage{
 OmegaPower(exp, mult)
@@ -45,6 +47,10 @@ ordinal_degree(o)
 \method{format}{sym_omega_power}(x, ...)
 
 \method{print}{sym_omega_power}(x, ...)
+
+OrdinalZero()
+
+OrdinalOmega()
 }
 \arguments{
 \item{exp}{An ordinal or a nonnegative integer.}

@@ -3,11 +3,14 @@
 \name{dimacs_load}
 \alias{dimacs_load}
 \alias{dimacs_load_file}
+\alias{load_file}
 \title{Read DIMACS CNF}
 \usage{
 dimacs_load(s)
 
 dimacs_load_file(location)
+
+load_file(location)
 }
 \arguments{
 \item{s}{A string.}

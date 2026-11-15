@@ -1601,3 +1601,74 @@ rm(.n)
   rows <- vapply(.mrows(m), function(r) paste0("<mtr>", paste0("<mtd>", vapply(r, .mml_pres, ""), "</mtd>", collapse = ""), "</mtr>"), "")
   paste0("<mrow><mo>[</mo><mtable>", paste(rows, collapse = ""), "</mtable><mo>]</mo></mrow>")
 }
+
+# _get_latex_main of sympy/printing/preview.py
+.latex_main <- function(expr, preamble = NULL, packages = character(), extra_preamble = NULL, euler = TRUE,
+                        fontsize = NULL, ...) {
+  if (is.null(preamble)) {
+    pk <- c(packages, "amsmath", "amsfonts", if (euler) "euler")
+    inc <- paste0("\n", paste0("\\usepackage{", pk, "}", collapse = "\n"))
+    if (!is.null(extra_preamble)) inc <- paste0(inc, extra_preamble)
+    fontsize <- if (is.null(fontsize)) "12pt" else if (is.numeric(fontsize)) paste0(fontsize, "pt") else fontsize
+    preamble <- sprintf("\\documentclass[varwidth,%s]{standalone}\n%s\n\\begin{document}\n", fontsize, inc)
+  } else if (length(packages) || !is.null(extra_preamble)) {
+    stop("ValueError: The \"packages\" or \"extra_preamble\" keywordsmust not be set if a custom LaTeX preamble was specified",
+         call. = FALSE)
+  }
+  body <- if (is.character(expr)) expr else paste0("$\\displaystyle ", latex(expr, mode = "plain", ...), "$")
+  paste0(preamble, "\n", body, "\n\n\\end{document}")
+}
+
+#' Render an expression with LaTeX
+#'
+#' SymPy's `preview()`: typeset `expr` (an expression, or a LaTeX string)
+#' in a standalone LaTeX document and compile it with
+#' [tools::texi2pdf()]. `output = "pdf"` keeps the PDF; `"png"` converts it
+#' with `pdftoppm` when that program is available; `"tex"` only writes the
+#' source. With `viewer = "file"` the result goes to `filename`; otherwise
+#' it is opened with the system viewer in an interactive session. A LaTeX
+#' installation is needed for `"pdf"` and `"png"`.
+#'
+#' @param expr An expression or a LaTeX string.
+#' @param output `"pdf"`, `"png"` or `"tex"`.
+#' @param viewer `NULL`, or `"file"`.
+#' @param euler Whether to use the Euler math fonts.
+#' @param packages Extra LaTeX packages.
+#' @param filename The output file for `viewer = "file"`.
+#' @param preamble A full custom preamble.
+#' @param extra_preamble Text added to the default preamble.
+#' @param fontsize The font size, a number of points or a string.
+#' @param ... Settings for [latex()].
+#' @return The path of the output file, invisibly.
+#' @examples
+#' x <- Symbol("x")
+#' f <- preview(x^2 + 1, output = "tex", viewer = "file", filename = tempfile(fileext = ".tex"))
+#' cat(readLines(f), sep = "\n")
+#' @export
+preview <- function(expr, output = "pdf", viewer = NULL, euler = TRUE, packages = character(), filename = NULL,
+                    preamble = NULL, extra_preamble = NULL, fontsize = NULL, ...) {
+  output <- match.arg(output, c("pdf", "png", "tex"))
+  src <- .latex_main(expr, preamble = preamble, packages = packages, extra_preamble = extra_preamble,
+                     euler = euler, fontsize = fontsize, ...)
+  if (identical(viewer, "file") && is.null(filename)) stop("ValueError: filename has to be specified if viewer=\"file\"", call. = FALSE)
+  wd <- tempfile("preview"); dir.create(wd)
+  tex <- file.path(wd, "texput.tex")
+  writeLines(src, tex, useBytes = TRUE)
+  out <- tex
+  if (output != "tex") {
+    old <- setwd(wd); on.exit(setwd(old), add = TRUE)
+    tools::texi2pdf("texput.tex", clean = TRUE)
+    out <- file.path(wd, "texput.pdf")
+    if (output == "png") {
+      if (!nzchar(Sys.which("pdftoppm"))) stop("RuntimeError: pdftoppm is needed for png output", call. = FALSE)
+      system2("pdftoppm", c("-png", "-singlefile", "-r", "150", shQuote(out), shQuote(file.path(wd, "texput"))))
+      out <- file.path(wd, "texput.png")
+    }
+  }
+  if (identical(viewer, "file")) {
+    file.copy(out, filename, overwrite = TRUE)
+    return(invisible(filename))
+  }
+  if (interactive()) utils::browseURL(out)
+  invisible(out)
+}

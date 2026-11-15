@@ -5,6 +5,7 @@
 %   R/codegen-printer-r.R, R/codegen-printer-rust.R
 \name{code-printer-objects}
 \alias{code-printer-objects}
+\alias{StrPrinter}
 \alias{printer_doprint}
 \alias{C89CodePrinter}
 \alias{C99CodePrinter}
@@ -25,6 +26,8 @@
 \alias{RustCodePrinter}
 \title{Code printer objects}
 \usage{
+StrPrinter(settings = NULL)
+
 printer_doprint(p, e, assign_to = NULL)
 
 C89CodePrinter(settings = NULL)
@@ -62,14 +65,14 @@ RCodePrinter(settings = NULL)
 RustCodePrinter(settings = NULL)
 }
 \arguments{
+\item{settings}{A named list of printer settings, such as
+\code{list(type_aliases = ...)} or \code{list(standard = 95)}.}
+
 \item{p}{A printer.}
 
 \item{e}{An expression or codegen node.}
 
 \item{assign_to}{Optional variable to assign to.}
-
-\item{settings}{A named list of printer settings, such as
-\code{list(type_aliases = ...)} or \code{list(standard = 95)}.}
 }
 \value{
 A printer, or for \code{printer_doprint()} a character scalar.
@@ -85,6 +88,10 @@ Printer objects after SymPy's code printer classes. \code{C89CodePrinter()},
 prints an expression with a printer, as the \code{doprint} method does; the
 printer keeps what the printed code needs (\code{headers}, \code{libraries},
 \code{macros}, \code{module_imports}), which \code{\link[=ast_attr]{ast_attr()}} reads.
+}
+\details{
+\code{StrPrinter()} is the printer of \code{\link[=sstr]{sstr()}}, for use with
+\code{printer_doprint()}.
 }
 \examples{
 x <- Symbol("x")

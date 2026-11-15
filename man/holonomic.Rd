@@ -24,6 +24,7 @@
 \alias{from_hyper}
 \alias{from_meijerg}
 \alias{expr_to_holonomic}
+\alias{RecurrenceOperator}
 \title{Holonomic functions}
 \usage{
 holonomic_ring(x, dom = "QQ")
@@ -77,6 +78,8 @@ expr_to_holonomic(
   domain = NULL,
   initcond = TRUE
 )
+
+RecurrenceOperator(list_of_poly, parent)
 }
 \arguments{
 \item{x, z, n}{Symbols.}
@@ -131,6 +134,11 @@ for singular conditions.}
 \item{evalf}{Evaluate initial conditions numerically.}
 
 \item{domain}{The coefficient domain.}
+
+\item{list_of_poly}{The coefficients of the shift operator powers, lowest
+first.}
+
+\item{parent}{A recurrence operator algebra.}
 }
 \value{
 An operator, holonomic function, sequence or expression.
@@ -145,6 +153,10 @@ Operators combine with \code{+}, \code{-}, \code{*} and \code{^}. \code{Holonomi
 are SymPy's methods. \code{expr_to_holonomic()}, \code{from_hyper()} and
 \code{from_meijerg()} convert expressions. \code{RecurrenceOperators()} and
 \code{HolonomicSequence()} are the recurrence counterparts.
+}
+\details{
+\code{RecurrenceOperator(list_of_poly, parent)} builds the operator
+\verb{sum p_i Sn^i} directly, as SymPy's class does.
 }
 \examples{
 x <- Symbol("x")

@@ -40,8 +40,9 @@
 #' error.
 #'
 #' @param ... Matrices.
-#' @param n,m Dimensions.
-#' @param format The matrix format, only `"sympy"`.
+#' @param n The number of rows.
+#' @param format The matrix format: `"sympy"`, or `"numpy"` for a base R
+#'   complex matrix (SymPy's NumPy format).
 #' @param e A matrix or an expression.
 #' @return A matrix or an expression.
 #' @examples
@@ -57,17 +58,20 @@ matrix_tensor_product <- function(...) {
   NULL
 }
 
+# "numpy" is a base R numeric or complex matrix; SciPy's sparse format has
+# no counterpart in base R
 .qformat_check <- function(format) {
-  if (!identical(format, "sympy")) .qstop("NotImplementedError", "The ", format, " format is not available in R.")
+  if (!format %in% c("sympy", "numpy")) .qstop("NotImplementedError", "The ", format, " format is not available in R.")
 }
+.qformat_out <- function(M, format) if (identical(format, "numpy")) sympy_to_numpy(M) else M
 
 #' @rdname quantum-matrixutils
 #' @export
-matrix_eye <- function(n, format = "sympy") { .qformat_check(format); eye(.qint(n)) }
+matrix_eye <- function(n, format = "sympy") { .qformat_check(format); .qformat_out(eye(.qint(n)), format) }
 
 #' @rdname quantum-matrixutils
 #' @export
-matrix_zeros <- function(m, n, format = "sympy") { .qformat_check(format); zeros(.qint(m), .qint(n)) }
+matrix_zeros <- function(m, n, format = "sympy") { .qformat_check(format); .qformat_out(zeros(.qint(m), .qint(n)), format) }
 
 #' @rdname quantum-matrixutils
 #' @export
@@ -402,7 +406,8 @@ normalized <- function(normalize) { .qnormalized$on <- isTRUE(normalize); invisi
 #' @param ngates,nqubits The number of gates and qubits.
 #' @param gate_space The gate classes to draw from.
 #' @param target_matrix The matrix of the gate on its targets.
-#' @param format The matrix format, only `"sympy"`.
+#' @param format The matrix format: `"sympy"`, or `"numpy"` for a base R
+#'   complex matrix (SymPy's NumPy format).
 #' @return A gate, a circuit or a matrix.
 #' @examples
 #' qapply(HadamardGate(0) * Qubit("0"))
@@ -450,6 +455,18 @@ PhaseGate <- function(...) .qfunc("PhaseGate", list(...))
 #' @rdname quantum-gates
 #' @export
 TGate <- function(...) .qfunc("TGate", list(...))
+#' @rdname quantum-gates
+#' @export
+X <- XGate
+#' @rdname quantum-gates
+#' @export
+Y <- YGate
+#' @rdname quantum-gates
+#' @export
+Z <- ZGate
+#' @rdname quantum-gates
+#' @export
+Phase <- PhaseGate
 #' @rdname quantum-gates
 #' @export
 CNotGate <- function(...) .qfunc("CNotGate", list(...))
@@ -594,3 +611,27 @@ random_circuit <- function(ngates, nqubits, gate_space = c("XGate", "YGate", "ZG
   }
   .mul(result)
 }
+
+#' @rdname quantum-matrixutils
+#' @param m The number of columns for `matrix_zeros()`; a matrix, or a number, for `sympy_to_numpy()`.
+#' @param dtype `"complex"` or `"double"`.
+#' @details `sympy_to_numpy()` and `to_numpy()` turn a SymPy matrix into a
+#'   base R matrix, the counterpart of a NumPy array; `numpy_to_sympy()`
+#'   turns a base R matrix back into a `Matrix`.
+#' @export
+sympy_to_numpy <- function(m, dtype = "complex") {
+  conv <- if (dtype == "complex") as.complex else as.numeric
+  if (inherits(m, "symmatrix")) {
+    d <- dim(m)
+    return(matrix(vapply(as.list(m$data), function(e) conv(e), conv(0)), d[1L], d[2L], byrow = TRUE))
+  }
+  e <- as_sym(m)
+  if (is_number_type(e) || e$type %in% c("Constant", "NumberSymbol", "ImaginaryUnit")) return(conv(e))
+  .qstop("TypeError", "Expected MatrixBase or complex scalar, got: ", .qrepr(e))
+}
+#' @rdname quantum-matrixutils
+#' @export
+to_numpy <- function(m, dtype = "complex") if (is.matrix(m)) m else sympy_to_numpy(m, dtype)
+#' @rdname quantum-matrixutils
+#' @export
+numpy_to_sympy <- function(m) Matrix(m)

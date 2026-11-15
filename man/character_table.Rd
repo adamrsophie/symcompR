@@ -9,6 +9,7 @@
 \alias{ct_shape}
 \alias{ct_zeta_order}
 \alias{ct_conjugacy_class_reps}
+\alias{CharacterTable}
 \title{Character tables of finite groups}
 \usage{
 character_table(G)
@@ -26,6 +27,8 @@ ct_shape(tbl)
 ct_zeta_order(tbl)
 
 ct_conjugacy_class_reps(tbl)
+
+CharacterTable(G)
 }
 \arguments{
 \item{G}{A permutation group.}
@@ -62,6 +65,8 @@ lists of expressions in the root of unity \code{zeta_k} (an
 dimensions, \code{ct_zeta_order()} the order \code{k} of the root of unity (1 for
 an integer table) and \code{ct_conjugacy_class_reps()} the first element of
 each conjugacy class.
+
+\code{CharacterTable(G)} is SymPy's \code{CharacterTable.from_perm_group(G)}.
 }
 \examples{
 ct_tolist(character_table_sn(3))

@@ -7,6 +7,9 @@
 \alias{matrix_zeros}
 \alias{matrix_dagger}
 \alias{matrix_to_zero}
+\alias{sympy_to_numpy}
+\alias{to_numpy}
+\alias{numpy_to_sympy}
 \title{Matrix utilities of the quantum module}
 \usage{
 matrix_tensor_product(...)
@@ -18,15 +21,26 @@ matrix_zeros(m, n, format = "sympy")
 matrix_dagger(e)
 
 matrix_to_zero(e)
+
+sympy_to_numpy(m, dtype = "complex")
+
+to_numpy(m, dtype = "complex")
+
+numpy_to_sympy(m)
 }
 \arguments{
 \item{...}{Matrices.}
 
-\item{n, m}{Dimensions.}
+\item{n}{The number of rows.}
 
-\item{format}{The matrix format, only \code{"sympy"}.}
+\item{format}{The matrix format: \code{"sympy"}, or \code{"numpy"} for a base R
+complex matrix (SymPy's NumPy format).}
+
+\item{m}{The number of columns for \code{matrix_zeros()}; a matrix, or a number, for \code{sympy_to_numpy()}.}
 
 \item{e}{A matrix or an expression.}
+
+\item{dtype}{\code{"complex"} or \code{"double"}.}
 }
 \value{
 A matrix or an expression.
@@ -39,6 +53,11 @@ The SymPy matrix helpers of \code{sympy.physics.quantum.matrixutils}:
 the identity on symbolic matrices and \code{flatten_scalar(m)} the entry of a 1 by 1 matrix.
 Only the \code{"sympy"} format exists here; NumPy and SciPy formats raise an
 error.
+}
+\details{
+\code{sympy_to_numpy()} and \code{to_numpy()} turn a SymPy matrix into a
+base R matrix, the counterpart of a NumPy array; \code{numpy_to_sympy()}
+turns a base R matrix back into a \code{Matrix}.
 }
 \examples{
 matrix_tensor_product(Matrix(list(list(1, 0), list(0, 1))), Matrix(list(list(0, 1), list(1, 0))))
