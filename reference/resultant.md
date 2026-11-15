@@ -22,6 +22,10 @@ discriminant(f, x = NULL, ...)
 
   The variable.
 
+- ...:
+
+  Options; `modulus = p` works over GF(p).
+
 ## Value
 
 An expression.

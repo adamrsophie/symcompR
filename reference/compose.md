@@ -24,6 +24,10 @@ interpolate(points, x)
 
   The variable.
 
+- ...:
+
+  Options; `modulus = p` works over GF(p).
+
 - points:
 
   A list of `c(x, y)` pairs, or a vector of values.
