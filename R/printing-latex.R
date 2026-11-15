@@ -1567,8 +1567,8 @@ rm(.n)
   r <- A$nrow; cc <- A$ncol
   if (cc == 1L) return(.glsl(rows[[1L]][[1L]], consts))
   cells <- lapply(rows, function(row) vapply(row, .glsl, "", consts = consts))
-  if (!r || !cc) tab <- function(...) "[]"
-  else tab <- function(rowsep, rowstart, rowend) {
+  tab <- function(rowsep, rowstart, rowend) {
+    if (!r || !cc) return("[]")
     w <- vapply(seq_len(cc), function(j) max(nchar(vapply(cells, `[`, "", j))), 0)
     paste(vapply(cells, function(row) paste0(rowstart, paste(mapply(function(z, k) formatC(z, width = k), row, w), collapse = ", "), rowend), ""),
           collapse = rowsep)
