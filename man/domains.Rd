@@ -22,6 +22,7 @@
 \alias{RealField}
 \alias{ComplexField}
 \alias{ExpressionDomain}
+\alias{ExpressionRawDomain}
 \alias{FiniteField}
 \alias{PolynomialRing}
 \alias{FractionField}
@@ -38,6 +39,15 @@
 \alias{FF_python}
 \alias{FF_gmpy}
 \alias{PythonRational}
+\alias{PythonRationalField}
+\alias{GMPYRational}
+\alias{PythonInteger}
+\alias{GMPYInteger}
+\alias{SymPyInteger}
+\alias{SymPyRational}
+\alias{SymPyReal}
+\alias{PythonReal}
+\alias{PythonComplex}
 \alias{to_sympy}
 \alias{from_sympy}
 \title{Polynomial domains}
@@ -82,6 +92,8 @@ ComplexField(prec = 53, dps = NULL)
 
 ExpressionDomain()
 
+ExpressionRawDomain()
+
 FiniteField(p)
 
 PolynomialRing(K, ...)
@@ -114,6 +126,24 @@ FF_gmpy(p)
 
 PythonRational(p, q = 1)
 
+PythonRationalField()
+
+GMPYRational(p, q = 1)
+
+PythonInteger(x)
+
+GMPYInteger(x)
+
+SymPyInteger(x)
+
+SymPyRational(p, q = 1)
+
+SymPyReal(x, ...)
+
+PythonReal(x)
+
+PythonComplex(real = 0, imag = 0)
+
 to_sympy(K, a)
 
 from_sympy(K, a)
@@ -135,6 +165,8 @@ from_sympy(K, a)
 
 \item{q}{The denominator for \code{PythonRational()}.}
 
+\item{real, imag}{Real and imaginary parts.}
+
 \item{a}{An element or expression.}
 }
 \value{
@@ -155,9 +187,13 @@ between elements and expressions (with one argument, \code{to_sympy(m)} is the
 quantum matrix helper of \code{\link[=matrix_tensor_product]{matrix_tensor_product()}}), and \code{Domain(K)}
 tests for a domain.
 The names \code{IntegerRing()}, \code{RationalField()}, \code{RealField()},
-\code{ComplexField()}, \code{ExpressionDomain()}, \code{FiniteField()} and the Python
+\code{ComplexField()}, \code{ExpressionDomain()}, \code{ExpressionRawDomain()}, \code{FiniteField()} and the Python
 and GMPY variants of SymPy (\code{ZZ_python}, \code{QQ_gmpy}, \code{FF_python}, ...)
-return the same domains.
+return the same domains. The ground type constructors make the element
+types SymPy uses: \code{PythonInteger()} and \code{GMPYInteger()} a \code{bigz},
+\code{PythonRational()} and \code{GMPYRational()} a \code{bigq}, \code{SymPyInteger()},
+\code{SymPyRational()} and \code{SymPyReal()} the SymPy numbers, \code{PythonReal()} a
+double and \code{PythonComplex()} a complex number.
 }
 \examples{
 ZZ(3); QQ(1, 2); GF(7)(10)

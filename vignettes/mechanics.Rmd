@@ -208,6 +208,16 @@ ForceActuator(Symbol("F"), path)$to_loads()
 TorqueActuator(Symbol("T"), N$z, ReferenceFrame("A"), N)$to_loads()
 ```
 
+`PathwayBase`, `ActuatorBase`, `WrappingGeometryBase`, `BodyBase` and
+`MethodBase` are SymPy's abstract base classes. Their constructors raise a
+`TypeError`, and their names are the classes the concrete objects inherit.
+
+```{r}
+inherits(path, "PathwayBase")
+inherits(LinearSpring(k, path), "ActuatorBase")
+tryCatch(PathwayBase(), error = conditionMessage)
+```
+
 ## Joints
 
 Joints connect a parent and a child body and create the coordinates,

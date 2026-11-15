@@ -388,6 +388,7 @@ reference:
   - mersenne_prime_exponent
   - core
   - integer-helpers
+  - groundtypes
   - crt
   - sqrt_mod
   - is_nthpow_residue
@@ -552,6 +553,7 @@ reference:
   - ReferenceFrame
   - CoordinateSym
   - PhysVector
+  - physics-abstract-bases
   - PhysPoint
   - dynamicsymbols
   - time_derivative
@@ -642,6 +644,7 @@ reference:
   - cartesian-quantum
   - cg-coefficients
   - circuit-gates
+  - circuit_plot
   - circuitutils
   - combined_tensor_printing
   - density-operators

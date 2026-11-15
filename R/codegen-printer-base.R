@@ -585,6 +585,13 @@ rm(.cg_n)
              if (length(e) == 1L) return(paste0("(", .cgpp(p, e[[1L]]), ",)"))
              paste0("(", .cgp_stringify(p, unclass(e), ", "), ")")
            },
+           `_print_Sum` = function(p, e) {
+             lims <- vapply(e$args[-1L], function(l) {
+               xab <- l$args
+               if (length(xab) == 1L) .cgpp(p, xab[[1L]]) else .cgpp(p, structure(xab, class = "pytuple"))
+             }, "")
+             sprintf("Sum(%s, %s)", .cgpp(p, e$args[[1L]]), paste(lims, collapse = ", "))
+           },
            `_print_Tuple` = function(p, e) {
              if (length(e$args) == 1L) return(paste0("(", .cgpp(p, e$args[[1L]]), ",)"))
              paste0("(", .cgp_stringify(p, e$args, ", "), ")")

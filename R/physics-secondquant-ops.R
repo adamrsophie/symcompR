@@ -535,7 +535,7 @@ matrix_rep <- function(op, basis) {
   }
   b$state <- function(i) basis[[.qint(i) + 1L]]
   b$`__getitem__` <- b$state
-  class(b) <- cls
+  class(b) <- c(cls, "BosonicBasis")
   b
 }
 

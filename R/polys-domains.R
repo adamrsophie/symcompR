@@ -30,12 +30,17 @@
 #' quantum matrix helper of [matrix_tensor_product()]), and `Domain(K)`
 #' tests for a domain.
 #' The names `IntegerRing()`, `RationalField()`, `RealField()`,
-#' `ComplexField()`, `ExpressionDomain()`, `FiniteField()` and the Python
+#' `ComplexField()`, `ExpressionDomain()`, `ExpressionRawDomain()`, `FiniteField()` and the Python
 #' and GMPY variants of SymPy (`ZZ_python`, `QQ_gmpy`, `FF_python`, ...)
-#' return the same domains.
+#' return the same domains. The ground type constructors make the element
+#' types SymPy uses: `PythonInteger()` and `GMPYInteger()` a `bigz`,
+#' `PythonRational()` and `GMPYRational()` a `bigq`, `SymPyInteger()`,
+#' `SymPyRational()` and `SymPyReal()` the SymPy numbers, `PythonReal()` a
+#' double and `PythonComplex()` a complex number.
 #'
 #' @param p A prime modulus, or the numerator for `PythonRational()`.
 #' @param q The denominator for `PythonRational()`.
+#' @param real,imag Real and imaginary parts.
 #' @param K A domain.
 #' @param ... Generators, extensions or values.
 #' @param prec Precision in bits (kept for SymPy compatibility).
@@ -153,6 +158,9 @@ ComplexField <- function(prec = 53, dps = NULL) {
 ExpressionDomain <- function() EX
 #' @rdname domains
 #' @export
+ExpressionRawDomain <- function() EXRAW
+#' @rdname domains
+#' @export
 FiniteField <- function(p) GF(p)
 #' @rdname domains
 #' @export
@@ -200,6 +208,33 @@ FF_gmpy <- FiniteField
 #' @rdname domains
 #' @export
 PythonRational <- function(p, q = 1) gmp::as.bigq(p, q)
+#' @rdname domains
+#' @export
+PythonRationalField <- RationalField
+#' @rdname domains
+#' @export
+GMPYRational <- PythonRational
+#' @rdname domains
+#' @export
+PythonInteger <- function(x) gmp::as.bigz(x)
+#' @rdname domains
+#' @export
+GMPYInteger <- PythonInteger
+#' @rdname domains
+#' @export
+SymPyInteger <- function(x) Integer(x)
+#' @rdname domains
+#' @export
+SymPyRational <- function(p, q = 1) Rational(p, q)
+#' @rdname domains
+#' @export
+SymPyReal <- function(x, ...) Float(x, ...)
+#' @rdname domains
+#' @export
+PythonReal <- function(x) as.numeric(x)
+#' @rdname domains
+#' @export
+PythonComplex <- function(real = 0, imag = 0) complex(real = real, imaginary = imag)
 
 .as_q <- function(a) {
   if (is_sym(a)) {

@@ -402,6 +402,7 @@ physics_units <- function() {
   all_units <- list()
   for (u in si_units) all_units <- c(all_units, prefix_unit(u, PREFIXES))
   all_units <- c(all_units, si_units, list(mole, candela, kelvin, lux))
+  ns$all_units <- all_units
   dimsys_SI <- extend(dimsys_MKSA, list(temperature, amount_of_substance, luminous_intensity))
   ns$dimsys_SI <- dimsys_SI
   ns$dimsys_default <- extend(dimsys_SI, list(information))

@@ -33,6 +33,16 @@ algebraic_field(QQ, sqrt(S(2)))
 construct_domain(list(1, Rational(1, 2)))[[1]]
 ```
 
+The integer functions of SymPy's ground types work on any integers:
+`python_gcdex()` gives the Bezout coefficients and the gcd, and
+`sqrtrem()` the integer square root and its remainder.
+
+```{r}
+python_gcdex(12, 18)
+sqrtrem(10)
+gmpy_qdiv(6, 4)
+```
+
 `ring()` creates a sparse polynomial ring and its generators, the low level
 representation that the algorithms use.
 

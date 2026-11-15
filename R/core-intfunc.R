@@ -248,3 +248,59 @@ register_str_printer("UnevaluatedExpr", function(e) .str(e$args[[1L]]))
 register_latex_printer("UnevaluatedExpr", function(e) .latex(e$args[[1L]]))
 register_doit("UnevaluatedExpr", function(e) e$args[[1L]])
 register_neval("UnevaluatedExpr", function(e, env) .neval(e$args[[1L]], env))
+
+#' Ground type integer functions
+#'
+#' The integer functions of `sympy.polys.domains.groundtypes`, which SymPy
+#' takes from Python or from gmpy2: `python_gcd()`, `python_lcm()` and
+#' `python_gcdex()` (Python's), and `gmpy_gcd()`, `gmpy_lcm()`,
+#' `gmpy_gcdex()`, `gmpy_numer()`, `gmpy_denom()` and `gmpy_qdiv()`
+#' (gmpy2's, here computed with gmp). `python_gcdex(a, b)` returns
+#' `list(x, y, g)` with `x*a + y*b = g`, while `gmpy_gcdex(a, b)` returns
+#' gmpy2's order `list(g, x, y)`. `gmpy_qdiv(x, y)` is the exact quotient,
+#' an integer when it is one. `sqrtrem(n)` returns the integer square root
+#' `s` and the remainder `n - s^2`.
+#'
+#' @param a,b,x,y,n Integers (rationals for `gmpy_numer()`, `gmpy_denom()`
+#'   and `gmpy_qdiv()`).
+#' @return An integer, a rational, or a list of integers.
+#' @examples
+#' python_gcdex(12, 18)
+#' gmpy_gcdex(12, 18)
+#' sqrtrem(10)
+#' gmpy_qdiv(6, 4)
+#' @name groundtypes
+#' @export
+python_gcd <- function(a, b) igcd(a, b)
+#' @rdname groundtypes
+#' @export
+python_lcm <- function(a, b) ilcm(a, b)
+#' @rdname groundtypes
+#' @export
+python_gcdex <- function(a, b) lapply(.igcdex(.nt_int(a), .nt_int(b)), .nt_out)
+#' @rdname groundtypes
+#' @export
+gmpy_gcd <- function(a, b) igcd(a, b)
+#' @rdname groundtypes
+#' @export
+gmpy_lcm <- function(a, b) ilcm(a, b)
+#' @rdname groundtypes
+#' @export
+gmpy_gcdex <- function(a, b) { r <- python_gcdex(a, b); list(r[[3L]], r[[1L]], r[[2L]]) }
+#' @rdname groundtypes
+#' @export
+gmpy_numer <- function(x) numer(as_sym(x))
+#' @rdname groundtypes
+#' @export
+gmpy_denom <- function(x) denom(as_sym(x))
+#' @rdname groundtypes
+#' @export
+gmpy_qdiv <- function(x, y = 1) as_sym(x) / as_sym(y)
+#' @rdname groundtypes
+#' @export
+sqrtrem <- function(n) {
+  n <- .nt_int(n)
+  if (n < 0) stop(.sympy_condition("ValueError", "square root of negative number"))
+  s <- .mp_isqrt(n)
+  list(.nt_out(s), .nt_out(n - s * s))
+}

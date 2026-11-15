@@ -100,6 +100,7 @@
   Inertia = "sympy.physics.mechanics.inertia.Inertia",
   Force = "sympy.physics.mechanics.loads.Force",
   Torque = "sympy.physics.mechanics.loads.Torque",
+  LoadBase = "sympy.physics.mechanics.loads.LoadBase",
   Body = "sympy.physics.mechanics.body.Body",
   PinJoint = "sympy.physics.mechanics.joint.PinJoint",
   PrismaticJoint = "sympy.physics.mechanics.joint.PrismaticJoint",
