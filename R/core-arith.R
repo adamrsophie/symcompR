@@ -626,13 +626,19 @@ as_coeff_mul_split <- function(a) {
 }
 
 # Pow._eval_power: (b^e)^expt = s*b^(e*expt) when the branch factor s is known
-.pow_eval_power <- function(b, e, expt) {
+# Pow._eval_power; cached as SymPy caches Pow construction
+.pow_eval_power <- function(b, e, expt)
+  .cacheit("Pow._eval_power", paste(b$key, e$key, expt$key), .pow_eval_power_raw(b, e, expt))
+.pow_eval_power_raw <- function(b, e, expt) {
   if (is_nan(b)) return(NULL)
   num_lt <- function(x, k) {
     if (length(free_symbols(x))) return(FALSE)
     d <- tryCatch(.mp_num_sign(.sub(x, .int(k))), error = function(err) NA)
     isTRUE(d < 0)
   }
+  # (abs(e) < k) == True; free symbols make num_lt FALSE, so test them before
+  # building Abs(e)
+  abs_lt <- function(x, k) !length(free_symbols(x)) && num_lt(fcall("Abs", list(x)), k)
   half <- function(x) {
     if (x$type == "Rational" && gmp::denominator(x$value) == 2) return(TRUE)
     nd <- .as_numer_denom(x)
@@ -660,9 +666,10 @@ as_coeff_mul_split <- function(a) {
         if (isTRUE(ask_fact(b, "extended_real"))) b <- fcall("Abs", list(b))
         if (isTRUE(ask_fact(b, "imaginary"))) b <- .mul(list(fcall("Abs", list(fcall("im", list(b)))), S_I))
       }
-      if (num_lt(fcall("Abs", list(e)), 1L) || is_one_num(e)) s <- S_One
+      if (abs_lt(e, 1L) || is_one_num(e)) s <- S_One
       else if (isTRUE(ask_fact(b, "extended_nonnegative"))) s <- S_One
-      else if (isTRUE(ask_fact(fcall("re", list(b)), "extended_nonnegative")) && num_lt(fcall("Abs", list(e)), 2L)) s <- S_One
+      # (abs(e) < 2) first: both tests are pure and re(b) is the costly one
+      else if (abs_lt(e, 2L) && isTRUE(ask_fact(fcall("re", list(b)), "extended_nonnegative"))) s <- S_One
       else if (half(expt)) {
         fl <- fcall("floor", list(.sub(S_Half, .div(.mul(list(e, fcall("arg", list(b)))), .mul(list(S_Two, S_Pi))))))
         s <- real_sign(fcall("exp", list(.mul(list(S_Two, S_Pi, S_I, expt, fl)))))
