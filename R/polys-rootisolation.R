@@ -4,7 +4,12 @@
 # quadruples (a, b, c, d) of bigz for the map x -> (a*x + b)/(c*x + d).
 
 .zp <- function(v) gmp::as.bigz(v)
-.zp_strip <- function(f) { nz <- which(f != 0); if (!length(nz)) .zp(integer(0)) else f[nz[1L]:length(f)] }
+.zp_strip <- function(f) {
+  if (!length(f)) return(.zp(integer(0)))
+  if (f[1L] != 0) return(f)
+  nz <- which(f != 0)
+  if (!length(nz)) .zp(integer(0)) else f[nz[1L]:length(f)]
+}
 .zp_tc <- function(f) if (length(f)) f[length(f)] else .zp(0)
 .zp_shift <- function(f, a) {
   n <- length(f)
@@ -31,10 +36,25 @@
   if (length(s) < 2L) 0L else sum(s[-1L] != s[-length(s)])
 }
 .zp_mul <- function(f, g) {
-  if (!length(f) || !length(g)) return(.zp(integer(0)))
-  out <- .zp(rep(0, length(f) + length(g) - 1L))
-  for (i in seq_along(f)) { idx <- i:(i + length(g) - 1L); out[idx] <- out[idx] + f[i] * g }
-  out
+  nf <- length(f); ng <- length(g)
+  if (!nf || !ng) return(.zp(integer(0)))
+  if (nf < 4L || ng < 4L) {
+    out <- .zp(rep(0, nf + ng - 1L))
+    for (i in seq_len(nf)) { idx <- i:(i + ng - 1L); out[idx] <- out[idx] + f[i] * g }
+    return(out)
+  }
+  # Kronecker substitution: one big multiplication at x = 2^bits. Every
+  # product coefficient is below 2^(bits - 2) in absolute value, so adding
+  # half a digit to each makes all digits nonnegative and they unpack
+  # without borrows.
+  n <- nf + ng - 1L
+  bits <- gmp::sizeinbase(max(abs(f)), 2L) + gmp::sizeinbase(max(abs(g)), 2L) +
+    as.integer(ceiling(log2(min(nf, ng)))) + 2L
+  two <- gmp::as.bigz(2L)
+  N <- sum(f * two^(bits * ((nf - 1L):0L))) * sum(g * two^(bits * ((ng - 1L):0L)))
+  pw <- two^(bits * ((n - 1L):0L))
+  half <- two^(bits - 1L)
+  gmp::mod.bigz(gmp::divq.bigz(N + sum(half * pw), pw), two^bits) - half
 }
 .zp_add <- function(f, g) {
   n <- max(length(f), length(g))

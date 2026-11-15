@@ -3,7 +3,7 @@
 # Integer polynomials are bigz vectors, highest degree first.
 
 .zp_trim <- function(a) {
-  if (!length(a)) return(a)
+  if (!length(a) || !(a[1L] == 0)) return(a)
   nz <- which(!(a == 0))
   if (!length(nz)) return(gmp::as.bigz(integer(0)))
   a[nz[1L]:length(a)]

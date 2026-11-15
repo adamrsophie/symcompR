@@ -65,7 +65,7 @@ new_sym <- function(type, args = list(), name = NULL, value = NULL,
          "(", paste(ks, collapse = ","), ")")
 }
 
-.k <- function(e) e$key
+.k <- function(e) .subset2(e, "key")
 
 sym_key <- function(e) e$key
 
@@ -128,8 +128,14 @@ sym_name <- function(e) as_sym(e)$name
 
 .NUMBER_TYPES <- c("Integer", "Rational", "Float")
 
-is_number_type <- function(e) e$type %in% .NUMBER_TYPES
-is_exact_number <- function(e) e$type == "Integer" || e$type == "Rational"
+is_number_type <- function(e) {
+  t <- .subset2(e, "type")
+  !is.null(t) && (t == "Integer" || t == "Rational" || t == "Float")
+}
+is_exact_number <- function(e) {
+  t <- .subset2(e, "type")
+  !is.null(t) && (t == "Integer" || t == "Rational")
+}
 
 make_rational <- function(q) {
   den <- gmp::denominator(q)

@@ -238,7 +238,8 @@ as_coeff_mul_split <- function(a) {
   if (n == 0L) return(S_One)
   if (n == 1L) return(args[[1L]])
   # AssocOp.__new__ drops the identity S.One before flattening, so 1*x is x
-  one <- vapply(args, function(a) identical(a$type, "Integer") && a$value == 1L, NA)
+  # the key of Integer 1 is "Z1" and no other node has that key
+  one <- vapply(args, .subset2, "", "key") == "Z1"
   if (any(one)) {
     args <- args[!one]
     n <- length(args)
@@ -248,7 +249,8 @@ as_coeff_mul_split <- function(a) {
   # Mul.flatten's two-argument hack: a Rational times r*Add with a Rational
   # r other than 1 stays Mul(a*r, Add) without distributing
   if (n == 2L) {
-    ia <- if (args[[1L]]$type %in% c("Integer", "Rational")) 1L else if (args[[2L]]$type %in% c("Integer", "Rational")) 2L else 0L
+    t1 <- .subset2(args[[1L]], "type"); t2 <- .subset2(args[[2L]], "type")
+    ia <- if (t1 == "Integer" || t1 == "Rational") 1L else if (t2 == "Integer" || t2 == "Rational") 2L else 0L
     if (ia > 0L) {
       a <- args[[ia]]; b <- args[[3L - ia]]
       if (b$type == "Mul" && length(b$args) == 2L && b$args[[1L]]$type %in% c("Integer", "Rational") &&
@@ -259,12 +261,12 @@ as_coeff_mul_split <- function(a) {
       }
     }
   }
-  types <- vapply(args, `[[`, "", "type")
+  types <- vapply(args, .subset2, "", "type")
   if (any(types %in% .REL_TYPES)) .rel_in_assoc("Mul")
   if (any(types == "Mul")) {
     args <- do.call(c, lapply(args, function(a)
       if (a$type == "Mul") a$args else list(a)))
-    types <- vapply(args, `[[`, "", "type")
+    types <- vapply(args, .subset2, "", "type")
   }
   # Mul.flatten rebuilds each number power with Pow(b, e), so an
   # unevaluated Pow(2, -1/2) becomes sqrt(2)/2 once multiplied by -1
@@ -287,22 +289,24 @@ as_coeff_mul_split <- function(a) {
       if (!length(fo$rest)) return(fo$acc)
       if (!.is_ab(fo$acc)) return(.mul(c(fo$rest, list(fo$acc)), depth))
       args <- c(fo$rest, list(fo$acc))
-      types <- vapply(args, `[[`, "", "type")
+      types <- vapply(args, .subset2, "", "type")
     }
   }
   coeff <- S_One
   infs <- character()
   cfac <- list()
   ncfac <- list()
+  nc <- .nc_state$any
   for (i in seq_along(args)) {
     a <- args[[i]]
     t <- types[i]
     if (t == "Integer" || t == "Rational" || t == "Float") {
-      coeff <- num_mul(coeff, a)
+      # 1 * a is a for an exact number
+      coeff <- if (t != "Float" && identical(.subset2(coeff, "key"), "Z1")) a else num_mul(coeff, a)
     } else if (t == "Constant" && a$name %in% c(.INF_NAMES, "nan")) {
       if (a$name == "nan") return(S_NaN)
       infs <- c(infs, a$name)
-    } else if (.is_comm(a)) {
+    } else if (!nc || .is_comm(a)) {
       cfac[[length(cfac) + 1L]] <- if (t == "Pow" || t == "Function") .reeval_exp(a) else a
     } else {
       ncfac[[length(ncfac) + 1L]] <- a
@@ -352,12 +356,16 @@ as_coeff_mul_split <- function(a) {
       }
       cfac <- newf
     }
-    cfac <- .combine_num_exp(cfac)
-    cfac <- .combine_rational_radicals(cfac)
-    ft <- vapply(cfac, `[[`, "", "type")
+    ft <- vapply(cfac, .subset2, "", "type")
+    # both combiners only act on powers
+    if (any(ft == "Pow")) {
+      cfac <- .combine_num_exp(cfac)
+      cfac <- .combine_rational_radicals(cfac)
+      ft <- vapply(cfac, .subset2, "", "type")
+    }
     if (depth < 8L && (any(ft %in% c("Mul", .NUMBER_TYPES)) ||
-                       any(vapply(cfac, is_inf_const, TRUE)) ||
-                       any(vapply(cfac, is_nan, TRUE)))) {
+                       (any(ft == "Constant") && (any(vapply(cfac, is_inf_const, TRUE)) ||
+                                                  any(vapply(cfac, is_nan, TRUE)))))) {
       return(.mul(c(list(coeff), if (!is.null(inf_head)) list(inf_head),
                     cfac, ncfac), depth + 1L))
     }
