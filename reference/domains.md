@@ -16,9 +16,13 @@ algebraic number field such as `QQ<sqrt(2)>`; `CyclotomicField(n)` is
 [`matrix_tensor_product()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)),
 and `Domain(K)` tests for a domain. The names `IntegerRing()`,
 `RationalField()`, `RealField()`, `ComplexField()`,
-`ExpressionDomain()`, `FiniteField()` and the Python and GMPY variants
-of SymPy (`ZZ_python`, `QQ_gmpy`, `FF_python`, ...) return the same
-domains.
+`ExpressionDomain()`, `ExpressionRawDomain()`, `FiniteField()` and the
+Python and GMPY variants of SymPy (`ZZ_python`, `QQ_gmpy`, `FF_python`,
+...) return the same domains. The ground type constructors make the
+element types SymPy uses: `PythonInteger()` and `GMPYInteger()` a
+`bigz`, `PythonRational()` and `GMPYRational()` a `bigq`,
+`SymPyInteger()`, `SymPyRational()` and `SymPyReal()` the SymPy numbers,
+`PythonReal()` a double and `PythonComplex()` a complex number.
 
 ## Usage
 
@@ -63,6 +67,8 @@ ComplexField(prec = 53, dps = NULL)
 
 ExpressionDomain()
 
+ExpressionRawDomain()
+
 FiniteField(p)
 
 PolynomialRing(K, ...)
@@ -94,6 +100,24 @@ FF_python(p)
 FF_gmpy(p)
 
 PythonRational(p, q = 1)
+
+PythonRationalField()
+
+GMPYRational(p, q = 1)
+
+PythonInteger(x)
+
+GMPYInteger(x)
+
+SymPyInteger(x)
+
+SymPyRational(p, q = 1)
+
+SymPyReal(x, ...)
+
+PythonReal(x)
+
+PythonComplex(real = 0, imag = 0)
 
 to_sympy(K, a)
 
@@ -133,6 +157,10 @@ from_sympy(K, a)
 - q:
 
   The denominator for `PythonRational()`.
+
+- real, imag:
+
+  Real and imaginary parts.
 
 - a:
 

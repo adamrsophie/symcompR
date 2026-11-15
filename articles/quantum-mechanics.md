@@ -925,6 +925,19 @@ CreateCGate("V")(list(0), 1)
 #> C((0),V(1))
 ```
 
+[`circuit_plot()`](https://adamrsophie.github.io/symcompR/reference/circuit_plot.md)
+draws a circuit with base graphics. The rightmost gate of a product acts
+first and is drawn first; a measured wire is doubled after the
+measurement.
+
+``` r
+
+circuit_plot(CNOT(0, 1) * Mz(0) * HadamardGate(0) * SwapGate(0, 1), 2,
+             labels = labeller(2))
+```
+
+![](quantum-mechanics_files/figure-html/unnamed-chunk-32-1.png)
+
 Circuit utilities find and replace subcircuits, and convert between
 numbered and symbolic qubit indices.
 

@@ -882,9 +882,16 @@ plotting module create named gates and measurement gates.</p>
 <span><span class="co">#&gt; Q(1)</span></span>
 <span><span class="fu"><a href="../reference/circuit-gates.html">CreateCGate</a></span><span class="op">(</span><span class="st">"V"</span><span class="op">)</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; C((0),V(1))</span></span></code></pre></div>
+<p><code><a href="../reference/circuit_plot.html">circuit_plot()</a></code> draws a circuit with base graphics. The
+rightmost gate of a product acts first and is drawn first; a measured
+wire is doubled after the measurement.</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/circuit_plot.html">circuit_plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/quantum-gates.html">CNOT</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/circuit-gates.html">Mz</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/quantum-gates.html">HadamardGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/quantum-gates.html">SwapGate</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fl">2</span>,</span>
+<span>             labels <span class="op">=</span> <span class="fu"><a href="../reference/circuit-gates.html">labeller</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="quantum-mechanics_files/figure-html/unnamed-chunk-32-1.png" class="r-plt" alt="" width="480"></p>
 <p>Circuit utilities find and replace subcircuits, and convert between
 numbered and symbolic qubit indices.</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tup</span><span class="op">(</span><span class="fu"><a href="../reference/circuitutils.html">kmp_table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"D"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; (-1, 0, 0, 0, 0, 1, 2)</span></span>
 <span><span class="fu"><a href="../reference/circuitutils.html">find_subcircuit</a></span><span class="op">(</span><span class="fu"><a href="../reference/quantum-gates.html">XGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/quantum-gates.html">YGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/quantum-gates.html">XGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="../reference/quantum-gates.html">YGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/quantum-gates.html">XGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
@@ -904,7 +911,7 @@ identity. <code><a href="../reference/identitysearch.html">GateIdentity()</a></c
 equivalent rearrangements, and the identity search functions look for
 identities among a set of gates. The rules and equivalent identities are
 sets, so only their sizes are shown here.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/identitysearch.html">GateIdentity</a></span><span class="op">(</span><span class="fu"><a href="../reference/quantum-gates.html">XGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="../reference/quantum-gates.html">XGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">gi</span></span>
 <span><span class="co">#&gt; 1</span></span>
@@ -926,7 +933,7 @@ sets, so only their sizes are shown here.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="../reference/identitysearch.html">bfs_identity_search</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/quantum-gates.html">XGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="../reference/quantum-gates.html">YGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="../reference/quantum-gates.html">ZGate</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span>, max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 3</span></span></code></pre></div>
 <p>The random circuit tools draw gates at random:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">7</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/quantum-gates.html">random_circuit</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Y(0)*CNOT(1,0)*Y(0)*Y(1)</span></span>
@@ -948,7 +955,7 @@ occupation number states. Its <code>Dagger</code>,
 <code>Commutator</code> and <code>InnerProduct</code> are exported as
 <code><a href="../reference/secondquant.html">sq_Dagger()</a></code>, <code><a href="../reference/secondquant.html">sq_Commutator()</a></code> and
 <code><a href="../reference/secondquant.html">sq_InnerProduct()</a></code>.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"p"</span><span class="op">)</span>; <span class="va">q</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"q"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/secondquant.html">B</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; b(0)</span></span>
@@ -981,7 +988,7 @@ occupation number states. Its <code>Dagger</code>,
 <span><span class="fu"><a href="../reference/secondquant.html">apply_operators</a></span><span class="op">(</span><span class="fu"><a href="../reference/secondquant.html">sym_F</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/secondquant.html">FKet</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; |(2,)&gt;</span></span></code></pre></div>
 <p>The underlying classes can also be called directly:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/secondquant.html">AnnihilateBoson</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; b(0)</span></span>
 <span><span class="fu"><a href="../reference/secondquant.html">CreateBoson</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
@@ -1015,7 +1022,7 @@ occupation number states. Its <code>Dagger</code>,
 <span><span class="fu"><a href="../reference/secondquant.html">FermionState</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; (1, 2)</span></span></code></pre></div>
 <p>Bosonic bases and matrix representations:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/secondquant.html">VarBosonicBasis</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [FockState((0,)), FockState((1,)), FockState((2,))]</span></span>
 <span><span class="fu"><a href="../reference/secondquant.html">FixedBosonicBasis</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span>
@@ -1035,7 +1042,7 @@ occupation number states. Its <code>Dagger</code>,
 <code><a href="../reference/secondquant-wicks.html">NO()</a></code> is the normal ordered product,
 <code><a href="../reference/secondquant-wicks.html">contraction()</a></code> the contraction of two operators, and
 <code><a href="../reference/secondquant-wicks.html">wicks()</a></code> applies Wick’s theorem.</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">i</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"i"</span>, below_fermi <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>; <span class="va">j</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"j"</span>, below_fermi <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">ab</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"a"</span>, above_fermi <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>; <span class="va">bb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"b"</span>, above_fermi <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/secondquant.html">FKet</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">i</span>, <span class="va">ab</span><span class="op">)</span>, fermi_level <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -1061,7 +1068,7 @@ occupation number states. Its <code>Dagger</code>,
 <span><span class="fu"><a href="../reference/secondquant-wicks.html">evaluate_deltas</a></span><span class="op">(</span><span class="fu"><a href="../reference/elementary-functions.html">KroneckerDelta</a></span><span class="op">(</span><span class="va">p</span>, <span class="va">q</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/secondquant.html">sym_F</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; f(p)</span></span></code></pre></div>
 <p>Antisymmetric tensors, index permutations and dummy substitution:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/secondquant.html">AntiSymmetricTensor</a></span><span class="op">(</span><span class="st">"v"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">ab</span>, <span class="va">i</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">bb</span>, <span class="va">j</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; v((a, i),(b, j))</span></span>
 <span><span class="fu"><a href="../reference/secondquant.html">AntiSymmetricTensor</a></span><span class="op">(</span><span class="st">"v"</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">i</span>, <span class="va">ab</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">bb</span>, <span class="va">j</span><span class="op">)</span><span class="op">)</span></span>
@@ -1085,7 +1092,7 @@ index (<code>LorentzIndex</code> is the index type).
 <code><a href="../reference/gamma-matrices.html">kahane_simplify()</a></code> removes contracted gamma matrices,
 <code><a href="../reference/gamma-matrices.html">gamma_trace()</a></code> takes traces, and
 <code><a href="../reference/gamma-matrices.html">simplify_gpgp()</a></code> simplifies products of slashed momenta.</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">i0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tensor-indices.html">TensorIndex</a></span><span class="op">(</span><span class="st">"i0"</span>, <span class="va">LorentzIndex</span><span class="op">)</span>; <span class="va">i1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tensor-indices.html">TensorIndex</a></span><span class="op">(</span><span class="st">"i1"</span>, <span class="va">LorentzIndex</span><span class="op">)</span></span>
 <span><span class="va">i2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tensor-indices.html">TensorIndex</a></span><span class="op">(</span><span class="st">"i2"</span>, <span class="va">LorentzIndex</span><span class="op">)</span>; <span class="va">i3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tensor-indices.html">TensorIndex</a></span><span class="op">(</span><span class="st">"i3"</span>, <span class="va">LorentzIndex</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/gamma-matrices.html">kahane_simplify</a></span><span class="op">(</span><span class="fu"><a href="../reference/gamma-matrices.html">GammaMatrix</a></span><span class="op">(</span><span class="va">i0</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/gamma-matrices.html">GammaMatrix</a></span><span class="op">(</span><span class="va">i1</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/gamma-matrices.html">GammaMatrix</a></span><span class="op">(</span><span class="op">-</span><span class="va">i0</span><span class="op">)</span><span class="op">)</span></span>
@@ -1129,7 +1136,7 @@ dimensional isotropic harmonic oscillator
 oscillator (<code>sympy.physics.qho_1d</code>) and the particle on a
 ring (<code>sympy.physics.pring</code>). The functions carry the module
 name as a prefix.</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"r"</span><span class="op">)</span>; <span class="va">theta</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"theta"</span><span class="op">)</span>; <span class="va">phi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"phi"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/hydrogen_R_nl.html">hydrogen_R_nl</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="va">r</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 2*exp(-r)</span></span>
@@ -1169,7 +1176,7 @@ name as a prefix.</p>
 </h2>
 <p><code>sympy.physics.wigner</code> evaluates the angular momentum
 coupling coefficients exactly.</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/wigner_3j.html">wigner_3j</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">6</span>, <span class="fl">4</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; sqrt(715)/143</span></span>
 <span><span class="fu"><a href="../reference/wigner_3j.html">clebsch_gordan</a></span><span class="op">(</span><span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">2</span><span class="op">)</span>, <span class="va">S_Half</span>, <span class="fl">2</span>, <span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">2</span><span class="op">)</span>, <span class="va">S_Half</span>, <span class="fl">2</span><span class="op">)</span></span>
@@ -1204,7 +1211,7 @@ coupling coefficients exactly.</p>
 gamma matrices, the Minkowski metric, the parallel axis theorem matrix,
 and the (deprecated) discrete Fourier transform matrix
 <code><a href="../reference/msigma.html">mdft()</a></code>, which now points to <code><a href="../reference/structured-matrices.html">DFT()</a></code>.</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/msigma.html">msigma</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Matrix(2, 2)</span></span>
 <span><span class="co">#&gt; [0, 1]</span></span>

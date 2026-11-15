@@ -234,6 +234,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/checkodesol.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/checksysodesol.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/circuit-gates.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/circuit_plot.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/circuitutils.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/classify_ode.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/classify_sysode.html</loc></url>
@@ -356,6 +357,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/grad.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/graph_certificate.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/groebner.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/groundtypes.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/groups_count.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/grover.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/gruntz.html</loc></url>
@@ -494,6 +496,7 @@
 <url><loc>https://adamrsophie.github.io/symcompR/reference/perm_af_direct_product.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/perm_group_presentation.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/permutations.html</loc></url>
+<url><loc>https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/physics-attributes.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/physics_units.html</loc></url>
 <url><loc>https://adamrsophie.github.io/symcompR/reference/pi_hex_digits.html</loc></url>

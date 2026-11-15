@@ -408,13 +408,25 @@ and general forces and torques.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; [[2]]</span></span>
 <span><span class="co">#&gt; Torque(frame=N, torque=- T*N.z)</span></span></code></pre></div>
+<p><code>PathwayBase</code>, <code>ActuatorBase</code>,
+<code>WrappingGeometryBase</code>, <code>BodyBase</code> and
+<code>MethodBase</code> are SymPy’s abstract base classes. Their
+constructors raise a <code>TypeError</code>, and their names are the
+classes the concrete objects inherit.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="va">path</span>, <span class="st">"PathwayBase"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="fu"><a href="../reference/ForceActuator.html">LinearSpring</a></span><span class="op">(</span><span class="va">k</span>, <span class="va">path</span><span class="op">)</span>, <span class="st">"ActuatorBase"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/physics-abstract-bases.html">PathwayBase</a></span><span class="op">(</span><span class="op">)</span>, error <span class="op">=</span> <span class="va">conditionMessage</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Can't instantiate abstract class PathwayBase without an implementation for abstract methods 'extension_velocity', 'length', 'to_loads'"</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="joints">Joints<a class="anchor" aria-label="anchor" href="#joints"></a>
 </h2>
 <p>Joints connect a parent and a child body and create the coordinates,
 speeds and kinematic equations of the connection.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Pp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Particle.html">RigidBody</a></span><span class="op">(</span><span class="st">"P"</span><span class="op">)</span>; <span class="va">Cp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Particle.html">RigidBody</a></span><span class="op">(</span><span class="st">"C"</span><span class="op">)</span></span>
 <span><span class="va">J</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Joint.html">PinJoint</a></span><span class="op">(</span><span class="st">"J"</span>, <span class="va">Pp</span>, <span class="va">Cp</span><span class="op">)</span></span>
 <span><span class="va">J</span><span class="op">$</span><span class="va">coordinates</span></span>
@@ -458,7 +470,7 @@ speeds and kinematic equations of the connection.</p>
 deprecated <code><a href="../reference/Body.html">Body()</a></code> and <code><a href="../reference/JointsMethod.html">JointsMethod()</a></code> still
 work, with a deprecation warning, but <code><a href="../reference/Particle.html">RigidBody()</a></code>,
 <code><a href="../reference/Particle.html">Particle()</a></code> and <code><a href="../reference/System.html">System()</a></code> replace them.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/Joint.html">Joint</a></span><span class="op">(</span><span class="st">"J0"</span>, <span class="va">Pp</span>, <span class="va">Cp</span><span class="op">)</span>, error <span class="op">=</span> <span class="va">conditionMessage</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Can't instantiate abstract class Joint without an implementation for abstract methods '_generate_coordinates', '_generate_speeds', '_orient_frames', '_set_angular_velocity', '_set_linear_velocity'"</span></span>
 <span><span class="va">B</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu"><a href="../reference/Body.html">Body</a></span><span class="op">(</span><span class="st">"B"</span><span class="op">)</span><span class="op">)</span></span>
@@ -474,7 +486,7 @@ work, with a deprecation warning, but <code><a href="../reference/Particle.html"
 <h2 id="equations-of-motion">Equations of motion<a class="anchor" aria-label="anchor" href="#equations-of-motion"></a>
 </h2>
 <p>Kane’s method for a mass on a spring:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Pk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/PhysPoint.html">PhysPoint</a></span><span class="op">(</span><span class="st">"Pk"</span><span class="op">)</span></span>
 <span><span class="va">Pk</span><span class="op">$</span><span class="fu">set_vel</span><span class="op">(</span><span class="va">N</span>, <span class="va">u</span> <span class="op">*</span> <span class="va">N</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="va">km</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/KanesMethod.html">KanesMethod</a></span><span class="op">(</span><span class="va">N</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">u</span><span class="op">)</span>, kd_eqs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">qd</span> <span class="op">-</span> <span class="va">u</span><span class="op">)</span><span class="op">)</span></span>
@@ -490,13 +502,13 @@ work, with a deprecation warning, but <code><a href="../reference/Particle.html"
 <span><span class="co">#&gt; [u(t)     ]</span></span>
 <span><span class="co">#&gt; [-k*q(t)/m]</span></span></code></pre></div>
 <p>Lagrange’s method takes the Lagrangian:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/LagrangesMethod.html">LagrangesMethod</a></span><span class="op">(</span><span class="va">m</span> <span class="op">*</span> <span class="va">qd</span><span class="op">^</span><span class="fl">2</span> <span class="op">/</span> <span class="fl">2</span> <span class="op">-</span> <span class="va">k</span> <span class="op">*</span> <span class="va">q</span><span class="op">^</span><span class="fl">2</span> <span class="op">/</span> <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="fu">form_lagranges_equations</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Matrix(1, 1)</span></span>
 <span><span class="co">#&gt; [k*q(t) + m*Derivative(q(t), (t, 2))]</span></span></code></pre></div>
 <p><code><a href="../reference/Linearizer.html">Linearizer()</a></code> linearizes the equations, either built from
 the parts or taken from a method object:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">km</span><span class="op">$</span><span class="fu">to_linearizer</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="fu">linearize</span><span class="op">(</span>A_and_B <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; (Matrix([[0, 1], [-k/m, 0]]), Matrix(0, 0, []))</span></span>
 <span><span class="fu"><a href="../reference/Linearizer.html">Linearizer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">qd</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">-</span><span class="va">u</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">ud</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">k</span> <span class="op">*</span> <span class="va">q</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
@@ -506,7 +518,7 @@ the parts or taken from a method object:</p>
 <p><code><a href="../reference/System.html">System()</a></code> collects the coordinates, speeds, bodies, loads
 and kinematic equations; <code><a href="../reference/SymbolicSystem.html">SymbolicSystem()</a></code> stores equations
 of motion already derived.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/System.html">System</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">sy</span><span class="op">$</span><span class="fu">add_coordinates</span><span class="op">(</span><span class="va">q</span><span class="op">)</span></span>
 <span><span class="va">sy</span><span class="op">$</span><span class="fu">add_speeds</span><span class="op">(</span><span class="va">u</span><span class="op">)</span></span>
@@ -529,7 +541,7 @@ of motion already derived.</p>
 <span><span class="co">#&gt; [u(t) ]</span></span>
 <span><span class="co">#&gt; [-q(t)]</span></span></code></pre></div>
 <p>Two ready made models:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">msd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/multi_mass_spring_damper.html">multi_mass_spring_damper</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">msd</span><span class="op">$</span><span class="va">mass_matrix</span></span>
 <span><span class="co">#&gt; Matrix(1, 1)</span></span>
@@ -555,7 +567,7 @@ of motion already derived.</p>
 <h2 id="biomechanics">Biomechanics<a class="anchor" aria-label="anchor" href="#biomechanics"></a>
 </h2>
 <p>Activation dynamics turn an excitation into a muscle activation.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">act</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/activation-dynamics.html">FirstOrderActivationDeGroote2016</a></span><span class="op">(</span><span class="st">"bicep"</span><span class="op">)</span></span>
 <span><span class="va">act</span><span class="op">$</span><span class="va">x</span></span>
 <span><span class="co">#&gt; Matrix(1, 1)</span></span>
@@ -580,7 +592,7 @@ of motion already derived.</p>
 tendon and fiber forces to their lengths and velocities. Each curve
 takes its constants as arguments, and the <code>_with_defaults</code>
 forms use the published values.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lT</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"l_T_tilde"</span><span class="op">)</span></span>
 <span><span class="va">fT</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/characteristic-curves.html">TendonForceLengthDeGroote2016_with_defaults</a></span><span class="op">(</span><span class="va">lT</span><span class="op">)</span></span>
 <span><span class="va">fT</span></span>
@@ -627,7 +639,7 @@ forms use the published values.</p>
 <p>A musculotendon model combines a pathway, activation dynamics and the
 curves; <code><a href="../reference/MusculotendonFormulation.html">MusculotendonFormulation()</a></code> selects its state
 variables.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/MusculotendonFormulation.html">MusculotendonFormulation</a></span><span class="op">(</span><span class="st">"RIGID_TENDON"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;MusculotendonFormulation.RIGID_TENDON: 0&gt;</span></span>
 <span><span class="fu"><a href="../reference/MusculotendonFormulation.html">MusculotendonFormulation</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span> <span class="op">==</span> <span class="fl">2</span></span>
@@ -655,7 +667,7 @@ variables.</p>
 <code><a href="../reference/characteristic-curves.html">CharacteristicCurveFunction()</a></code> and
 <code><a href="../reference/musculotendon.html">MusculotendonBase()</a></code> are abstract base classes, which cannot
 be instantiated:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/activation-dynamics.html">ActivationBase</a></span><span class="op">(</span><span class="st">"a"</span><span class="op">)</span>, error <span class="op">=</span> <span class="va">conditionMessage</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Can't instantiate abstract class ActivationBase without an implementation for abstract methods 'F', 'M', 'constants', 'input_vars', 'order', 'p', 'r', 'rhs', 'state_vars', 'with_defaults', 'x'"</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span><span class="fu"><a href="../reference/characteristic-curves.html">CharacteristicCurveFunction</a></span><span class="op">(</span><span class="op">)</span>, error <span class="op">=</span> <span class="va">conditionMessage</span><span class="op">)</span></span>

@@ -13,9 +13,13 @@ between elements and expressions (with one argument, to_sympy(m) is the
 quantum matrix helper of matrix_tensor_product()), and Domain(K)
 tests for a domain.
 The names IntegerRing(), RationalField(), RealField(),
-ComplexField(), ExpressionDomain(), FiniteField() and the Python
+ComplexField(), ExpressionDomain(), ExpressionRawDomain(), FiniteField() and the Python
 and GMPY variants of SymPy (ZZ_python, QQ_gmpy, FF_python, ...)
-return the same domains."><meta property="og:description" content="SymPy's coefficient domains. ZZ, QQ, RR, CC, EX, EXRAW,
+return the same domains. The ground type constructors make the element
+types SymPy uses: PythonInteger() and GMPYInteger() a bigz,
+PythonRational() and GMPYRational() a bigq, SymPyInteger(),
+SymPyRational() and SymPyReal() the SymPy numbers, PythonReal() a
+double and PythonComplex() a complex number."><meta property="og:description" content="SymPy's coefficient domains. ZZ, QQ, RR, CC, EX, EXRAW,
 ZZ_I (Gaussian integers) and QQ_I (Gaussian rationals) are domain
 objects; GF(p) (alias FF) is the finite field of p elements,
 poly_ring(K, ...) (also K[x, y] and PolynomialRing()) a polynomial
@@ -29,9 +33,13 @@ between elements and expressions (with one argument, to_sympy(m) is the
 quantum matrix helper of matrix_tensor_product()), and Domain(K)
 tests for a domain.
 The names IntegerRing(), RationalField(), RealField(),
-ComplexField(), ExpressionDomain(), FiniteField() and the Python
+ComplexField(), ExpressionDomain(), ExpressionRawDomain(), FiniteField() and the Python
 and GMPY variants of SymPy (ZZ_python, QQ_gmpy, FF_python, ...)
-return the same domains."><meta property="og:image" content="https://adamrsophie.github.io/symcompR/logo.svg"></head><body>
+return the same domains. The ground type constructors make the element
+types SymPy uses: PythonInteger() and GMPYInteger() a bigz,
+PythonRational() and GMPYRational() a bigq, SymPyInteger(),
+SymPyRational() and SymPyReal() the SymPy numbers, PythonReal() a
+double and PythonComplex() a complex number."><meta property="og:image" content="https://adamrsophie.github.io/symcompR/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -137,9 +145,13 @@ between elements and expressions (with one argument, <code>to_sympy(m)</code> is
 quantum matrix helper of <code><a href="quantum-matrixutils.html">matrix_tensor_product()</a></code>), and <code>Domain(K)</code>
 tests for a domain.
 The names <code>IntegerRing()</code>, <code>RationalField()</code>, <code>RealField()</code>,
-<code>ComplexField()</code>, <code>ExpressionDomain()</code>, <code>FiniteField()</code> and the Python
+<code>ComplexField()</code>, <code>ExpressionDomain()</code>, <code>ExpressionRawDomain()</code>, <code>FiniteField()</code> and the Python
 and GMPY variants of SymPy (<code>ZZ_python</code>, <code>QQ_gmpy</code>, <code>FF_python</code>, ...)
-return the same domains.</p>
+return the same domains. The ground type constructors make the element
+types SymPy uses: <code>PythonInteger()</code> and <code>GMPYInteger()</code> a <code>bigz</code>,
+<code>PythonRational()</code> and <code>GMPYRational()</code> a <code>bigq</code>, <code>SymPyInteger()</code>,
+<code>SymPyRational()</code> and <code>SymPyReal()</code> the SymPy numbers, <code>PythonReal()</code> a
+double and <code>PythonComplex()</code> a complex number.</p>
     </div>
 
     <div class="section level2">
@@ -184,6 +196,8 @@ return the same domains.</p>
 <span></span>
 <span><span class="fu">ExpressionDomain</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
+<span><span class="fu">ExpressionRawDomain</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu">FiniteField</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">PolynomialRing</span><span class="op">(</span><span class="va">K</span>, <span class="va">...</span><span class="op">)</span></span>
@@ -215,6 +229,24 @@ return the same domains.</p>
 <span><span class="fu">FF_gmpy</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">PythonRational</span><span class="op">(</span><span class="va">p</span>, q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">PythonRationalField</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">GMPYRational</span><span class="op">(</span><span class="va">p</span>, q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">PythonInteger</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">GMPYInteger</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">SymPyInteger</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">SymPyRational</span><span class="op">(</span><span class="va">p</span>, q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">SymPyReal</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">PythonReal</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">PythonComplex</span><span class="op">(</span>real <span class="op">=</span> <span class="fl">0</span>, imag <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">to_sympy</span><span class="op">(</span><span class="va">K</span>, <span class="va">a</span><span class="op">)</span></span>
 <span></span>
@@ -255,6 +287,10 @@ return the same domains.</p>
 
 <dt id="arg-q">q<a class="anchor" aria-label="anchor" href="#arg-q"></a></dt>
 <dd><p>The denominator for <code>PythonRational()</code>.</p></dd>
+
+
+<dt id="arg-real-imag">real, imag<a class="anchor" aria-label="anchor" href="#arg-real-imag"></a></dt>
+<dd><p>Real and imaginary parts.</p></dd>
 
 
 <dt id="arg-a">a<a class="anchor" aria-label="anchor" href="#arg-a"></a></dt>

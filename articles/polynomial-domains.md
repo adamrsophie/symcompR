@@ -30,6 +30,33 @@ construct_domain(list(1, Rational(1, 2)))[[1]]
 #> QQ
 ```
 
+The integer functions of SymPy’s ground types work on any integers:
+[`python_gcdex()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+gives the Bezout coefficients and the gcd, and
+[`sqrtrem()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+the integer square root and its remainder.
+
+``` r
+
+python_gcdex(12, 18)
+#> [[1]]
+#> [1] -1
+#> 
+#> [[2]]
+#> [1] 1
+#> 
+#> [[3]]
+#> [1] 6
+sqrtrem(10)
+#> [[1]]
+#> [1] 3
+#> 
+#> [[2]]
+#> [1] 1
+gmpy_qdiv(6, 4)
+#> 3/2
+```
+
 [`ring()`](https://adamrsophie.github.io/symcompR/reference/rings.md)
 creates a sparse polynomial ring and its generators, the low level
 representation that the algorithms use.

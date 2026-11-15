@@ -1356,6 +1356,7 @@ system.
   [`RealField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   [`ComplexField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   [`ExpressionDomain()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`ExpressionRawDomain()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   [`FiniteField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   [`PolynomialRing()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   [`FractionField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
@@ -1372,6 +1373,15 @@ system.
   [`FF_python()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   [`FF_gmpy()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   [`PythonRational()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`PythonRationalField()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`GMPYRational()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`PythonInteger()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`GMPYInteger()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`SymPyInteger()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`SymPyRational()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`SymPyReal()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`PythonReal()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
+  [`PythonComplex()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   [`to_sympy()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   [`from_sympy()`](https://adamrsophie.github.io/symcompR/reference/domains.md)
   : Polynomial domains
@@ -1835,6 +1845,17 @@ DomainMatrix layer.
   [`num_digits()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
   [`arity()`](https://adamrsophie.github.io/symcompR/reference/integer-helpers.md)
   : Integer helpers
+- [`python_gcd()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  [`python_lcm()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  [`python_gcdex()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  [`gmpy_gcd()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  [`gmpy_lcm()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  [`gmpy_gcdex()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  [`gmpy_numer()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  [`gmpy_denom()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  [`gmpy_qdiv()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  [`sqrtrem()`](https://adamrsophie.github.io/symcompR/reference/groundtypes.md)
+  : Ground type integer functions
 - [`crt()`](https://adamrsophie.github.io/symcompR/reference/crt.md)
   [`crt1()`](https://adamrsophie.github.io/symcompR/reference/crt.md)
   [`crt2()`](https://adamrsophie.github.io/symcompR/reference/crt.md)
@@ -3200,6 +3221,16 @@ Reference frames, vectors, dyadics and points from sympy.physics.vector.
 - [`PhysVector()`](https://adamrsophie.github.io/symcompR/reference/PhysVector.md)
   [`PhysDyadic()`](https://adamrsophie.github.io/symcompR/reference/PhysVector.md)
   : Vectors and dyadics of classical mechanics
+- [`ActuatorBase()`](https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.md)
+  [`PathwayBase()`](https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.md)
+  [`WrappingGeometryBase()`](https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.md)
+  [`BodyBase()`](https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.md)
+  [`LoadBase()`](https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.md)
+  [`MethodBase()`](https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.md)
+  [`BosonicBasis()`](https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.md)
+  [`Vector()`](https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.md)
+  [`Dyadic()`](https://adamrsophie.github.io/symcompR/reference/physics-abstract-bases.md)
+  : Abstract base classes of the physics modules
 - [`PhysPoint()`](https://adamrsophie.github.io/symcompR/reference/PhysPoint.md)
   : Points of classical mechanics
 - [`dynamicsymbols()`](https://adamrsophie.github.io/symcompR/reference/dynamicsymbols.md)
@@ -3544,6 +3575,9 @@ sympy.physics.quantum, secondquant, paulialgebra and hep.gamma_matrices.
   [`CreateCGate()`](https://adamrsophie.github.io/symcompR/reference/circuit-gates.md)
   [`labeller()`](https://adamrsophie.github.io/symcompR/reference/circuit-gates.md)
   : Measurement gates and gate factories
+- [`circuit_plot()`](https://adamrsophie.github.io/symcompR/reference/circuit_plot.md)
+  [`CircuitPlot()`](https://adamrsophie.github.io/symcompR/reference/circuit_plot.md)
+  : Plot quantum circuits
 - [`kmp_table()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
   [`find_subcircuit()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
   [`replace_subcircuit()`](https://adamrsophie.github.io/symcompR/reference/circuitutils.md)
