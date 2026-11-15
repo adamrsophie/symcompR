@@ -40,7 +40,7 @@ Eijk(1, 3, 2)
 c(identical(ImmutableDenseMatrix, ImmutableMatrix),
   identical(MutableMatrix, ImmutableMatrix),
   identical(MutableDenseMatrix, ImmutableMatrix))
-#> [1] TRUE TRUE TRUE
+#> [1]  TRUE FALSE FALSE
 vapply(list(DenseNDimArray, ImmutableDenseNDimArray, ImmutableSparseNDimArray,
             MutableDenseNDimArray, MutableSparseNDimArray, SparseNDimArray),
        identical, NA, NDimArray)

@@ -47,6 +47,22 @@ MutableMatrix(...)
 MutableDenseMatrix(...)
 
 ImmutableDenseMatrix(...)
+
+as_immutable(M)
+
+as_mutable(M)
+
+todok(M)
+
+row_list(M)
+
+col_list(M)
+
+RL(M)
+
+CL(M)
+
+nnz(M)
 ```
 
 ## Arguments

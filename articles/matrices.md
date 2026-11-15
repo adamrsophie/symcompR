@@ -841,6 +841,33 @@ banded(3, list("0" = 1, "-1" = c(2, 3)))
 #> [0, 3, 1]
 ```
 
+As in SymPy, the four matrix classes (mutable or immutable, dense or
+sparse) are kept by methods and combined by priority in arithmetic. An
+immutable matrix refuses assignment, and a sparse one lists its nonzero
+entries with zero based indices.
+
+``` r
+
+I2 <- ImmutableMatrix(list(list(1, 2), list(3, 4)))
+S2 <- SparseMatrix(2, 2, list(list(0, 1, x)))
+srepr(t(I2))
+#> [1] "ImmutableDenseMatrix([[Integer(1), Integer(3)], [Integer(2), Integer(4)]])"
+srepr(I2 + S2)
+#> [1] "ImmutableDenseMatrix([[Integer(1), Add(Integer(2), Symbol('x'))], [Integer(3), Integer(4)]])"
+tryCatch(I2[1, 1] <- 0, error = conditionMessage)
+#> [1] "TypeError: Cannot set values of <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>"
+row_list(S2)[[1]][1:2]
+#> [[1]]
+#> [1] 0
+#> 
+#> [[2]]
+#> [1] 1
+nnz(S2)
+#> [1] 1
+srepr(as_mutable(I2))
+#> [1] "MutableDenseMatrix([[Integer(1), Integer(2)], [Integer(3), Integer(4)]])"
+```
+
 Rotation matrices:
 [`rot_axis1()`](https://adamrsophie.github.io/symcompR/reference/matrix-constructions.md)
 to
