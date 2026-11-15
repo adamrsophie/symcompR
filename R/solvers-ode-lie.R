@@ -306,55 +306,45 @@
 }
 
 .ode_lie_abaco2_unique_general <- function(match, comp = FALSE) {
+  # Written with the arithmetic operators so each product associates left to
+  # right as in SymPy; 3*Ax*Ay then distributes 3 over Ax, which keeps the
+  # simplify inputs the same as SymPy's.
   hx <- match$hx; hy <- match$hy; func <- match$func; x <- func$args[[1L]]; y <- match$y
   xe <- .ode_xi_eta(x, func)
-  d <- function(e, v) .diff1(e, v)
-  A <- d(hx, y)
-  B <- .add(list(d(hy, y), .pow(hy, S_Two)))
-  C <- .sub(d(hx, x), .pow(hx, S_Two))
+  A <- diff(hx, y)
+  B <- diff(hy, y) + hy^2
+  C <- diff(hx, x) - hx^2
   if (!(.ode_true(A) && .ode_true(B) && .ode_true(C))) return(NULL)
-  Ax <- d(A, x); Ay <- d(A, y); Axy <- d(Ax, y); Axx <- d(Ax, x); Ayy <- d(Ay, y)
-  D <- .sub(.mul(list(simplify(.add(list(.mul(list(S_Two, Axy)), .mul(list(hx, Ay)), .neg(.mul(list(Ax, hy))),
-                                          .mul(list(.add(list(.mul(list(hx, hy)), .mul(list(S_Two, A)))), A))))), A)),
-            .mul(list(.int(3), Ax, Ay)))
+  Ax <- diff(A, x); Ay <- diff(A, y); Axy <- diff(Ax, y); Axx <- diff(Ax, x); Ayy <- diff(Ay, y)
+  D <- simplify(2 * Axy + hx * Ay - Ax * hy + (hx * hy + 2 * A) * A) * A - 3 * Ax * Ay
   if (!.ode_true(D)) {
-    E1 <- simplify(.add(list(.mul(list(.int(3), .pow(Ax, S_Two))),
-                             .mul(list(.sub(.mul(list(.add(list(.pow(hx, S_Two), .mul(list(S_Two, C)))), A)), .mul(list(S_Two, Axx))), A)))))
+    E1 <- simplify(3 * Ax^2 + ((hx^2 + 2 * C) * A - 2 * Axx) * A)
     if (.ode_true(E1)) {
-      E2 <- simplify(.sub(.mul(list(.add(list(.mul(list(S_Two, Ayy)), .mul(list(.sub(.mul(list(S_Two, B)), .pow(hy, S_Two)), A)))), A)),
-                          .mul(list(.int(3), .pow(Ay, S_Two)))))
+      E2 <- simplify((2 * Ayy + (2 * B - hy^2) * A) * A - 3 * Ay^2)
       if (!.ode_true(E2)) {
-        E3 <- simplify(.sub(.mul(list(E1, .sub(.mul(list(.add(list(.mul(list(.int(28), Ax)), .mul(list(.int(4), hx, A)))), .pow(A, .int(3)))),
-                                               .mul(list(E1, .add(list(.mul(list(hy, A)), Ay))))))),
-                            .mul(list(d(E1, x), .int(8), .pow(A, .int(4))))))
+        E3 <- simplify(E1 * ((28 * Ax + 4 * hx * A) * A^3 - E1 * (hy * A + Ay)) - diff(E1, x) * 8 * A^4)
         if (!.ode_true(E3)) {
-          etaval <- cancel(.div(.add(list(.mul(list(.int(4), .pow(A, .int(3)), .sub(Ax, .mul(list(hx, A))))),
-                                          .mul(list(E1, .sub(.mul(list(hy, A)), Ay))))), .mul(list(S_Two, A, E1))))
+          etaval <- cancel((4 * A^3 * (Ax - hx * A) + E1 * (hy * A - Ay)) / (2 * A * E1))
           if (!.has_free(etaval, list(x))) {
-            etaval <- fcall("exp", list(integrate(etaval, y)))
-            xival <- .div(.mul(list(.int(-4), .pow(A, .int(3)), etaval)), E1)
+            etaval <- exp(integrate(etaval, y))
+            xival <- -4 * A^3 * etaval / E1
             if (!.has_free(xival, list(y))) return(list(.ode_inf(xe[[1L]], xival, xe[[2L]], subs(etaval, y, func))))
           }
         }
       }
     }
   } else {
-    E1 <- simplify(.sub(.mul(list(.add(list(.mul(list(S_Two, Ayy)), .mul(list(.sub(.mul(list(S_Two, B)), .pow(hy, S_Two)), A)))), A)),
-                        .mul(list(.int(3), .pow(Ay, S_Two)))))
+    E1 <- simplify((2 * Ayy + (2 * B - hy^2) * A) * A - 3 * Ay^2)
     if (.ode_true(E1)) {
-      E2 <- simplify(.add(list(.mul(list(.int(4), .pow(A, .int(3)), D)), .neg(.pow(D, S_Two)),
-                               .mul(list(E1, .sub(.mul(list(.sub(.mul(list(S_Two, Axx)), .mul(list(.add(list(.pow(hx, S_Two), .mul(list(S_Two, C)))), A))), A)),
-                                                  .mul(list(.int(3), .pow(Ax, S_Two)))))))))
+      E2 <- simplify(4 * A^3 * D - D^2 + E1 * ((2 * Axx - (hx^2 + 2 * C) * A) * A - 3 * Ax^2))
       if (!.ode_true(E2)) {
-        E3 <- simplify(.add(list(.mul(list(.neg(.mul(list(A, D))), d(E1, y))),
-                                 .mul(list(.add(list(.mul(list(.sub(d(E1, x), .mul(list(hy, D))), A)), .mul(list(.int(3), Ay, D)),
-                                                     .mul(list(.sub(.mul(list(A, hx)), .mul(list(.int(3), Ax))), E1)))), E1)))))
+        E3 <- simplify(-(A * D) * diff(E1, y) + ((diff(E1, x) - hy * D) * A + 3 * Ay * D +
+                                                (A * hx - 3 * Ax) * E1) * E1)
         if (!.ode_true(E3)) {
-          etaval <- cancel(.div(.sub(.mul(list(.sub(.mul(list(A, hx)), Ax), E1)), .mul(list(.add(list(Ay, .mul(list(A, hy)))), D))),
-                                .mul(list(S_Two, A, D))))
+          etaval <- cancel(((A * hx - Ax) * E1 - (Ay + A * hy) * D) / (2 * A * D))
           if (!.has_free(etaval, list(x))) {
-            etaval <- fcall("exp", list(integrate(etaval, y)))
-            xival <- .div(.mul(list(.neg(E1), etaval)), D)
+            etaval <- exp(integrate(etaval, y))
+            xival <- -E1 * etaval / D
             if (!.has_free(xival, list(y))) return(list(.ode_inf(xe[[1L]], xival, xe[[2L]], subs(etaval, y, func))))
           }
         }

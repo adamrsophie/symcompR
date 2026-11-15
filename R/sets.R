@@ -194,7 +194,10 @@ EmptySet <- S_EmptySet
 
 .ONE_SORT_KEY <- list(list(1, 0, "Number"), list(0, list()), list(), 1)
 
-.sort_key <- function(e) {
+# Expr.sort_key; cached as SymPy caches it, since the print orders of nested
+# sums and products ask for the keys of the same subterms again and again
+.sort_key <- function(e) if (is.null(e$key)) .sort_key_raw(e) else .cacheit("sort_key", e$key, .sort_key_raw(e))
+.sort_key_raw <- function(e) {
   if (e$type == "Float" && is.nan(e$value)) e <- S_NaN
   if (e$type %in% .NUMBER_TYPES || (e$type == "Constant" && e$name %in% c("oo", "-oo")))
     return(list(.class_key(e), list(0, list()), list(),

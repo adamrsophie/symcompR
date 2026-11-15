@@ -202,7 +202,8 @@ PREC <- list(Lambda = 1, Xor = 10, Or = 20, And = 30, Relational = 35,
     if (!.is_comm(f)) { nc[[length(nc) + 1L]] <- f; next }
     d <- .decompose_power(f)
     b <- d[[1L]]
-    nm <- .str(b)
+    # generators are told apart as expressions, as in Expr.as_terms
+    nm <- if (is.null(b$key)) .str(b) else b$key
     gsyms[[nm]] <- b
     mon[nm] <- (if (is.na(mon[nm])) 0 else mon[nm]) + d[[2L]]
   }
