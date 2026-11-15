@@ -124,3 +124,9 @@ sym_symbols <- symbols
 # session is _Dummy_34, as in SymPy. The numbering drifts wherever symcompR
 # creates internal dummies that SymPy does not, or the reverse.
 .dummy_counter$n <- 34L
+
+# An object built at load time with a noncommutative or quantum part would
+# switch the slow paths on for every session; build such constants with
+# delayedAssign().
+if (.nc_state$any || .qm_state$on)
+  stop("a noncommutative or quantum object was built at load time")

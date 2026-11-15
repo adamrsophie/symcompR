@@ -1896,7 +1896,8 @@ topological_sort <- function(vertices, edges, key = NULL) {
 #' @rdname cartesian-quantum
 #' @format `Px` is SymPy's `Px = PxOp('Px')`, the momentum operator.
 #' @export
-Px <- PxOp("Px")
+Px <- NULL
+delayedAssign("Px", PxOp("Px"))
 
 #' @rdname core-helpers
 #' @export

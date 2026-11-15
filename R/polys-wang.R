@@ -224,11 +224,31 @@
 .gz_lshift <- function(f, n) if (!length(f)) f else c(f, .dz(rep(0L, n)))
 .gz_to_int <- function(f, p) .zp_trunc(f, p)
 
-# dup_zz_diophantine and dmp_zz_diophantine
+# dup_zz_diophantine and dmp_zz_diophantine. Hensel lifting asks for the
+# same univariate solutions over and over (x^30 - y^30: 1084 calls, 91
+# distinct), so they are remembered for the length of one .dm_zz_wang call.
+.wang_memo <- .htab()
+.zkey <- function(F) paste(vapply(F, function(f) paste(as.character(f), collapse = ","), ""), collapse = "|")
 .dup_zz_diophantine <- function(F, m, p) {
+  k <- paste("D", .zkey(F), m, as.character(p), sep = ";")
+  hit <- .hget(.wang_memo, k)
+  if (!is.null(hit)) return(hit)
+  r <- .dup_zz_diophantine_raw(F, m, p)
+  .hset(.wang_memo, k, r)
+  r
+}
+.gz_gcdex_memo <- function(f, g, p) {
+  k <- paste("G", .zkey(list(f, g)), as.character(p), sep = ";")
+  hit <- .hget(.wang_memo, k)
+  if (!is.null(hit)) return(hit)
+  r <- .gz_gcdex(f, g, p)
+  .hset(.wang_memo, k, r)
+  r
+}
+.dup_zz_diophantine_raw <- function(F, m, p) {
   if (length(F) == 2L) {
     f <- .gz_mod(F[[1L]], p); g <- .gz_mod(F[[2L]], p)
-    gx <- .gz_gcdex(g, f, p)
+    gx <- .gz_gcdex_memo(g, f, p)
     s <- .gz_lshift(gx[[1L]], m); t <- .gz_lshift(gx[[2L]], m)
     qr <- .gz_divmod(s, f, p)
     s <- qr$r
@@ -412,6 +432,7 @@
 # dmp_zz_wang; fac_lc(g) factors a level u - 1 leading coefficient into
 # list(content, list(list(factor, multiplicity), ...))
 .dm_zz_wang <- function(f, u, fac_lc, mod = NULL) {
+  .hclear(.wang_memo)
   ft <- fac_lc(.dm_LC(f, u), u - 1L)
   ct <- ft[[1L]]; Tl <- ft[[2L]]
   b <- .dm_zz_mignotte_bound(f, u)

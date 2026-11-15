@@ -10,8 +10,6 @@
 # the Hilbert space slot of QExpr. A class is passed around by its name.
 
 .QC <- new.env(hash = TRUE)
-.qm_state <- new.env()
-.qm_state$on <- FALSE
 
 .prop <- function(f) structure(f, qkind = "prop")
 .cm <- function(f) structure(f, qkind = "cm")
@@ -195,6 +193,7 @@
 }
 
 .qhooks <- function(name) {
+  assign(name, "q", envir = .nc_types)
   register_str_printer(name, function(e) .qprint(e, "str"))
   register_latex_printer(name, function(e) .qprint(e, "latex"))
   assign(name, function(e) .qprint(e, "repr"), envir = .srepr_printers)

@@ -10,11 +10,8 @@
   # RandomIndexedSymbol.free_symbols: the free symbols of its key and itself
   if (t == "RandomIndexedSymbol") return(c(.free_sym_list(.ris_key(e)), stats::setNames(list(e), e$key)))
   if (!length(e$args)) return(list())
-  cacheable <- nchar(e$key) < 9000L
-  if (cacheable) {
-    hit <- .fs_cache[[e$key]]
-    if (!is.null(hit)) return(hit)
-  }
+  hit <- .hget(.fs_cache, e$key)
+  if (!is.null(hit)) return(hit)
   out <- list()
   add <- function(z) {
     s <- .free_sym_list(z)
@@ -65,10 +62,7 @@
       if (length(bound)) out <- out[setdiff(names(out), bound)]
     }
   }
-  if (cacheable) {
-    if (length(.fs_cache) > 50000L) rm(list = ls(.fs_cache, all.names = TRUE), envir = .fs_cache)
-    assign(e$key, out, envir = .fs_cache)
-  }
+  .hset(.fs_cache, e$key, out)
   out
 }
 

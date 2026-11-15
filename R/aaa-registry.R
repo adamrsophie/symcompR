@@ -34,12 +34,23 @@ register_diff_hook <- function(type, fn) assign(type, fn, envir = .diff_hooks)
 register_parse_function <- function(name, fn) assign(name, fn, envir = .parse_functions)
 
 .facts_hooks <- new.env()
-.fact_cache <- new.env(hash = TRUE)
+
+# String keyed hash tables for the caches. Unlike environment names, keys have
+# no 10000 byte limit, lookups cost the same for any key length and clearing
+# releases the memory. Kept behind these wrappers so the store can be swapped.
+.htab <- function() utils::hashtab()
+.hget <- function(h, k) utils::gethash(h, k)
+.hset <- function(h, k, v) {
+  if (utils::numhash(h) >= 50000L) utils::clrhash(h)
+  utils::sethash(h, k, v)
+}
+.hclear <- function(h) utils::clrhash(h)
+.fact_cache <- .htab()
 
 # SymPy's @cacheit for pure functions of expressions: results keyed by the
 # argument keys (and the assumptions in force), dropped wholesale when the
 # cache fills up. ponytail: no LRU order; a full cache is simply cleared.
-.cacheit_store <- new.env(hash = TRUE, parent = emptyenv())
+.cacheit_store <- .htab()
 # global_parameters.evaluate: evaluate(FALSE, expr) turns it off
 .EVAL <- new.env()
 .EVAL$off <- FALSE
@@ -49,15 +60,14 @@ register_parse_function <- function(name, fn) assign(name, fn, envir = .parse_fu
   if (isTRUE(.EVAL$off)) return(expr)
   ctx <- global_assumptions$preds
   k <- paste(name, key, if (length(ctx)) paste(vapply(ctx, function(p) if (is.null(p$key)) "?" else p$key, ""), collapse = "&"), sep = "\r")
-  hit <- .cacheit_store[[k]]
+  hit <- .hget(.cacheit_store, k)
   if (!is.null(hit)) return(hit[[1L]])
   v <- expr
-  if (length(.cacheit_store) >= 50000L) rm(list = ls(.cacheit_store, all.names = TRUE), envir = .cacheit_store)
-  .cacheit_store[[k]] <- list(v)
+  .hset(.cacheit_store, k, list(v))
   v
 }
 .ckey <- function(z) if (is.null(z)) "NULL" else if (is_sym(z)) z$key else paste(format(z), collapse = ",")
-.fs_cache <- new.env(hash = TRUE)
+.fs_cache <- .htab()
 .ops_hooks <- new.env()
 .expand_hooks <- new.env()
 .doit_hooks <- new.env()
@@ -87,7 +97,7 @@ def_function <- function(name, nargs = 1L, eval = NULL, diff = NULL,
 #' clear_cache()
 #' @export
 clear_cache <- function() {
-  rm(list = ls(.cacheit_store, all.names = TRUE), envir = .cacheit_store)
+  for (h in list(.cacheit_store, .fact_cache, .fs_cache, .comm_tab)) .hclear(h)
   invisible(NULL)
 }
 

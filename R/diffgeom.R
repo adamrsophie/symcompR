@@ -237,8 +237,10 @@ register_latex_printer("BaseVectorField", function(e) paste0("\\partial_{", .lat
 
 .facts_hooks$BaseScalarField <- function(e) c(commutative = TRUE)
 for (.t in c("BaseVectorField", "Differential", "TensorProduct", "WedgeProduct", "Commutator", "LieDerivative",
-             "BaseCovarDerivativeOp", "CovarDerivativeOp"))
+             "BaseCovarDerivativeOp", "CovarDerivativeOp")) {
   assign(.t, function(e) c(commutative = FALSE), envir = .facts_hooks)
+  assign(.t, "nc", envir = .nc_types)
+}
 rm(.t)
 
 #' @rdname diffgeom

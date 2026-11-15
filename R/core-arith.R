@@ -1,12 +1,36 @@
 # Canonical constructors for Add, Mul and Pow, following sympy/core/add.py,
 # sympy/core/mul.py and sympy/core/power.py.
 
-.nc_state <- new.env()
-.nc_state$any <- FALSE
+
+.comm_tab <- .htab()
+
+# is_commutative of e (TRUE, FALSE or NA) without the other facts. For Add,
+# Mul, Pow and a Function without its own facts hook, commutative is "every
+# argument is commutative", and no closure rule concludes commutative = FALSE.
+.comm3 <- function(e) {
+  t <- e$type
+  switch(t,
+    Symbol = , Dummy = , Wild = return(unname(e$extra$facts["commutative"])),
+    Integer = , Rational = , Float = , Constant = , BooleanAtom = return(TRUE),
+    NULL)
+  k <- e$key
+  hit <- .hget(.comm_tab, k)
+  if (!is.null(hit)) return(hit)
+  v <- if (t == "Add" || t == "Mul" || t == "Pow" ||
+           (t == "Function" && is.null(e$extra$facts))) {
+    r <- TRUE
+    for (a in e$args) if (!isTRUE(.comm3(a))) { r <- FALSE; break }
+    # a Function with a facts hook closes its other facts before
+    # commutative, so a noncommutative argument needs the full closure
+    if (r || t != "Function") r else unname(.facts(e)["commutative"])
+  } else unname(.facts(e)["commutative"])
+  .hset(.comm_tab, k, v)
+  v
+}
 
 .is_comm <- function(e) {
   if (!.nc_state$any) return(TRUE)
-  !identical(ask_fact(e, "commutative"), FALSE)
+  !identical(.comm3(e), FALSE)
 }
 
 # Split a term into numeric coefficient and the rest: 3*x*y -> (3, x*y).

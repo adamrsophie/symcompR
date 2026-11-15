@@ -245,11 +245,8 @@ ask_fact <- function(e, fact) {
   t <- e$type
   if (t == "Symbol" || t == "Dummy" || t == "Wild") return(e$extra$facts)
   k <- e$key
-  cacheable <- nchar(k) < 9000L
-  if (cacheable) {
-    hit <- .fact_cache[[k]]
-    if (!is.null(hit)) return(hit)
-  }
+  hit <- .hget(.fact_cache, k)
+  if (!is.null(hit)) return(hit)
   v <- switch(t,
               Integer = , Rational = .number_facts(e),
               Float = .float_facts(e),
@@ -261,10 +258,7 @@ ask_fact <- function(e, fact) {
               BooleanAtom = c(commutative = TRUE),
               .other_facts(e))
   full <- tryCatch(.close_facts(v), error = function(err) .close_facts(v, strict = FALSE))
-  if (cacheable) {
-    if (length(.fact_cache) > 50000L) rm(list = ls(.fact_cache, all.names = TRUE), envir = .fact_cache)
-    assign(k, full, envir = .fact_cache)
-  }
+  .hset(.fact_cache, k, full)
   full
 }
 

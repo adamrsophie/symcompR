@@ -243,6 +243,7 @@ UnevaluatedExpr <- function(e) {
   new_sym("UnevaluatedExpr", list(as_sym(e)))
 }
 .facts_hooks$UnevaluatedExpr <- function(e) c(commutative = FALSE)
+.nc_types$UnevaluatedExpr <- "nc"
 
 register_str_printer("UnevaluatedExpr", function(e) .str(e$args[[1L]]))
 register_latex_printer("UnevaluatedExpr", function(e) .latex(e$args[[1L]]))

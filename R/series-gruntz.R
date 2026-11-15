@@ -24,7 +24,7 @@ gruntz <- function(e, z, z0, dir = "+") {
   e <- as_sym(e); z <- as_sym(z); z0 <- as_sym(z0)
   if (!(z$type %in% c("Symbol", "Dummy"))) stop("Second argument must be a Symbol", call. = FALSE)
   if (is.null(.gr_state$cache)) {
-    .gr_state$cache <- new.env(hash = TRUE); .gr_state$depth <- 0L
+    .gr_state$cache <- .htab(); .gr_state$depth <- 0L
     on.exit(.gr_state$cache <- NULL)
   }
   if (.has_type(e, "Function") && any(c("Min", "Max") %in% .fun_names(e))) e <- rewrite(e, "Abs")
@@ -48,9 +48,9 @@ gruntz <- function(e, z, z0, dir = "+") {
   cache <- .gr_state$cache
   if (is.null(cache)) return(f())
   k <- paste(tag, e$key, x$key)
-  if (!is.null(r <- cache[[k]])) return(r)
+  if (!is.null(r <- .hget(cache, k))) return(r)
   r <- f()
-  assign(k, r, envir = cache)
+  utils::sethash(cache, k, r)
   r
 }
 

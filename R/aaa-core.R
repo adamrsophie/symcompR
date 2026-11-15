@@ -32,8 +32,26 @@
   eval(cl, parent.frame(2L))
 }
 
+# Node types that are noncommutative ("nc") or quantum classes ("q").
+# Building a noncommutative one switches on the noncommutative paths of .mul
+# (and, for a quantum class, the quantum hooks of .pow) whatever constructor
+# builds it, so no constructor can forget to. A quantum class whose
+# is_commutative is TRUE (hbar, Wigner symbols) is left alone.
+.nc_types <- new.env(hash = TRUE)
+.nc_state <- new.env()
+.nc_state$any <- FALSE
+.qm_state <- new.env()
+.qm_state$on <- FALSE
+
 new_sym <- function(type, args = list(), name = NULL, value = NULL,
                     extra = NULL, key = NULL) {
+  if (!.nc_state$any || !.qm_state$on) {
+    nc <- .nc_types[[type]]
+    if (!is.null(nc) && (nc == "nc" || !isTRUE(.qfind(type, "is_commutative")$val))) {
+      .nc_state$any <- TRUE
+      if (nc == "q") .qm_state$on <- TRUE
+    }
+  }
   if (is.null(key)) key <- .compound_key(type, args, name)
   obj <- list(type = type, args = args, name = name, value = value,
               extra = extra, key = key)
