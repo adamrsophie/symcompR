@@ -147,6 +147,10 @@
 # Order.contains: TRUE, FALSE or NA
 .so_contains <- function(o, expr) {
   expr <- as_sym(expr)
+  # Order.contains is @cacheit in SymPy
+  .cacheit("Order.contains", paste(o$key, expr$key), .so_contains_raw(o, expr))
+}
+.so_contains_raw <- function(o, expr) {
   if (isTRUE(ask_fact(expr, "zero"))) return(TRUE)
   if (is_nan(expr)) return(FALSE)
   pts <- .so_points(o)
@@ -271,9 +275,11 @@ as_leading_term <- function(e, x, logx = NULL, cdir = 0) {
   e <- as_sym(e); x <- as_sym(x); cdir <- as_sym(cdir)
   if (!(x$type %in% c("Symbol", "Dummy", "Wild"))) stop("expecting a Symbol but got ", .str(x), call. = FALSE)
   if (!(x$key %in% names(.free_sym_list(e)))) return(e)
-  obj <- .so_eval_alt(e, x, logx, cdir)
-  if (is.null(obj)) .notimpl_error(paste0("as_leading_term(", .str(e), ", ", .str(x), ")"))
-  powsimp(obj, deep = TRUE, combine = "exp")
+  .cacheit("as_leading_term", paste(e$key, x$key, .ckey(logx), cdir$key), {
+    obj <- .so_eval_alt(e, x, logx, cdir)
+    if (is.null(obj)) .notimpl_error(paste0("as_leading_term(", .str(e), ", ", .str(x), ")"))
+    powsimp(obj, deep = TRUE, combine = "exp")
+  })
 }
 
 

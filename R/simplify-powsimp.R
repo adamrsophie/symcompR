@@ -25,7 +25,9 @@
 #' @export
 powsimp <- function(e, deep = FALSE, combine = "all", force = FALSE, measure = count_ops) {
   if (inherits(e, "symmatrix")) return(.mat_map(e, function(z) powsimp(z, deep, combine, force, measure)))
-  .powsimp(as_sym(e), deep, combine, force, measure)
+  e <- as_sym(e)
+  if (!identical(measure, count_ops)) return(.powsimp(e, deep, combine, force, measure))
+  .cacheit("powsimp", paste(e$key, deep, combine, force), .powsimp(e, deep, combine, force, measure))
 }
 
 .ps_y <- Dummy("y")

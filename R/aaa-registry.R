@@ -35,6 +35,22 @@ register_parse_function <- function(name, fn) assign(name, fn, envir = .parse_fu
 
 .facts_hooks <- new.env()
 .fact_cache <- new.env(hash = TRUE)
+
+# SymPy's @cacheit for pure functions of expressions: results keyed by the
+# argument keys (and the assumptions in force), dropped wholesale when the
+# cache fills up. ponytail: no LRU order; a full cache is simply cleared.
+.cacheit_store <- new.env(hash = TRUE, parent = emptyenv())
+.cacheit <- function(name, key, expr) {
+  ctx <- global_assumptions$preds
+  k <- paste(name, key, if (length(ctx)) paste(vapply(ctx, function(p) if (is.null(p$key)) "?" else p$key, ""), collapse = "&"), sep = "\r")
+  hit <- .cacheit_store[[k]]
+  if (!is.null(hit)) return(hit[[1L]])
+  v <- expr
+  if (length(.cacheit_store) >= 50000L) rm(list = ls(.cacheit_store, all.names = TRUE), envir = .cacheit_store)
+  .cacheit_store[[k]] <- list(v)
+  v
+}
+.ckey <- function(z) if (is.null(z)) "NULL" else if (is_sym(z)) z$key else paste(format(z), collapse = ",")
 .fs_cache <- new.env(hash = TRUE)
 .ops_hooks <- new.env()
 .expand_hooks <- new.env()
