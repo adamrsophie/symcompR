@@ -12,6 +12,8 @@
 dimacs_load(s)
 
 dimacs_load_file(location)
+
+load_file(location)
 ```
 
 ## Arguments

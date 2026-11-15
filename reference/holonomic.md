@@ -66,6 +66,8 @@ expr_to_holonomic(
   domain = NULL,
   initcond = TRUE
 )
+
+RecurrenceOperator(list_of_poly, parent)
 ```
 
 ## Arguments
@@ -175,9 +177,22 @@ expr_to_holonomic(
 
   The coefficient domain.
 
+- list_of_poly:
+
+  The coefficients of the shift operator powers, lowest first.
+
+- parent:
+
+  A recurrence operator algebra.
+
 ## Value
 
 An operator, holonomic function, sequence or expression.
+
+## Details
+
+`RecurrenceOperator(list_of_poly, parent)` builds the operator
+`sum p_i Sn^i` directly, as SymPy's class does.
 
 ## Examples
 

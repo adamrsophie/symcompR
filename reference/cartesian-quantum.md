@@ -32,7 +32,13 @@ PositionBra3D(...)
 PxKet(...)
 
 PxBra(...)
+
+Px
 ```
+
+## Format
+
+`Px` is SymPy's `Px = PxOp('Px')`, the momentum operator.
 
 ## Arguments
 

@@ -313,6 +313,7 @@ between R and symbolic values.
   [`sstrrepr()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
   [`true`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
   [`false`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
+  [`Relational()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
   [`sym_ordered()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)
   : Core constructors and helpers
 - [`UnevaluatedExpr()`](https://adamrsophie.github.io/symcompR/reference/UnevaluatedExpr.md)
@@ -399,6 +400,24 @@ between R and symbolic values.
   [`PolificationFailed()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
   [`OptionError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
   [`FlagError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMBadInputError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMDomainError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMFormatError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMRankError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMShapeError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMNotAField()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMNonInvertibleMatrixError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMNonSquareMatrixError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`DMValueError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`QuantumError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`HilbertSpaceError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`ClosureFailure()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`StructureError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`MissingUnityError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`SMTLibSyntaxError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`UnknownSMTLibCommandError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
+  [`UnknownSMTLibOperatorError()`](https://adamrsophie.github.io/symcompR/reference/sympy-exceptions.md)
   : SymPy exceptions
 - [`sympy_seed()`](https://adamrsophie.github.io/symcompR/reference/sympy_seed.md)
   : Seed SymPy's random generator
@@ -650,6 +669,10 @@ system.
   [`plot_parametric()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
   [`plot3d()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
   [`plot_implicit()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+  [`plot_contour()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+  [`plot3d_parametric_line()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+  [`plot3d_parametric_surface()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+  [`PlotGrid()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
   : Plot symbolic expressions with base graphics
 - [`textplot()`](https://adamrsophie.github.io/symcompR/reference/textplot.md)
   : Text plot
@@ -1055,6 +1078,7 @@ system.
   [`from_hyper()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
   [`from_meijerg()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
   [`expr_to_holonomic()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
+  [`RecurrenceOperator()`](https://adamrsophie.github.io/symcompR/reference/holonomic.md)
   : Holonomic functions
 - [`pade()`](https://adamrsophie.github.io/symcompR/reference/pade.md) :
   Pade approximant
@@ -1919,6 +1943,7 @@ DomainMatrix layer.
   [`ct_shape()`](https://adamrsophie.github.io/symcompR/reference/character_table.md)
   [`ct_zeta_order()`](https://adamrsophie.github.io/symcompR/reference/character_table.md)
   [`ct_conjugacy_class_reps()`](https://adamrsophie.github.io/symcompR/reference/character_table.md)
+  [`CharacterTable()`](https://adamrsophie.github.io/symcompR/reference/character_table.md)
   : Character tables of finite groups
 - [`symmetric()`](https://adamrsophie.github.io/symcompR/reference/symmetric.md)
   [`cyclic()`](https://adamrsophie.github.io/symcompR/reference/symmetric.md)
@@ -2233,6 +2258,7 @@ DomainMatrix layer.
   [`fg_slice()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
   [`fg_index()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
   [`fp_contains()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
+  [`vfree_group()`](https://adamrsophie.github.io/symcompR/reference/FreeGroup.md)
   : Free groups
 - [`word_array_form()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
   [`word_letter_form()`](https://adamrsophie.github.io/symcompR/reference/word_array_form.md)
@@ -2283,6 +2309,7 @@ DomainMatrix layer.
   [`fp_most_frequent_generator()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
   [`fp_random()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
   [`fp_index()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
+  [`vfp_group()`](https://adamrsophie.github.io/symcompR/reference/FpGroup.md)
   : Finitely presented groups
 - [`FpSubgroup()`](https://adamrsophie.github.io/symcompR/reference/FpSubgroup.md)
   [`fps_contains()`](https://adamrsophie.github.io/symcompR/reference/FpSubgroup.md)
@@ -2386,6 +2413,7 @@ DomainMatrix layer.
   : Xnor and Exclusive
 - [`dimacs_load()`](https://adamrsophie.github.io/symcompR/reference/dimacs_load.md)
   [`dimacs_load_file()`](https://adamrsophie.github.io/symcompR/reference/dimacs_load.md)
+  [`load_file()`](https://adamrsophie.github.io/symcompR/reference/dimacs_load.md)
   : Read DIMACS CNF
 - [`distribute_and_over_or()`](https://adamrsophie.github.io/symcompR/reference/distribute_and_over_or.md)
   [`distribute_xor_over_and()`](https://adamrsophie.github.io/symcompR/reference/distribute_and_over_or.md)
@@ -2493,6 +2521,8 @@ DomainMatrix layer.
   [`b_interval()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
   [`complex_region_from_real()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
   [`normalize_theta_set()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
+  [`CartesianComplexRegion()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
+  [`PolarComplexRegion()`](https://adamrsophie.github.io/symcompR/reference/ComplexRegion.md)
   : Regions of the complex plane
 - [`SetExpr()`](https://adamrsophie.github.io/symcompR/reference/SetExpr.md)
   : Set expressions
@@ -2512,6 +2542,8 @@ DomainMatrix layer.
   [`print(`*`<sym_ordinal>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
   [`format(`*`<sym_omega_power>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
   [`print(`*`<sym_omega_power>`*`)`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`OrdinalZero()`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
+  [`OrdinalOmega()`](https://adamrsophie.github.io/symcompR/reference/ordinals.md)
   : Ordinals
 
 ## Special functions
@@ -2968,6 +3000,9 @@ DomainMatrix layer.
   [`riemann_cyclic_replace()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
   [`riemann_cyclic()`](https://adamrsophie.github.io/symcompR/reference/tensor-expressions.md)
   : Tensor expressions
+- [`WildTensorIndex()`](https://adamrsophie.github.io/symcompR/reference/wild-tensors.md)
+  [`WildTensorHead()`](https://adamrsophie.github.io/symcompR/reference/wild-tensors.md)
+  : Wild tensors and tensor pattern matching
 - [`PartialDerivative()`](https://adamrsophie.github.io/symcompR/reference/PartialDerivative.md)
   [`pd_expand()`](https://adamrsophie.github.io/symcompR/reference/PartialDerivative.md)
   [`pd_perform_derivative()`](https://adamrsophie.github.io/symcompR/reference/PartialDerivative.md)
@@ -3082,12 +3117,14 @@ DomainMatrix layer.
   [`hom()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
   [`is_subdiagram()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
   [`subdiagram_from_objects()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
+  [`Morphism()`](https://adamrsophie.github.io/symcompR/reference/categories.md)
   : Categories
 - [`DiagramGrid()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
   [`grid_get()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
   [`ArrowStringDescription()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
   [`XypicDiagramDrawer()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
   [`xypic_draw_diagram()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
+  [`preview_diagram()`](https://adamrsophie.github.io/symcompR/reference/diagram_drawing.md)
   : Drawing diagrams
 
 ## Physical units
@@ -3493,6 +3530,7 @@ sympy.physics.quantum, secondquant, paulialgebra and hep.gamma_matrices.
   [`PositionBra3D()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
   [`PxKet()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
   [`PxBra()`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
+  [`Px`](https://adamrsophie.github.io/symcompR/reference/cartesian-quantum.md)
   : Cartesian position and momentum
 - [`Wigner3j()`](https://adamrsophie.github.io/symcompR/reference/cg-coefficients.md)
   [`CG()`](https://adamrsophie.github.io/symcompR/reference/cg-coefficients.md)
@@ -3612,6 +3650,10 @@ sympy.physics.quantum, secondquant, paulialgebra and hep.gamma_matrices.
   [`ZGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
   [`PhaseGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
   [`TGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`X()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`Y()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`Z()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
+  [`Phase()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
   [`CNotGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
   [`CNOT()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
   [`SwapGate()`](https://adamrsophie.github.io/symcompR/reference/quantum-gates.md)
@@ -3627,6 +3669,9 @@ sympy.physics.quantum, secondquant, paulialgebra and hep.gamma_matrices.
   [`matrix_zeros()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
   [`matrix_dagger()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
   [`matrix_to_zero()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
+  [`sympy_to_numpy()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
+  [`to_numpy()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
+  [`numpy_to_sympy()`](https://adamrsophie.github.io/symcompR/reference/quantum-matrixutils.md)
   : Matrix utilities of the quantum module
 - [`Operator()`](https://adamrsophie.github.io/symcompR/reference/quantum-operators.md)
   [`HermitianOperator()`](https://adamrsophie.github.io/symcompR/reference/quantum-operators.md)
@@ -3990,7 +4035,8 @@ utilities.codegen routines.
   : Approximations of sums and of functions
 - [`MatrixSolve()`](https://adamrsophie.github.io/symcompR/reference/MatrixSolve.md)
   : Solve a linear system in generated code
-- [`printer_doprint()`](https://adamrsophie.github.io/symcompR/reference/code-printer-objects.md)
+- [`StrPrinter()`](https://adamrsophie.github.io/symcompR/reference/code-printer-objects.md)
+  [`printer_doprint()`](https://adamrsophie.github.io/symcompR/reference/code-printer-objects.md)
   [`C89CodePrinter()`](https://adamrsophie.github.io/symcompR/reference/code-printer-objects.md)
   [`C99CodePrinter()`](https://adamrsophie.github.io/symcompR/reference/code-printer-objects.md)
   [`C11CodePrinter()`](https://adamrsophie.github.io/symcompR/reference/code-printer-objects.md)
@@ -4144,6 +4190,9 @@ utilities.codegen routines.
   [`PoissonProcess()`](https://adamrsophie.github.io/symcompR/reference/stochastic_process.md)
   [`WienerProcess()`](https://adamrsophie.github.io/symcompR/reference/stochastic_process.md)
   [`GammaProcess()`](https://adamrsophie.github.io/symcompR/reference/stochastic_process.md)
+  [`StochasticProcess()`](https://adamrsophie.github.io/symcompR/reference/stochastic_process.md)
+  [`DiscreteTimeStochasticProcess()`](https://adamrsophie.github.io/symcompR/reference/stochastic_process.md)
+  [`ContinuousTimeStochasticProcess()`](https://adamrsophie.github.io/symcompR/reference/stochastic_process.md)
   : Stochastic processes
 - [`E()`](https://adamrsophie.github.io/symcompR/reference/E.md)
   [`expectation()`](https://adamrsophie.github.io/symcompR/reference/E.md)
@@ -4311,6 +4360,121 @@ utilities.codegen routines.
   [`encipher_bg()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
   [`decipher_bg()`](https://adamrsophie.github.io/symcompR/reference/crypto.md)
   : Cryptography
+
+## Kinds, dispatch and evaluation control
+
+- [`expr_kind()`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`NumberKind`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`UndefinedKind`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`BooleanKind`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`KetKind`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`BraKind`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`OperatorKind`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`MatrixKind()`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`ArrayKind()`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`VectorKind()`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`SetKind()`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  [`TupleKind()`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+  : Kinds of expressions
+- [`isinstance()`](https://adamrsophie.github.io/symcompR/reference/isinstance.md)
+  [`RealNumber()`](https://adamrsophie.github.io/symcompR/reference/isinstance.md)
+  : Class membership in SymPy's hierarchy
+- [`Dispatcher()`](https://adamrsophie.github.io/symcompR/reference/multipledispatch.md)
+  [`dispatcher_add()`](https://adamrsophie.github.io/symcompR/reference/multipledispatch.md)
+  [`dispatch()`](https://adamrsophie.github.io/symcompR/reference/multipledispatch.md)
+  [`MDNotImplementedError()`](https://adamrsophie.github.io/symcompR/reference/multipledispatch.md)
+  [`halt_ordering()`](https://adamrsophie.github.io/symcompR/reference/multipledispatch.md)
+  [`restart_ordering()`](https://adamrsophie.github.io/symcompR/reference/multipledispatch.md)
+  : Multiple dispatch
+- [`evaluate()`](https://adamrsophie.github.io/symcompR/reference/evaluate.md)
+  : Turn evaluation off
+- [`seterr()`](https://adamrsophie.github.io/symcompR/reference/seterr.md)
+  : Raise an error on 0/0
+- [`cacheit()`](https://adamrsophie.github.io/symcompR/reference/cacheit.md)
+  : Cache a function
+- [`clear_cache()`](https://adamrsophie.github.io/symcompR/reference/clear_cache.md)
+  : Clear the caches
+- [`BinaryRelation()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+  [`EqualityPredicate()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+  [`UnequalityPredicate()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+  [`StrictGreaterThanPredicate()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+  [`GreaterThanPredicate()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+  [`StrictLessThanPredicate()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+  [`LessThanPredicate()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+  [`AppliedBinaryRelation()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+  [`binrel_properties()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+  : Binary relation predicates
+- [`test_closed_group()`](https://adamrsophie.github.io/symcompR/reference/test_closed_group.md)
+  : Closed group test of the assumption handlers
+- [`all_assumptions`](https://adamrsophie.github.io/symcompR/reference/all_assumptions.md)
+  : Assumption names
+
+## Power series rings and interval arithmetic
+
+- [`power_series_ring()`](https://adamrsophie.github.io/symcompR/reference/power_series_ring.md)
+  [`PowerSeriesRingRing()`](https://adamrsophie.github.io/symcompR/reference/power_series_ring.md)
+  [`PowerSeriesRingField()`](https://adamrsophie.github.io/symcompR/reference/power_series_ring.md)
+  : Power series rings
+- [`closure()`](https://adamrsophie.github.io/symcompR/reference/set-closure.md)
+  [`interior()`](https://adamrsophie.github.io/symcompR/reference/set-closure.md)
+  [`powerset()`](https://adamrsophie.github.io/symcompR/reference/set-closure.md)
+  [`symmetric_difference()`](https://adamrsophie.github.io/symcompR/reference/set-closure.md)
+  : Closure, interior and power set of a set
+- [`graph_certificate()`](https://adamrsophie.github.io/symcompR/reference/graph_certificate.md)
+  : Certificate of a graph
+- [`interval()`](https://adamrsophie.github.io/symcompR/reference/intervalmath.md)
+  [`imin()`](https://adamrsophie.github.io/symcompR/reference/intervalmath.md)
+  [`imax()`](https://adamrsophie.github.io/symcompR/reference/intervalmath.md)
+  [`ceil()`](https://adamrsophie.github.io/symcompR/reference/intervalmath.md)
+  [`intervalMembership()`](https://adamrsophie.github.io/symcompR/reference/intervalmath.md)
+  : Interval arithmetic for plotting
+- [`AlgIntPowers()`](https://adamrsophie.github.io/symcompR/reference/AlgIntPowers.md)
+  [`alg_int_power()`](https://adamrsophie.github.io/symcompR/reference/AlgIntPowers.md)
+  [`` `[[`( ``*`<AlgIntPowers>`*`)`](https://adamrsophie.github.io/symcompR/reference/AlgIntPowers.md)
+  [`coeff_search()`](https://adamrsophie.github.io/symcompR/reference/AlgIntPowers.md)
+  : Powers of an algebraic integer, and a coefficient search
+
+## Printing, plotting and numeric helpers
+
+- [`pretty_symbol()`](https://adamrsophie.github.io/symcompR/reference/pretty_symbology.md)
+  [`xsym()`](https://adamrsophie.github.io/symcompR/reference/pretty_symbology.md)
+  [`hobj()`](https://adamrsophie.github.io/symcompR/reference/pretty_symbology.md)
+  [`vobj()`](https://adamrsophie.github.io/symcompR/reference/pretty_symbology.md)
+  [`center_pad()`](https://adamrsophie.github.io/symcompR/reference/pretty_symbology.md)
+  [`center()`](https://adamrsophie.github.io/symcompR/reference/pretty_symbology.md)
+  [`annotated()`](https://adamrsophie.github.io/symcompR/reference/pretty_symbology.md)
+  [`greek_unicode`](https://adamrsophie.github.io/symcompR/reference/pretty_symbology.md)
+  [`sup`](https://adamrsophie.github.io/symcompR/reference/pretty_symbology.md)
+  : Pretty printing symbology
+- [`preview()`](https://adamrsophie.github.io/symcompR/reference/preview.md)
+  : Render an expression with LaTeX
+- [`DeferredVector()`](https://adamrsophie.github.io/symcompR/reference/DeferredVector.md)
+  [`` `[`( ``*`<DeferredVector>`*`)`](https://adamrsophie.github.io/symcompR/reference/DeferredVector.md)
+  : Deferred vectors for lambdify
+- [`list2numpy()`](https://adamrsophie.github.io/symcompR/reference/list2numpy.md)
+  [`matrix2numpy()`](https://adamrsophie.github.io/symcompR/reference/list2numpy.md)
+  : Lists and matrices as R arrays
+- [`vectorize()`](https://adamrsophie.github.io/symcompR/reference/vectorize.md)
+  : Vectorize a function over nested lists
+- [`sample_iter()`](https://adamrsophie.github.io/symcompR/reference/sample_iter.md)
+  : Draw samples as expressions
+- [`allhints`](https://adamrsophie.github.io/symcompR/reference/allhints.md)
+  : ODE solver hints
+- [`BaseScalarField()`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`BaseVectorField()`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`CoordinateSymbol()`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`R2`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`R2_origin`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`relations_2d`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`R2_r`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`R2_p`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`R3`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`R3_origin`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`relations_3d`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`R3_r`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`R3_c`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  [`R3_s`](https://adamrsophie.github.io/symcompR/reference/rn-manifolds.md)
+  : Predefined manifolds of sympy.diffgeom.rn
 
 # Articles
 

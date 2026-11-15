@@ -30,6 +30,10 @@ b_interval(region)
 complex_region_from_real(s)
 
 normalize_theta_set(theta)
+
+CartesianComplexRegion(sets)
+
+PolarComplexRegion(sets)
 ```
 
 ## Arguments

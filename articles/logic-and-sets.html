@@ -577,6 +577,20 @@ its elements, which is interval arithmetic for intervals.</p>
 <span><span class="co">#&gt; SetExpr(Interval(1, 2))</span></span>
 <span><span class="fu"><a href="../reference/SetExpr.html">SetExpr</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="../reference/SetExpr.html">SetExpr</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; SetExpr(Interval(10, 40))</span></span></code></pre></div>
+<p><code><a href="../reference/set-closure.html">closure()</a></code>, <code><a href="../reference/set-closure.html">interior()</a></code> and
+<code><a href="../reference/sets.html">boundary()</a></code> give the topological parts of a set;
+<code><a href="../reference/set-closure.html">powerset()</a></code> lists the subsets of a finite set, and
+<code><a href="../reference/set-closure.html">symmetric_difference()</a></code> is SymPy’s
+<code>SymmetricDifference</code>.</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/set-closure.html">closure</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Interval(0, 1)</span></span>
+<span><span class="fu"><a href="../reference/set-closure.html">interior</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Interval.open(0, 1)</span></span>
+<span><span class="fu"><a href="../reference/set-closure.html">powerset</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">FiniteSet</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; FiniteSet(EmptySet, {1}, {2}, {1, 2})</span></span>
+<span><span class="fu"><a href="../reference/set-closure.html">symmetric_difference</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="../reference/sets.html">Interval</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Union(Interval.Ropen(0, 1), Interval.Lopen(2, 3))</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -585,7 +599,7 @@ its elements, which is interval arithmetic for intervals.</p>
 <p>symcompR implements ordinal numbers below <span class="math inline">\varepsilon_0</span> in Cantor normal form.
 <code>ord_omega</code> is <span class="math inline">\omega</span>, and
 ordinal arithmetic is not commutative:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="va">ord_omega</span></span>
 <span><span class="va">w</span> <span class="op">+</span> <span class="fl">1</span></span>
 <span><span class="co">#&gt; w + 1</span></span>

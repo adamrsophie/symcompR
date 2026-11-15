@@ -440,3 +440,37 @@ Rq$pretty(Rq$exp(Rq$gen))
 Rq$pretty(Rq$log(Rq(c(1, 1))))
 #> [1] "x - 1/2*x**2 + 1/3*x**3 + O(x**4)"
 ```
+
+`power_series_ring(symbol, K, prec)` is SymPy’s `sympy.polys.series`
+ring in a named variable over `ZZ` or `QQ`. It returns the ring and its
+generator; series combine with the usual operators, and an exact
+polynomial gets an
+[`O()`](https://adamrsophie.github.io/symcompR/reference/O.md) term only
+when it grows past the ring precision. The ring holds the composition,
+inversion and elementary functions.
+
+``` r
+
+rs <- power_series_ring("x", QQ, 6)
+R <- rs[[1]]; xs <- rs[[2]]
+R
+#> Power Series Ring in x over QQ of size 6
+(1 + xs + xs^2)^3
+#> 1 + 3*x + 6*x^2 + 7*x^3 + 6*x^4 + 3*x^5 + O(x^6)
+1 / (1 - xs)
+#> 1 + x + x^2 + x^3 + x^4 + x^5 + O(x^6)
+R$inverse(1 + xs + xs^2)
+#> 1 - x + x^3 - x^4 + O(x^6)
+R$reversion(R$sin(xs))
+#> x + 1/6*x^3 + 3/40*x^5 + O(x^6)
+R$compose(R$exp(xs) - 1, xs + xs^2)
+#> x + 3/2*x^2 + 7/6*x^3 + 25/24*x^4 + 27/40*x^5 + O(x^6)
+R$tan(xs)
+#> x + 1/3*x^3 + 2/15*x^5 + O(x^6)
+R$sqrt(4 + xs)
+#> 2 + 1/4*x - 1/64*x^2 + 1/512*x^3 - 5/16384*x^4 + 7/131072*x^5 + O(x^6)
+R$to_expr(R$atan(xs))
+#> x - x^3/3 + x^5/5 + O(x^6)
+R$from_expr(Symbol("x")^2 + 3 * Symbol("x") + O(Symbol("x")^3))
+#> 3*x + x^2 + O(x^3)
+```

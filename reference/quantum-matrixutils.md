@@ -20,6 +20,12 @@ matrix_zeros(m, n, format = "sympy")
 matrix_dagger(e)
 
 matrix_to_zero(e)
+
+sympy_to_numpy(m, dtype = "complex")
+
+to_numpy(m, dtype = "complex")
+
+numpy_to_sympy(m)
 ```
 
 ## Arguments
@@ -28,21 +34,37 @@ matrix_to_zero(e)
 
   Matrices.
 
-- n, m:
+- n:
 
-  Dimensions.
+  The number of rows.
 
 - format:
 
-  The matrix format, only `"sympy"`.
+  The matrix format: `"sympy"`, or `"numpy"` for a base R complex matrix
+  (SymPy's NumPy format).
+
+- m:
+
+  The number of columns for `matrix_zeros()`; a matrix, or a number, for
+  `sympy_to_numpy()`.
 
 - e:
 
   A matrix or an expression.
 
+- dtype:
+
+  `"complex"` or `"double"`.
+
 ## Value
 
 A matrix or an expression.
+
+## Details
+
+`sympy_to_numpy()` and `to_numpy()` turn a SymPy matrix into a base R
+matrix, the counterpart of a NumPy array; `numpy_to_sympy()` turns a
+base R matrix back into a `Matrix`.
 
 ## Examples
 

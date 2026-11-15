@@ -8,17 +8,17 @@ the truth value is decidable they return `S_true` or `S_false`. Use
 ## Usage
 
 ``` r
-Eq(a, b = 0, evaluate = TRUE)
+Eq(a, b = 0, evaluate = .ev_default())
 
-Ne(a, b, evaluate = TRUE)
+Ne(a, b, evaluate = .ev_default())
 
-Lt(a, b, evaluate = TRUE)
+Lt(a, b, evaluate = .ev_default())
 
-Le(a, b, evaluate = TRUE)
+Le(a, b, evaluate = .ev_default())
 
-Gt(a, b, evaluate = TRUE)
+Gt(a, b, evaluate = .ev_default())
 
-Ge(a, b, evaluate = TRUE)
+Ge(a, b, evaluate = .ev_default())
 
 lhs(e)
 

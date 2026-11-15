@@ -560,6 +560,28 @@ SetExpr(Interval(1, 2)) * SetExpr(Interval(10, 20))
 #> SetExpr(Interval(10, 40))
 ```
 
+[`closure()`](https://adamrsophie.github.io/symcompR/reference/set-closure.md),
+[`interior()`](https://adamrsophie.github.io/symcompR/reference/set-closure.md)
+and
+[`boundary()`](https://adamrsophie.github.io/symcompR/reference/sets.md)
+give the topological parts of a set;
+[`powerset()`](https://adamrsophie.github.io/symcompR/reference/set-closure.md)
+lists the subsets of a finite set, and
+[`symmetric_difference()`](https://adamrsophie.github.io/symcompR/reference/set-closure.md)
+is SymPy’s `SymmetricDifference`.
+
+``` r
+
+closure(Interval(0, 1, TRUE, TRUE))
+#> Interval(0, 1)
+interior(Interval(0, 1))
+#> Interval.open(0, 1)
+powerset(FiniteSet(1, 2))
+#> FiniteSet(EmptySet, {1}, {2}, {1, 2})
+symmetric_difference(Interval(0, 2), Interval(1, 3))
+#> Union(Interval.Ropen(0, 1), Interval.Lopen(2, 3))
+```
+
 ## Ordinals
 
 symcompR implements ordinal numbers below \varepsilon_0 in Cantor normal

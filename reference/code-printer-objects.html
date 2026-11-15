@@ -123,7 +123,9 @@ printer keeps what the printed code needs (<code>headers</code>, <code>libraries
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">printer_doprint</span><span class="op">(</span><span class="va">p</span>, <span class="va">e</span>, assign_to <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">StrPrinter</span><span class="op">(</span>settings <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">printer_doprint</span><span class="op">(</span><span class="va">p</span>, <span class="va">e</span>, assign_to <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">C89CodePrinter</span><span class="op">(</span>settings <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
@@ -164,7 +166,12 @@ printer keeps what the printed code needs (<code>headers</code>, <code>libraries
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
+<dl><dt id="arg-settings">settings<a class="anchor" aria-label="anchor" href="#arg-settings"></a></dt>
+<dd><p>A named list of printer settings, such as
+<code>list(type_aliases = ...)</code> or <code>list(standard = 95)</code>.</p></dd>
+
+
+<dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
 <dd><p>A printer.</p></dd>
 
 
@@ -175,15 +182,15 @@ printer keeps what the printed code needs (<code>headers</code>, <code>libraries
 <dt id="arg-assign-to">assign_to<a class="anchor" aria-label="anchor" href="#arg-assign-to"></a></dt>
 <dd><p>Optional variable to assign to.</p></dd>
 
-
-<dt id="arg-settings">settings<a class="anchor" aria-label="anchor" href="#arg-settings"></a></dt>
-<dd><p>A named list of printer settings, such as
-<code>list(type_aliases = ...)</code> or <code>list(standard = 95)</code>.</p></dd>
-
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A printer, or for <code>printer_doprint()</code> a character scalar.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><code>StrPrinter()</code> is the printer of <code><a href="sstr.html">sstr()</a></code>, for use with
+<code>printer_doprint()</code>.</p>
     </div>
 
     <div class="section level2">

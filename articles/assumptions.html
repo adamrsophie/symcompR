@@ -300,6 +300,29 @@ them.</p>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="fu"><a href="../reference/AssumptionsWrapper.html">is_extended_nonnegative</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] NA</span></span></code></pre></div>
+<p>The binary relation predicates <code>Q$eq</code>, <code>Q$gt</code>
+and the rest are <code>BinaryRelation</code> objects;
+<code><a href="../reference/binary-relations.html">binrel_properties()</a></code> lists their properties, and
+<code><a href="../reference/binary-relations.html">AppliedBinaryRelation()</a></code> applies one.
+<code><a href="../reference/test_closed_group.html">test_closed_group()</a></code> asks whether every term of a sum or
+product has a property, as SymPy’s handlers do.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/binary-relations.html">AppliedBinaryRelation</a></span><span class="op">(</span><span class="fu"><a href="../reference/binary-relations.html">StrictLessThanPredicate</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">y</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Q.lt(y, 2)</span></span>
+<span><span class="fu"><a href="../reference/binary-relations.html">binrel_properties</a></span><span class="op">(</span><span class="va">Q</span><span class="op">$</span><span class="va">gt</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $is_reflexive</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $is_symmetric</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $reversed</span></span>
+<span><span class="co">#&gt; Q.lt</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $negated</span></span>
+<span><span class="co">#&gt; Q.le</span></span>
+<span><span class="fu"><a href="../reference/test_closed_group.html">test_closed_group</a></span><span class="op">(</span><span class="va">y</span> <span class="op">+</span> <span class="fl">1</span>, <span class="va">Q</span><span class="op">$</span><span class="fu">positive</span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, <span class="va">Q</span><span class="op">$</span><span class="va">positive</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

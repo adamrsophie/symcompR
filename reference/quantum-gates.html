@@ -149,6 +149,14 @@ a random one. <code>represent_zbasis()</code> is the matrix of a controlled gate
 <span></span>
 <span><span class="fu">TGate</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
 <span></span>
+<span><span class="fu">X</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">Y</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">Z</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">Phase</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu">CNotGate</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">CNOT</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
@@ -202,7 +210,8 @@ a random one. <code>represent_zbasis()</code> is the matrix of a controlled gate
 
 
 <dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
-<dd><p>The matrix format, only <code>"sympy"</code>.</p></dd>
+<dd><p>The matrix format: <code>"sympy"</code>, or <code>"numpy"</code> for a base R
+complex matrix (SymPy's NumPy format).</p></dd>
 
 
 <dt id="arg-circuit">circuit<a class="anchor" aria-label="anchor" href="#arg-circuit"></a></dt>

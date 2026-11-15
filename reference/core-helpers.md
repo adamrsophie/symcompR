@@ -21,11 +21,11 @@ compares two numbers within a tolerance. `check_assumptions()` and
 ## Usage
 
 ``` r
-Add(..., evaluate = TRUE)
+Add(..., evaluate = .ev_default())
 
-Mul(..., evaluate = TRUE)
+Mul(..., evaluate = .ev_default())
 
-Pow(a, b, evaluate = TRUE)
+Pow(a, b, evaluate = .ev_default())
 
 Equality(a, b, evaluate = TRUE)
 
@@ -60,6 +60,8 @@ sstrrepr(e)
 true
 
 false
+
+Relational(a, b, op = "==")
 
 sym_ordered(x, ...)
 ```

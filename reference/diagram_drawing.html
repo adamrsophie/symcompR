@@ -135,6 +135,17 @@ the Xy-pic code of a diagram. <code>ArrowStringDescription()</code> and
 <span>  diagram_format <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  groups <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">preview_diagram</span><span class="op">(</span></span>
+<span>  <span class="va">diagram</span>,</span>
+<span>  masked <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  diagram_format <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  groups <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  output <span class="op">=</span> <span class="st">"pdf"</span>,</span>
+<span>  viewer <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  euler <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -181,10 +192,20 @@ the Xy-pic code of a diagram. <code>ArrowStringDescription()</code> and
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Hints for <code>DiagramGrid()</code>.</p></dd>
 
+
+<dt id="arg-output-viewer-euler">output, viewer, euler<a class="anchor" aria-label="anchor" href="#arg-output-viewer-euler"></a></dt>
+<dd><p>As for <code><a href="preview.html">preview()</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A grid, a string or a drawer.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><code>preview_diagram()</code> draws the diagram with
+<code>xypic_draw_diagram()</code> and renders it with <code><a href="preview.html">preview()</a></code> and the LaTeX
+package <code>xypic</code>.</p>
     </div>
 
     <div class="section level2">

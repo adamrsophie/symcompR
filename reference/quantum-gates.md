@@ -44,6 +44,14 @@ PhaseGate(...)
 
 TGate(...)
 
+X(...)
+
+Y(...)
+
+Z(...)
+
+Phase(...)
+
 CNotGate(...)
 
 CNOT(...)
@@ -96,7 +104,8 @@ random_circuit(
 
 - format:
 
-  The matrix format, only `"sympy"`.
+  The matrix format: `"sympy"`, or `"numpy"` for a base R complex matrix
+  (SymPy's NumPy format).
 
 - circuit:
 

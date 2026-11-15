@@ -35,6 +35,17 @@ xypic_draw_diagram(
   groups = NULL,
   ...
 )
+
+preview_diagram(
+  diagram,
+  masked = NULL,
+  diagram_format = "",
+  groups = NULL,
+  output = "pdf",
+  viewer = NULL,
+  euler = TRUE,
+  ...
+)
 ```
 
 ## Arguments
@@ -80,9 +91,21 @@ xypic_draw_diagram(
 
   Hints for `DiagramGrid()`.
 
+- output, viewer, euler:
+
+  As for
+  [`preview()`](https://adamrsophie.github.io/symcompR/reference/preview.md).
+
 ## Value
 
 A grid, a string or a drawer.
+
+## Details
+
+`preview_diagram()` draws the diagram with `xypic_draw_diagram()` and
+renders it with
+[`preview()`](https://adamrsophie.github.io/symcompR/reference/preview.md)
+and the LaTeX package `xypic`.
 
 ## Examples
 

@@ -277,13 +277,45 @@ automatic simplification until <code><a href="../reference/doit.html">doit()</a>
 <span><span class="co">#&gt; x*1/x</span></span>
 <span><span class="fu"><a href="../reference/doit.html">doit</a></span><span class="op">(</span><span class="va">x</span> <span class="op">*</span> <span class="fu"><a href="../reference/UnevaluatedExpr.html">UnevaluatedExpr</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 1</span></span></code></pre></div>
+<p><code>evaluate(FALSE, expr)</code> evaluates <code>expr</code> with
+automatic evaluation turned off, as SymPy’s <code>evaluate(False)</code>
+context manager: sums, products, powers, relations and function calls
+stay as written.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/evaluate.html">evaluate</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="va">x</span> <span class="op">+</span> <span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; x + x</span></span>
+<span><span class="fu"><a href="../reference/evaluate.html">evaluate</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (x + 1) + 2</span></span>
+<span><span class="fu"><a href="../reference/evaluate.html">evaluate</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fu"><a href="../reference/Integer.html">Integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; sin(0)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="kinds-and-classes">Kinds and classes<a class="anchor" aria-label="anchor" href="#kinds-and-classes"></a>
+</h2>
+<p><code><a href="../reference/kinds.html">expr_kind()</a></code> is SymPy’s <code>.kind</code>: the
+mathematical kind of an object, whatever its class.
+<code><a href="../reference/isinstance.html">isinstance()</a></code> tests an expression against SymPy class names,
+following SymPy’s class hierarchy.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/kinds.html">expr_kind</a></span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; NumberKind</span></span>
+<span><span class="fu"><a href="../reference/kinds.html">expr_kind</a></span><span class="op">(</span><span class="va">x</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; BooleanKind</span></span>
+<span><span class="fu"><a href="../reference/kinds.html">expr_kind</a></span><span class="op">(</span><span class="fu"><a href="../reference/Matrix.html">Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; MatrixKind(NumberKind)</span></span>
+<span><span class="fu"><a href="../reference/kinds.html">expr_kind</a></span><span class="op">(</span><span class="fu"><a href="../reference/sets.html">FiniteSet</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; SetKind(NumberKind)</span></span>
+<span><span class="fu"><a href="../reference/isinstance.html">isinstance</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"Atom"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="../reference/isinstance.html">isinstance</a></span><span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Number"</span>, <span class="st">"Add"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="anonymous-functions">Anonymous functions<a class="anchor" aria-label="anchor" href="#anonymous-functions"></a>
 </h2>
 <p><code><a href="../reference/Lambda.html">Lambda()</a></code> creates a symbolic function;
 <code><a href="../reference/diffgeom.html">rcall()</a></code> applies it.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sq</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lambda.html">Lambda</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">sq</span></span>
 <span><span class="co">#&gt; Lambda(x, x^2)</span></span>
@@ -298,7 +330,7 @@ automatic simplification until <code><a href="../reference/doit.html">doit()</a>
 <p>The <code>S_*</code> objects are the singletons of SymPy’s
 <code>S</code> registry. They are ordinary symcompR expressions, and
 <code>TribonacciConstant</code> is one more named constant.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">S_Zero</span>, <span class="va">S_One</span>, <span class="va">S_NegativeOne</span>, <span class="va">S_Half</span>, <span class="va">S_Pi</span>, <span class="va">S_E</span>, <span class="va">S_I</span>,</span>
 <span>          <span class="va">S_Infinity</span>, <span class="va">S_NegativeInfinity</span>, <span class="va">S_ComplexInfinity</span>, <span class="va">S_NaN</span>,</span>
 <span>          <span class="va">S_EmptySet</span><span class="op">)</span><span class="op">)</span></span>
@@ -323,7 +355,7 @@ the name of a symbol, <code><a href="../reference/is_sym.html">is_sym()</a></cod
 <code><a href="../reference/iterables.html">numbered_symbols()</a></code> makes a run of fresh symbols, and
 <code><a href="../reference/misc-helpers.html">sym_prod()</a></code> multiplies a list. <code><a href="../reference/poly-aliases.html">sym_poly()</a></code> is
 the <code><a href="https://rdrr.io/r/stats/poly.html" class="external-link">poly()</a></code> function of SymPy.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/core-helpers.html">Add</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x + y + 2</span></span>
 <span><span class="fu"><a href="../reference/core-helpers.html">Mul</a></span><span class="op">(</span><span class="fl">2</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
@@ -353,7 +385,7 @@ order, <code><a href="../reference/misc-helpers.html">sym_reshape()</a></code> r
 <code><a href="../reference/core-helpers.html">nfloat()</a></code> turns the rational coefficients of an expression
 into floats while leaving its powers exact. <code><a href="../reference/core-helpers.html">comp()</a></code> compares
 two numbers to a tolerance.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/core-helpers.html">sym_ordered</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span>, <span class="va">x</span>, <span class="fu"><a href="../reference/as_sym.html">S</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "1"   "x"   "y"   "x^2"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="../reference/misc-helpers.html">sym_reshape</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">" "</span><span class="op">)</span>, <span class="st">""</span><span class="op">)</span></span>
@@ -365,7 +397,7 @@ two numbers to a tolerance.</p>
 <p><code><a href="../reference/function-aliases.html">sym_rf()</a></code> and <code><a href="../reference/function-aliases.html">ff()</a></code> are the rising and
 falling factorials; with an integer second argument they expand into
 products.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/function-aliases.html">sym_rf</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; x*(x + 1)*(x + 2)</span></span>
 <span><span class="fu"><a href="../reference/function-aliases.html">ff</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">3</span><span class="op">)</span></span>
@@ -381,7 +413,7 @@ with <code>x^e &lt;= y</code> and whether the power is exact,
 <code><a href="../reference/integer-helpers.html">num_digits()</a></code> counts digits in a base,
 <code><a href="../reference/integer-helpers.html">trailing()</a></code> counts the trailing zero bits, and
 <code><a href="../reference/integer-helpers.html">arity()</a></code> counts the arguments of an R function.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu"><a href="../reference/integer-helpers.html">integer_log</a></span><span class="op">(</span><span class="fl">125</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 2</span></span>
 <span><span class="co">#&gt;  $ e    : num 3</span></span>
@@ -405,7 +437,7 @@ out common terms without full factorization, and
 principal part and a number of turns.
 <code><a href="../reference/could_extract_minus_sign.html">could_extract_minus_sign()</a></code> tells whether an expression
 reads more naturally with its sign flipped.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/extract-methods.html">add_primitive</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "2"     "x + 2"</span></span>
 <span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/as_content_primitive.html">as_content_primitive</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">6</span> <span class="op">*</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
@@ -418,7 +450,7 @@ reads more naturally with its sign flipped.</p>
 <span><span class="co">#&gt; [1]  TRUE FALSE</span></span></code></pre></div>
 <p><code><a href="../reference/factor_nc.html">factor_nc()</a></code> factors expressions with noncommutative
 symbols, keeping the order of the factors.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">P</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"P"</span>, commutative <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>; <span class="va">Qn</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"Q"</span>, commutative <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/factor_nc.html">factor_nc</a></span><span class="op">(</span><span class="va">P</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="va">P</span> <span class="op">*</span> <span class="va">y</span><span class="op">)</span></span>
 <span><span class="co">#&gt; (x + y)*P</span></span>
@@ -432,7 +464,7 @@ symbols, keeping the order of the factors.</p>
 names, and <code><a href="../reference/core-helpers.html">Rel()</a></code> picks the class from an operator string.
 <code><a href="../reference/imageset.html">Contains()</a></code> states that an element lies in a set; it
 evaluates when the answer is known.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/core-helpers.html">Equality</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Eq(x, 1)</span></span>
 <span><span class="fu"><a href="../reference/core-helpers.html">GreaterThan</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span><span class="op">)</span></span>
@@ -460,7 +492,7 @@ evaluates when the answer is known.</p>
 <p><code><a href="../reference/Dict.html">Dict()</a></code> is SymPy’s immutable dictionary of expressions,
 with <code><a href="../reference/Dict.html">dict_get()</a></code>, <code><a href="../reference/Dict.html">dict_keys()</a></code>,
 <code><a href="../reference/Dict.html">dict_values()</a></code>, and <code><a href="../reference/Dict.html">dict_items()</a></code>.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Dict.html">Dict</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">d</span></span>
 <span><span class="co">#&gt; {x: 1, y: 2}</span></span>
@@ -478,7 +510,7 @@ with <code><a href="../reference/Dict.html">dict_get()</a></code>, <code><a href
 </h2>
 <p><code><a href="../reference/as_bigq.html">as_bigq()</a></code> and <code><a href="../reference/as_bigq.html">as_bigz()</a></code> return the exact
 value of a rational or integer as a <code>gmp</code> number.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/as_bigq.html">as_bigq</a></span><span class="op">(</span><span class="fu"><a href="../reference/Integer.html">Rational</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Big Rational ('bigq') :</span></span>
 <span><span class="co">#&gt; [1] 1/3</span></span>
@@ -492,7 +524,7 @@ value of a rational or integer as a <code>gmp</code> number.</p>
 <p><code><a href="../reference/Dummy.html">Dummy()</a></code> creates a symbol that is never equal to any
 other symbol, even one with the same name. It is used internally for
 temporary variables.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"d"</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="../reference/Symbol.html">Symbol</a></span><span class="op">(</span><span class="st">"d"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="fu"><a href="../reference/Dummy.html">Dummy</a></span><span class="op">(</span><span class="st">"d"</span><span class="op">)</span> <span class="op">==</span> <span class="fu"><a href="../reference/Dummy.html">Dummy</a></span><span class="op">(</span><span class="st">"d"</span><span class="op">)</span></span>
@@ -505,7 +537,7 @@ temporary variables.</p>
 subscripted quantities such as matrix entries, and
 <code><a href="../reference/Indexed.html">get_indices()</a></code> finds the free indices of a product,
 following the summation convention for repeated indices.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">i</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Indexed.html">Idx</a></span><span class="op">(</span><span class="st">"i"</span><span class="op">)</span>; <span class="va">j</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Indexed.html">Idx</a></span><span class="op">(</span><span class="st">"j"</span><span class="op">)</span></span>
 <span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Indexed.html">IndexedBase</a></span><span class="op">(</span><span class="st">"A"</span><span class="op">)</span>; <span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Indexed.html">IndexedBase</a></span><span class="op">(</span><span class="st">"v"</span><span class="op">)</span></span>
 <span><span class="fu">A</span><span class="op">(</span><span class="va">i</span>, <span class="va">j</span><span class="op">)</span> <span class="op">*</span> <span class="fu">v</span><span class="op">(</span><span class="va">j</span><span class="op">)</span></span>

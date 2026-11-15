@@ -50,6 +50,8 @@ hom(x, A, B)
 is_subdiagram(x, diagram)
 
 subdiagram_from_objects(x, objects)
+
+Morphism(domain, codomain)
 ```
 
 ## Arguments
@@ -93,6 +95,11 @@ subdiagram_from_objects(x, objects)
 ## Value
 
 A sym object.
+
+## Details
+
+`Morphism()` is SymPy's abstract base class, which cannot be
+instantiated; use `NamedMorphism()` and the other derived classes.
 
 ## Examples
 

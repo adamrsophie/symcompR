@@ -200,6 +200,45 @@ doit(x * UnevaluatedExpr(1 / x))
 #> 1
 ```
 
+`evaluate(FALSE, expr)` evaluates `expr` with automatic evaluation
+turned off, as SymPy’s `evaluate(False)` context manager: sums,
+products, powers, relations and function calls stay as written.
+
+``` r
+
+evaluate(FALSE, x + x)
+#> x + x
+evaluate(FALSE, (x + 1) + 2)
+#> (x + 1) + 2
+evaluate(FALSE, sin(Integer(0)))
+#> sin(0)
+```
+
+## Kinds and classes
+
+[`expr_kind()`](https://adamrsophie.github.io/symcompR/reference/kinds.md)
+is SymPy’s `.kind`: the mathematical kind of an object, whatever its
+class.
+[`isinstance()`](https://adamrsophie.github.io/symcompR/reference/isinstance.md)
+tests an expression against SymPy class names, following SymPy’s class
+hierarchy.
+
+``` r
+
+expr_kind(x + 1)
+#> NumberKind
+expr_kind(x > 1)
+#> BooleanKind
+expr_kind(Matrix(list(1, x)))
+#> MatrixKind(NumberKind)
+expr_kind(FiniteSet(1, x))
+#> SetKind(NumberKind)
+isinstance(x, "Atom")
+#> [1] TRUE
+isinstance(x + 1, c("Number", "Add"))
+#> [1] TRUE
+```
+
 ## Anonymous functions
 
 [`Lambda()`](https://adamrsophie.github.io/symcompR/reference/Lambda.md)

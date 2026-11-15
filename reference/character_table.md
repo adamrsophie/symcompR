@@ -31,6 +31,8 @@ ct_shape(tbl)
 ct_zeta_order(tbl)
 
 ct_conjugacy_class_reps(tbl)
+
+CharacterTable(G)
 ```
 
 ## Arguments
@@ -66,6 +68,8 @@ lists of expressions in the root of unity `zeta_k` (an
 `ct_zeta_order()` the order `k` of the root of unity (1 for an integer
 table) and `ct_conjugacy_class_reps()` the first element of each
 conjugacy class.
+
+`CharacterTable(G)` is SymPy's `CharacterTable.from_perm_group(G)`.
 
 ## Examples
 

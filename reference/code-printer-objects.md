@@ -16,6 +16,8 @@ reads.
 ## Usage
 
 ``` r
+StrPrinter(settings = NULL)
+
 printer_doprint(p, e, assign_to = NULL)
 
 C89CodePrinter(settings = NULL)
@@ -55,6 +57,11 @@ RustCodePrinter(settings = NULL)
 
 ## Arguments
 
+- settings:
+
+  A named list of printer settings, such as `list(type_aliases = ...)`
+  or `list(standard = 95)`.
+
 - p:
 
   A printer.
@@ -67,14 +74,15 @@ RustCodePrinter(settings = NULL)
 
   Optional variable to assign to.
 
-- settings:
-
-  A named list of printer settings, such as `list(type_aliases = ...)`
-  or `list(standard = 95)`.
-
 ## Value
 
 A printer, or for `printer_doprint()` a character scalar.
+
+## Details
+
+`StrPrinter()` is the printer of
+[`sstr()`](https://adamrsophie.github.io/symcompR/reference/sstr.md),
+for use with `printer_doprint()`.
 
 ## Examples
 

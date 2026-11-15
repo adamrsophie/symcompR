@@ -54,6 +54,8 @@ fp_most_frequent_generator(G)
 fp_random(G)
 
 fp_index(G, H, strategy = "relator_based")
+
+vfp_group(fr_grp, relators = list(), envir = parent.frame())
 ```
 
 ## Arguments
@@ -97,6 +99,10 @@ fp_index(G, H, strategy = "relator_based")
 - max_cosets, draft, incomplete:
 
   Passed to the coset enumeration.
+
+- envir:
+
+  The environment that receives the generators.
 
 ## Value
 

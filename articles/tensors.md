@@ -482,6 +482,48 @@ double_coset_can_rep(list(0:5), list(0), c(0, 2), dg,
 #> [1] 0 2 1 4 3 5 6 7
 ```
 
+## Pattern matching with wild tensors
+
+[`WildTensorIndex()`](https://adamrsophie.github.io/symcompR/reference/wild-tensors.md)
+makes an index that matches any index of its type (of either variance
+with `ignore_updown = TRUE`), and
+[`WildTensorHead()`](https://adamrsophie.github.io/symcompR/reference/wild-tensors.md)
+a head whose tensors match whole tensor expressions with matching free
+indices.
+[`sym_match()`](https://adamrsophie.github.io/symcompR/reference/sym_match.md)
+returns the match, and
+[`sym_replace()`](https://adamrsophie.github.io/symcompR/reference/sym_match.md)
+replaces every matching subexpression; a matched wild head stands for
+the matched expression with its free indices renamed.
+
+``` r
+
+R3 <- TensorIndexType("R3", dim = 3)
+ip <- tensor_indices("p q r s t", R3)
+p <- ip$p; q <- ip$q; r <- ip$r; s <- ip$s; tt <- ip$t
+a <- WildTensorIndex("a", R3, ignore_updown = TRUE)
+b <- WildTensorIndex("b", R3, ignore_updown = TRUE)
+cc <- WildTensorIndex("c", R3, ignore_updown = TRUE)
+dd <- WildTensorIndex("d", R3, ignore_updown = TRUE)
+e <- WildTensorIndex("e", R3, ignore_updown = TRUE)
+K <- TensorHead("K", list(R3)); V <- TensorHead("V", list(R3))
+W <- WildTensorHead("W", unordered_indices = TRUE)
+sym_match(K(p) * V(q), W(a, p))
+#> $a
+#> q 
+#> 
+#> $`W(R3,R3)`
+#> _WildTensExpr(K(p)*V(q))
+sym_replace(K(p) * V(-p), W(a) * V(-a), 1)
+#> 1
+sym_replace(K(p) * V(q), W(q) * K(p), W(p) * W(q))
+#> V(p)*V(q)
+eps <- R3$epsilon; delta <- R3$delta
+canon_bp(sym_replace(eps(r, p, q) * eps(-r, -s, -tt), eps(e, a, b) * eps(-e, cc, dd),
+                     delta(a, cc) * delta(b, dd) - delta(a, dd) * delta(b, cc)))
+#> KD(p, -s)*KD(q, -t) - KD(p, -t)*KD(q, -s)
+```
+
 ## Array expressions
 
 The array expressions of `sympy.tensor.array.expressions` describe

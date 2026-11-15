@@ -170,7 +170,9 @@ are SymPy's methods. <code>expr_to_holonomic()</code>, <code>from_hyper()</code>
 <span>  lenics <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  domain <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  initcond <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">RecurrenceOperator</span><span class="op">(</span><span class="va">list_of_poly</span>, <span class="va">parent</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -281,10 +283,24 @@ for singular conditions.</p></dd>
 <dt id="arg-domain">domain<a class="anchor" aria-label="anchor" href="#arg-domain"></a></dt>
 <dd><p>The coefficient domain.</p></dd>
 
+
+<dt id="arg-list-of-poly">list_of_poly<a class="anchor" aria-label="anchor" href="#arg-list-of-poly"></a></dt>
+<dd><p>The coefficients of the shift operator powers, lowest
+first.</p></dd>
+
+
+<dt id="arg-parent">parent<a class="anchor" aria-label="anchor" href="#arg-parent"></a></dt>
+<dd><p>A recurrence operator algebra.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An operator, holonomic function, sequence or expression.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><code>RecurrenceOperator(list_of_poly, parent)</code> builds the operator
+<code>sum p_i Sn^i</code> directly, as SymPy's class does.</p>
     </div>
 
     <div class="section level2">

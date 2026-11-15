@@ -45,6 +45,10 @@ format(x, ...)
 
 # S3 method for class 'sym_omega_power'
 print(x, ...)
+
+OrdinalZero()
+
+OrdinalOmega()
 ```
 
 ## Arguments

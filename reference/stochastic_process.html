@@ -116,7 +116,13 @@ called, <code>X(t)</code>. Process attributes such as <code>"state_space"</code>
 <span></span>
 <span><span class="fu">WienerProcess</span><span class="op">(</span><span class="va">sym</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">GammaProcess</span><span class="op">(</span><span class="va">sym</span>, <span class="va">lamda</span>, <span class="va">gamma</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">GammaProcess</span><span class="op">(</span><span class="va">sym</span>, <span class="va">lamda</span>, <span class="va">gamma</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">StochasticProcess</span><span class="op">(</span><span class="va">sym</span>, state_space <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">DiscreteTimeStochasticProcess</span><span class="op">(</span><span class="va">sym</span>, state_space <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ContinuousTimeStochasticProcess</span><span class="op">(</span><span class="va">sym</span>, state_space <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -142,6 +148,10 @@ called, <code>X(t)</code>. Process attributes such as <code>"state_space"</code>
 <dt id="arg-lamda-gamma">lamda, gamma<a class="anchor" aria-label="anchor" href="#arg-lamda-gamma"></a></dt>
 <dd><p>Rate and shape parameters.</p></dd>
 
+
+<dt id="arg-state-space">state_space<a class="anchor" aria-label="anchor" href="#arg-state-space"></a></dt>
+<dd><p>The state space: a set, or a vector of states.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -154,7 +164,7 @@ called, <code>X(t)</code>. Process attributes such as <code>"state_space"</code>
 <span class="r-in"><span><span class="fu"><a href="E.html">E</a></span><span class="op">(</span><span class="fu"><a href="rv_attr.html">rv_getitem</a></span><span class="op">(</span><span class="va">B</span>, <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="rv_attr.html">rv_getitem</a></span><span class="op">(</span><span class="va">B</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1</span>
 <span class="r-in"><span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu">PoissonProcess</span><span class="op">(</span><span class="st">"X"</span>, <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="E.html">E</a></span><span class="op">(</span><span class="fu">X</span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="E.html">E</a></span><span class="op">(</span><span class="fu"><a href="quantum-gates.html">X</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6</span>
 </code></pre></div>
     </div>

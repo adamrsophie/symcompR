@@ -301,6 +301,47 @@ plot3d(x * y, list(x, -1, 1), list(y, -1, 1))
 
 ![](other-modules_files/figure-html/unnamed-chunk-13-3.png)
 
+[`plot_contour()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+draws level curves, and
+[`plot3d_parametric_line()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+and
+[`plot3d_parametric_surface()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
+draw curves and surfaces in space.
+
+``` r
+
+plot_contour(x^2 + y^2, list(x, -2, 2), list(y, -2, 2))
+```
+
+![](other-modules_files/figure-html/unnamed-chunk-14-1.png)
+
+``` r
+
+u <- Symbol("u"); v <- Symbol("v")
+plot3d_parametric_surface(cos(u) * sin(v), sin(u) * sin(v), cos(v),
+                          list(u, 0, 2 * sym_pi), list(v, 0, sym_pi))
+```
+
+![](other-modules_files/figure-html/unnamed-chunk-14-2.png)
+
+[`interval()`](https://adamrsophie.github.io/symcompR/reference/intervalmath.md)
+is the interval arithmetic of the plotting module: arithmetic and
+elementary functions give intervals that contain every possible value,
+and comparisons give three valued `intervalMembership` results.
+
+``` r
+
+iv <- interval(1, 2)
+iv * interval(-1, 2)
+#> interval(-2.000000, 4.000000)
+sqrt(interval(-1, 4))
+#> interval(-inf, inf)
+sin(interval(0, 3))
+#> interval(0.000000, 1.000000)
+iv > 0
+#> intervalMembership(True, True)
+```
+
 [`textplot()`](https://adamrsophie.github.io/symcompR/reference/textplot.md)
 draws a rough plot with text characters:
 
@@ -447,6 +488,50 @@ xthreaded(function(e) e^2)(x + 1)
 #> (x + 1)^2
 names(timed(function() sum(1:10)))
 #> [1] "number" "time"   "scaled" "unit"
+```
+
+[`Dispatcher()`](https://adamrsophie.github.io/symcompR/reference/multipledispatch.md)
+and
+[`dispatch()`](https://adamrsophie.github.io/symcompR/reference/multipledispatch.md)
+port `sympy.multipledispatch`: a function that picks the implementation
+registered for the most specific classes of its arguments.
+[`cacheit()`](https://adamrsophie.github.io/symcompR/reference/cacheit.md)
+caches a function as SymPy’s cache does, and
+[`clear_cache()`](https://adamrsophie.github.io/symcompR/reference/clear_cache.md)
+empties every cache.
+[`vectorize()`](https://adamrsophie.github.io/symcompR/reference/vectorize.md)
+maps a function over list arguments, and
+[`DeferredVector()`](https://adamrsophie.github.io/symcompR/reference/DeferredVector.md)
+is a vector argument for
+[`lambdify()`](https://adamrsophie.github.io/symcompR/reference/lambdify.md).
+
+``` r
+
+fd <- dispatch("Integer", fname = "fd", fun = function(v) v + 1)
+fd <- dispatch("Rational", fname = "fd", fun = function(v) v * 2)
+fd(Integer(3))
+#> 4
+fd(Rational(1, 3))
+#> 2/3
+vdiff <- vectorize(0, 1)(function(f, v) diff(f, v))
+vdiff(list(x^2, x * y), list(x, y))
+#> [[1]]
+#> [[1]][[1]]
+#> 2*x
+#> 
+#> [[1]][[2]]
+#> 0
+#> 
+#> 
+#> [[2]]
+#> [[2]][[1]]
+#> y
+#> 
+#> [[2]][[2]]
+#> x
+X <- DeferredVector("X")
+lambdify(X, X[0] + 2 * X[1])(c(3, 4))
+#> [1] 11
 ```
 
 [`default_sort_key()`](https://adamrsophie.github.io/symcompR/reference/core-helpers.md)

@@ -28,6 +28,8 @@ fg_slice(G, from = 0L, to = G$rank)
 fg_index(G, gen)
 
 fp_contains(G, gen)
+
+vfree_group(symbols, envir = parent.frame())
 ```
 
 ## Arguments
@@ -47,6 +49,10 @@ fp_contains(G, gen)
 - gen:
 
   A generator of `G`.
+
+- envir:
+
+  The environment that receives the generators.
 
 ## Value
 

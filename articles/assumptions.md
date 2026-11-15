@@ -225,3 +225,33 @@ is_extended_nonnegative(y, Q$positive(y))
 is_extended_nonnegative(y)
 #> [1] NA
 ```
+
+The binary relation predicates `Q$eq`, `Q$gt` and the rest are
+`BinaryRelation` objects;
+[`binrel_properties()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+lists their properties, and
+[`AppliedBinaryRelation()`](https://adamrsophie.github.io/symcompR/reference/binary-relations.md)
+applies one.
+[`test_closed_group()`](https://adamrsophie.github.io/symcompR/reference/test_closed_group.md)
+asks whether every term of a sum or product has a property, as SymPy’s
+handlers do.
+
+``` r
+
+AppliedBinaryRelation(StrictLessThanPredicate(), y, 2)
+#> Q.lt(y, 2)
+binrel_properties(Q$gt)
+#> $is_reflexive
+#> [1] FALSE
+#> 
+#> $is_symmetric
+#> [1] FALSE
+#> 
+#> $reversed
+#> Q.lt
+#> 
+#> $negated
+#> Q.le
+test_closed_group(y + 1, Q$positive(y), Q$positive)
+#> [1] TRUE
+```

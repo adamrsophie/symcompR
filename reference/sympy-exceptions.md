@@ -89,6 +89,42 @@ PolificationFailed(message = "")
 OptionError(message = "")
 
 FlagError(message = "")
+
+DMError(message = "")
+
+DMBadInputError(message = "")
+
+DMDomainError(message = "")
+
+DMFormatError(message = "")
+
+DMRankError(message = "")
+
+DMShapeError(message = "")
+
+DMNotAField(message = "")
+
+DMNonInvertibleMatrixError(message = "")
+
+DMNonSquareMatrixError(message = "")
+
+DMValueError(message = "")
+
+QuantumError(message = "")
+
+HilbertSpaceError(message = "")
+
+ClosureFailure(message = "")
+
+StructureError(message = "")
+
+MissingUnityError(message = "")
+
+SMTLibSyntaxError(message = "")
+
+UnknownSMTLibCommandError(message = "")
+
+UnknownSMTLibOperatorError(message = "")
 ```
 
 ## Arguments

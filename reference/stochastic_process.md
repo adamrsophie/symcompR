@@ -21,6 +21,12 @@ PoissonProcess(sym, lamda)
 WienerProcess(sym)
 
 GammaProcess(sym, lamda, gamma)
+
+StochasticProcess(sym, state_space = NULL)
+
+DiscreteTimeStochasticProcess(sym, state_space = NULL)
+
+ContinuousTimeStochasticProcess(sym, state_space = NULL)
 ```
 
 ## Arguments
@@ -44,6 +50,10 @@ GammaProcess(sym, lamda, gamma)
 - lamda, gamma:
 
   Rate and shape parameters.
+
+- state_space:
+
+  The state space: a set, or a vector of states.
 
 ## Value
 
