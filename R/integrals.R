@@ -68,24 +68,39 @@ register_str_printer("Integral", function(e) {
   paste0("Integral(", .str(e$args[[1L]]), ", ", paste(lims, collapse = ", "), ")")
 })
 register_doit("Integral", function(e) .integral_doit(e))
-register_diff_hook("Integral", function(e, x) {
-  f <- e$args[[1L]]
+# Integral._eval_derivative: differentiate under the integral sign, with
+# the fundamental theorem of calculus for the limits, from the outermost
+# limit inward
+register_diff_hook("Integral", function(e, sym) {
   lims <- e$args[-1L]
-  if (length(lims) == 1L && length(lims[[1L]]$args) == 3L) {
-    v <- lims[[1L]]$args[[1L]]; a <- lims[[1L]]$args[[2L]]; b <- lims[[1L]]$args[[3L]]
-    if (identical(v$key, x$key)) {
-      # the integration variable is a dummy: rename it before Leibniz' rule
-      d <- Dummy(v$name)
-      f <- xreplace(f, list(list(v, d)))
-      v <- d
-      lims[[1L]] <- Tuple(d, a, b)
-    }
-    out <- list(.mul(list(subs(f, v, b), .diff1(b, x))), .neg(.mul(list(subs(f, v, a), .diff1(a, x)))))
-    if (.has1(f, x)) out[[3L]] <- new_sym("Integral", list(.diff1(f, x), lims[[1L]]))
-    return(.add(out))
+  limit <- lims[[length(lims)]]$args
+  lims <- lims[-length(lims)]
+  x <- limit[[1L]]
+  a <- if (length(limit) == 3L) limit[[2L]] else NULL
+  b <- if (length(limit) == 3L) limit[[3L]] else if (length(limit) == 2L) limit[[2L]] else NULL
+  f <- if (length(lims)) new_sym("Integral", c(list(e$args[[1L]]), lims)) else e$args[[1L]]
+  .do <- function(f, ab) {
+    dab <- .diff1(ab, sym)
+    if (is_zero_num(dab)) return(S_Zero)
+    if (f$type == "Integral")
+      f <- new_sym("Integral", c(list(f$args[[1L]]), lapply(f$args[-1L], function(l)
+        if (length(l$args) == 1L && identical(l$args[[1L]]$key, x$key)) Tuple(x, x) else l)))
+    .mul(list(subs(f, x, ab), dab))
   }
-  if (length(lims) == 1L && length(lims[[1L]]$args) == 1L && identical(lims[[1L]]$args[[1L]]$key, x$key)) return(f)
-  .derivative_node(e, list(list(x, 1L)))
+  rv <- list()
+  if (!is.null(b)) rv[[length(rv) + 1L]] <- .do(f, b)
+  if (!is.null(a)) rv[[length(rv) + 1L]] <- .neg(.do(f, a))
+  if (length(limit) == 1L && identical(sym$key, x$key)) {
+    rv[[length(rv) + 1L]] <- f
+  } else {
+    u <- Dummy("u")
+    arg <- subs(.diff1(subs(f, x, u), sym), u, x)
+    if (!is_zero_num(arg)) {
+      lim <- if (is.null(a) && is.null(b)) Tuple(x) else if (is.null(a)) Tuple(x, b) else Tuple(x, a, b)
+      rv[[length(rv) + 1L]] <- Integral(arg, lim)
+    }
+  }
+  .add(rv)
 })
 
 # the antiderivative by SymPy's _eval_integral, NULL when none is found

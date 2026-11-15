@@ -220,7 +220,10 @@
     else cfs[[k]] <- .add(list(cfs[[k]], v))
   }
   parts <- lapply(cfs, .gi_parts)
-  if (!all(vapply(parts, function(v) all(gmp::denominator(v) == 1), NA))) return(orig)
+  # QQ_I is a field: clear_denoms, then the content over ZZ_I
+  den <- gmp::as.bigz(1)
+  for (v in parts) for (j in 1:2) den <- gmp::lcm.bigz(den, gmp::denominator(v[j]))
+  parts <- lapply(parts, function(v) v * den)
   cont <- Reduce(.gi_gcd, parts, gmp::as.bigq(c(0, 0)))
   J <- Reduce(pmin, mons)
   rest <- .add(lapply(names(cfs), function(k) {
@@ -229,7 +232,7 @@
     .mul(c(list(.gi_make(q[1], q[2])), Map(function(g, e) .pow(g, .int(e)), gx[m > 0L], m[m > 0L])))
   }))
   term <- .mul(Map(function(g, e) .pow(g, .int(e)), gx[J > 0L], J[J > 0L]))
-  coeff <- .gi_make(cont[1], cont[2])
+  coeff <- .div(.gi_make(cont[1], cont[2]), Integer(as.character(den)))
   if (is_one_num(coeff)) {
     coeff <- S_One
     if (is_one_num(term)) return(orig)

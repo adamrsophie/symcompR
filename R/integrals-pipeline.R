@@ -305,6 +305,7 @@ deltaintegrate <- function(f, x) {
   f <- i$args[[1L]]; lim <- i$args[[2L]]
   x <- if (lim$type == "Tuple") lim$args[[1L]] else lim
   r <- .sympy_eval_integral(f, x, meijerg = meijerg, risch = FALSE, manual = manual, heurisch = heurisch, conds = conds)
-  if (is.null(r)) i else r
+  # doit: an undone limit leaves self.func(function, xab).factor()
+  if (is.null(r)) .integral_factor(i) else r
 }
 

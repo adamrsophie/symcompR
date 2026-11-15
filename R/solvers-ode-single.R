@@ -787,8 +787,9 @@ print.ode_solver <- function(x, ...) {
       dummy_eq <- simplify(subs(dummy_eq, reps))
       r2 <- sym_match(collect(expand(dummy_eq), list(df, fx)), a * df + b)
       if (length(r2)) {
-        self$d <- r2$d %||% S_Zero
-        self$e <- r2$e %||% S_Zero
+        # self.d, self.e = r2[b], r2[a], where a is the Wild named d
+        self$d <- r2$e %||% S_Zero
+        self$e <- r2$d %||% S_Zero
         orderd <- homogeneous_order(self$d, x, fx)
         ordere <- homogeneous_order(self$e, x, fx)
         if (!is.null(orderd) && !is.null(ordere) && identical(orderd$key, ordere$key)) {

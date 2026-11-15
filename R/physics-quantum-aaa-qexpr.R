@@ -766,7 +766,8 @@ Dagger <- function(arg, evaluate = TRUE) {
 for (.t in .HS_TYPES) assign(.t, function(e) c(commutative = TRUE), envir = .facts_hooks)
 # ExprWithLimits: obj.is_commutative = function.is_commutative, so a sum of
 # states stays noncommutative
-for (.t in c("Sum", "Product", "Integral"))
+# (Integral also carries _eval_is_zero, in integrals-doit.R)
+for (.t in c("Sum", "Product"))
   assign(.t, function(e) c(commutative = !identical(ask_fact(e$args[[1L]], "commutative"), FALSE)), envir = .facts_hooks)
 rm(.t)
 

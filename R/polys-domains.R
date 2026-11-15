@@ -309,6 +309,12 @@ PythonComplex <- function(real = 0, imag = 0) complex(real = real, imaginary = i
     if (z$type %in% c("Add", "Mul")) return(all(vapply(z$args, rec, NA)))
     if (z$type == "Pow" && z$args[[2L]]$type == "Integer" && (field || z$args[[2L]]$value >= 0) &&
         has_gen(z$args[[1L]])) return(rec(z$args[[1L]]))
+    # decompose_power, as _parallel_dict_from_expr reads the factor: exp(6)
+    # is E^6, exp(2*x) is exp(x)^2 and 2^(2*n) is (2^n)^2
+    if (z$type == "Pow" || (z$type == "Function" && z$name == "exp")) {
+      dp <- .decompose_power(z)
+      if (!identical(dp[[1L]]$key, z$key) && (field || dp[[2L]] > 0) && has_gen(dp[[1L]])) return(rec(dp[[1L]]))
+    }
     if (field && z$type == "Rational") return(TRUE)
     if (has_gen(z)) return(FALSE)
     coeff_ok(z)

@@ -13,7 +13,8 @@
 .gens_of <- function(exprs, gens) {
   gens <- .as_gens(gens)
   if (!is.null(gens)) return(gens)
-  .find_gens(lapply(exprs, function(z) expand(as_sym(z))))
+  # _parallel_dict_from_expr_no_gens with greedy: I is a coefficient
+  Filter(function(g) !identical(g$key, S_I$key), .find_gens(lapply(exprs, function(z) expand(as_sym(z)))))
 }
 
 .domain_of <- function(p) {
@@ -105,11 +106,21 @@ print.Poly <- function(x, ...) { cat(.poly_sstr(x), "\n", sep = ""); invisible(x
 .poly_sstr <- function(x) {
   ng <- .poly_ngens(x)
   gens <- vapply(x$gens[seq_len(ng)], .str, "")
-  dom <- if (!is.null(x$dom_str)) x$dom_str else if (!is.null(x$rr_prec)) "RR" else if (ng < length(x$gens)) paste0(.domain_of(x$rep), "[", paste(vapply(x$gens[-seq_len(ng)], .str, ""),
-                                                  collapse = ","), "]")
+  dom <- if (!is.null(x$dom_str)) x$dom_str else if (!is.null(x$rr_prec)) "RR" else if (ng < length(x$gens)) .poly_coeff_dom(x$rep, x$gens[-seq_len(ng)])
          else .domain_of(x$rep)
   tail <- if (!is.null(x$modulus)) paste0("modulus=", x$modulus) else paste0("domain='", dom, "'")
   paste0("Poly(", .poly_terms_str(x), ", ", paste(gens, collapse = ", "), ", ", tail, ")")
+}
+
+# construct_domain of the coefficients in the generators cg: I makes the
+# ground ZZ_I or QQ_I, another algebraic number generator makes EX
+.poly_coeff_dom <- function(rep, cg) {
+  isI <- vapply(cg, function(g) identical(g$key, S_I$key), NA)
+  if (any(!isI & vapply(cg, function(g) !length(free_symbols(g)) && isTRUE(ask_fact(g, "algebraic")), NA))) return("EX")
+  ground <- .domain_of(rep)
+  if (any(isI)) ground <- paste0(ground, "_I")
+  rest <- cg[!isI]
+  if (!length(rest)) ground else paste0(ground, "[", paste(vapply(rest, .str, ""), collapse = ","), "]")
 }
 
 # SymPy's StrPrinter._print_Poly: terms in lex order, each monomial written
@@ -853,10 +864,17 @@ invert <- function(f, g, ...) {
 #' Content and primitive part
 #'
 #' `primitive(f)` returns `list(content, primitive)`, and `terms_gcd()` pulls
-#' out the greatest common monomial and numeric factor.
+#' out the greatest common monomial and the content of the coefficients, as
+#' SymPy's `terms_gcd()`: an equation is handled side by side, `deep = TRUE`
+#' works bottom up through the arguments, `clear = FALSE` keeps a rational
+#' factor inside a sum when that leaves integer coefficients, and
+#' `expand = FALSE` reads the expression without expanding it.
 #'
 #' @param f An expression.
 #' @param ... Generators.
+#' @param deep Apply to every argument first.
+#' @param clear Pull a rational content out of a sum.
+#' @param expand Expand before reading the terms.
 #' @return A list or an expression.
 #' @export
 primitive <- function(f, ...) {
@@ -877,16 +895,86 @@ content <- function(f, ...) {
 
 #' @rdname primitive
 #' @export
-terms_gcd <- function(f, ...) {
+terms_gcd <- function(f, ..., deep = FALSE, clear = TRUE, expand = TRUE) {
   if (!is.null(r <- .gf_hook("terms_gcd", list(f), list(...)))) return(r)
-  f <- as_sym(f)
-  gens <- .gens_of(list(f), list(...))
-  p <- expr_to_qpoly(f, gens, strict = FALSE)
-  if (qp_is_zero(p)) return(S_Zero)
-  pr <- qp_primitive(p)
-  mins <- apply(pr$poly$e, 2L, min)
-  q <- qp_norm(pr$poly$e - matrix(mins, nrow(pr$poly$e), length(mins), byrow = TRUE), pr$poly$c)
-  .mul(list(make_rational(pr$content), .monomial_vec_expr(mins, gens), qpoly_to_expr(q, gens)))
+  orig <- f <- as_sym(f)
+  if (f$type == "Equality") return(Eq(terms_gcd(f$args[[1L]], ..., deep = deep, clear = clear, expand = expand),
+                                terms_gcd(f$args[[2L]], ..., deep = deep, clear = clear, expand = expand)))
+  if (is_relational(f)) stop("TypeError: Inequalities cannot be used with terms_gcd. Found: ", sstr(f), call. = FALSE)
+  if (!.is_expr_node(f) || !length(f$args)) return(orig)
+  if (deep) {
+    new <- sym_rebuild(f, lapply(f$args, function(a) terms_gcd(a, ..., deep = TRUE, clear = clear, expand = expand)))
+    return(terms_gcd(new, ..., clear = clear, expand = FALSE))
+  }
+  fe <- if (expand) expand(f) else f
+  gens <- .as_gens(list(...))
+  if (is.null(gens)) gens <- Filter(function(g) !identical(g$key, S_I$key), .find_gens(list(fe)))
+  if (!length(gens)) return(orig)
+  P <- tryCatch(do.call(Poly, c(list(fe), gens)), error = function(e) NULL)
+  if (is.null(P)) return(orig)
+  ms <- monoms(P); cs <- coeffs(P)
+  if (!length(ms)) return(orig)
+  E <- do.call(rbind, ms)
+  J <- apply(E, 2L, min)
+  E <- E - matrix(J, nrow(E), length(J), byrow = TRUE)
+  # the domain is a ring unless a coefficient has a symbolic denominator
+  coeff <- S_One
+  ring <- all(vapply(cs, function(c) !length(free_symbols(.as_numer_denom(c)[[2L]])), NA))
+  if (ring) {
+    denom <- Reduce(function(u, v) .lcm_int(u, v), lapply(cs, function(c) .numeric_denominator(c)), S_One)
+    cs <- lapply(cs, function(c) expand(.mul(list(c, denom))))
+    content <- .terms_gcd_content(cs)
+    cs <- lapply(cs, function(c) expand(.div(c, content)))
+    coeff <- .div(content, denom)
+  }
+  term <- .mul(lapply(seq_along(gens), function(j) .pow(gens[[j]], Integer(J[j]))))
+  if (is_one_num(coeff)) {
+    coeff <- S_One
+    if (is_one_num(term)) return(orig)
+  }
+  fx <- .add(lapply(seq_along(cs), function(i)
+    .mul(c(list(cs[[i]]), lapply(seq_along(gens), function(j) .pow(gens[[j]], Integer(E[i, j])))))))
+  if (clear) return(.keep_coeff(coeff, .mul(list(term, fx))))
+  # base the clearing on the form of the original expression
+  cm <- as_coeff_mul_split(.keep_coeff(coeff, fx, clear = FALSE))
+  .keep_coeff(cm[[1L]], .mul(list(term, cm[[2L]])), clear = FALSE)
+}
+
+.numeric_denominator <- function(c) {
+  d <- .as_numer_denom(c)[[2L]]
+  if (d$type == "Integer") d else S_One
+}
+.lcm_int <- function(u, v) Integer(as.character(gmp::lcm.bigz(gmp::as.bigz(u$value), gmp::as.bigz(v$value))))
+
+# Poly.primitive's content: the gcd of the coefficients, a Gaussian integer
+# in the first quadrant over ZZ_I, else gcd_list over the ground ring
+.terms_gcd_content <- function(cs) {
+  ri <- lapply(cs, function(c) { r <- .re_im(c); if (all(vapply(r, function(z) z$type == "Integer", NA))) r else NULL })
+  if (any(vapply(cs, function(c) .contains_key(c, S_I$key), NA)) && !any(vapply(ri, is.null, NA))) {
+    g <- Reduce(.zi_gcd, lapply(ri, function(r) gmp::as.bigz(c(r[[1L]]$value, r[[2L]]$value))))
+    return(.add(list(Integer(as.character(g[1L])), .mul(list(Integer(as.character(g[2L])), S_I)))))
+  }
+  if (any(vapply(cs, function(c) .contains_key(c, S_I$key), NA))) return(S_One)
+  g <- gcd_list(cs)
+  if (is_number_type(g) && isTRUE(ask_fact(g, "negative"))) g <- .neg(g)
+  g
+}
+# gcd of Gaussian integers c(re, im), normalized to re > 0, im >= 0
+.zi_gcd <- function(a, b) {
+  mulz <- function(u, v) c(u[1L] * v[1L] - u[2L] * v[2L], u[1L] * v[2L] + u[2L] * v[1L])
+  while (any(b != 0)) {
+    n <- b[1L]^2 + b[2L]^2
+    num <- mulz(a, c(b[1L], -b[2L]))
+    q <- gmp::as.bigz(round(gmp::as.bigq(num) / n))
+    r <- a - mulz(q, b)
+    a <- b; b <- r
+  }
+  if (all(a == 0)) return(a)
+  for (k in 1:4) {
+    if (a[1L] > 0 && a[2L] >= 0) return(a)
+    a <- c(-a[2L], a[1L])
+  }
+  a
 }
 
 # ---------------------------------------------------------------------------

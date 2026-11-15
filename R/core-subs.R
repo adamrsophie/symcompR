@@ -25,7 +25,8 @@
     if (length(ofs)) {
       fse <- .free_sym_list(e)
       # a matrix symbol is free on its own, but its shape can hold symbols
-      if (!all(ofs %in% names(fse)) &&
+      # old may itself be free, as f(x) is in Integral(g, f(x))
+      if (!all(ofs %in% names(fse)) && !(old$key %in% names(fse)) &&
           !any(vapply(fse, function(s) s$type == "MatrixSymbol" && length(.free_sym_list(new_sym("Tuple", s$args))) > 0L, NA)))
         return(e)
     }

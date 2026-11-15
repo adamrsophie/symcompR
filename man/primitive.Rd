@@ -10,17 +10,27 @@ primitive(f, ...)
 
 content(f, ...)
 
-terms_gcd(f, ...)
+terms_gcd(f, ..., deep = FALSE, clear = TRUE, expand = TRUE)
 }
 \arguments{
 \item{f}{An expression.}
 
 \item{...}{Generators.}
+
+\item{deep}{Apply to every argument first.}
+
+\item{clear}{Pull a rational content out of a sum.}
+
+\item{expand}{Expand before reading the terms.}
 }
 \value{
 A list or an expression.
 }
 \description{
 \code{primitive(f)} returns \code{list(content, primitive)}, and \code{terms_gcd()} pulls
-out the greatest common monomial and numeric factor.
+out the greatest common monomial and the content of the coefficients, as
+SymPy's \code{terms_gcd()}: an equation is handled side by side, \code{deep = TRUE}
+works bottom up through the arguments, \code{clear = FALSE} keeps a rational
+factor inside a sum when that leaves integer coefficients, and
+\code{expand = FALSE} reads the expression without expanding it.
 }

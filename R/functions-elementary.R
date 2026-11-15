@@ -16,6 +16,8 @@ def_function(
     if (is_const(a, "zoo")) return(S_NaN)
     if (a$type == "Float") return(.float_eval("exp", args))
     if (a$type == "Function" && a$name == "log") return(a$args[[1L]])
+    # exp.eval: arg.is_zero (asked only where an integral can make it zero)
+    if (.has_type(a, "Integral") && isTRUE(ask_fact(a, "zero"))) return(S_One)
     if (a$type == "Mul") {
       # exp.eval: rational multiples of pi*I, reduced to (-pi, pi]
       coeff <- as_coefficient(a, .mul(list(S_Pi, S_I)))
@@ -88,10 +90,9 @@ def_function(
     f <- afs[[1L]]
     out <- c(commutative = !identical(f[["commutative"]], FALSE))
     if (isTRUE(f[["real"]])) out["positive"] <- TRUE
-    if (isTRUE(f[["finite"]])) {
-      out["finite"] <- TRUE
-      out["zero"] <- FALSE
-    }
+    if (isTRUE(f[["finite"]])) out["finite"] <- TRUE
+    # ExpBase._eval_is_zero: self.exp is S.NegativeInfinity
+    out["zero"] <- is_const(args[[1L]], "-oo")
     if (isTRUE(f[["rational"]]) && isTRUE(f[["nonzero"]])) out["transcendental"] <- TRUE
     out
   },

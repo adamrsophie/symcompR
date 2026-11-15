@@ -8,6 +8,14 @@
 
 # Expr._eval_interval; NULL bounds stand for None
 .expr_eval_interval <- function(F, x, a, b) {
+  # ExprWithLimits._eval_interval: the limit of x becomes (x, a, b)
+  if (F$type %in% c("Integral", "Sum", "Product")) {
+    lims <- lapply(F$args[-1L], function(l) {
+      if (!identical(l$args[[1L]]$key, x$key)) return(l)
+      if (is.null(a)) Tuple(x, b) else if (is.null(b)) Tuple(x, a) else Tuple(x, a, b)
+    })
+    return(new_sym(F$type, c(list(F$args[[1L]]), lims)))
+  }
   if (is.null(a) && is.null(b)) stop("Both interval ends cannot be None.", call. = FALSE)
   endpoint <- function(left) {
     c <- if (left) a else b
@@ -353,6 +361,13 @@
   }
   NA
 }
+# Integral facts: commutative as the integrand (ExprWithLimits), zero by
+# _eval_is_zero
+.facts_hooks$Integral <- function(e) {
+  out <- c(commutative = !identical(ask_fact(e$args[[1L]], "commutative"), FALSE))
+  if (isTRUE(.integral_is_zero(e))) out["zero"] <- TRUE
+  out
+}
 
 .integral_doit <- function(I, hints = list(), deep = TRUE, final = TRUE) {
   meijerg <- hints$meijerg; risch <- hints$risch; heurisch <- hints$heurisch; manual <- hints$manual
@@ -468,7 +483,7 @@
     if (is.null(antideriv)) {
       undone[[length(undone) + 1L]] <- xab
       function_ <- .integral_factor(new_sym("Integral", list(function_, xab)))
-      ff <- .integral_factor(function_)
+      ff <- if (function_$type == "Integral") .integral_factor(function_) else function_
       if (ff$type != "Integral") function_ <- ff
       next
     }
