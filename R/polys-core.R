@@ -25,9 +25,10 @@ qp_var <- function(i, n, k = 1L) {
   qp(e, gmp::as.bigq(1))
 }
 
-qp_nterms <- function(p) length(p$c)
+# Term counts from the exponent matrix: length() of a bigq vector is slow.
+qp_nterms <- function(p) nrow(p$e)
 qp_nvars <- function(p) ncol(p$e)
-qp_is_zero <- function(p) length(p$c) == 0L
+qp_is_zero <- function(p) nrow(p$e) == 0L
 
 .mono_order_index <- function(e, order = .ORDER$current) {
   n <- ncol(e)
@@ -220,15 +221,16 @@ qp_vars_used <- function(p) {
 # Content: gcd of numerators over lcm of denominators (positive rational).
 qp_content <- function(p) {
   if (qp_is_zero(p)) return(gmp::as.bigq(0))
+  # split once with as.list: indexing a big vector element by element is slow
   nums <- abs(gmp::numerator(p$c))
   dens <- gmp::denominator(p$c)
   g <- nums[1L]
-  if (length(nums) > 1L) for (k in 2:length(nums)) {
-    g <- gmp::gcd.bigz(g, nums[k])
+  if (nrow(p$e) > 1L) for (v in as.list(nums)[-1L]) {
+    g <- gmp::gcd.bigz(g, v)
     if (g == 1) break
   }
   l <- dens[1L]
-  if (length(dens) > 1L) for (k in 2:length(dens)) l <- gmp::lcm.bigz(l, dens[k])
+  if (!all(dens == 1)) for (v in as.list(dens)[-1L]) l <- gmp::lcm.bigz(l, v)
   gmp::as.bigq(g, l)
 }
 
@@ -302,9 +304,15 @@ qp_rem_multi <- function(f, gs) {
   qp_norm(do.call(rbind, rem_e), do.call(c, rem_c))
 }
 
-# Exact division f / g, or NULL when g does not divide f.
+# Exact division f / g, or NULL when g does not divide f. Two fast paths for
+# integer polynomials under lex order come first; each returns list(q), FALSE
+# when g does not divide f, or NULL to leave the case to the bigq division.
 qp_exquo <- function(f, g) {
   if (qp_is_zero(g)) stop("polynomial division by zero")
+  r <- .qp_exquo_dbl(f, g)
+  if (is.null(r)) r <- .qp_exquo_big(f, g)
+  if (isFALSE(r)) return(NULL)
+  if (!is.null(r)) return(r[[1L]])
   d <- qp_div_multi(f, list(g))
   if (!qp_is_zero(d$r)) return(NULL)
   d$q[[1L]]
@@ -609,4 +617,118 @@ up_sqf_list <- function(f) {
     if (up_deg(w) <= 0) break
   }
   out
+}
+
+# Shared setup of the fast exact divisions: each exponent row is packed into
+# one double by mixed radix, with place values from the degree of f in each
+# variable plus one, so packed keys keep lex order and a monomial product is a
+# key sum. In an exact division every quotient term times every term of g
+# stays within the degrees of f, so the digits never overflow.
+.qp_pack <- function(f, g) {
+  if (.ORDER$current != "lex") return(NULL)
+  fe <- f$e; ge <- g$e
+  n <- ncol(fe)
+  if (!nrow(fe) || !nrow(ge) || !n) return(NULL)
+  R <- integer(n); gmax <- integer(n)
+  for (j in seq_len(n)) { R[j] <- max(fe[, j]); gmax[j] <- max(ge[, j]) }
+  # a divisor of higher degree in some variable cannot divide f
+  if (any(gmax > R)) return(FALSE)
+  R <- R + 1L
+  if (sum(log2(R)) >= 52) return(NULL)
+  place <- rev(cumprod(c(1, rev(R)[-n])))
+  list(n = n, R = R, gmax = gmax, place = place,
+       pk = as.vector(fe %*% place), gk = as.vector(ge %*% place), lmg = ge[1L, ])
+}
+.qp_unpack <- function(qk, qc, k) {
+  nq <- length(qk)
+  qe <- matrix(as.integer(outer(qk, k$place, `%/%`) %% rep(k$R, each = nq)), nq, k$n)
+  qp_norm(qe, qc)
+}
+
+# Exact division in doubles while every coefficient is an integer below 2^52.
+.qp_exquo_dbl <- function(f, g) {
+  fc <- f$c; gc <- g$c
+  if (!all(gmp::denominator(fc) == 1) || !all(gmp::denominator(gc) == 1)) return(NULL)
+  fd <- as.double(fc); gd <- as.double(gc)
+  big <- 4503599627370496
+  if (max(abs(fd)) >= big || max(abs(gd)) >= big) return(NULL)
+  k <- .qp_pack(f, g)
+  if (!is.list(k)) return(k)
+  pk <- k$pk; pc <- fd; gk <- k$gk; lkg <- gk[1L]; lcg <- gd[1L]
+  qk <- numeric(); qc <- numeric()
+  while (length(pk)) {
+    i <- which.max(pk)
+    L <- pk[i]
+    mono <- (L %/% k$place) %% k$R - k$lmg
+    # a term the divisor cannot reach goes to the remainder: not exact
+    if (any(mono < 0) || any(k$gmax + mono >= k$R)) return(FALSE)
+    cf <- pc[i] / lcg
+    if (cf != round(cf) || cf * lcg != pc[i]) return(NULL)
+    tk <- L - lkg
+    nk <- gk + tk; nc <- -cf * gd
+    if (max(abs(nc)) >= big) return(NULL)
+    m <- match(nk, pk)
+    hit <- !is.na(m)
+    mh <- m[hit]
+    pc[mh] <- pc[mh] + nc[hit]
+    if (!all(hit)) { pk <- c(pk, nk[!hit]); pc <- c(pc, nc[!hit]) }
+    if (max(abs(pc)) >= big) return(NULL)
+    keep <- pc != 0
+    pk <- pk[keep]; pc <- pc[keep]
+    qk <- c(qk, tk); qc <- c(qc, cf)
+  }
+  list(.qp_unpack(qk, gmp::as.bigq(qc), k))
+}
+
+# The same loop with the coefficients held as an R list of bigz scalars, so a
+# step costs one scalar gmp call per term of g instead of vector work over the
+# whole remainder.
+.qp_exquo_big <- function(f, g) {
+  fc <- f$c; gc <- g$c
+  if (!all(gmp::is.whole(fc)) || !all(gmp::is.whole(gc))) return(NULL)
+  k <- .qp_pack(f, g)
+  if (!is.list(k)) return(k)
+  pk <- k$pk; gk <- k$gk; lkg <- gk[1L]
+  pl <- as.list(gmp::numerator(fc)); gl <- as.list(gmp::numerator(gc))
+  ng <- length(gl); lcg <- gl[[1L]]
+  unit <- abs(lcg) == 1
+  np <- length(pk)
+  qk <- numeric(); qc <- list()
+  repeat {
+    i <- which.max(pk)
+    L <- pk[i]
+    if (L < 0) break
+    mono <- (L %/% k$place) %% k$R - k$lmg
+    if (any(mono < 0) || any(k$gmax + mono >= k$R)) return(FALSE)
+    lc <- pl[[i]]
+    cf <- gmp::divq.bigz(lc, lcg)
+    if (!unit && gmp::mul.bigz(cf, lcg) != lc) {
+      # Gauss's lemma: a primitive integer divisor of an integer polynomial
+      # has an integer quotient, so a fractional coefficient means no
+      # division; a divisor with content is left to the bigq division
+      cont <- lcg
+      for (j in seq_len(ng)[-1L]) cont <- gmp::gcd.bigz(cont, gl[[j]])
+      return(if (abs(cont) == 1) FALSE else NULL)
+    }
+    tk <- L - lkg
+    pk[i] <- -1
+    if (ng > 1L) {
+      nk <- gk + tk
+      m <- match(nk, pk)
+      for (j in 2:ng) {
+        v <- gmp::mul.bigz(cf, gl[[j]])
+        mj <- m[j]
+        if (is.na(mj)) {
+          np <- np + 1L
+          pk[np] <- nk[j]; pl[[np]] <- -v
+        } else {
+          s <- gmp::sub.bigz(pl[[mj]], v)
+          if (sign(s) == 0L) pk[mj] <- -1 else pl[[mj]] <- s
+        }
+      }
+    }
+    qk <- c(qk, tk); qc[[length(qc) + 1L]] <- cf
+  }
+  if (!length(qk)) return(NULL)
+  list(.qp_unpack(qk, gmp::as.bigq(do.call(c, qc)), k))
 }
