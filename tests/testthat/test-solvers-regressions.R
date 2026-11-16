@@ -3,6 +3,7 @@
 # on one core starts with skip_on_cran() or skip_unless_full_tests().
 
 test_that("dsolve agrees with SymPy on the fixed cases", {
+  skip_on_cran()
   x <- Symbol("x"); f <- Function("f")
   expect_equal(sstr(dsolve(x * diff(f(x), x) - f(x) - x^2 * f(x)^2, f(x))),
                "Eq(f(x), -3*x/(C1 + x^3))")
@@ -17,6 +18,7 @@ test_that("dsolve agrees with SymPy on the fixed cases", {
 })
 
 test_that("constantsimp factors a Gaussian rational content", {
+  skip_on_cran()
   x <- Symbol("x"); f <- Function("f")
   s <- dsolve(1 + f(x)^3 + x^2 * f(x)^2 * diff(f(x), x), f(x), hint = "almost_linear")
   expect_equal(vapply(s, sstr, ""),

@@ -42,10 +42,8 @@ uses it.
 }
 \examples{
 x <- Symbol("x")
-\donttest{
 q <- PolyQuintic(x^5 - 5 * x + 12)
 q$f20
-# solving the quintic in radicals takes about 30 seconds
-length(roots_quintic(x^5 - 5 * x + 12))
-}
+# roots_quintic(x^5 - 5 * x + 12) solves this quintic in radicals; it
+# takes several seconds, so it is not run here.
 }

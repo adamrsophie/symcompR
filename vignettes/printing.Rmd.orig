@@ -1,0 +1,120 @@
+---
+title: "Printing"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Printing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+symcompR expressions can be printed as plain strings, 2D ASCII or Unicode
+art, LaTeX, and MathML. Code generation and parsing have their own
+vignettes.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); k <- Symbol("k")
+f <- Function("f")
+```
+
+## String forms
+
+`print()` uses `sstr()`, SymPy's `str()`. `srepr()` shows the exact tree
+structure of the expression.
+
+```{r}
+sstr(x^2 + 2 * x + 1)
+srepr(x^2 + 1)
+```
+
+## Pretty printing
+
+`pretty()` returns a 2D rendering as a string and `pprint()` prints it. ASCII
+output works everywhere; Unicode output uses box drawing characters.
+
+```{r}
+cat(pretty((x + 1) / (y - 2), use_unicode = FALSE), "\n")
+cat(pretty(sqrt(x^2 + 1), use_unicode = FALSE), "\n")
+cat(pretty(x^2 + 2 * x / 3, use_unicode = FALSE), "\n")
+cat(pretty((x + 1) / (y - 2), use_unicode = TRUE), "\n")
+```
+
+## LaTeX and MathML
+
+`latex()` produces LaTeX source, ready to paste into a document or to render
+in R Markdown with `$$ ... $$`.
+
+```{r}
+latex(x^2 / 2 + sin(x))
+latex(sqrt(x + 1) / (y - 2))
+latex(Rational(3, 4) * sym_pi)
+latex(Sum(1 / k^2, list(k, 1, oo)))
+latex(Derivative(f(x), x, 2))
+latex(Eq(x^2 + 1, 0))
+latex(Matrix(list(list(1, x), list(y, 2))))
+latex(Interval(0, 1, TRUE))
+latex(gamma(x))
+```
+
+For example, the sum above renders as
+$$\sum_{k=1}^{\infty} \frac{1}{k^{2}}$$
+
+`mathml()` produces content MathML by default, or presentation MathML:
+
+```{r}
+mathml(x^2 + 1)
+mathml(x^2 + 1, printer = "presentation")
+```
+
+`TableForm()` lays out a table of expressions, as text or as LaTeX:
+
+```{r}
+TableForm(list(list(5, 7), list(4, 2), list(10, 3)), headings = "automatic")
+cat(latex(TableForm(list(list(x^2, 1 / x)), headings = list(NULL, c("a", "b")))), "\n")
+```
+
+`dotprint()` returns a Graphviz description of the expression tree:
+
+```{r}
+cat(dotprint(x + 2), "\n")
+```
+
+## More printing functions
+
+`print_latex()`, `print_mathml()`, and `print_python()` print instead of
+returning a string. `python()` writes Python code that recreates the
+expression, `multiline_latex()` splits a long equation over several lines,
+and `print_tree()` shows the expression tree.
+
+```{r}
+print_latex(x^2 / 2)
+print_mathml(x + 1)
+python(Rational(-1, 3))
+print_python(x^2 + y)
+cat(multiline_latex(x, x^2 + y + 3), "\n")
+print_tree(x + 2 * y)
+sstrrepr(x^2)
+```
+
+`pretty_print()` is another name for `pprint()`, and `pager_print()` sends
+the pretty form through R's pager, set by `options(pager = )`. Here the
+pager is a function that prints the file into the document. The Unicode
+setting can be read and changed:
+
+```{r}
+pretty_print(x^2 + 1, use_unicode = FALSE)
+pprint_try_use_unicode()
+old <- pprint_use_unicode(FALSE)
+pprint_use_unicode()
+pprint_use_unicode(old)
+old_pager <- options(pager = function(files, header, title, delete.file) {
+  cat(readLines(files), sep = "\n")
+  if (delete.file) unlink(files)
+})
+pager_print(x^2, use_unicode = FALSE)
+options(old_pager)
+```

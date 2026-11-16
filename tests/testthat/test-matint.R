@@ -63,6 +63,7 @@ test_that("CRootOf follows ComplexRootOf.__new__", {
 })
 
 test_that("eigenvects over QQ<a> and matrix_exp follow SymPy's forms", {
+  skip_on_cran()
   o <- as_sym(1); s3 <- sqrt(as_sym(3)); h <- Rational(1, 2)
   M <- Matrix(list(list(o, o, o), list(o, -h - s3 * sym_I / 2, -h + s3 * sym_I / 2),
                    list(o, -h + s3 * sym_I / 2, -h - s3 * sym_I / 2))) / s3

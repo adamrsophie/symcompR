@@ -3,6 +3,7 @@
 # on one core starts with skip_on_cran() or skip_unless_full_tests().
 
 test_that("expressions with keys over 10000 bytes are cached", {
+  skip_on_cran()
   x <- Symbol("x"); y <- Symbol("y")
   e <- powsimp(expand((x + y + 1)^25))
   expect_length(e$args, 351L)
@@ -165,6 +166,7 @@ test_that("the stable sort agrees with insertion order on ties and long inputs",
 })
 
 test_that("cse accepts expressions with keys over 10000 bytes", {
+  skip_on_cran()
   xs <- lapply(sprintf("x%04d", seq_len(1500)), Symbol)
   r <- cse(do.call(Add, xs))
   expect_length(r$replacements, 0L)

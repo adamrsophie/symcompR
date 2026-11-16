@@ -1,0 +1,102 @@
+---
+title: "Quadrature and integration over polytopes"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quadrature and integration over polytopes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+This article covers two numerical and geometric corners of SymPy's
+integration module: the nodes and weights of Gaussian quadrature rules, and
+the exact integration of polynomials over polygons and polyhedra.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y")
+```
+
+## Gaussian quadrature
+
+The quadrature functions return the nodes and weights of Gaussian
+quadrature rules of order `n`, to `n_digits` significant digits. The helper
+`nw()` prints the nodes and the weights as character vectors:
+
+```{r}
+nw <- function(r) lapply(setNames(r, c("nodes", "weights")),
+                         function(v) vapply(v, sstr, ""))
+nw(gauss_legendre(3, 5))
+nw(gauss_laguerre(3, 5))
+nw(gauss_hermite(3, 5))
+nw(gauss_gen_laguerre(3, -Rational(1, 2), 5))
+nw(gauss_chebyshev_t(3, 5))
+nw(gauss_chebyshev_u(3, 5))
+nw(gauss_jacobi(3, Rational(1, 2), -Rational(1, 2), 5))
+nw(gauss_lobatto(3, 5))
+```
+
+## Integration over polytopes
+
+`polytope_integrate()` integrates a polynomial over a polygon or a
+polyhedron. A polyhedron is a list whose first element holds the vertices
+and whose other elements are the faces, as zero based vertex indices.
+
+```{r}
+polytope_integrate(Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0)), x * y)
+cube <- list(list(c(0, 0, 0), c(0, 0, 5), c(0, 5, 0), c(0, 5, 5), c(5, 0, 0),
+                  c(5, 0, 5), c(5, 5, 0), c(5, 5, 5)),
+             c(2, 6, 7, 3), c(3, 7, 5, 1), c(7, 6, 4, 5), c(1, 5, 4, 0),
+             c(3, 1, 0, 2), c(0, 4, 6, 2))
+vertices <- cube[[1]]; faces <- cube[-1]
+```
+
+The algorithm reduces the integral over the region to integrals over its
+facets with the generalized Stokes theorem. Its building blocks are
+exported: `hyperplane_parameters()` gives the hyperplane of each facet,
+`main_integrate()` and `main_integrate3d()` integrate over a polygon and a
+polyhedron, and the other functions are the steps on single facets and
+line segments.
+
+```{r}
+hp3 <- hyperplane_parameters(faces, vertices)
+main_integrate3d(1, faces, vertices, hp3)
+polygon_integrate(faces[[1]], list(c(0, 1, 0), 5), 0, faces, vertices, 1, 0)
+left_integral3D(faces, 3, 1, vertices, list(c(0, -1, 0), -5), 0)
+tri <- Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+facets <- list(Segment(Point(0, 3), Point(5, 3)), Segment(Point(5, 3), Point(1, 1)),
+               Segment(Point(1, 1), Point(0, 3)))
+hp <- hyperplane_parameters(tri)
+sstr(do.call(Tuple, lapply(hp, function(h) Tuple(do.call(Tuple, h[[1]]), h[[2]]))))
+main_integrate(x^2 + y^2, facets, hp)
+x0 <- Point(0, 3)
+integration_reduction(facets, 0, hp[[1]][[1]], hp[[1]][[2]], 1, list(x, y), 0)
+left_integral2D(3, 0, facets, x0, 1, list(x, y))
+mv <- list(list(0, 0, 0, 0), list(1, 0, 0, 5), list(y, 0, 1, 15), list(x, 1, 0, NULL))
+integration_reduction_dynamic(facets, 0, hp[[1]][[1]], hp[[1]][[2]], x, 1, list(x, y),
+                              1, 0, 1, x0, mv, 3)
+lineseg_integrate(list(c(0, 5, 0), c(5, 5, 0), c(5, 5, 5), c(0, 5, 5)), 0,
+                  list(c(0, 5, 0), c(5, 5, 0)), 1, 0)
+distance_to_side(c(0, 0, 0), list(c(0, 0, 1), c(0, 1, 0)), c(1, 0, 0))
+```
+
+Geometric and algebraic helpers:
+
+```{r}
+sstr(do.call(Tuple, lapply(gradient_terms(2), function(r) do.call(Tuple, r))))
+unlist(lapply(best_origin(c(2, 1), 3, Segment2D(Point(0, 3), Point(1, 1)), x^3 * y^7), sstr))
+intpoly_norm(Point(2, 7))
+unlist(lapply(intpoly_intersection(Segment2D(Point(1, 1), Point(3, 5)),
+                                   Segment2D(Point(2, 0), Point(2, 5)), "segment2D"), sstr))
+unlist(lapply(intpoly_intersection(list(c(-1, 0), 0), list(c(0, 1), 1), "plane2D"), sstr))
+is_vertex(c(2, 3))
+is_vertex(Point(2, 3))
+point_sort(list(Point(0, 0), Point(1, 0), Point(1, 1)))
+intpoly_strip(3 * x^2)
+unlist(lapply(intpoly_cross_product(c(0, 0, 0), c(1, 0, 0), c(0, 1, 0)), sstr))
+intpoly_decompose(x^2 + x * y + x + y + x^3 * y^2 + y^5)
+intpoly_decompose(x^2 + x * y + x + y + x^3 * y^2 + y^5, TRUE)
+```

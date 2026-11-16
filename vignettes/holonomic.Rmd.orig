@@ -1,0 +1,126 @@
+---
+title: "Holonomic functions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Holonomic functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(symcompR)
+x <- Symbol("x"); n <- Symbol("n")
+```
+
+This vignette covers `sympy.holonomic`: holonomic functions, the
+differential and recurrence operators that define them, and conversions to
+and from hypergeometric and Meijer G functions.
+
+## Holonomic functions and operators
+
+A holonomic function is a solution of a linear ordinary differential equation
+with polynomial coefficients, together with initial conditions. Sums and
+products of holonomic functions are holonomic, so many manipulations reduce
+to operations on differential operators.
+
+`DifferentialOperators()` creates the algebra of operators in $D_x$. Below,
+$p$ is $e^x$ (the solution of $y' = y$, $y(0) = 1$) and $q$ is $\sin x$ (the
+solution of $y'' = -y$, $y(0) = 0$, $y'(0) = 1$).
+
+```{r}
+R <- DifferentialOperators(holonomic_ring(x), "Dx")
+Dx <- R$Dx
+p <- HolonomicFunction(Dx - 1, x, 0, list(1))
+q <- HolonomicFunction(Dx^2 + 1, x, 0, list(0, 1))
+to_expr_holonomic(p)
+to_expr_holonomic(q * q)
+```
+
+`expr_to_holonomic()` converts an expression, after which series, sequences
+of coefficients, derivatives, and numerical values are available.
+
+```{r}
+h <- expr_to_holonomic(exp(x) * sin(x), x)
+series_holonomic(h, n = 6)
+to_expr_holonomic(diff_holonomic(expr_to_holonomic(sin(x), x)))
+to_expr_holonomic(expr_to_holonomic(log(1 + x), x))
+to_hyper(expr_to_holonomic(exp(x), x))
+```
+
+`evalf_holonomic()` integrates the differential equation numerically along a
+path of points, with the fourth order Runge-Kutta method by default, and
+returns the values at those points. Integrating $y' = y$ from 0 to 1 in
+steps of 0.1 approximates $e \approx 2.718282$:
+
+```{r}
+path <- as.list(seq(0.1, 1, by = 0.1))
+vals <- evalf_holonomic(p, path)
+vapply(vals, sstr, "")
+sstr(evalf_holonomic(expr_to_holonomic(sin(x), x), path)[[10]])
+```
+
+The last value approximates $\sin(1) \approx 0.841471$.
+
+
+## Transformations
+
+`change_x()` substitutes a polynomial for the variable, `shift_x()` shifts
+it, and `change_ics()` moves the point where the initial conditions are
+given. `holonomic_degree()` is the largest degree of a polynomial
+coefficient of the annihilator, and `holonomic_indicial()` the indicial
+equation at the origin.
+
+```{r}
+shift_x(p, 2)
+change_ics(expr_to_holonomic(sin(x), x), 1)
+change_x(p, 2 * x)
+holonomic_degree(expr_to_holonomic(exp(x^2), x))
+holonomic_indicial(expr_to_holonomic(sqrt(x) * exp(x), x))
+```
+
+`composition()` substitutes an algebraic expression into a holonomic
+function. Without initial conditions only the annihilator is computed;
+with them, the result can be converted back to an expression.
+
+```{r}
+composition(HolonomicFunction(Dx - 1, x), x^2 + x)
+to_expr_holonomic(composition(p, x^2, 0, list(1)))
+```
+
+`integrate_holonomic()` integrates, either as a new holonomic function or
+over limits:
+
+```{r}
+integrate_holonomic(q, list(x, 0, 1))
+to_expr_holonomic(integrate_holonomic(p, list(x, 0, x)))
+```
+
+## Recurrences
+
+The coefficients of the power series of a holonomic function satisfy a
+linear recurrence. `RecurrenceOperators()` builds the algebra of shift
+operators, `HolonomicSequence()` a sequence defined by a recurrence, and
+`to_sequence()` the recurrence for a holonomic function.
+
+```{r}
+RS <- RecurrenceOperators(holonomic_ring(n), "Sn")
+Sn <- RS$Sn
+HolonomicSequence(Sn - n - 1, list(1))
+to_sequence(expr_to_holonomic(x^3, x))
+to_sequence(p)
+```
+
+## Hypergeometric and Meijer G functions
+
+`from_hyper()` and `from_meijerg()` turn special functions into holonomic
+functions, and `to_meijerg()` goes back.
+
+```{r}
+from_hyper(hyper(list(1, 1), list(Rational(3, 2)), x^2 / 4))
+from_meijerg(meijerg(list(), list(), list(0), list(), x))
+to_meijerg(expr_to_holonomic(sin(x), x))
+```

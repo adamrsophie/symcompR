@@ -25,6 +25,7 @@ test_that("Integral differentiates under the integral sign", {
 })
 
 test_that("an undone integral keeps its limit and factors its integrand", {
+  skip_on_cran()
   x <- Symbol("x"); n <- Symbol("n"); y <- Dummy("y"); f <- Function("f")
   expect_equal(sstr(doit(Integral(exp(Integral(y^2 + n * y, y)), list(y, f(x))))),
                "Integral(exp(_y^3/3)*exp(_y^2*n/2), (_y, f(x)))")
@@ -99,6 +100,7 @@ test_that("sums and integrals that go through apart", {
 })
 
 test_that("a non elementary Risch result prints", {
+  skip_on_cran()
   x <- Symbol("x")
   r <- risch_integrate((1 + 2*x^2 + x^4 + 2*x^3*exp(2*x^2))/(x^4*exp(x^2) + 2*x^2*exp(x^2) + exp(x^2)), x)
   expect_equal(sstr(r), "Integral(exp(-x^2), x) + exp(x^2)/(x^2 + 1)")
@@ -120,6 +122,7 @@ test_that("a number as integration variable is rejected", {
 })
 
 test_that("a non integer power of a higher order holonomic function raises", {
+  skip_on_cran()
   x <- Symbol("x")
   h <- expr_to_holonomic(sin(x), x)
   expect_error(h^Rational(1, 2), "TypeError")

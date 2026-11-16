@@ -4,6 +4,7 @@
 # installed package.
 
 test_that("no top-level name is defined in two source files", {
+  skip_on_cran()
   # An installed package (covr, R CMD check) has an R/ folder without .R files.
   files <- list.files(test_path("..", "..", "R"), pattern = "[.]R$", full.names = TRUE)
   skip_if(length(files) == 0L, "package sources not available")

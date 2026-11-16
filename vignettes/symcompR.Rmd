@@ -7,9 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
-```
+
 
 symcompR is a computer algebra system written in R. It is a native port of
 the Python library [SymPy](https://www.sympy.org): expressions are ordinary R
@@ -24,7 +22,8 @@ constants, printing, substitution, numerical evaluation, and turning
 expressions into R functions. The other vignettes cover each area of the
 package in depth; they are listed at the end.
 
-```{r}
+
+``` r
 library(symcompR)
 ```
 
@@ -33,21 +32,34 @@ library(symcompR)
 A symbol is a named mathematical variable. Create one with `Symbol()`, or
 several at once with `sym_symbols()`, which returns a named list.
 
-```{r}
+
+``` r
 x <- Symbol("x")
 y <- Symbol("y")
 x + y + x
+#> 2*x + y
 xyz <- sym_symbols("a b c")
 xyz$a * xyz$b^2
+#> a*b^2
 sym_symbols("t0:3")
+#> $t0
+#> t0
+#> 
+#> $t1
+#> t1
+#> 
+#> $t2
+#> t2
 ```
 
 `sym_var()` creates symbols and assigns them in the calling environment, the
 way `var()` does in SymPy.
 
-```{r}
+
+``` r
 sym_var("u v")
 u^2 - v^2
+#> u^2 - v^2
 ```
 
 ### Assumptions
@@ -56,24 +68,34 @@ Symbols can carry assumptions such as `positive`, `integer`, or `real`.
 Assumptions change what simplifications are valid. In general
 $\sqrt{x^2} \neq x$, but it is true for a positive $x$:
 
-```{r}
+
+``` r
 sqrt(x^2)
+#> sqrt(x^2)
 p <- Symbol("p", positive = TRUE)
 sqrt(p^2)
+#> p
 n <- Symbol("n", integer = TRUE)
 cos(2 * sym_pi * n)
+#> 1
 (-1)^(2 * n)
+#> 1
 ```
 
 The queries `is_positive()`, `is_integer()`, `is_real()`, and friends follow
 SymPy's three valued logic: `TRUE`, `FALSE`, or `NA` when the answer is not
 known.
 
-```{r}
+
+``` r
 is_integer(n)
+#> [1] TRUE
 is_positive(p + 1)
+#> [1] TRUE
 is_real(x)
+#> [1] NA
 is_even(2 * n)
+#> [1] TRUE
 ```
 
 The vignette on logic and sets shows the second assumptions system, built on
@@ -87,39 +109,65 @@ result is a `sym` object: a tree whose nodes are typed (`Add`, `Mul`, `Pow`,
 function applications, ...). Expressions are put in a canonical form as they
 are built, so equal terms are combined automatically.
 
-```{r}
+
+``` r
 e <- (x + 1)^2 * y + 3 * y * (x + 1)^2
 e
+#> 4*y*(x + 1)^2
 sym_type(e)
+#> [1] "Mul"
 sym_args(e)
+#> [[1]]
+#> 4
+#> 
+#> [[2]]
+#> y
+#> 
+#> [[3]]
+#> (x + 1)^2
 free_symbols(sin(x) * exp(y))
+#> [[1]]
+#> x
+#> 
+#> [[2]]
+#> y
 ```
 
 Expressions are not expanded unless you ask; see the simplification vignette
 for `expand()`, `factor_sym()`, and friends.
 
-```{r}
+
+``` r
 expand((x + y)^3)
+#> x^3 + 3*x^2*y + 3*x*y^2 + y^3
 ```
 
 `==` tests structural equality, as in SymPy. To build an equation use
 `Eq()`; `Ne()`, `Lt()`, `Le()`, `Gt()`, and `Ge()` build the other
 relations.
 
-```{r}
+
+``` r
 (x + 1)^2 == x^2 + 2 * x + 1
+#> [1] FALSE
 expand((x + 1)^2) == x^2 + 2 * x + 1
+#> [1] TRUE
 Eq(x^2, 4)
+#> Eq(x^2, 4)
 Lt(x, 3)
+#> x < 3
 ```
 
 Undefined functions are created with `Function()`. They stay unevaluated and
 are useful in differential equations.
 
-```{r}
+
+``` r
 f <- Function("f")
 f(x) + f(y)^2
+#> f(x) + f(y)^2
 diff(f(x^2), x)
+#> 2*x*Subs(Derivative(f(_xi_1), _xi_1), _xi_1, x^2)
 ```
 
 ## Exact numbers
@@ -127,38 +175,55 @@ diff(f(x^2), x)
 symcompR keeps numbers exact. Integers have arbitrary size and rationals
 never lose precision.
 
-```{r}
+
+``` r
 Integer(2)^100
+#> 1267650600228229401496703205376
 Rational(1, 3) + Rational(1, 6)
+#> 1/2
 Integer("123456789012345678901234567890") * 3
+#> 370370367037037036703703703670
 sym_factorial(Integer(25))
+#> 15511210043330985984000000
 ```
 
 R evaluates `1/3` as a double before symcompR sees it, so the result is
 inexact. Write `Rational(1, 3)`, or make one operand symbolic first with `S()`
 (an alias of `as_sym()`), and the division stays exact.
 
-```{r}
+
+``` r
 x + 1/3
+#> x + 0.333333333333333
 x + Rational(1, 3)
+#> x + 1/3
 S(1) / 3
+#> 1/3
 sqrt(S(8))
+#> 2*sqrt(2)
 ```
 
 The same applies to functions of plain R numbers: `sqrt(8)` and `sin(pi/6)`
 are computed by base R, while `sqrt(S(8))` and `sin(sym_pi/6)` are symbolic.
 
-```{r}
+
+``` r
 sqrt(8)
+#> [1] 2.828427
 sin(sym_pi / 6)
+#> 1/2
 cos(sym_pi / 4)
+#> sqrt(2)/2
 ```
 
 Floating point numbers are arbitrary precision `Float`s, as in SymPy.
 
-```{r}
+
+``` r
 Float("1.5", 30)
+#> 1.50000000000000000000000000000
 x / 2 + 0.5
+#> x/2 + 0.5
 ```
 
 ## Constants
@@ -168,14 +233,22 @@ Constants whose names would clash with R carry a `sym_` prefix: `sym_pi`,
 infinity is `zoo`, and "not a number" is `nan`. `EulerGamma`, `Catalan`, and
 `GoldenRatio` are also available.
 
-```{r}
+
+``` r
 sym_I^2
+#> -1
 exp(sym_I * sym_pi)
+#> -1
 log(sym_E^3)
+#> 3
 1 / oo
+#> 0
 oo - oo
+#> nan
 GoldenRatio^2 - GoldenRatio
+#> -GoldenRatio + GoldenRatio^2
 N(GoldenRatio, 20)
+#> 1.6180339887498948482
 ```
 
 ## The `sym_` prefix convention
@@ -189,20 +262,30 @@ symcompR adds an S3 method instead, so the base name works on symbolic
 input. A few functions also have a second name with the suffix `_sym`, such
 as `factor_sym()`.
 
-```{r}
+
+``` r
 sym_factor(x^3 - x)
+#> x*(x - 1)*(x + 1)
 factor_sym(x^3 - x)
+#> x*(x - 1)*(x + 1)
 sym_binomial(x, 2)
+#> binomial(x, 2)
 expand_func(sym_binomial(x, 2))
+#> x*(x - 1)/2
 sym_Mod(x + 5, 2)
+#> Mod(x + 1, 2)
 Integer(17) %% 5
+#> 2
 ```
 
 Base R behavior is untouched for ordinary R values:
 
-```{r}
+
+``` r
 diff(c(1, 4, 9, 16))
+#> [1] 3 5 7
 sym_factorial(5)
+#> 120
 ```
 
 ## Printing
@@ -215,13 +298,25 @@ The printers return strings:
 * `latex()` gives LaTeX.
 * `pprint()` draws a two dimensional picture in the console.
 
-```{r}
+
+``` r
 e <- x^2 / (y + 1) + sqrt(x)
 sstr(e)
+#> [1] "sqrt(x) + x^2/(y + 1)"
 srepr(x^2 + 1)
+#> [1] "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
 latex(e)
+#> [1] "\\sqrt{x} + \\frac{x^{2}}{y + 1}"
 pprint(e, use_unicode = FALSE)
+#>           2  
+#>   ___    x   
+#> \/ x  + -----
+#>         y + 1
 pprint(Rational(1, 3) * x^3 + exp(-x))
+#>  3      
+#> x     -x
+#> ── + ℯ  
+#> 3
 ```
 
 The printing vignette covers MathML, tables, and code generation for C,
@@ -232,19 +327,26 @@ Fortran, Python, Julia, and other languages.
 `subs()` replaces a subexpression and simplifies the result. It takes either
 an old and a new value, or a list of pairs.
 
-```{r}
+
+``` r
 e <- x^2 + y
 subs(e, x, 2)
+#> y + 4
 subs(e, list(list(x, 2), list(y, 3)))
+#> 7
 subs(sin(x), x, y^2)
+#> sin(y^2)
 subs(x^4 + x^2, x^2, y)
+#> y^2 + y
 ```
 
 `xreplace()` does exact structural replacement without any mathematical
 matching. It takes a named list from symbol names to new values.
 
-```{r}
+
+``` r
 xreplace(x + 2 * y, list(x = 3))
+#> 2*y + 3
 ```
 
 ## Numerical evaluation
@@ -252,27 +354,38 @@ xreplace(x + 2 * y, list(x = 3))
 `N()` (also available as `evalf()`) evaluates an expression to a floating
 point number with any number of significant digits. The default is 15.
 
-```{r}
+
+``` r
 N(sym_pi)
+#> 3.14159265358979
 N(sym_pi, 50)
+#> 3.1415926535897932384626433832795028841971693993751
 N(sqrt(S(2)), 30)
+#> 1.41421356237309504880168872421
 N(exp(sym_pi * sqrt(S(163))), 40)
+#> 262537412640768743.9999999999992500725972
 ```
 
 The last result is famous: $e^{\pi\sqrt{163}}$ is within $10^{-12}$ of an
 integer, which only shows at high precision. `N()` can substitute values
 before evaluating, and leaves remaining symbols alone.
 
-```{r}
+
+``` r
 N(sin(x), subs = list(x = 1))
+#> 0.841470984807897
 N(x^2 + sym_pi, 10)
+#> x^2 + 3.141592654
 evalf(sqrt(S(2)) * x, 5)
+#> 1.4142*x
 ```
 
 To get an ordinary R number, use `as.numeric()`.
 
-```{r}
+
+``` r
 as.numeric(sqrt(S(2)) + 1)
+#> [1] 2.414214
 ```
 
 ## From expressions to R functions
@@ -281,21 +394,28 @@ as.numeric(sqrt(S(2)) + 1)
 the fast way to evaluate an expression many times, to plot it, or to pass it
 to an optimizer.
 
-```{r}
+
+``` r
 g <- lambdify(x, sin(x)^2 + cos(x))
 g(c(0, 1, 2))
+#> [1] 1.000000 1.248376 0.410675
 h <- lambdify(list(x, y), x * y + 1)
 h(1:3, 2)
+#> [1] 3 5 7
 body(h)
+#> 1 + x * y
 ```
 
 For example, the derivative of an expression can be handed to `uniroot()`:
 
-```{r}
+
+``` r
 fx <- x^3 - 2 * x - 5
 dfx <- lambdify(x, diff(fx, x))
 dfx(2)
+#> [1] 10
 uniroot(lambdify(x, fx), c(2, 3))$root
+#> [1] 2.094541
 ```
 
 ## Strings and parsing
@@ -303,9 +423,12 @@ uniroot(lambdify(x, fx), c(2, 3))$root
 `sympify()` turns a string into an expression. It accepts both Python's
 `**` and R's `^` for powers.
 
-```{r}
+
+``` r
 sympify("x**2 + sin(y)")
+#> x^2 + sin(y)
 sympify("x^2 + 2*x + 1")
+#> x^2 + 2*x + 1
 ```
 
 `parse_expr()`, `parse_latex()`, and `parse_mathematica()` are described in

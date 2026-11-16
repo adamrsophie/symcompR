@@ -1,0 +1,237 @@
+---
+title: "Physical units"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Physical units}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+symcompR ports `sympy.physics.units`: units and physical constants are
+symbolic quantities that combine with ordinary expressions, convert between
+each other exactly, and carry dimensions that can be checked.
+
+```{r}
+library(symcompR)
+```
+
+## The unit registry
+
+`physics_units()` returns a list of all predefined units, prefixes,
+constants, dimensions, and unit systems. Index it with `$`, or evaluate code
+inside it with `with()`.
+
+```{r}
+u <- physics_units()
+5 * u$kilometer
+u$kilo * u$meter
+u$kilo * u$kilo
+with(u, 3 * newton * 2 * meter)
+```
+
+Prefixes multiply into units, and two prefixes combine into a single one
+(`kilo * kilo` is mega, printed `M`).
+
+## Converting units
+
+`convert_to(expr, target)` rewrites an expression in the target units. The
+conversion is exact: the factor between a mile and a kilometer is the
+rational number $1.609344$.
+
+```{r}
+convert_to(u$mile, u$kilometer)
+N(convert_to(u$mile, u$kilometer))
+convert_to(u$inch, u$centimeter)
+convert_to(100 * u$kilometer / u$hour, u$meter / u$second)
+convert_to(u$day, u$second)
+convert_to(u$liter, u$meter^3)
+convert_to(u$atmosphere, u$pascal)
+convert_to(u$watt * u$hour, u$joule)
+convert_to(u$kilo * u$gram, u$pound)
+convert_to(3 * u$newton * 2 * u$meter, u$joule)
+convert_to(u$ohm * u$ampere, u$volt)
+```
+
+The target may be a list of units, in which case the result is expressed in
+terms of all of them. This is a convenient way to see a derived unit in base
+units.
+
+```{r}
+convert_to(u$newton, list(u$kilogram, u$meter, u$second))
+convert_to(u$volt, list(u$kilogram, u$meter, u$second, u$ampere))
+```
+
+## Physical constants
+
+The constants use their CODATA values; the SI defining constants are exact.
+
+```{r}
+convert_to(u$speed_of_light, list(u$meter, u$second))
+convert_to(u$planck, list(u$joule, u$second))
+convert_to(u$hbar, list(u$joule, u$second))
+convert_to(u$elementary_charge, u$coulomb)
+convert_to(u$boltzmann, list(u$joule, u$kelvin))
+convert_to(u$gravitational_constant, list(u$meter, u$kilogram, u$second))
+convert_to(u$joule, u$electronvolt)
+```
+
+A light year is the speed of light times a year:
+
+```{r}
+convert_to(u$speed_of_light * u$year, u$meter)
+```
+
+## Simplifying quantities
+
+`quantity_simplify()` combines prefixes and units of the same dimension.
+
+```{r}
+quantity_simplify(u$kilo * u$foot * u$inch)
+```
+
+## Dimensions
+
+Every quantity has a dimension in a unit system. Dimensions form their own
+algebra, and the SI dimension system expresses each one in terms of the base
+dimensions.
+
+```{r}
+u$length / u$time
+dimension_name(u$length)
+dimension_symbol(u$length)
+Dimension("length", "L") == u$length
+get_quantity_dimension(u$SI, u$newton)
+quantity_dimension(u$newton)
+get_quantity_scale_factor(u$SI, u$kilometer)
+equivalent_dims(u$dimsys_SI, u$energy, u$force * u$length)
+SI <- get_unit_system("SI")
+get_dimensional_expr(SI, u$newton / u$meter)
+```
+
+`collect_factor_and_dimension()` returns the numeric scale factor of an
+expression together with its dimension. Adding quantities of different
+dimensions is an error, which makes this a dimensional analysis check.
+
+```{r}
+collect_factor_and_dimension(SI, u$meter + u$kilometer)
+collect_factor_and_dimension(SI, 5 * u$kilometer / (2 * u$hour))
+tryCatch(collect_factor_and_dimension(SI, u$meter + u$second),
+         error = function(e) conditionMessage(e))
+```
+
+## Defining new units
+
+`Quantity()` creates a new unit, and `set_quantity_dimension()` and
+`set_quantity_scale_factor()` register it in a unit system.
+
+```{r}
+furlong <- Quantity("furlong")
+set_quantity_dimension(u$SI, furlong, u$length)
+set_quantity_scale_factor(u$SI, furlong, 220 * u$yard)
+convert_to(furlong, u$meter)
+```
+
+`Unit()` is another name for `Quantity()`. `set_global_dimension()` and
+`set_global_relative_scale_factor()` register a quantity in every unit
+system at once, relative to another quantity.
+
+```{r}
+rod <- Unit("rod")
+set_global_relative_scale_factor(rod, Rational(33, 2), u$foot)
+convert_to(rod, u$meter)
+cfm <- Quantity("cfm")
+set_global_dimension(cfm, u$length^3 / u$time)
+quantity_name(rod)
+quantity_abbrev(u$meter)
+is_prefixed(u$kilometer)
+is_prefixed(u$meter)
+scale_factor(u$kilometer)
+```
+
+`PhysicalConstant()` creates a constant, and `is_physical_constant()` tests
+for one.
+
+```{r}
+is_physical_constant(u$speed_of_light)
+is_physical_constant(u$meter)
+k_e <- PhysicalConstant("coulomb_constant", abbrev = "k_e")
+is_physical_constant(k_e)
+```
+
+## Prefixes
+
+`Prefix()` defines a new prefix and `prefix_unit()` builds the prefixed
+versions of a unit.
+
+```{r}
+u$kilo
+scale_factor(u$kilo)
+Prefix("zz", "Z", 2)
+prefix_unit(u$gram, list(k = u$kilo, m = u$milli))
+```
+
+## Dimension systems
+
+A `DimensionSystem` lists base dimensions and derived dimensions with their
+dependencies on the base ones.
+
+```{r}
+ds <- DimensionSystem(list(u$length, u$mass, u$time),
+                      list(Dimension("velocity"), Dimension("force")),
+                      list(velocity = list(length = 1, time = -1),
+                           force = list(mass = 1, length = 1, time = -2)))
+base_dims(ds)
+derived_dims(ds)
+list_can_dims(ds)
+can_transf_matrix(ds)
+inv_can_transf_matrix(ds)
+dim_can_vector(ds, u$length)
+dim_vector(ds, u$length)
+print_dim_base(ds, Dimension("force"))
+dimensional_dependencies(ds)
+is_consistent(ds)
+system_dim(ds)
+```
+
+The SI dimension system is `u$dimsys_SI`:
+
+```{r}
+get_dimensional_dependencies(u$dimsys_SI, u$force)
+is_dimensionless(u$dimsys_SI, u$length / u$length)
+has_integer_powers(u$length, u$dimsys_SI)
+```
+
+## Unit systems
+
+A `UnitSystem` chooses base units and a dimension system.
+
+```{r}
+SI
+get_default_unit_system()
+get_dimension_system(SI)
+system_dim(SI)
+is_consistent(SI)
+length(derived_units(SI)) > 0
+any(vapply(get_units_non_prefixed(SI), function(q) q == u$volt, TRUE))
+UnitSystem(list(u$meter, u$second), name = "MS")
+extend(UnitSystem(list(u$meter, u$second), list(u$speed_of_light)),
+       list(u$kilogram))
+```
+
+## Checking and finding units
+
+`check_dimensions()` signals an error when an expression adds quantities of
+different dimensions and returns the expression otherwise. `find_unit()`
+lists the predefined units with a given name or dimension.
+
+```{r}
+check_dimensions(u$inch + u$meter)
+tryCatch(check_dimensions(u$meter + u$second),
+         error = function(e) conditionMessage(e))
+find_unit("charge")
+find_unit(u$inch)
+```

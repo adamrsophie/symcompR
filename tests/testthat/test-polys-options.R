@@ -11,6 +11,7 @@ fmt <- function(v) {
 }
 
 test_that("modulus, extension, gaussian and domain options match SymPy", {
+  skip_on_cran()
   expect_equal(fmt(sym_factor(x^2+1, modulus=2)), "(x + 1)^2")
   expect_equal(fmt(sym_factor(x^2+1, modulus=5)), "(x - 2)*(x + 2)")
   expect_equal(fmt(sym_factor(2*x^2+2, modulus=5)), "2*(x - 2)*(x + 2)")

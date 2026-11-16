@@ -7,9 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
-```
+
 
 This vignette covers Boolean algebra (normal forms, minimization, and
 satisfiability) and sets: intervals, finite sets, the number sets, image
@@ -17,7 +15,8 @@ sets, condition sets, ranges, set operations, and transfinite ordinals. The
 predicate based assumptions system (`ask()`, `refine()`, and `assuming()`)
 has its own vignette.
 
-```{r}
+
+``` r
 library(symcompR)
 p <- Symbol("p"); q <- Symbol("q"); r <- Symbol("r")
 w <- Symbol("w"); x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z")
@@ -30,41 +29,66 @@ Symbols double as Boolean variables. `And()`, `Or()`, `Not()`, `Xor()`,
 `Implies()`, `Equivalent()`, and `ITE()` (if then else) build Boolean
 functions, and `&`, `|`, and `!` work as operators.
 
-```{r}
+
+``` r
 And(p, Or(q, Not(p)))
+#> p & (q | ~p)
 (p & q) | !r
+#> ~r | (p & q)
 Implies(p, q)
+#> Implies(p, q)
 Equivalent(p, q)
+#> Equivalent(p, q)
 Xor(p, q)
+#> p ^ q
 And(p, TRUE)
+#> p
 ```
 
 Truth values are substituted with `subs()`, and `truth_table()` lists all
 assignments.
 
-```{r}
+
+``` r
 subs(And(p, q), list(list(p, S_true), list(q, S_false)))
+#> False
 truth_table(Implies(p, q))
+#>       p     q value
+#> 1 FALSE FALSE  TRUE
+#> 2 FALSE  TRUE  TRUE
+#> 3  TRUE FALSE FALSE
+#> 4  TRUE  TRUE  TRUE
 ```
 
 ### Normal forms and simplification
 
-```{r}
+
+``` r
 to_cnf(Or(And(p, q), r))
+#> (p | r) & (q | r)
 to_dnf(And(Or(p, q), r))
+#> (p & r) | (q & r)
 to_nnf(Not(Implies(p, q)))
+#> p & ~q
 eliminate_implications(Implies(p, q))
+#> q | ~p
 is_cnf(And(Or(p, q), r))
+#> [1] TRUE
 to_cnf(Equivalent(p, Or(q, r)), simplify = TRUE)
+#> (p | ~q) & (p | ~r) & (q | r | ~p)
 ```
 
 `simplify_logic()` finds a minimal equivalent expression with the
 Quine-McCluskey algorithm.
 
-```{r}
+
+``` r
 simplify_logic(Or(And(p, q), And(p, Not(q))))
+#> p
 simplify_logic((!p & !q & !r) | (!p & !q & r))
+#> ~p & ~q
 simplify_logic(Implies(p, q) & Implies(q, p), form = "cnf")
+#> (p | ~q) & (q | ~p)
 ```
 
 `SOPform()` and `POSform()` build a minimal sum of products or product of
@@ -72,10 +96,14 @@ sums from the minterms of a truth table (the rows where the function is
 true), optionally with "don't care" rows. Minterms are given as row
 numbers, so `c(3, 7)` over `x, y, z` means the rows `011` and `111`.
 
-```{r}
+
+``` r
 SOPform(list(x, y, z), c(3, 7))
+#> y & z
 SOPform(list(x, y, z), c(1, 2, 5, 6))
+#> (y & ~z) | (z & ~y)
 POSform(list(w, x, y, z), c(1, 3, 7, 11, 15), dontcares = c(0, 2, 5))
+#> z & (y | ~w)
 ```
 
 ### Satisfiability
@@ -84,33 +112,61 @@ POSform(list(w, x, y, z), c(1, 3, 7, 11, 15), dontcares = c(0, 2, 5))
 or `FALSE` when there is none. `valid()` tests whether an expression is a
 tautology.
 
-```{r}
+
+``` r
 satisfiable(And(p, Not(q)))
+#> $p
+#> [1] TRUE
+#> 
+#> $q
+#> [1] FALSE
 satisfiable(And(p, Not(p)))
+#> [1] FALSE
 length(satisfiable(Or(p, q), all_models = TRUE))
+#> [1] 3
 valid(Or(p, Not(p)))
+#> [1] TRUE
 ```
 
 The remaining connectives are `Nand()`, `Nor()`, and the if then else
 function `ITE()`. `is_dnf()` and `is_nnf()` test for disjunctive and
 negation normal form.
 
-```{r}
+
+``` r
 Nand(TRUE, FALSE)
+#> True
 Nor(TRUE, FALSE)
+#> False
 Nand(x > 0, y > 0)
+#> ~((x > 0) & (y > 0))
 Nor(x > 0, y > 0)
+#> ~((x > 0) | (y > 0))
 ITE(TRUE, p, q)
+#> p
 c(is_dnf(Or(And(p, q), r)), is_dnf(And(p, Or(q, r))))
+#> [1]  TRUE FALSE
 c(is_nnf(And(Not(p), q)), is_nnf(Not(And(p, q))))
+#> [1]  TRUE FALSE
 distribute_or_over_and(And(Or(Not(p), q), r))
+#> (q & r) | (r & ~p)
 ```
 
 `bool_map()` decides whether two Boolean functions are the same up to a
 renaming of variables, and returns the renaming.
 
-```{r}
+
+``` r
 bool_map(Or(And(p, q), Not(p)), Or(And(x, y), Not(x)))
+#> $expr
+#> q | ~p
+#> 
+#> $mapping
+#> $mapping$p
+#> x
+#> 
+#> $mapping$q
+#> y
 ```
 
 ## Algebraic normal form and gates
@@ -119,22 +175,37 @@ The algebraic normal form (ANF) writes a Boolean function as an exclusive
 or of conjunctions. `Xnor()` is the negated exclusive or and `Exclusive()`
 says that at most one argument is true.
 
-```{r}
+
+``` r
 A <- Symbol("A"); B <- Symbol("B"); C <- Symbol("C")
 Xnor(A, B)
+#> ~(A ^ B)
 Exclusive(A, B, C)
+#> ~(A & B) & ~(A & C) & ~(B & C)
 distribute_and_over_or(Or(And(A, B), C))
+#> (A | C) & (B | C)
 distribute_xor_over_and(And(A, Xor(B, C)))
+#> (A & B) ^ (A & C)
 to_anf(Or(x, y))
+#> x ^ y ^ (x & y)
 to_anf(Implies(x, y))
+#> x ^ True ^ (x & y)
 is_anf(Xor(x, And(x, y)))
+#> [1] TRUE
 is_anf(Or(x, y))
+#> [1] FALSE
 anf_coeffs(c(1, 1, 1, 0))
+#> [1] 1 0 0 1
 ANFform(list(x, y), c(1, 1, 1, 0))
+#> True ^ (x & y)
 bool_minterm(3, list(x, y))
+#> x & y
 bool_maxterm(3, list(x, y))
+#> ~x | ~y
 bool_monomial(3, list(x, y))
+#> x & y
 gateinputcount(Or(A, And(B, C)))
+#> [1] 4
 ```
 
 ## Inference
@@ -143,49 +214,110 @@ gateinputcount(Or(A, And(B, C)))
 logical consequence and a `PropKB()` knowledge base answers queries about
 what it has been told. `KB()` is the base class.
 
-```{r}
+
+``` r
 literal_symbol(Not(A))
+#> A
 pl_true(Or(A, B), list(A = TRUE))
+#> [1] TRUE
 pl_true(And(A, B), list(A = TRUE))
+#> [1] NA
 entails(B, list(Implies(A, B), A))
+#> [1] TRUE
 entails(A, list(Or(A, B)))
+#> [1] FALSE
 kb <- PropKB()
 kb$tell(Implies(A, B)); kb$tell(A)
 kb$ask(B)
+#> [1] TRUE
 kb$ask(C)
+#> [1] FALSE
 kb$clauses()
+#> [[1]]
+#> A
+#> 
+#> [[2]]
+#> B | ~A
 kb$retract(A)
 kb$ask(B)
+#> [1] FALSE
 KB()$clauses()
+#> list()
 ```
 
 The DPLL procedure decides satisfiability. Its steps work on clauses
 written with symbols, or with integers (`to_int_repr()`), where `-i` is
 the negation of the `i`th symbol.
 
-```{r}
+
+``` r
 dpll_satisfiable(And(A, Not(A)))
+#> [1] FALSE
 dpll(list(Or(A, B), Not(A)), list(A, B), list())
+#> $A
+#> [1] FALSE
+#> 
+#> $B
+#> [1] TRUE
 find_pure_symbol(list(A, B), list(Or(A, Not(B)), Or(Not(B), A)))
+#> [[1]]
+#> A
+#> 
+#> [[2]]
+#> [1] TRUE
 find_unit_clause(list(Or(A, B), A), list())
+#> [[1]]
+#> A
+#> 
+#> [[2]]
+#> [1] TRUE
 unit_propagate(list(Or(A, B), Or(Not(A), B)), A)
+#> [[1]]
+#> B
 to_int_repr(list(Or(x, y), Not(x)), list(x, y))
+#> [[1]]
+#> [1] 1 2
+#> 
+#> [[2]]
+#> [1] -1
 dpll_int_repr(list(c(1, 2), -1), c(1, 2), list())
+#> $`1`
+#> [1] FALSE
+#> 
+#> $`2`
+#> [1] TRUE
 find_pure_symbol_int_repr(c(1, 2, 3), list(c(1, -2), c(-2, -3), c(3, 1)))
+#> [[1]]
+#> [1] 1
+#> 
+#> [[2]]
+#> [1] TRUE
 find_unit_clause_int_repr(list(c(1, 2, 3), c(2, -3), c(1, -2)), list("1" = TRUE))
+#> [[1]]
+#> [1] 2
+#> 
+#> [[2]]
+#> [1] FALSE
 unit_propagate_int_repr(list(c(1, 2), c(3, -2), 2), 2)
+#> [[1]]
+#> [1] 3
 pl_true_int_repr(c(1, 2), list("1" = FALSE))
+#> [1] NA
 pl_true_int_repr(c(1, 2), list("1" = FALSE, "2" = FALSE))
+#> [1] FALSE
 ```
 
 `dimacs_load()` reads a formula in the DIMACS CNF format, and
 `dimacs_load_file()` reads it from a file:
 
-```{r}
+
+``` r
 dimacs_load("1 2 \n 3")
+#> cnf_3 & (cnf_1 | cnf_2)
 tf <- tempfile(fileext = ".cnf")
 writeLines(c("1 -2 0", "3 0"), tf)
 dimacs_load_file(tf)
+#> cnf_3 & (cnf_1 | ~cnf_2)
 unlink(tf)
 ```
 
@@ -202,49 +334,79 @@ The assumptions system, with `ask()` and `refine()`, has its own vignette,
 that, and `Interval_open()`, `Interval_Lopen()`, and `Interval_Ropen()` are
 shortcuts.
 
-```{r}
+
+``` r
 Interval(0, 1)
+#> Interval(0, 1)
 Interval(0, 1, TRUE, FALSE)
+#> Interval.Lopen(0, 1)
 Interval_open(0, 1)
+#> Interval.open(0, 1)
 Interval_Lopen(0, 1)
+#> Interval.Lopen(0, 1)
 Interval_Ropen(0, 1)
+#> Interval.Ropen(0, 1)
 FiniteSet(1, 2, 3)
+#> {1, 2, 3}
 ```
 
 Set operations simplify their result whenever they can.
 
-```{r}
+
+``` r
 Union(Interval(0, 1), Interval(2, 3), Interval(1, 2))
+#> Interval(0, 3)
 Union(Interval(0, 1), EmptySet)
+#> Interval(0, 1)
 Intersection(Interval(0, 1), UniversalSet)
+#> Interval(0, 1)
 PowerSet(FiniteSet(1, 2))
+#> PowerSet({1, 2})
 DisjointUnion(FiniteSet(1, 2), FiniteSet(3))
+#> DisjointUnion({1, 2}, {3})
 Intersection(Interval(0, 5), Interval(3, 10))
+#> Interval(3, 5)
 Complement(Interval(0, 5), Interval(1, 2))
+#> Union(Interval.Ropen(0, 1), Interval.Lopen(2, 5))
 Complement(Reals, FiniteSet(0))
+#> Union(Interval.open(-oo, 0), Interval.open(0, oo))
 SymmetricDifference(Interval(0, 3), Interval(2, 5))
+#> Union(Interval.Ropen(0, 2), Interval.Lopen(3, 5))
 Union(FiniteSet(1, 2, 3), FiniteSet(3, 4))
+#> {1, 2, 3, 4}
 Intersection(FiniteSet(1, 2, 3), Interval(2, 5))
+#> {2, 3}
 ProductSet(FiniteSet(1, 2), FiniteSet(3, 4))
+#> ProductSet({1, 2}, {3, 4})
 ```
 
 Membership, inclusion, and measure:
 
-```{r}
+
+``` r
 contains(Interval(0, 1), Rational(1, 2))
+#> [1] TRUE
 contains(Interval(0, 1), x)
+#> (0 <= x) & (x <= 1)
 is_subset(Interval(0, 1), Interval(-1, 2))
+#> [1] TRUE
 measure(Union(Interval(0, 1), Interval(2, 4)))
+#> 3
 boundary(Interval(0, 1, TRUE))
+#> {0, 1}
 set_inf(Union(Interval(0, 1), Interval(2, 4)))
+#> 0
 set_sup(Union(Interval(0, 1), Interval(2, 4)))
+#> 4
 ```
 
 `contains()` returns a condition when membership depends on a symbol, and
 `as_relational()` turns a set into the equivalent condition.
 
-```{r}
+
+``` r
 as_relational(Union(Interval(0, 1), Interval(2, 3)), x)
+#> ((0 <= x) & (x <= 1)) | ((2 <= x) & (x <= 3))
 ```
 
 ### Number sets and ranges
@@ -253,17 +415,28 @@ as_relational(Union(Interval(0, 1), Interval(2, 3)), x)
 are the standard number sets. `Range()` is an arithmetic progression of
 integers, possibly infinite.
 
-```{r}
+
+``` r
 is_subset(Naturals, Integers)
+#> [1] TRUE
 Naturals0
+#> Naturals0
 Rationals
+#> Rationals
 Complexes
+#> Complexes
 contains(Rationals, Rational(1, 2))
+#> [1] TRUE
 Intersection(Integers, Interval(-2.5, 2))
+#> Range(-2, 3, 1)
 Range(1, 10, 3)
+#> Range(1, 10, 3)
 contains(Range(1, 10, 3), 7)
+#> [1] TRUE
 Intersection(Range(1, 10, 3), Interval(3, 8))
+#> Range(4, 10, 3)
 Range(0, oo, 2)
+#> Range(0, oo, 2)
 ```
 
 ### Image sets and condition sets
@@ -273,13 +446,19 @@ it when possible. `ConditionSet(x, cond, S)` is $\{x \in S : \text{cond}\}$.
 These are the sets that `solveset()` returns for periodic and unsolved
 equations.
 
-```{r}
+
+``` r
 squares <- ImageSet(Lambda(x, x^2), Naturals)
 squares
+#> ImageSet(Lambda(x, x^2), Naturals)
 contains(squares, 4)
+#> [1] TRUE
 imageset(Lambda(x, 2 * x), Integers)
+#> ImageSet(Lambda(x, 2*x), Integers)
 imageset(Lambda(x, x^2), Interval(-2, 1))
+#> Interval(0, 4)
 ConditionSet(x, Eq(sin(x), x), Interval(0, 1))
+#> ConditionSet(x, Eq(sin(x), x), Interval(0, 1))
 ```
 
 ### Complex regions
@@ -287,25 +466,36 @@ ConditionSet(x, Eq(sin(x), x), Interval(0, 1))
 `ComplexRegion()` describes a region of the complex plane as a product of
 intervals, in rectangular or polar form.
 
-```{r}
+
+``` r
 R1 <- ComplexRegion(ProductSet(Interval(2, 3), Interval(4, 6)))
 contains(R1, Rational(5, 2) + Rational(9, 2) * sym_I)
+#> [1] TRUE
 Intersection(ComplexRegion(ProductSet(Interval(1, 3), Interval(-1, 1))), Reals)
+#> Interval(1, 3)
 ComplexRegion(ProductSet(Interval(0, 1), Interval(0, 2 * sym_pi)), polar = TRUE)
+#> PolarComplexRegion(ProductSet(Interval(0, 1), Interval.Ropen(0, 2*pi)))
 ```
 
 `a_interval()`, `b_interval()`, and `psets()` return the parts of a
 region, `complex_region_from_real()` embeds a set of reals, and
 `normalize_theta_set()` reduces a set of angles to $[0, 2\pi)$.
 
-```{r}
+
+``` r
 R2 <- ComplexRegion(ProductSet(Interval(1, 2), Interval(3, 4)))
 a_interval(R2)
+#> Interval(1, 2)
 b_interval(R2)
+#> Interval(3, 4)
 psets(R2)[[1]]
+#> ProductSet(Interval(1, 2), Interval(3, 4))
 complex_region_from_real(Interval(1, 2))
+#> CartesianComplexRegion(ProductSet(Interval(1, 2), {0}))
 normalize_theta_set(Interval(9 * sym_pi / 2, 5 * sym_pi))
+#> Interval(pi/2, pi)
 normalize_theta_set(Interval(-3 * sym_pi / 2, sym_pi / 2))
+#> Interval.Ropen(0, 2*pi)
 ```
 
 ### Set arithmetic
@@ -313,20 +503,28 @@ normalize_theta_set(Interval(-3 * sym_pi / 2, sym_pi / 2))
 `SetExpr()` wraps a set so that arithmetic acts on all of its elements, which
 is interval arithmetic for intervals.
 
-```{r}
+
+``` r
 SetExpr(Interval(0, 1)) + 1
+#> SetExpr(Interval(1, 2))
 SetExpr(Interval(1, 2)) * SetExpr(Interval(10, 20))
+#> SetExpr(Interval(10, 40))
 ```
 
 `closure()`, `interior()` and `boundary()` give the topological parts of a
 set; `powerset()` lists the subsets of a finite set, and
 `symmetric_difference()` is SymPy's `SymmetricDifference`.
 
-```{r}
+
+``` r
 closure(Interval(0, 1, TRUE, TRUE))
+#> Interval(0, 1)
 interior(Interval(0, 1))
+#> Interval.open(0, 1)
 powerset(FiniteSet(1, 2))
+#> FiniteSet(EmptySet, {1}, {2}, {1, 2})
 symmetric_difference(Interval(0, 2), Interval(1, 3))
+#> Union(Interval.Ropen(0, 1), Interval.Lopen(2, 3))
 ```
 
 ## Ordinals
@@ -334,16 +532,27 @@ symmetric_difference(Interval(0, 2), Interval(1, 3))
 symcompR implements ordinal numbers below $\varepsilon_0$ in Cantor normal
 form. `ord_omega` is $\omega$, and ordinal arithmetic is not commutative:
 
-```{r}
+
+``` r
 w <- ord_omega
 w + 1
+#> w + 1
 1 + w
+#> w
 1 + w == w
+#> [1] TRUE
 (w + 3) * (w + 2)
+#> w^2 + w*2 + 3
 Ordinal(OmegaPower(3, 2), OmegaPower(1, 4), OmegaPower(0, 7))
+#> w^3*2 + w*4 + 7
 is_successor_ordinal(w^2 + 1)
+#> [1] TRUE
 is_limit_ordinal(w^2)
+#> [1] TRUE
 ord0
+#> ord0
 ord0 + 1
+#> 1
 ordinal_degree(w^2 + w * 3 + 1)
+#> 2
 ```

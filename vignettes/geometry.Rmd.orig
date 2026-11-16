@@ -1,0 +1,156 @@
+---
+title: "Geometry"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Geometry}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+This vignette covers `sympy.geometry` (exact Euclidean geometry in two and
+three dimensions) and quaternions from `sympy.algebras`. Vector calculus,
+tensors, differential geometry, Lie algebras, and categories have their own
+vignettes.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y")
+t <- Symbol("t"); theta <- Symbol("theta")
+```
+
+## Plane geometry
+
+Points, lines, segments, polygons, circles, ellipses, and parabolas are
+exact: coordinates are symbolic numbers, so distances and areas come out as
+closed forms.
+
+```{r}
+A <- Point(0, 0); B <- Point(3, 4)
+distance(A, B)
+midpoint(Point(1, 2), Point(3, 6))
+translate(Point(1, 2), 1, 1)
+L <- Line(Point(0, 0), Point(1, 2))
+slope(L)
+line_equation(L)
+is_perpendicular(Line(Point(0, 0), Point(1, 1)), Line(Point(0, 2), Point(2, 0)))
+is_collinear(Point(0, 0), Point(1, 1), Point(2, 2))
+intersection(Line(Point(0, 0), Point(1, 1)), Line(Point(0, 2), Point(2, 0)))
+```
+
+Triangles and polygons:
+
+```{r}
+T3 <- Triangle(Point(0, 0), Point(4, 0), Point(0, 3))
+area(T3)
+perimeter(T3)
+centroid(T3)
+area(Polygon(Point(0, 0), Point(2, 0), Point(2, 1), Point(0, 1)))
+area(RegularPolygon(Point(0, 0), 1, 6))
+are_similar(Triangle(Point(0, 0), Point(1, 0), Point(0, 1)),
+            Triangle(Point(0, 0), Point(2, 0), Point(0, 2)))
+convex_hull(Point(0, 0), Point(1, 1), Point(2, 0), Point(1, Rational(1, 2)), Point(1, -1))
+```
+
+Conic sections:
+
+```{r}
+C <- Circle(Point(0, 0), 5)
+circle_equation(C)
+area(C)
+intersection(C, Line(Point(0, 0), Point(1, 0)))
+E <- Ellipse(Point(0, 0), 3, 2)
+foci(E)
+eccentricity(E)
+major(E)
+area(E)
+circumference(E)
+P <- Parabola(Point(0, 1), Line(Point(-1, -1), Point(1, -1)))
+vertex(P)
+equation(P)
+```
+
+The circumference of an ellipse is a complete elliptic integral of the second
+kind. Segments have a length and a parametrization:
+
+```{r}
+S <- Segment(Point(0, 0), Point(3, 4))
+geo_length(S)
+arbitrary_point(S, t)
+```
+
+## Solid geometry
+
+```{r}
+L3 <- Line3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+direction_ratio(L3)
+distance(L3, Point3D(0, 0, 0))
+pl <- Plane(Point3D(0, 0, 0), normal_vector = c(1, 1, 1))
+equation(pl)
+intersection(pl, Line3D(Point3D(0, 0, 5), Point3D(1, 1, 5)))
+normal_vector(Plane(Point3D(1, 0, 0), Point3D(0, 1, 0), Point3D(0, 0, 1)))
+distance(Plane(Point3D(0, 0, 0), normal_vector = c(0, 0, 1)), Point3D(1, 2, 3))
+angle_between(Plane(Point3D(0, 0, 0), normal_vector = c(1, 0, 0)),
+              Plane(Point3D(0, 0, 0), normal_vector = c(1, 1, 0)))
+```
+
+### Rays, curves, and more properties
+
+`Ray()` starts at a point and passes through another. `Ray2D()`, `Ray3D()`,
+`Point2D()`, `Line2D()`, `Segment2D()`, and `Segment3D()` are the
+dimension specific names.
+
+```{r}
+r <- Ray(Point(0, 0), Point(1, 1))
+contains(r, Point(2, 2))
+distance(Point(2, 1), Ray2D(Point(0, 0), Point(1, 0)))
+distance(Point3D(0, 0, 0), Ray3D(Point3D(0, 0, 2), Point3D(1, 0, 5)))
+intersection(Ray2D(Point(0, 0), Point(1, 0)), Ray2D(Point(3, 0), Point(2, 0)))
+Point2D(1, 2)
+Line2D(Point(0, 0), Point(1, 1))
+geo_length(Segment2D(Point(0, 0), Point(1, 1)))
+geo_length(Segment3D(Point3D(0, 0, 0), Point3D(3, 4, 5)))
+direction_cosine(Line3D(Point3D(0, 0, 0), Point3D(3, 4, 5)))
+projection(Line(Point(0, 0), Point(1, 1)), Point(2, 0))
+is_parallel(Line(Point(0, 0), Point(1, 1)), Line(Point(0, 1), Point(1, 2)))
+closest_points(Point(0, 0), Point(3, 0), Point(1, 1))
+farthest_points(Point(0, 0), Point(3, 0), Point(1, 1))
+```
+
+Ellipse and parabola properties:
+
+```{r}
+encloses_point(E, Point(1, 1))
+focus_distance(E)
+P2 <- Parabola(Point(0, 3), Line(Point(-1, 1), Point(1, 1)))
+axis_of_symmetry(P2)
+focal_length(P2)
+p_parameter(P2)
+```
+
+`Curve()` is a parametric curve:
+
+```{r}
+cv <- Curve(list(t, t^2), list(t, 0, 1))
+arbitrary_point(cv)
+```
+
+## Quaternions
+
+```{r}
+q1 <- Quaternion(1, 2, 3, 4)
+q1 + Quaternion(5, 6, 7, 8)
+q1 * quat_inverse(q1)
+q1 * quat_conjugate(q1)
+quat_norm(q1)
+```
+
+A unit quaternion represents a rotation:
+
+```{r}
+trigsimp(quat_to_rotation_matrix(Quaternion(cos(theta / 2), 0, 0, sin(theta / 2))))
+```
+

@@ -1,0 +1,246 @@
+---
+title: "Polynomial domains and rings"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Polynomial domains and rings}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y")
+```
+
+This vignette covers `sympy.polys.domains`, `sympy.polys.rings`,
+`sympy.polys.fields`, and `sympy.polys.orderings`: the coefficient domains
+behind `Poly`, and the sparse polynomial rings that the algorithms use.
+
+## Domains
+
+Coefficient domains are objects: `ZZ`, `QQ`, `GF(p)`, polynomial rings
+`ZZ[x]`, fraction fields, and algebraic fields.
+
+```{r}
+ZZ[x]
+GF(7)(3) * GF(7)(5)
+frac_field(QQ, x)
+algebraic_field(QQ, sqrt(S(2)))
+construct_domain(list(1, Rational(1, 2)))[[1]]
+```
+
+The integer functions of SymPy's ground types work on any integers:
+`python_gcdex()` gives the Bezout coefficients and the gcd, and
+`sqrtrem()` the integer square root and its remainder.
+
+```{r}
+python_gcdex(12, 18)
+sqrtrem(10)
+gmpy_qdiv(6, 4)
+```
+
+`ring()` creates a sparse polynomial ring and its generators, the low level
+representation that the algorithms use.
+
+```{r}
+R <- ring("x,y", ZZ)
+R[[1]]
+X <- R[[2]]; Y <- R[[3]]
+(X + Y)^2
+```
+
+
+### Domain constructors
+
+Each SymPy domain class has a constructor. The integer and rational domains
+exist in "python" and "gmpy" flavors in SymPy; here they all give the same
+domain.
+
+```{r}
+IntegerRing()
+RationalField()
+RealField()
+ComplexField()
+RR
+CC
+ZZ_I
+QQ_I
+EX
+EXRAW
+ExpressionDomain()
+FiniteField(5)
+FF(5)
+FractionField(ZZ, x)
+PolynomialRing(QQ, x, y)
+poly_ring(ZZ, x)
+AlgebraicField(QQ, sqrt(S(3)))
+CyclotomicField(5)
+Domain(ZZ)
+Domain(3)
+list(ZZ_python(), ZZ_gmpy(), GMPYIntegerRing(), PythonIntegerRing(),
+     QQ_python(), QQ_gmpy(), GMPYRationalField())
+list(FF_python(3), FF_gmpy(3), GMPYFiniteField(3), PythonFiniteField(3))
+PythonRational(3, 6)
+```
+
+`from_sympy()` converts an expression into a domain element and
+`to_sympy()` converts it back.
+
+```{r}
+a <- from_sympy(QQ, Rational(3, 4))
+a
+to_sympy(QQ, a)
+to_sympy(GF(7), GF(7)(10))
+```
+
+## Polynomial rings and fields
+
+`ring()` and `xring()` create a ring and its generators, `vring()` also
+assigns the generators to variables, and `sring()` builds the ring from
+expressions. `field()`, `xfield()`, `vfield()`, and `sfield()` are the
+counterparts for rational function fields.
+
+```{r}
+R <- xring("x,y", ZZ)
+R[[1]]
+X <- R[[2]][[1]]; Y <- R[[2]][[2]]
+(X + Y)^2
+vring("u,v", QQ)
+(u - v)^3
+sring(list(x^2 + 2 * y, x / 3))
+K <- xfield("s,t", ZZ)
+K[[2]][[1]] / K[[2]][[2]]
+vfield("p", QQ)
+1 / (p + 1)
+sfield(list(x / y, 1 / x))
+Kf <- field("u,v", QQ)
+Kf[[1]]
+Kf[[2]] / Kf[[3]] + 1
+```
+
+## Monomials and orderings
+
+`Monomial()` is an exponent vector with optional generators. The ordering
+keys `ilex()`, `igrlex()`, and `igrevlex()` sort monomials in the inverse
+of the lexicographic, graded lexicographic, and graded reverse lexicographic
+orders.
+
+```{r}
+m <- Monomial(c(1, 2))
+m
+Monomial(c(2, 0, 1), list(x, y, Symbol("z")))
+ilex(c(1, 2))
+igrlex(c(1, 2))
+igrevlex(c(1, 2))
+```
+
+`Options()` is the option manager that `Poly` uses to process generators
+and flags.
+
+```{r}
+Options(list(x, y), list(domain = "QQ"))
+```
+
+## Domain matrices
+
+A `DomainMatrix` is a matrix whose entries are elements of a domain, the
+fast matrix type that SymPy uses internally. `DM()` builds one from a list
+of rows; the other constructors build it from flat lists, dictionaries,
+SymPy matrices or expressions, or as special matrices.
+
+```{r}
+A <- DM(list(list(1, 2), list(3, 4)), ZZ)
+A
+A$det()
+A$rank()
+A$rref()
+A$charpoly()
+A$transpose()
+A$convert_to(QQ)$inv()
+A * A
+A$to_Matrix()
+DomainMatrix(list(list(ZZ(1), ZZ(2)), list(ZZ(3), ZZ(4))), c(2, 2), ZZ)
+DomainMatrix_from_list(list(list(1, 2), list(3, 4)), ZZ)
+DomainMatrix_from_list_flat(list(ZZ(1), ZZ(2), ZZ(3), ZZ(4)), c(2, 2), ZZ)
+DomainMatrix_from_dod(list(`0` = list(`0` = ZZ(5)), `1` = list(`1` = ZZ(7))), c(2, 2), ZZ)
+DomainMatrix_from_dok(list(`0,1` = ZZ(3)), c(2, 2), ZZ)
+DomainMatrix_from_Matrix(Matrix(list(list(1, x), list(0, 2))))
+DomainMatrix_from_list_sympy(1, 2, list(list(Rational(1, 2), x)))
+DomainMatrix_from_dict_sympy(2, 2, list(`0` = list(`0` = x), `1` = list(`1` = Rational(1, 2))))
+DomainMatrix_diag(list(ZZ(1), ZZ(2)), ZZ)
+DomainMatrix_eye(2, QQ)
+DomainMatrix_ones(c(2, 3), ZZ)
+DomainMatrix_zeros(c(2, 2), ZZ)
+```
+
+The dense (`DDM`) and sparse (`SDM`) representations can be used
+directly, and `DomainMatrix_from_rep()` wraps one:
+
+```{r}
+D <- DDM(list(list(ZZ(1), ZZ(2)), list(ZZ(3), ZZ(4))), c(2, 2), ZZ)
+D
+D$det()
+D$charpoly()
+Sp <- SDM(list(`0` = list(`1` = ZZ(2))), c(2, 2), ZZ)
+Sp
+Sp$to_ddm()
+DomainMatrix_from_rep(Sp)
+```
+
+The Smith normal form of an integer matrix, with the unimodular matrices
+that produce it:
+
+```{r}
+smith_normal_decomp(DM(list(list(12, 6, 4), list(3, 9, 6), list(2, 16, 14)), ZZ))
+is_smith_normal_form(DM(list(list(1, 0), list(0, 2)), ZZ))
+is_smith_normal_form(DM(list(list(2, 0), list(0, 3)), ZZ))
+```
+
+A `DomainScalar` is a domain element that knows its domain, so that
+arithmetic unifies the domains:
+
+```{r}
+DomainScalar(ZZ(3), ZZ) + DomainScalar(QQ(1, 2), QQ)
+DomainScalar(ZZ(3), ZZ)$to_sympy()
+DomainScalar_from_sympy(Rational(3, 4))
+DomainScalar_from_sympy(Rational(3, 4))$domain
+```
+
+## Power series rings
+
+`PythonPowerSeriesRingZZ()` and `PythonPowerSeriesRingQQ()` are rings of
+truncated univariate power series with integer and rational coefficients:
+
+```{r}
+Rz <- PythonPowerSeriesRingZZ()
+Rz$pretty(Rz$pow_int(Rz(c(1, 2, 3)), 2))
+Rz$pretty(Rz$inverse(Rz(c(1, 1))))
+Rq <- PythonPowerSeriesRingQQ(4)
+Rq$pretty(Rq$exp(Rq$gen))
+Rq$pretty(Rq$log(Rq(c(1, 1))))
+```
+
+`power_series_ring(symbol, K, prec)` is SymPy's `sympy.polys.series`
+ring in a named variable over `ZZ` or `QQ`. It returns the ring and its
+generator; series combine with the usual operators, and an exact
+polynomial gets an `O()` term only when it grows past the ring precision.
+The ring holds the composition, inversion and elementary functions.
+
+```{r}
+rs <- power_series_ring("x", QQ, 6)
+R <- rs[[1]]; xs <- rs[[2]]
+R
+(1 + xs + xs^2)^3
+1 / (1 - xs)
+R$inverse(1 + xs + xs^2)
+R$reversion(R$sin(xs))
+R$compose(R$exp(xs) - 1, xs + xs^2)
+R$tan(xs)
+R$sqrt(4 + xs)
+R$to_expr(R$atan(xs))
+R$from_expr(Symbol("x")^2 + 3 * Symbol("x") + O(Symbol("x")^3))
+```

@@ -1,0 +1,68 @@
+---
+title: "Code printers"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Code printers}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+The code printers of `sympy.printing` translate an expression into source
+code for another programming language.
+
+```{r}
+library(symcompR)
+x <- Symbol("x"); y <- Symbol("y"); z <- Symbol("z"); k <- Symbol("k")
+f <- Function("f")
+```
+
+## Expressions and assignments
+
+The code printers translate an expression into an expression in the target
+language. With `assign_to`, they produce a complete assignment statement.
+
+```{r}
+e <- x^2 + sin(x) / 3
+ccode(e)
+ccode(sin(x)^2 + cos(x)^2, assign_to = "z")
+cxxcode(e)
+jscode(e)
+pycode(e)
+rust_code(e)
+maple_code(e)
+rcode(x^2 + exp(x))
+glsl_code(sqrt(x + 1))
+mathematica_code(sin(x)^2 + exp(x))
+```
+
+`smtlib_code()` writes SMT-LIB, the input language of SMT solvers such as
+Z3:
+
+```{r}
+cat(smtlib_code(Eq(x + 1, 3)), "\n")
+```
+
+For evaluating expressions in R itself, use `lambdify()` (see the getting
+started vignette), which builds an R function directly.
+
+`fcode()` writes free form Fortran (SymPy's `source_format = "free"`),
+and `octave_code()` writes Octave and MATLAB code. The `print_*()` forms
+print the code instead of returning it.
+
+```{r}
+fcode(x^3 + Rational(1, 2))
+fcode(sin(x) + 2 * y, assign_to = "r")
+octave_code(sin(x) + 2 * y)
+print_ccode(sin(x) + 2 * y)
+print_fcode(x^3 + Rational(1, 2))
+print_jscode(sin(x) + 2 * y)
+print_rcode(sin(x) + 2 * y)
+print_glsl(sin(x) + 2 * y)
+print_maple_code(sin(x) + 2 * y)
+julia_code(sin(x) + 2 * y)
+```
+

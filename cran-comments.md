@@ -1,3 +1,22 @@
+## Resubmission
+
+This resubmission addresses the incoming pretest of 2026-11-16, which reported
+an overall check time of 28 minutes on r-devel-windows-x86_64.
+
+* All 39 vignettes are now precomputed (the sources are kept as `.Rmd.orig`
+  and excluded from the build), so rebuilding them runs no package code.
+* The slowest tests and one slow example now skip on CRAN; the tests that
+  run on CRAN take about 20 seconds locally.
+* Of the remaining time, about 13 minutes on Windows is the step "checking R
+  code for possible problems". That step scales with the amount of R code
+  (about 187,000 lines), and we cannot shorten it without removing
+  functionality. We would be grateful if the check time could be accepted for
+  this reason.
+
+The words flagged as possibly misspelled, "combinatorics" and
+"multiprecision", are spelled correctly; they are standard terms in
+mathematics and numerical computing.
+
 ## Submission
 
 This is the first submission of symcompR, a native R port of the Python
