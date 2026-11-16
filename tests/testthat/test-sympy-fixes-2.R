@@ -57,3 +57,30 @@ test_that("invalid input is refused", {
   expect_warning(m <- as.matrix(Matrix(list(list(1, 2), list(3, x)))), "not numbers")
   expect_equal(m[1, 2], 2)
 })
+
+test_that("Poly() of a Poly applies requested generators and options", {
+  x <- Symbol("x"); y <- Symbol("y")
+  p <- Poly(x + 2, x)
+  expect_identical(Poly(p, x), p)
+  expect_equal(sstr(Poly(p, x, modulus = 2)), "Poly(x, x, modulus=2)")
+  expect_equal(sstr(Poly(Poly(x * y + 1, x, y), y, x)), "Poly(y*x + 1, y, x, domain='ZZ')")
+})
+
+test_that("arithmetic between Polys unifies their generators", {
+  x <- Symbol("x"); y <- Symbol("y")
+  expect_equal(sstr(Poly(x, x) + Poly(y, y)), "Poly(x + y, x, y, domain='ZZ')")
+  expect_equal(sstr(Poly(y, y) * Poly(x, x)), "Poly(y*x, y, x, domain='ZZ')")
+})
+
+test_that("a non integer power of a higher order holonomic function raises", {
+  x <- Symbol("x")
+  h <- expr_to_holonomic(sin(x), x)
+  expect_error(h^Rational(1, 2), "TypeError")
+  expect_equal(sstr(to_expr_holonomic(h^2)), "sin(x)^2")
+})
+
+test_that("preview() raises when the output file cannot be written", {
+  x <- Symbol("x")
+  bad <- file.path(tempdir(), "no-such-directory", "out.tex")
+  expect_error(preview(x, output = "tex", viewer = "file", filename = bad), "could not write")
+})

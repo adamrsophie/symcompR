@@ -459,7 +459,11 @@ print.HolonomicFunction <- function(x, ...) { cat(format(x), "\n"); invisible(x)
     sol <- list(expand(.mul(list(ann$polys[[1L]], as_sym(n)))), ann$polys[[2L]])
     return(HolonomicFunction(.diffop(sol, ann$parent), self$x, self$x0, y0))
   }
-  if (is_sym(n)) n <- num_value_dbl(n)
+  if (is_sym(n)) {
+    if (n$type != "Integer") stop("TypeError: unsupported operand type(s) for >>=: '", n$type, "' and 'int'", call. = FALSE)
+    n <- num_value_dbl(n)
+  }
+  if (n != round(n)) stop("TypeError: unsupported operand type(s) for >>=: 'float' and 'int'", call. = FALSE)
   if (n < 0) stop("Negative Power on a Holonomic Function", call. = FALSE)
   Dx <- .diffop(list(S_Zero, S_One), ann$parent)
   result <- HolonomicFunction(Dx, self$x, 0, list(S_One))

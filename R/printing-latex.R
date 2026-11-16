@@ -1666,7 +1666,8 @@ preview <- function(expr, output = "pdf", viewer = NULL, euler = TRUE, packages 
     }
   }
   if (identical(viewer, "file")) {
-    file.copy(out, filename, overwrite = TRUE)
+    if (!file.exists(out) || !isTRUE(suppressWarnings(file.copy(out, filename, overwrite = TRUE))))
+      stop("OSError: could not write ", filename, call. = FALSE)
     return(invisible(filename))
   }
   if (interactive()) utils::browseURL(out)

@@ -10,7 +10,8 @@ License, and its notice is retained as it requires.
 
 The R code in symcompR is Copyright (c) 2026 Adam R Sophie and is
 distributed under the GNU General Public License, version 3 (see
-LICENSE.md).
+https://www.r-project.org/Licenses/GPL-3, or the file share/licenses/GPL-3
+of an R installation).
 
 The multiprecision numerical code (for example R/evalf-mp*.R and
 R/fnsimp-nsolve.R) is ported from mpmath (https://mpmath.org), version

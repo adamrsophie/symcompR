@@ -40,7 +40,19 @@
 #' degree(p, x)
 #' @export
 Poly <- function(expr, ...) {
-  if (inherits(expr, "Poly")) return(expr)
+  if (inherits(expr, "Poly")) {
+    # Poly._from_poly: an existing Poly is kept unless other generators or
+    # options are requested
+    pa <- .split_poly_opts(list(...))
+    old <- expr$gens[seq_len(.poly_ngens(expr))]
+    gk <- function(gs) vapply(gs, function(g) .k(as_sym(g)), "")
+    if (!length(pa$opts) && (!length(pa$gens) || identical(gk(pa$gens), gk(old)))) return(expr)
+    gens <- if (length(pa$gens)) pa$gens else old
+    if (!length(pa$opts) && !is.null(expr$modulus))
+      pa$opts <- c(list(modulus = expr$modulus), if (isFALSE(expr$symmetric)) list(symmetric = FALSE))
+    else if (!length(pa$opts) && !is.null(expr$dom_str)) pa$opts <- list(domain = expr$dom_str)
+    return(do.call(Poly, c(list(as_expr(expr)), gens, pa$opts)))
+  }
   expr <- as_sym(expr)
   pa <- .split_poly_opts(list(...))
   if (length(pa$opts)) {
@@ -171,6 +183,11 @@ Ops.Poly <- function(e1, e2) {
     return(if (.Generic == "==") eq else !eq)
   }
   g <- if (inherits(e1, "Poly")) e1$gens else e2$gens
+  if (!missing(e2) && inherits(e1, "Poly") && inherits(e2, "Poly")) {
+    # _unify_gens: the generators of both operands, in order of appearance
+    gk <- vapply(g, .k, "")
+    for (h in e2$gens) if (!(.k(h) %in% gk)) { g[[length(g) + 1L]] <- h; gk <- c(gk, .k(h)) }
+  }
   a <- if (inherits(e1, "Poly")) as_expr(e1) else as_sym(e1)
   # Poly._unify: the result keeps the modulus (or explicit domain) of the operands
   ps <- Filter(function(z) inherits(z, "Poly"), if (missing(e2)) list(e1) else list(e1, e2))

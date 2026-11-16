@@ -706,9 +706,15 @@ Routine <- function(name, arguments, results, local_vars, global_vars) {
   for (df in .cgu_dump_fns(cg)) {
     filename <- sprintf("%s.%s", prefix, df[[2L]])
     if (to_files) {
-      con <- file(filename, "w")
-      df[[1L]](cg, routines, con, prefix, header, empty)
-      close(con)
+      # render first, so an error leaves an existing file untouched
+      tc <- rawConnection(raw(0), "w")
+      ok <- FALSE
+      tryCatch({
+        df[[1L]](cg, routines, tc, prefix, header, empty)
+        s <- rawConnectionValue(tc)
+        ok <- TRUE
+      }, finally = close(tc))
+      if (ok) writeBin(s, filename)
     } else {
       con <- rawConnection(raw(0), "w")
       df[[1L]](cg, routines, con, prefix, header, empty)
