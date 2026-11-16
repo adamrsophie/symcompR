@@ -4,12 +4,18 @@
 \alias{lambdify}
 \title{Turn an expression into an R function}
 \usage{
-lambdify(args, e)
+lambdify(args, e, cse = FALSE)
 }
 \arguments{
 \item{args}{A symbol or list of symbols.}
 
 \item{e}{An expression or a list of expressions.}
+
+\item{cse}{If \code{TRUE}, common subexpressions are computed once, into
+temporaries, before the result. This makes the function slower to build
+and faster to call when the expressions share work. Expressions with
+\code{\link[=implemented_function]{implemented_function()}} calls or \code{Piecewise} are built without it, since
+moving a call out of a branch could evaluate it where it is not defined.}
 }
 \value{
 An R function.
@@ -23,4 +29,8 @@ tree.
 x <- Symbol("x")
 f <- lambdify(x, x^2 + sin(x))
 f(c(0, 1, 2))
+y <- Symbol("y")
+h <- exp(sin(x + y)) + cos(x * y)
+g <- lambdify(list(x, y), list(h^2, h^3), cse = TRUE)
+g(1, 2)
 }

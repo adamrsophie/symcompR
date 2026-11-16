@@ -204,8 +204,9 @@ as_coeff_mul_split <- function(a) {
       dup <- which(tabulate(idx, length(u)) > 1L)
       keepi <- !(idx %in% dup)
       newterms <- list()
+      grp <- split(seq_along(idx), factor(idx, levels = seq_along(u)))
       for (g in dup) {
-        w <- which(idx == g)
+        w <- grp[[g]]
         cf <- NULL
         for (j in w) {
           cj <- if (is.null(cs[[j]])) S_One else cs[[j]]
@@ -385,8 +386,9 @@ as_coeff_mul_split <- function(a) {
       u <- unique(gk)
       idx <- match(gk, u)
       newf <- vector("list", length(u))
+      grp <- split(seq_along(idx), factor(idx, levels = seq_along(u)))
       for (g in seq_along(u)) {
-        w <- which(idx == g)
+        w <- grp[[g]]
         if (length(w) == 1L) {
           newf[[g]] <- cfac[[w]]
           next

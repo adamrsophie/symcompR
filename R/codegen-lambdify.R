@@ -1,6 +1,17 @@
 # implemented_function() and lambdastr(), after sympy/utilities/lambdify.py.
 
-.cg_imp_key <- function(imp) if (is_sym(imp)) imp$key else paste(deparse(imp), collapse = " ")
+# An R implementation is identified by its code and its enclosing environment:
+# closures with the same body over different captured values are different.
+.cg_imp_reg <- new.env(parent = emptyenv())
+.cg_imp_key <- function(imp) {
+  if (is_sym(imp)) return(imp$key)
+  code <- paste(deparse(imp), collapse = " ")
+  if (!is.function(imp)) return(code)
+  reg <- .cg_imp_reg$fns
+  for (i in seq_along(reg)) if (identical(reg[[i]], imp)) return(paste0(code, "#", i))
+  .cg_imp_reg$fns <- c(reg, list(imp))
+  paste0(code, "#", length(reg) + 1L)
+}
 
 # _imp_namespace: two implementations under one function name are an error
 .cg_imp_namespace <- function(e) {

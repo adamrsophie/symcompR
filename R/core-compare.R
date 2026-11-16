@@ -49,8 +49,9 @@
 # _hashable_content as a list of sym nodes and plain values
 .hashable <- function(e) {
   t <- e$type
-  if (t == "Integer") return(list(as.double(e$value)))
-  if (t == "Rational") return(list(as.double(gmp::numerator(e$value)), as.double(gmp::denominator(e$value))))
+  # exact values: doubles cannot tell 2^53 from 2^53 + 1
+  if (t == "Integer") return(list(gmp::as.bigz(e$value)))
+  if (t == "Rational") return(list(gmp::numerator(gmp::as.bigq(e$value)), gmp::denominator(gmp::as.bigq(e$value))))
   if (t == "Float") return(list(as.double(e$value)))
   # a BaseScalar hashes its index and system; a CoordSys3D its name first
   if (t %in% c("Symbol", "Wild")) return(if (isTRUE(e$extra$base_scalar)) list(.int(e$extra$index), e$extra$system) else if (t == "Symbol") c(list(e$name), .fs_assumption_items(e)) else list(e$name))
@@ -63,6 +64,31 @@
   e$args
 }
 
+# A stable sort of 1..n by cmp(i, j) (negative, zero or positive): the same
+# order as a stable insertion sort, in O(n log n) comparisons.
+.stable_order <- function(n, cmp) {
+  if (n < 2L) return(seq_len(n))
+  if (n <= 8L) {
+    o <- integer()
+    for (i in seq_len(n)) {
+      j <- length(o)
+      while (j > 0L && cmp(o[j], i) > 0) j <- j - 1L
+      o <- append(o, i, after = j)
+    }
+    return(o)
+  }
+  h <- n %/% 2L
+  a <- .stable_order(h, cmp)
+  b <- .stable_order(n - h, function(i, j) cmp(i + h, j + h)) + h
+  out <- integer(n); i <- 1L; j <- 1L; k <- 1L
+  while (i <= h && j <= n - h) {
+    if (cmp(a[i], b[j]) <= 0) { out[k] <- a[i]; i <- i + 1L } else { out[k] <- b[j]; j <- j + 1L }
+    k <- k + 1L
+  }
+  if (i <= h) out[k:n] <- a[i:h] else if (j <= n - h) out[k:n] <- b[j:(n - h)]
+  out
+}
+
 .basic_compare <- function(a, b) {
   if (identical(a$key, b$key)) return(0L)
   c <- .cmp_name(.sympy_class(a), .sympy_class(b))
@@ -71,7 +97,9 @@
   if (length(st) != length(ot)) return(if (length(st) > length(ot)) 1L else -1L)
   for (i in seq_along(st)) {
     l <- st[[i]]; r <- ot[[i]]
-    c <- if (is_sym(l) && is_sym(r)) .basic_compare(l, r) else if (identical(l, r)) 0L
+    c <- if (is_sym(l) && is_sym(r)) .basic_compare(l, r)
+         else if (inherits(l, "bigz") && inherits(r, "bigz")) { if (l == r) 0L else if (l > r) 1L else -1L }
+         else if (identical(l, r)) 0L
          else if (is.character(l) && is.character(r)) .cmp_codepoints(l, r) else if (l > r) 1L else -1L
     if (c != 0L) return(c)
   }
@@ -93,11 +121,5 @@
       return(c(cp, args[!comm]))
     }
   }
-  o <- integer()
-  for (i in seq_along(args)) {
-    j <- length(o)
-    while (j > 0L && .basic_compare(args[[o[j]]], args[[i]]) > 0L) j <- j - 1L
-    o <- append(o, i, after = j)
-  }
-  args[o]
+  args[.stable_order(length(args), function(i, j) .basic_compare(args[[i]], args[[j]]))]
 }

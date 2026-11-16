@@ -148,3 +148,33 @@ test_that("invalid input is refused", {
   expect_warning(m <- as.matrix(Matrix(list(list(1, 2), list(3, x)))), "not numbers")
   expect_equal(m[1, 2], 2)
 })
+
+test_that("exact numbers compare exactly when arguments are sorted", {
+  a <- Integer("9007199254740992"); b <- Integer("9007199254740993")
+  expect_equal(symcompR:::.basic_compare(a, b), -1L)
+  expect_equal(symcompR:::.basic_compare(b, a), 1L)
+  expect_equal(symcompR:::.basic_compare(Rational("9007199254740993/2"), Rational("9007199254740991/2")), 1L)
+})
+
+test_that("the stable sort agrees with insertion order on ties and long inputs", {
+  v <- c(5, 3, 5, 1, 3, 9, 2, 2, 8, 1, 7, 3, 6, 4, 0, 5, 5)
+  o <- symcompR:::.stable_order(length(v), function(i, j) sign(v[i] - v[j]))
+  expect_equal(o, order(v, method = "radix"))
+  xs <- lapply(sprintf("v%03d", 200:1), Symbol)
+  expect_equal(sstr(do.call(Add, xs[1:3])), "v198 + v199 + v200")
+})
+
+test_that("cse accepts expressions with keys over 10000 bytes", {
+  xs <- lapply(sprintf("x%04d", seq_len(1500)), Symbol)
+  r <- cse(do.call(Add, xs))
+  expect_length(r$replacements, 0L)
+  expect_equal(r$reduced[[1L]]$key, do.call(Add, xs)$key)
+})
+
+test_that("a sign query on a large integer does not need primality", {
+  n <- Integer(gmp::as.bigz(2)^2203 - 1)
+  expect_true(ask_fact(n, "positive"))
+  expect_false(ask_fact(n, "even"))
+  expect_true(ask_fact(Integer(7), "prime"))
+  expect_false(ask_fact(Integer(1), "prime"))
+})

@@ -244,7 +244,6 @@ dpoly <- function(c, x, K) structure(list(c = .dp_strip(c), x = x, K = K), class
   repeat {
     lcr <- .dp_LC(r)
     if (!field) {
-      cc <- cancel(.div(lcr, lcg))
       if (!.dom_divides(K, lcg, lcr)) break
       c <- .dom_quo(K, lcr, lcg)
     } else c <- .dn(K, .div(lcr, lcg))
@@ -337,20 +336,22 @@ dpoly <- function(c, x, K) structure(list(c = .dp_strip(c), x = x, K = K), class
 }
 
 # dup_inner_gcd: list(h, cff, cfg)
-.dp_inner_gcd <- function(f, g) {
+.dp_inner_gcd <- function(f, g, cofactors = TRUE) {
   K <- f$K
   # dup_inner_gcd: over RR the gcd is computed exactly over QQ
   if (.dk(K) == "RR") {
     toq <- function(p) dpoly(lapply(p$c, function(z) if (z$type == "Float") make_rational(gmp::as.bigq(z$value)) else z), p$x, QQ)
     tor <- function(p) dpoly(lapply(p$c, function(z) Float(as.double(num_value_dbl(z)))), p$x, K)
-    r <- .dp_inner_gcd(toq(f), toq(g))
+    r <- .dp_inner_gcd(toq(f), toq(g), cofactors)
     return(lapply(r, tor))
   }
   if (.dk_field(K)) {
     if (.dp_zero(f) && .dp_zero(g)) return(list(f, f, f))
     if (.dp_zero(f)) { h <- .dp_monic(g); return(list(h, .dp_set(f, list()), .dp_const(f, .dn(K, .inv(.dp_LC(g)))))) }
     if (.dp_zero(g)) { h <- .dp_monic(f); return(list(h, .dp_const(f, .dn(K, .inv(.dp_LC(f)))), .dp_set(f, list()))) }
-    h <- .dp_monic(.dp_subresultants(f, g)[[length(.dp_subresultants(f, g))]])
+    sr <- .dp_subresultants(f, g)
+    h <- .dp_monic(sr[[length(sr)]])
+    if (!cofactors) return(list(h))
     return(list(h, .dp_quo(f, h), .dp_quo(g, h)))
   }
   # dup_rr_prs_gcd
@@ -369,9 +370,10 @@ dpoly <- function(c, x, K) structure(list(c = .dp_strip(c), x = x, K = K), class
   h <- .dp_primitive(sr[[length(sr)]])[[2L]]
   c <- .dn(K, .mul(list(c, .dom_canonical_unit(K, .dp_LC(h)))))
   h <- .dp_mul_ground(h, c)
+  if (!cofactors) return(list(h))
   list(h, .dp_quo(f, h), .dp_quo(g, h))
 }
-.dp_gcd <- function(f, g) .dp_inner_gcd(f, g)[[1L]]
+.dp_gcd <- function(f, g) .dp_inner_gcd(f, g, cofactors = FALSE)[[1L]]
 
 # dup_sqf_list: list(coeff, list(list(factor, k), ...))
 .dp_sqf_list <- function(f, all = FALSE) {

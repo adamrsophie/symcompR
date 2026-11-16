@@ -202,13 +202,22 @@ pycode <- .mk_printer("python", "%s = %s")
 #'
 #' @param args A symbol or list of symbols.
 #' @param e An expression or a list of expressions.
+#' @param cse If `TRUE`, common subexpressions are computed once, into
+#'   temporaries, before the result. This makes the function slower to build
+#'   and faster to call when the expressions share work. Expressions with
+#'   [implemented_function()] calls or `Piecewise` are built without it, since
+#'   moving a call out of a branch could evaluate it where it is not defined.
 #' @return An R function.
 #' @examples
 #' x <- Symbol("x")
 #' f <- lambdify(x, x^2 + sin(x))
 #' f(c(0, 1, 2))
+#' y <- Symbol("y")
+#' h <- exp(sin(x + y)) + cos(x * y)
+#' g <- lambdify(list(x, y), list(h^2, h^3), cse = TRUE)
+#' g(1, 2)
 #' @export
-lambdify <- function(args, e) {
+lambdify <- function(args, e, cse = FALSE) {
   # a DeferredVector argument X is one vector; its entries X[i] index it
   if (inherits(args, "DeferredVector")) args <- list(args)
   if (is.list(args) && !is_sym(args)) {
@@ -219,16 +228,48 @@ lambdify <- function(args, e) {
   args <- .as_gens(list(args))
   nms <- vapply(args, function(s) s$name, "")
   .cg_imp_namespace(e)
-  body <- if (inherits(e, "symmatrix"))
-            as.call(c(list(as.name("matrix"), as.call(c(list(as.name("c")), lapply(e$data, .to_call)))),
-                      list(nrow = e$nrow, ncol = e$ncol, byrow = TRUE)))
-          else if (is.list(e) && !inherits(e, "sym")) as.call(c(list(as.name("list")), lapply(e, function(z) .to_call(as_sym(z)))))
-          else .to_call(as_sym(e))
+  mk <- function(e) {
+    if (inherits(e, "symmatrix"))
+      as.call(c(list(as.name("matrix"), as.call(c(list(as.name("c")), lapply(e$data, .to_call)))),
+                list(nrow = e$nrow, ncol = e$ncol, byrow = TRUE)))
+    else if (is.list(e) && !inherits(e, "sym")) as.call(c(list(as.name("list")), lapply(e, function(z) .to_call(as_sym(z)))))
+    else .to_call(as_sym(e))
+  }
+  body <- NULL
+  if (isTRUE(cse) && .lamb_cse_safe(e)) {
+    mat <- inherits(e, "symmatrix")
+    many <- !mat && is.list(e) && !inherits(e, "sym")
+    items <- if (mat) e$data else if (many) lapply(e, as_sym) else list(as_sym(e))
+    r <- .lamb_cse(items)
+    if (length(r$replacements)) {
+      out <- if (mat) { m <- e; m$data <- r$reduced; m } else if (many) r$reduced else r$reduced[[1L]]
+      assigns <- lapply(r$replacements, function(p) call("<-", as.name(p[[1L]]$name), .to_call(p[[2L]])))
+      body <- as.call(c(list(as.name("{")), assigns, list(mk(out))))
+    }
+  }
+  if (is.null(body)) body <- mk(e)
   fn <- function() NULL
   formals(fn) <- stats::setNames(rep(list(quote(expr = )), length(nms)), nms)
   body(fn) <- body
   environment(fn) <- list2env(list(), parent = asNamespace("stats"))
   fn
+}
+
+.lamb_cse <- function(exprs) cse(exprs, prefix = ".cse")
+# no implemented functions (they may not be pure) and no Piecewise (a
+# temporary would evaluate a branch unconditionally)
+.lamb_cse_safe <- function(e) {
+  ok <- TRUE
+  walk <- function(z) {
+    if (!ok) return(invisible())
+    if (inherits(z, "symmatrix")) { for (a in z$data) walk(a); return(invisible()) }
+    if (is.list(z) && !is_sym(z)) { for (a in z) walk(a); return(invisible()) }
+    if (!is_sym(z)) return(invisible())
+    if (z$type == "Piecewise" || (z$type == "Function" && !is.null(z$extra$imp))) { ok <<- FALSE; return(invisible()) }
+    for (a in z$args) walk(a)
+  }
+  walk(e)
+  ok
 }
 
 .LAMB <- new.env()

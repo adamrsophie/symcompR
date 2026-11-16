@@ -52,3 +52,26 @@ test_that("preview() raises when the output file cannot be written", {
   bad <- file.path(tempdir(), "no-such-directory", "out.tex")
   expect_error(preview(x, output = "tex", viewer = "file", filename = bad), "could not write")
 })
+
+test_that("lambdify with cse computes shared work once and gives the same values", {
+  x <- Symbol("x"); y <- Symbol("y")
+  u <- sin(x + y); v <- cos(x * y); h <- exp(u) + v
+  ex <- list(u + h, h^2 + v, h^3 + exp(u))
+  f0 <- lambdify(list(x, y), ex); f1 <- lambdify(list(x, y), ex, cse = TRUE)
+  a <- c(0.1, 0.5, 2); b <- c(1, -1, 3)
+  expect_equal(f1(a, b), f0(a, b))
+  expect_true(any(grepl(".cse", deparse(body(f1)), fixed = TRUE)))
+  M <- Matrix(list(list(sin(x)^2, sin(x)), list(1, x)))
+  expect_equal(lambdify(x, M, cse = TRUE)(1), lambdify(x, M)(1))
+  pw <- Piecewise(list(log(x), x > 0), list(log(x) + 1, TRUE))
+  expect_false(any(grepl(".cse", deparse(body(lambdify(x, pw, cse = TRUE))), fixed = TRUE)))
+})
+
+test_that("implementations with different captured values are different functions", {
+  maker <- function(k) function(z) z + k
+  x <- Symbol("x")
+  f1 <- implemented_function("f", maker(1)); f2 <- implemented_function("f", maker(2))
+  expect_false(identical(f1(x)$key, f2(x)$key))
+  g <- function(z) z^2
+  expect_identical(implemented_function("g", g)(x)$key, implemented_function("g", g)(x)$key)
+})

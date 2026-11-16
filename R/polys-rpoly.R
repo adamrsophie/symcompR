@@ -51,6 +51,7 @@ P_all_coeffs <- function(p) if (length(p$c)) lapply(p$c, .gd_out) else list(S_Ze
 .P_unify <- function(f, g) {
   if (!inherits(g, "dpoly")) g <- .P(as_sym(g), f$x)
   if (!inherits(f, "dpoly")) f <- .P(as_sym(f), g$x)
+  if (identical(f$K, g$K)) return(list(f, g))
   K <- .dom_unify(f$K, g$K)
   list(.dp_convert(f, K), .dp_convert(g, K))
 }

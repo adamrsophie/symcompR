@@ -13,7 +13,15 @@
   structure(list(func = func, args = args, id = .fs_cse_env$uid), class = "fs_uneval")
 }
 .fs_is_uneval <- function(z) inherits(z, "fs_uneval")
-.fs_ukey <- function(z) if (.fs_is_uneval(z)) paste0("\001U", z$id) else z$key
+# Environment names are limited to 10000 bytes: longer keys are interned.
+.fs_intern <- utils::hashtab()
+.fs_ek <- function(k) {
+  if (nchar(k, "bytes") < 9000L) return(k)
+  id <- utils::gethash(.fs_intern, k)
+  if (is.null(id)) { id <- paste0("\001K", utils::numhash(.fs_intern) + 1L); utils::sethash(.fs_intern, k, id) }
+  id
+}
+.fs_ukey <- function(z) if (.fs_is_uneval(z)) paste0("\001U", z$id) else .fs_ek(z$key)
 .fs_uneval_basic <- function(z) {
   switch(z$func, Add = .add(z$args), Mul = .mul(z$args), Pow = .pow(z$args[[1L]], z$args[[2L]]))
 }
@@ -138,7 +146,7 @@
         changed <- union(changed, k)
       }
     }
-    if (i %in% changed) assign(funcs[[i]]$key, .fs_uneval(func_class, .fs_tr_values(tr, tr$func_to_argset[[i]])), envir = opt)
+    if (i %in% changed) assign(.fs_ek(funcs[[i]]$key), .fs_uneval(func_class, .fs_tr_values(tr, tr$func_to_argset[[i]])), envir = opt)
     .fs_tr_stop(tr, i)
   }
   invisible()
@@ -154,14 +162,14 @@
   find <- function(z) {
     if (!is_sym(z) || .fs_is_atomish(z)) return(invisible())
     if (.fs_is_iter(z)) { lapply(z$args, find); return(invisible()) }
-    if (exists(z$key, envir = seen, inherits = FALSE)) return(invisible())
-    assign(z$key, TRUE, envir = seen)
+    if (exists(.fs_ek(z$key), envir = seen, inherits = FALSE)) return(invisible())
+    assign(.fs_ek(z$key), TRUE, envir = seen)
     lapply(.fs_cse_args(z), find)
     if (!.fs_is_matrix_expr_node(z) && could_extract_minus_sign(z)) {
       ng <- if (z$type == "Add") .add(lapply(z$args, .neg)) else .neg(z)
       if (length(ng$args)) {
-        assign(z$key, .fs_uneval("Mul", list(S_NegativeOne, ng)), envir = opt)
-        assign(ng$key, TRUE, envir = seen)
+        assign(.fs_ek(z$key), .fs_uneval("Mul", list(S_NegativeOne, ng)), envir = opt)
+        assign(.fs_ek(ng$key), TRUE, envir = seen)
         z <- ng
       }
     }
@@ -171,7 +179,7 @@
       if (is.null(adds[[z$key]])) adds[[z$key]] <<- z
     } else if (z$type == "Pow") {
       b <- z$args[[1L]]; ex <- z$args[[2L]]
-      if (could_extract_minus_sign(ex)) assign(z$key, .fs_uneval("Pow", list(.pow(b, .neg(ex)), S_NegativeOne)), envir = opt)
+      if (could_extract_minus_sign(ex)) assign(.fs_ek(z$key), .fs_uneval("Pow", list(.pow(b, .neg(ex)), S_NegativeOne)), envir = opt)
     }
     invisible()
   }
@@ -184,7 +192,7 @@
       c_mul <- .mul(c)
       if (length(nc)) {
         new_obj <- if (is_one_num(c_mul)) .mul(nc) else new_sym("Mul", list(c_mul, .mul(nc)))
-        assign(m$key, new_obj, envir = opt)
+        assign(.fs_ek(m$key), new_obj, envir = opt)
       }
       if (length(c) > 1L && is.null(cmuls[[c_mul$key]])) cmuls[[c_mul$key]] <- c_mul
     }
@@ -201,7 +209,7 @@
   seen <- new.env(parent = emptyenv())
   excluded <- character()
   ign_keys <- vapply(ignore, .k, "")
-  optget <- function(z) if (.fs_is_uneval(z)) NULL else get0(z$key, envir = opt, inherits = FALSE)
+  optget <- function(z) if (.fs_is_uneval(z)) NULL else get0(.fs_ek(z$key), envir = opt, inherits = FALSE)
   find <- function(z) {
     if (!(is_sym(z) || .fs_is_uneval(z))) return(invisible())
     if (!.fs_is_uneval(z)) {

@@ -235,6 +235,11 @@ ask_fact <- function(e, fact) {
   e <- as_sym(e)
   # is_polar: exp_polar, polar_lift, polar symbols and their products and powers
   if (identical(fact, "polar") && !(e$type %in% c("Symbol", "Dummy", "Wild")) && .is_polar(e)) return(TRUE)
+  # an exact number answers its sign and parity without a primality test
+  if ((e$type == "Integer" || e$type == "Rational") && !(fact %in% c("prime", "composite"))) {
+    r <- .number_facts(e, prime = FALSE)[fact]
+    if (!is.na(r)) return(unname(r))
+  }
   f <- .facts(e)
   r <- f[fact]
   if (is.null(r) || length(r) != 1L) stop("unknown fact: ", fact)
@@ -269,7 +274,7 @@ ask_fact <- function(e, fact) {
 }
 
 
-.number_facts <- function(e) {
+.number_facts <- function(e, prime = TRUE) {
   v <- e$value
   s <- if (v > 0) 1 else if (v < 0) -1 else 0
   isint <- e$type == "Integer"
@@ -282,11 +287,11 @@ ask_fact <- function(e, fact) {
     f["even"] <- ev
     f["odd"] <- !ev
     n <- gmp::numerator(v)
-    if (n > 1) {
+    if (prime && n > 1) {
       pr <- gmp::isprime(n) > 0
       f["prime"] <- pr
       f["composite"] <- !pr
-    } else {
+    } else if (prime) {
       f["prime"] <- FALSE
       f["composite"] <- FALSE
     }

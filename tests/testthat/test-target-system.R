@@ -1,10 +1,9 @@
 # Acceptance target: 84 polynomial checks in 42 unknowns taken from a C
-# program. Skipped when the source file is not present.
+# program, one check per line in fixtures/key-system.txt.
 
 test_that("the 84 equation key system solves to a unique solution", {
-  path <- path.expand("~/Downloads/main.c")
-  skip_if_not(file.exists(path))
   skip_on_cran()
+  path <- test_path("fixtures", "key-system.txt")
   pattern <- "^\\s*if \\((.*) != (-?[0-9]+)\\)$"
   checks <- grep(pattern, readLines(path), value = TRUE)
   expect_length(checks, 84L)

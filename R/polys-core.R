@@ -401,8 +401,8 @@ qp_exquo <- function(f, g) {
 }
 
 #' @noRd
-expr_to_qpoly <- function(ex, gens, strict = TRUE) {
-  ex <- expand(as_sym(ex))
+expr_to_qpoly <- function(ex, gens, strict = TRUE, expanded = FALSE) {
+  ex <- if (expanded) as_sym(ex) else expand(as_sym(ex))
   n <- length(gens)
   gk <- vapply(gens, .k, "")
   terms <- if (ex$type == "Add") ex$args else list(ex)
@@ -456,12 +456,12 @@ qpoly_to_expr <- function(p, gens) {
 .to_qpolys <- function(exprs, gens = NULL) {
   exprs <- lapply(exprs, function(z) expand(as_sym(z)))
   if (is.null(gens)) gens <- .find_gens(exprs)
-  polys <- lapply(exprs, expr_to_qpoly, gens = gens, strict = TRUE)
+  polys <- lapply(exprs, expr_to_qpoly, gens = gens, strict = TRUE, expanded = TRUE)
   if (any(vapply(polys, is.null, TRUE))) {
     extra <- .find_gens(exprs)
     gk <- vapply(gens, .k, "")
     for (g in extra) if (!(g$key %in% gk)) gens[[length(gens) + 1L]] <- g
-    polys <- lapply(exprs, expr_to_qpoly, gens = gens, strict = FALSE)
+    polys <- lapply(exprs, expr_to_qpoly, gens = gens, strict = FALSE, expanded = TRUE)
   }
   list(polys = polys, gens = gens)
 }

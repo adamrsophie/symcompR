@@ -259,13 +259,7 @@ EmptySet <- S_EmptySet
 
 # ponytail: insertion sort, O(n^2) key comparisons; fine for printed sets.
 .key_sort <- function(keys, items = keys) {
-  o <- integer()
-  for (i in seq_along(keys)) {
-    j <- length(o)
-    while (j > 0L && .key_cmp(keys[[o[j]]], keys[[i]]) > 0) j <- j - 1L
-    o <- append(o, i, after = j)
-  }
-  items[o]
+  items[.stable_order(length(keys), function(i, j) .key_cmp(keys[[i]], keys[[j]]))]
 }
 
 register_str_printer("SpecialSet", function(e) e$name)
