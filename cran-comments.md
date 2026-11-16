@@ -1,17 +1,21 @@
 ## Resubmission
 
-This resubmission addresses the incoming pretest of 2026-11-16, which reported
-an overall check time of 28 minutes on r-devel-windows-x86_64.
+The incoming pretests of 2026-11-16 reported an overall check time of 28
+minutes, then 24 minutes, on r-devel-windows-x86_64.
 
 * All 39 vignettes are now precomputed (the sources are kept as `.Rmd.orig`
-  and excluded from the build), so rebuilding them runs no package code.
-* The slowest tests and one slow example now skip on CRAN; the tests that
-  run on CRAN take about 20 seconds locally.
-* Of the remaining time, about 13 minutes on Windows is the step "checking R
-  code for possible problems". That step scales with the amount of R code
-  (about 187,000 lines), and we cannot shorten it without removing
-  functionality. We would be grateful if the check time could be accepted for
-  this reason.
+  and excluded from the build), so rebuilding them runs no package code
+  (189 s to 40 s on Windows).
+* The slowest tests now skip on CRAN (174 s to 81 s on Windows); the full
+  comparison with SymPy's test suite runs in continuous integration.
+* One slow example no longer runs.
+* About 13 minutes on Windows is the step "checking R code for possible
+  problems". That step scales with the amount of R code (about 187,000
+  lines), and it cannot be shortened without removing functionality. We would
+  be grateful if the check time could be accepted for this reason.
+* `Authors@R` now lists only the maintainer; the authors of the ported
+  projects are credited through the `Copyright` field and `inst/COPYRIGHTS`,
+  which keeps their license notices.
 
 The words flagged as possibly misspelled, "combinatorics" and
 "multiprecision", are spelled correctly; they are standard terms in
