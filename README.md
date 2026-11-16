@@ -2,7 +2,7 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/adamrsophie/symcompR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/adamrsophie/symcompR/actions/workflows/R-CMD-check.yaml)
-[![test-coverage](https://github.com/adamrsophie/symcompR/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/adamrsophie/symcompR/actions/workflows/test-coverage.yaml)
+[![Codecov test coverage](https://codecov.io/gh/adamrsophie/symcompR/graph/badge.svg)](https://app.codecov.io/gh/adamrsophie/symcompR)
 [![pkgdown](https://github.com/adamrsophie/symcompR/actions/workflows/pkgdown.yaml/badge.svg)](https://adamrsophie.github.io/symcompR/)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
