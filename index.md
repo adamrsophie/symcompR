@@ -111,8 +111,8 @@ pprint((x + 1)/(y - 2) + sqrt(x^2 + 1), use_unicode = FALSE)
 | Other modules | Geometry in 2D and 3D, statistics, discrete transforms, quaternions, plotting |
 | Printing | `str`, `srepr`, LaTeX, MathML, 2D pretty printing, `TableForm`, and code for C, C++, Fortran, JavaScript, Julia, Mathematica, Maple, Octave, R, Python, Rust, GLSL, and SMT-LIB |
 
-Coverage is a work in progress: 867 of the 901 names in SymPy’s top
-level API (96 percent) are available, counted by name. A ported function
+Coverage is a work in progress: 869 of the 925 names in SymPy’s top
+level API (94 percent) are available, counted by name. A ported function
 can still handle fewer input classes than its SymPy counterpart. Python
 classes and exceptions with no R meaning (`Basic`, `Expr`,
 `PolynomialError`, domain objects such as `ZZ`) are not planned.
@@ -163,7 +163,7 @@ classes and exceptions with no R meaning (`Basic`, `Expr`,
   SymPy: the Diophantine solver matches SymPy on 52 of 53 equations (the
   last differs only in its error message), and the number theory module
   is compared function by function.
-- `R CMD check --as-cran` passes with no errors, warnings, or notes.
+- `R CMD check --as-cran` passes with no errors or warnings.
 
 ## Citing symcompR
 

@@ -288,7 +288,7 @@
 </tr>
 </tbody>
 </table>
-<p>Coverage is a work in progress: 867 of the 901 names in SymPy’s top level API (96 percent) are available, counted by name. A ported function can still handle fewer input classes than its SymPy counterpart. Python classes and exceptions with no R meaning (<code>Basic</code>, <code>Expr</code>, <code>PolynomialError</code>, domain objects such as <code>ZZ</code>) are not planned.</p>
+<p>Coverage is a work in progress: 869 of the 925 names in SymPy’s top level API (94 percent) are available, counted by name. A ported function can still handle fewer input classes than its SymPy counterpart. Python classes and exceptions with no R meaning (<code>Basic</code>, <code>Expr</code>, <code>PolynomialError</code>, domain objects such as <code>ZZ</code>) are not planned.</p>
 </div>
 <div class="section level2">
 <h2 id="differences-from-sympy">Differences from SymPy<a class="anchor" aria-label="anchor" href="#differences-from-sympy"></a>
@@ -310,7 +310,7 @@
 <li>Expected values in the test suite come from SymPy, pinned to commit <code>86150a81</code>, run as an oracle on the same inputs.</li>
 <li>Larger modules have dedicated differential test harnesses against SymPy: the Diophantine solver matches SymPy on 52 of 53 equations (the last differs only in its error message), and the number theory module is compared function by function.</li>
 <li>
-<code>R CMD check --as-cran</code> passes with no errors, warnings, or notes.</li>
+<code>R CMD check --as-cran</code> passes with no errors or warnings.</li>
 </ul>
 </div>
 <div class="section level2">

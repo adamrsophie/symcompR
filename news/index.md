@@ -3,7 +3,7 @@
 ## symcompR 0.1.0
 
 - First version: a native R port of SymPy (pinned to commit `86150a81`),
-  with no Python dependency. It covers 867 of the 901 names in SymPy’s
+  with no Python dependency. It covers 869 of the 925 names in SymPy’s
   top level API: core arithmetic and assumptions, elementary and special
   functions, calculus, integration and integral transforms, polynomials,
   algebraic number theory and Galois groups, simplification, solvers

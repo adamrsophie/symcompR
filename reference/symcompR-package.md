@@ -44,3 +44,15 @@ Other contributors:
   code is ported) \[copyright holder\]
 
 - mpmath contributors \[copyright holder\]
+
+- Erez Shinan (Author of 'lark', from which the Earley parser is ported)
+  \[copyright holder\]
+
+- Matthew Rocklin (Author of 'multipledispatch', from which the dispatch
+  code is ported) \[copyright holder\]
+
+- latex2sympy authors (Authors of 'latex2sympy', from which SymPy's
+  LaTeX parser derives) \[copyright holder\]
+
+- Sergey B Kirpichev (Author of patches from 'Diofant' included in
+  'SymPy') \[copyright holder\]

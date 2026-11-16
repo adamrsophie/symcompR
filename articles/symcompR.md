@@ -307,7 +307,7 @@ Base R behavior is untouched for ordinary R values:
 diff(c(1, 4, 9, 16))
 #> [1] 3 5 7
 sym_factorial(5)
-#> [1] 120
+#> 120
 ```
 
 ## Printing

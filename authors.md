@@ -12,6 +12,18 @@
 
 - **mpmath contributors**. Copyright holder.
 
+- **Erez Shinan**. Copyright holder.  
+  Author of 'lark', from which the Earley parser is ported
+
+- **Matthew Rocklin**. Copyright holder.  
+  Author of 'multipledispatch', from which the dispatch code is ported
+
+- **latex2sympy authors**. Copyright holder.  
+  Authors of 'latex2sympy', from which SymPy's LaTeX parser derives
+
+- **Sergey B Kirpichev**. Copyright holder.  
+  Author of patches from 'Diofant' included in 'SymPy'
+
 ## Citation
 
 Source:

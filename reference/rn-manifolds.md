@@ -56,6 +56,11 @@ Manifolds, patches, coordinate systems and lists.
 
   A coordinate index, from 0.
 
+## Value
+
+`BaseScalarField()`, `BaseVectorField()` and `CoordinateSymbol()` return
+`sym` expressions.
+
 ## Examples
 
 ``` r
