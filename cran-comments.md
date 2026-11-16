@@ -23,7 +23,7 @@ from source takes about three minutes because of the amount of R code.
 
 ## Tests and examples
 
-The tests that run on CRAN take about 80 seconds. Slower comparisons with
+The tests that run on CRAN take about 40 seconds. Slower comparisons with
 SymPy's own test suite are skipped on CRAN with `skip_on_cran()` and run in
 continuous integration. Examples that take longer than a few seconds are
 wrapped in `\donttest{}`.
