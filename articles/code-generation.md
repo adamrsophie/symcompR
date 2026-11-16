@@ -665,10 +665,10 @@ a complete function:
 
 cat(ccode(newtons_method(cos(xr) - xr^3, xr)), "\n")
 #> {
-#>    double _Dummy_117 = INFINITY;
-#>    while (fabs(_Dummy_117) > 3.9999999999999999e-16*fabs(x) + 9.9999999999999998e-13) {
-#>       _Dummy_117 = (pow(x, 3) - cos(x))/(-3*pow(x, 2) - sin(x));
-#>       x += _Dummy_117;
+#>    double _Dummy_111 = INFINITY;
+#>    while (fabs(_Dummy_111) > 3.9999999999999999e-16*fabs(x) + 9.9999999999999998e-13) {
+#>       _Dummy_111 = (pow(x, 3) - cos(x))/(-3*pow(x, 2) - sin(x));
+#>       x += _Dummy_111;
 #>    };
 #> }
 cat(ccode(newtons_method_function(cos(xr) - xr^3, xr)), "\n")
