@@ -309,6 +309,7 @@ qp_rem_multi <- function(f, gs) {
 # when g does not divide f, or NULL to leave the case to the bigq division.
 qp_exquo <- function(f, g) {
   if (qp_is_zero(g)) stop("polynomial division by zero")
+  if (qp_is_zero(f)) return(f)
   r <- .qp_exquo_dbl(f, g)
   if (is.null(r)) r <- .qp_exquo_big(f, g)
   if (isFALSE(r)) return(NULL)

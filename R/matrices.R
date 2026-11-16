@@ -342,10 +342,60 @@ rbind.symmatrix <- function(..., deparse.level = 1) {
 # Determinant, inverse, row reduction
 
 # Bareiss fraction-free determinant of a list of rows.
+# Bareiss elimination directly on the polynomials, for a matrix whose entries
+# are polynomials in commutative symbols with rational coefficients. Every
+# division is exact in that ring; NULL leaves other matrices to the
+# expression path below.
+.det_bareiss_qp <- function(rows) {
+  n <- length(rows)
+  ents <- unlist(rows, recursive = FALSE)
+  if (any(vapply(ents, function(e) .has_type(e, "Float"), NA))) return(NULL)
+  gens <- .find_gens(ents)
+  if (!length(gens) || !all(vapply(gens, function(g) g$type %in% c("Symbol", "Dummy") && !identical(g$extra$facts[["commutative"]], FALSE), NA))) return(NULL)
+  P <- vector("list", n)
+  for (i in seq_len(n)) {
+    P[[i]] <- vector("list", n)
+    for (j in seq_len(n)) {
+      q <- expr_to_qpoly(rows[[i]][[j]], gens, strict = TRUE)
+      if (is.null(q) || any(q$e < 0L)) return(NULL)
+      P[[i]][[j]] <- q
+    }
+  }
+  sign <- 1
+  prev <- NULL
+  for (k in seq_len(n - 1L)) {
+    if (qp_is_zero(P[[k]][[k]])) {
+      sw <- NA
+      for (i in (k + 1L):n) if (!qp_is_zero(P[[i]][[k]])) {
+        sw <- i
+        break
+      }
+      if (is.na(sw)) return(S_Zero)
+      tmp <- P[[k]]; P[[k]] <- P[[sw]]; P[[sw]] <- tmp
+      sign <- -sign
+    }
+    for (i in (k + 1L):n) {
+      for (j in (k + 1L):n) {
+        num <- qp_sub(qp_mul(P[[i]][[j]], P[[k]][[k]]), qp_mul(P[[i]][[k]], P[[k]][[j]]))
+        if (!is.null(prev)) {
+          num <- qp_exquo(num, prev)
+          if (is.null(num)) return(NULL)
+        }
+        P[[i]][[j]] <- num
+      }
+    }
+    prev <- P[[k]][[k]]
+  }
+  r <- P[[n]][[n]]
+  if (sign < 0) r <- qp_neg(r)
+  qpoly_to_expr(r, gens)
+}
+
 .det_bareiss <- function(rows) {
   n <- length(rows)
   if (n == 0L) return(S_One)
   if (n == 1L) return(rows[[1L]][[1L]])
+  if (n > 2L && !is.null(r <- .det_bareiss_qp(rows))) return(r)
   if (n == 2L) return(expand(.sub(.mul(list(rows[[1L]][[1L]], rows[[2L]][[2L]])),
                                   .mul(list(rows[[1L]][[2L]], rows[[2L]][[1L]])))))
   M <- rows

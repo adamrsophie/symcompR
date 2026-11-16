@@ -186,6 +186,10 @@
         if (!is.na(rv)) return(rv)
       }
     }
+    if (length(ovars) == 1L && identical(ovk, ek)) {
+      rv <- .so_power_contains(oexpr, .mul(.so_indep(eexpr, ovars)[[2L]]), ovars[[1L]], point)
+      if (!is.na(rv)) return(rv)
+    }
     ratio <- powsimp(.div(oexpr, eexpr), deep = TRUE, combine = "exp")
     r <- NULL
     for (s in common) {
@@ -207,6 +211,26 @@
     }
   }
   .so_contains(o, .so_new(expr, ovars, pts))
+}
+
+# The ratio limit for two powers of one symbol with rational exponents,
+# x^p against x^q (x itself is p = 1, a nonzero constant p = 0): at 0 the
+# order x^p contains x^q when p <= q, at oo when p >= q. NA otherwise.
+.so_power_contains <- function(oexpr, other, symbol, point) {
+  ex <- function(t) {
+    if (identical(t$key, symbol$key)) return(S_One)
+    if (t$type == "Integer" && !is_zero_num(t)) return(S_Zero)
+    if (t$type == "Pow" && identical(t$args[[1L]]$key, symbol$key) &&
+        t$args[[2L]]$type %in% c("Integer", "Rational")) return(t$args[[2L]])
+    NULL
+  }
+  p <- ex(oexpr)
+  q <- if (is.null(p)) NULL else ex(other)
+  if (is.null(q)) return(NA)
+  d <- p$value - q$value
+  if (is_zero_num(point)) return(d <= 0)
+  if (identical(point$key, S_Infinity$key)) return(d >= 0)
+  NA
 }
 
 # Limit(ratio, s, point).doit(heuristics=False); the limit engine stands in

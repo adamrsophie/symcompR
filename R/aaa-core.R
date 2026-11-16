@@ -42,6 +42,13 @@
 .nc_state$any <- FALSE
 .qm_state <- new.env()
 .qm_state$on <- FALSE
+# The Add, Mul and Pow constructors are memoized by argument keys, as SymPy's
+# @cacheit on AssocOp.__new__ and Pow.__new__. That is exact only while a key
+# determines its object; .ctor_state$off is set for good once two symbols
+# share a key but not their given assumptions (srepr reads them).
+.ctor_state <- new.env()
+.ctor_state$off <- FALSE
+.sym_given <- utils::hashtab()
 
 new_sym <- function(type, args = list(), name = NULL, value = NULL,
                     extra = NULL, key = NULL) {
@@ -583,9 +590,14 @@ Symbol <- function(name, ...) {
   if (identical(facts[["commutative"]], FALSE)) .nc_state$any <- TRUE
   extra <- list(facts = facts, given = given)
   if (length(sp$other)) extra$other <- sp$other
-  new_sym("Symbol", name = name, extra = extra,
-          key = paste0("S", nchar(name), ":", name, .assumption_suffix(facts),
-                       .other_facts_suffix(sp$other)))
+  key <- paste0("S", nchar(name), ":", name, .assumption_suffix(facts),
+                .other_facts_suffix(sp$other))
+  if (!.ctor_state$off) {
+    g0 <- utils::gethash(.sym_given, key)
+    if (is.null(g0)) utils::sethash(.sym_given, key, list(given))
+    else if (!identical(g0[[1L]], given)) .ctor_state$off <- TRUE
+  }
+  new_sym("Symbol", name = name, extra = extra, key = key)
 }
 
 # Assumptions outside the fact system, such as the Fermi level ones of

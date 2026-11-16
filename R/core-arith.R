@@ -67,7 +67,35 @@ as_coeff_mul_split <- function(a) {
 # AssocOp.__new__ (sympy/core/operations.py:74)
 .rel_in_assoc <- function(cls) stop(.sympy_condition("TypeError", paste0("Relational cannot be used in ", cls)))
 
+# Constructor memo (see .ctor_state). It is bypassed once a noncommutative
+# or quantum object exists (their extra fields are not in the keys), under
+# evaluate(FALSE), while global assumptions are in force, and for arguments
+# holding a Wild, whose properties are closures the key does not describe.
+.ctor_tab <- .htab()
+.ctor_off <- function() .ctor_state$off || .nc_state$any || .qm_state$on ||
+  isTRUE(.EVAL$off) || length(global_assumptions$preds) > 0L
+.ctor_memo <- function(k, expr) {
+  if (grepl("\002WF?[0-9]|[(,]WF?[0-9]", k)) return(expr)
+  hit <- utils::gethash(.ctor_tab, k)
+  if (!is.null(hit)) return(hit)
+  v <- expr
+  .hset(.ctor_tab, k, v)
+  v
+}
 .add <- function(args) {
+  if (length(args) < 2L || .ctor_off()) return(.add_raw(args))
+  .ctor_memo(paste(c("A", vapply(args, .subset2, "", "key")), collapse = "\002"), .add_raw(args))
+}
+.mul <- function(args, depth = 0L) {
+  if (length(args) < 2L || depth != 0L || .ctor_off()) return(.mul_raw(args, depth))
+  .ctor_memo(paste(c("M", vapply(args, .subset2, "", "key")), collapse = "\002"), .mul_raw(args, depth))
+}
+.pow <- function(b, e) {
+  if (!is_sym(b) || !is_sym(e) || .ctor_off()) return(.pow_raw(b, e))
+  .ctor_memo(paste("P", .subset2(b, "key"), .subset2(e, "key"), sep = "\002"), .pow_raw(b, e))
+}
+
+.add_raw <- function(args) {
   n <- length(args)
   if (n == 0L) return(S_Zero)
   if (n == 1L) return(args[[1L]])
@@ -246,7 +274,7 @@ as_coeff_mul_split <- function(a) {
 .EXP_POLAR_1 <- new_sym("Function", list(new_sym("Integer", value = gmp::as.bigq(1), key = "Z1")), name = "exp_polar",
                         key = "exp_polar(Z1)")
 
-.mul <- function(args, depth = 0L) {
+.mul_raw <- function(args, depth = 0L) {
   n <- length(args)
   if (n == 0L) return(S_One)
   if (n == 1L) return(args[[1L]])
@@ -528,7 +556,7 @@ as_coeff_mul_split <- function(a) {
 # ---------------------------------------------------------------------------
 # Pow
 
-.pow <- function(b, e) {
+.pow_raw <- function(b, e) {
   if (is_sym(b) && b$type == "Order") { r <- .order_pow(b, as_sym(e)); if (!is.null(r)) return(r) }
   if (!is.null(.arith_hooks$pow_pre)) { r <- .arith_hooks$pow_pre(b, e); if (!is.null(r)) return(r) }
   bt <- b$type

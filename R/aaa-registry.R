@@ -97,7 +97,7 @@ def_function <- function(name, nargs = 1L, eval = NULL, diff = NULL,
 #' clear_cache()
 #' @export
 clear_cache <- function() {
-  for (h in list(.cacheit_store, .fact_cache, .fs_cache, .comm_tab)) .hclear(h)
+  for (h in list(.cacheit_store, .fact_cache, .fs_cache, .comm_tab, .ctor_tab)) .hclear(h)
   invisible(NULL)
 }
 

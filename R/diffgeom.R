@@ -210,7 +210,10 @@ point_to_coords <- function(cs, pt) .dg_point_coords(pt, cs)
 
 #' @rdname diffgeom
 #' @export
-base_scalar <- function(cs, coord_index) new_sym("BaseScalarField", list(cs, .int(coord_index)))
+base_scalar <- function(cs, coord_index) {
+  .nc_state$any <- TRUE
+  new_sym("BaseScalarField", list(cs, .int(coord_index)))
+}
 #' @rdname diffgeom
 #' @export
 base_scalars <- function(cs) if (.is_coordsys(cs)) .pytuple(.cs(cs)$base_scalars) else lapply(seq_len(.dg_dim(cs)) - 1L, function(i) base_scalar(cs, i))
