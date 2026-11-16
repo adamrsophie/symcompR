@@ -8,7 +8,15 @@ Authors@R:
              comment = "Author of 'SymPy', from which the algorithms are ported"),
       person("Fredrik", "Johansson", role = "cph",
              comment = "Author of 'mpmath', from which the multiprecision code is ported"),
-      person("mpmath contributors", role = "cph"))
+      person("mpmath contributors", role = "cph"),
+      person("Erez", "Shinan", role = "cph",
+             comment = "Author of 'lark', from which the Earley parser is ported"),
+      person("Matthew", "Rocklin", role = "cph",
+             comment = "Author of 'multipledispatch', from which the dispatch code is ported"),
+      person("latex2sympy authors", role = "cph",
+             comment = "Authors of 'latex2sympy', from which SymPy's LaTeX parser derives"),
+      person("Sergey B", "Kirpichev", role = "cph",
+             comment = "Author of patches from 'Diofant' included in 'SymPy'"))
 Description: A native R computer algebra system ported from the Python
     library 'SymPy'. Provides exact integer and rational arithmetic,
     automatically simplified symbolic expressions, assumptions, symbolic
@@ -29,7 +37,9 @@ Depends: R (>= 4.3.0)
 Imports:
     gmp,
     graphics,
+    grDevices,
     stats,
+    tools,
     utils
 Suggests:
     knitr,

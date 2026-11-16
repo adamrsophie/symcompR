@@ -57,7 +57,7 @@ sym_factor <- function(x, ...) factor_sym(x, ...)
 
 #' @rdname special-functions
 #' @export
-sym_factorial <- factorial
+sym_factorial <- function(x) fcall("factorial", list(as_sym(x)))
 
 #' @rdname elementary-functions
 #' @export

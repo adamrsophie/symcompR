@@ -102,9 +102,9 @@
 #'   `roots_quintic()` a list of expressions.
 #' @examples
 #' x <- Symbol("x")
+#' \donttest{
 #' q <- PolyQuintic(x^5 - 5 * x + 12)
 #' q$f20
-#' \donttest{
 #' # solving the quintic in radicals takes about 30 seconds
 #' length(roots_quintic(x^5 - 5 * x + 12))
 #' }

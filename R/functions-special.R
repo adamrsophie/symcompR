@@ -269,7 +269,14 @@ def_function("factorial2",
     n <- args[[1L]]
     if (n$type == "Integer") {
       v <- .int_val(n)
-      if (v < -1) return(NULL)
+      if (v < -1) {
+        if (v %% 2 == 0)
+          stop("ValueError: argument must be nonnegative integer or negative odd integer", call. = FALSE)
+        # factorial2(n) = factorial2(n + 2)/(n + 2)
+        r <- gmp::as.bigq(1)
+        for (k in seq(v + 2, -1, by = 2)) r <- r / k
+        return(make_rational(r))
+      }
       if (v <= 0) return(S_One)
       r <- gmp::as.bigz(1)
       for (k in seq(v, 1, by = -2)) r <- r * k

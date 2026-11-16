@@ -72,7 +72,7 @@ test_that("simplification functions", {
 
 test_that("special functions", {
   expect_equal(s(sym_factorial(S(20))), "2432902008176640000")
-  expect_equal(sym_factorial(5), 120)
+  expect_equal(sstr(sym_factorial(5)), "120")
   expect_equal(s(zeta(S(2))), "pi^2/6")
   expect_equal(s(zeta(S(-1))), "-1/12")
   expect_equal(s(gamma(S(1)/2)), "sqrt(pi)")

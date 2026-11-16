@@ -8,6 +8,8 @@ ns <- asNamespace("symcompR")
 # Shims mapping Python syntax used by the tests onto the package API. They
 # only route calls; all mathematics is done by package functions.
 H <- new.env(parent = ns)
+# the shims look these names up from H; the package exports an H (entropy)
+assign("H", H, envir = H); assign("ns", ns, envir = H)
 local(envir = H, {
   `%%` <- function(e1, e2) {
     if (is.character(e1)) {

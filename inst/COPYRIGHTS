@@ -19,3 +19,13 @@ and is distributed under the BSD 3-Clause License. The full mpmath
 license text is reproduced in inst/MPMATH-LICENSE and applies to the
 portions of this package derived from mpmath; its notice is retained as
 it requires.
+
+The Earley parser (R/parsing-latex-earley.R) is ported from lark,
+Copyright (c) 2017 Erez Shinan, MIT License. The multiple dispatch code
+(R/utilities-multipledispatch.R) is ported from multipledispatch,
+Copyright (c) 2014 Matthew Rocklin, BSD 3-Clause License. The LaTeX
+parser follows sympy/parsing/latex, which SymPy copied from latex2sympy,
+Copyright 2016 latex2sympy, MIT License. SymPy includes patches from
+Diofant, Copyright (c) 2006-2018 SymPy Development Team and 2013-2023
+Sergey B Kirpichev, BSD 3-Clause License. The full notices are
+reproduced in inst/THIRD-PARTY-NOTICES.

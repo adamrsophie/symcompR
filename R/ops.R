@@ -225,7 +225,7 @@ c.sym <- function(...) lapply(list(...), as_sym)
         # Add._eval_is_extended_real through _fuzzy_group: extended real
         # terms and one that is not make a difference that is not real,
         # so not zero
-        else if (d$type == "Add" && {
+        else if (d$type == "Add" && !identical(unname(fd["commutative"]), FALSE) && {
           er <- vapply(d$args, function(t) { v <- ask_fact(t, "extended_real"); if (length(v) == 1L) v else NA }, NA)
           !anyNA(er) && sum(!er) == 1L
         }) FALSE

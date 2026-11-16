@@ -125,7 +125,12 @@ matrix_to_zero <- function(e) {
 #' @examples
 #' normalized(TRUE)
 #' @export
-normalized <- function(normalize) { .qnormalized$on <- isTRUE(normalize); invisible(NULL) }
+normalized <- function(normalize) {
+  if (!is.logical(normalize) || length(normalize) != 1L || is.na(normalize))
+    stop("normalized() sets the gate normalization flag and takes TRUE or FALSE", call. = FALSE)
+  .qnormalized$on <- normalize
+  invisible(NULL)
+}
 
 # ---------------------------------------------------------------------------
 # Gates

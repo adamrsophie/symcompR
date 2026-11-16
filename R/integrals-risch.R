@@ -739,7 +739,7 @@ integrate_nonlinear_no_specials <- function(a, d, DE, z = NULL) {
 # NonElementaryIntegral: an Integral that prints and behaves as one
 NonElementaryIntegral <- function(f, ...) {
   r <- Integral(f, ...)
-  new_sym("Integral", r$args, extra = "NonElementary", key = paste0("NonElementary", r$key))
+  new_sym("Integral", r$args, extra = c(r$extra, list(nonelementary = TRUE)), key = paste0("NonElementary", r$key))
 }
 
 #' The Risch algorithm
@@ -788,7 +788,7 @@ risch_integrate <- function(f, x, extension = NULL, handle_first = "log", separa
       result <- .de_backsubs_apply(result, DE)
       if (!is_zero_num(i)) i <- NonElementaryIntegral(.de_backsubs_apply(i$args[[1L]], DE), i$args[[2L]])
       if (!separate_integral) return(.add(list(result, i)))
-      if (identical(i$extra, "NonElementary")) return(list(result, i))
+      if (isTRUE(i$extra$nonelementary)) return(list(result, i))
       return(list(result, S_Zero))
     }
   }

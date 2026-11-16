@@ -97,6 +97,19 @@ as_coeff_mul_split <- function(a) {
   } else {
     keys <- vapply(args, .k, "")
   }
+  # Add.flatten: a number to an integer or negative rational power that was
+  # built unevaluated is evaluated when it joins a sum
+  if (any(types == "Pow") && !isTRUE(.EVAL$off)) {
+    re <- FALSE
+    for (i in which(types == "Pow")) {
+      b <- args[[i]]$args[[1L]]; ex <- args[[i]]$args[[2L]]
+      if (is_number_type(b) && (ex$type == "Integer" || (ex$type == "Rational" && num_sign(ex) < 0))) {
+        v <- .pow(b, ex)
+        if (!identical(v$key, args[[i]]$key)) { args[[i]] <- v; re <- TRUE }
+      }
+    }
+    if (re) return(.add(args))
+  }
   if (any(types == "Order")) return(.add_with_order(args, types))
   if (any(types == "AccumulationBounds")) {
     # bounds absorb the numbers of the sum, as Add.flatten does

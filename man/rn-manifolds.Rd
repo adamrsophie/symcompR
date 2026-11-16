@@ -54,6 +54,10 @@ R3_s
 
 \item{index}{A coordinate index, from 0.}
 }
+\value{
+\code{BaseScalarField()}, \code{BaseVectorField()} and \code{CoordinateSymbol()}
+return \code{sym} expressions.
+}
 \description{
 \code{R2}, \code{R3}, their patches \code{R2_origin} and \code{R3_origin}, the coordinate
 systems \code{R2_r} (rectangular), \code{R2_p} (polar), \code{R3_r}, \code{R3_c}

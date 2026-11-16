@@ -163,6 +163,13 @@ Ops.Poly <- function(e1, e2) {
           else if (.Generic == "^" && is.numeric(e2) && length(e2) == 1L && e2 >= 0 && e2 == round(e2)) function(a, b) qp_pow(a, as.integer(e2))
     if (!is.null(op)) { out <- unclass(e1); out$rep <- op(e1$rep, if (same) e2$rep); return(structure(out, class = "Poly")) }
   }
+  if (!missing(e2) && .Generic %in% c("%/%", "%%")) return(if (.Generic == "%/%") quo(e1, e2) else rem(e1, e2))
+  if (!missing(e2) && .Generic %in% c("==", "!=") && inherits(e1, "Poly") && inherits(e2, "Poly")) {
+    gk <- function(p) vapply(p$gens[seq_len(.poly_ngens(p))], .k, "")
+    eq <- identical(gk(e1), gk(e2)) && identical(e1$modulus, e2$modulus) &&
+      identical(.k(as_expr(e1)), .k(as_expr(e2)))
+    return(if (.Generic == "==") eq else !eq)
+  }
   g <- if (inherits(e1, "Poly")) e1$gens else e2$gens
   a <- if (inherits(e1, "Poly")) as_expr(e1) else as_sym(e1)
   # Poly._unify: the result keeps the modulus (or explicit domain) of the operands

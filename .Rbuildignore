@@ -25,3 +25,4 @@
 ^doc$
 ^Meta$
 ^Rplots\.pdf$
+^vignettes/.*\.Rmd\.orig$

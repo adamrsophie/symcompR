@@ -1931,6 +1931,8 @@ all_assumptions <- c("algebraic", "commutative", "complex", "composite", "even",
 #' @param coord_sys A coordinate system.
 #' @param index A coordinate index, from 0.
 #' @format Manifolds, patches, coordinate systems and lists.
+#' @return `BaseScalarField()`, `BaseVectorField()` and `CoordinateSymbol()`
+#'   return `sym` expressions.
 #' @examples
 #' R2_r
 #' BaseScalarField(R2_r, 0)

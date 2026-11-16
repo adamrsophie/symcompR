@@ -224,10 +224,9 @@ print.symmatrix <- function(x, ...) {
 
 #' @export
 as.matrix.symmatrix <- function(x, ...) {
-  v <- vapply(x$data, function(e) {
-    r <- tryCatch(.neval(e, list()), error = function(err) NA_real_)
-    if (is.complex(r)) NA_real_ else r
-  }, 0)
+  v <- lapply(x$data, function(e) tryCatch(.neval(e, list()), error = function(err) NA_real_))
+  v <- unlist(v)
+  if (anyNA(v)) warning("entries that are not numbers became NA; use N() or subs() first", call. = FALSE)
   matrix(v, x$nrow, x$ncol, byrow = TRUE)
 }
 

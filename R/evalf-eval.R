@@ -245,7 +245,11 @@
   # MinMaxBase.evalf maps over the arguments, numbers or not
   if (e$name %in% c("Max", "Min")) return(sym_rebuild(e, lapply(e$args, .ev_evalf_or_self, prec)))
   if (e$name == "polar_lift") return(.ev_evalf_or_self(e$args[[1L]], prec))
-  if (!all(vapply(e$args, .ev_is_number, NA))) return(NULL)
+  if (!all(vapply(e$args, .ev_is_number, NA))) {
+    # an _eval_evalf that rewrites (logaddexp): the rewritten form, evaluated
+    h <- .FUNS[[e$name]]$evalf
+    return(if (is.null(h)) NULL else .ev_evalf_or_self(h(e), prec))
+  }
   if (e$name == "exp_polar") return(.ev_exp_polar_evalf(e, prec))
   # catalan._eval_evalf and mpmath's rf and ff: through gamma
   if (e$name %in% c("catalan", "RisingFactorial", "FallingFactorial")) {
@@ -280,8 +284,10 @@
   }
   h <- .FUNS[[e$name]]$evalf
   if (!is.null(h)) {
-    r <- tryCatch(.ev_evalf(h(e), prec, .ev_options()), NotImplementedError = function(err) NULL)
-    if (is.null(r)) return(NULL)
+    g <- h(e)
+    r <- tryCatch(.ev_evalf(g, prec, .ev_options()), NotImplementedError = function(err) NULL)
+    # _eval_evalf returns self.rewrite(...).evalf(), symbolic or not
+    if (is.null(r)) return(.ev_evalf_or_self(g, prec))
     if (.ev_is_zoo(r)) return(S_ComplexInfinity)
     return(.ev_parts_sym(r, prec))
   }

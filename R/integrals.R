@@ -34,6 +34,9 @@ integrate <- function(f, ..., meijerg = NULL, conds = "piecewise", risch = NULL,
     if (length(fs) != 1L) stop("ValueError: specify dummy variables for ", .str(f), call. = FALSE)
     lims <- list(Tuple(fs[[1L]]))
   }
+  for (l in lims) if (!length(free_symbols(l$args[[1L]])))
+    stop("ValueError: Invalid limits given: ", .str(l$args[[1L]]), " is not a variable; ",
+         "a definite integral takes list(x, a, b)", call. = FALSE)
   while (f$type == "Integral") { lims <- c(f$args[-1L], lims); f <- f$args[[1L]] }
   vars <- lapply(lims, function(l) l$args[[1L]])
   pws <- .uniq_syms(Filter(function(z) z$type == "Piecewise", .all_subexprs(f)))

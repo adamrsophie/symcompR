@@ -182,6 +182,8 @@ Integer <- function(p) {
     stop("not an integer: ", format(p))
   }
   if (is.character(p)) return(make_rational(gmp::as.bigq(.str_bigz(p))))
+  if ((is.numeric(p) || is.logical(p)) && length(p) == 1L && !is.finite(p))
+    stop("ValueError: cannot convert ", format(p), " to Integer", call. = FALSE)
   if (is.numeric(p) && is.finite(p) && p != round(p)) return(make_rational(gmp::as.bigq(trunc(p))))
   make_rational(gmp::as.bigq(p))
 }
