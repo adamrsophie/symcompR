@@ -142,6 +142,7 @@ unify_core(t1, unify_compound("Add", list(1, cv)))
 #> $valid
 #> function (e) 
 #> e > 1
+#> <environment: 0x7b32b7a120>
 #> 
 #> attr(,"class")
 #> [1] "unify_condvariable"

@@ -936,7 +936,10 @@ circuit_plot(CNOT(0, 1) * Mz(0) * HadamardGate(0) * SwapGate(0, 1), 2,
              labels = labeller(2))
 ```
 
-![](quantum-mechanics_files/figure-html/unnamed-chunk-32-1.png)
+![plot of chunk
+unnamed-chunk-32](fig-quantum-mechanics-unnamed-chunk-32-1.png)
+
+plot of chunk unnamed-chunk-32
 
 Circuit utilities find and replace subcircuits, and convert between
 numbered and symbolic qubit indices.

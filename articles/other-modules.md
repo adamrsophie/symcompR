@@ -277,7 +277,10 @@ x <- Symbol("x")
 plot(sin(x) / x, list(x, -10, 10))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-12-1.png)
+![plot of chunk
+unnamed-chunk-12](fig-other-modules-unnamed-chunk-12-1.png)
+
+plot of chunk unnamed-chunk-12
 
 ``` r
 
@@ -285,21 +288,30 @@ t <- Symbol("t"); y <- Symbol("y")
 plot_parametric(cos(3 * t), sin(2 * t), list(t, 0, 2 * sym_pi))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-13-1.png)
+![plot of chunk
+unnamed-chunk-13](fig-other-modules-unnamed-chunk-13-1.png)
+
+plot of chunk unnamed-chunk-13
 
 ``` r
 
 plot_implicit(x^2 + y^2 - 1, list(x, -1.5, 1.5), list(y, -1.5, 1.5))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-13-2.png)
+![plot of chunk
+unnamed-chunk-13](fig-other-modules-unnamed-chunk-13-2.png)
+
+plot of chunk unnamed-chunk-13
 
 ``` r
 
 plot3d(x * y, list(x, -1, 1), list(y, -1, 1))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-13-3.png)
+![plot of chunk
+unnamed-chunk-13](fig-other-modules-unnamed-chunk-13-3.png)
+
+plot of chunk unnamed-chunk-13
 
 [`plot_contour()`](https://adamrsophie.github.io/symcompR/reference/plot.sym.md)
 draws level curves, and
@@ -313,7 +325,10 @@ draw curves and surfaces in space.
 plot_contour(x^2 + y^2, list(x, -2, 2), list(y, -2, 2))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-14-1.png)
+![plot of chunk
+unnamed-chunk-14](fig-other-modules-unnamed-chunk-14-1.png)
+
+plot of chunk unnamed-chunk-14
 
 ``` r
 
@@ -322,7 +337,10 @@ plot3d_parametric_surface(cos(u) * sin(v), sin(u) * sin(v), cos(v),
                           list(u, 0, 2 * sym_pi), list(v, 0, sym_pi))
 ```
 
-![](other-modules_files/figure-html/unnamed-chunk-14-2.png)
+![plot of chunk
+unnamed-chunk-14](fig-other-modules-unnamed-chunk-14-2.png)
+
+plot of chunk unnamed-chunk-14
 
 [`interval()`](https://adamrsophie.github.io/symcompR/reference/intervalmath.md)
 is the interval arithmetic of the plotting module: arithmetic and

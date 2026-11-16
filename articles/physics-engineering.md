@@ -404,7 +404,7 @@ step_response_numerical_data(Gr, n = 5)
 #> [1]  0.0  2.5  5.0  7.5 10.0
 #> 
 #> [[2]]
-#> [1] 0.0000000 1.0233596 1.0745906 0.9741517 1.0021701
+#> [1] -5.551115e-17  1.023360e+00  1.074591e+00  9.741517e-01  1.002170e+00
 impulse_response_numerical_data(G0, n = 3)
 #> [[1]]
 #> [1]  0  5 10
@@ -416,7 +416,7 @@ ramp_response_numerical_data(G0, n = 3)
 #> [1]  0  5 10
 #> 
 #> [[2]]
-#> [1] 3.330669e-16 4.006738e+00 9.000045e+00
+#> [1] -2.220446e-16  4.006738e+00  9.000045e+00
 bode_magnitude_numerical_data(G0, initial_exp = -1, final_exp = 1, n = 3)
 #> [[1]]
 #> [1]  0.1  1.0 10.0
@@ -442,63 +442,90 @@ The plotting functions draw the same data with base R graphics.
 pole_zero_plot(Gr)
 ```
 
-![](physics-engineering_files/figure-html/unnamed-chunk-16-1.png)
+![plot of chunk
+unnamed-chunk-16](fig-physics-engineering-unnamed-chunk-16-1.png)
+
+plot of chunk unnamed-chunk-16
 
 ``` r
 
 step_response_plot(Gr)
 ```
 
-![](physics-engineering_files/figure-html/unnamed-chunk-16-2.png)
+![plot of chunk
+unnamed-chunk-16](fig-physics-engineering-unnamed-chunk-16-2.png)
+
+plot of chunk unnamed-chunk-16
 
 ``` r
 
 impulse_response_plot(Gr)
 ```
 
-![](physics-engineering_files/figure-html/unnamed-chunk-16-3.png)
+![plot of chunk
+unnamed-chunk-16](fig-physics-engineering-unnamed-chunk-16-3.png)
+
+plot of chunk unnamed-chunk-16
 
 ``` r
 
 ramp_response_plot(Gr)
 ```
 
-![](physics-engineering_files/figure-html/unnamed-chunk-16-4.png)
+![plot of chunk
+unnamed-chunk-16](fig-physics-engineering-unnamed-chunk-16-4.png)
+
+plot of chunk unnamed-chunk-16
 
 ``` r
 
 bode_magnitude_plot(Gr)
 ```
 
-![](physics-engineering_files/figure-html/unnamed-chunk-16-5.png)
+![plot of chunk
+unnamed-chunk-16](fig-physics-engineering-unnamed-chunk-16-5.png)
+
+plot of chunk unnamed-chunk-16
 
 ``` r
 
 bode_phase_plot(Gr)
 ```
 
-![](physics-engineering_files/figure-html/unnamed-chunk-16-6.png)
+![plot of chunk
+unnamed-chunk-16](fig-physics-engineering-unnamed-chunk-16-6.png)
+
+plot of chunk unnamed-chunk-16
 
 ``` r
 
 bode_plot(Gr)
 ```
 
-![](physics-engineering_files/figure-html/unnamed-chunk-17-1.png)
+![plot of chunk
+unnamed-chunk-17](fig-physics-engineering-unnamed-chunk-17-1.png)
+
+plot of chunk unnamed-chunk-17
 
 ``` r
 
 nyquist_plot(Gr, n = 50)
 ```
 
-![](physics-engineering_files/figure-html/unnamed-chunk-18-1.png)
+![plot of chunk
+unnamed-chunk-18](fig-physics-engineering-unnamed-chunk-18-1.png)
+
+plot of chunk unnamed-chunk-18
 
 ``` r
 
 nichols_plot(Gr, n = 50)
 ```
 
-![](physics-engineering_files/figure-html/unnamed-chunk-18-2.png)
+![plot of chunk
+unnamed-chunk-18](fig-physics-engineering-unnamed-chunk-18-2.png)
+
+plot of chunk unnamed-chunk-18
 
 ## Beams
 

@@ -86,8 +86,8 @@ factorint(big(2)^67 - 1)
 primefactors(360)
 #> [1] 2 3 5
 factorrat(Rational(-24, 35))
-#> -1  2  3  5  7 
-#>  1  3  1 -1 -1
+#>  2  3 -1  5  7 
+#>  3  1  1 -1 -1
 ```
 
 2^{67} - 1 is the Mersenne number that Cole factored by hand in 1903.
