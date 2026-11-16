@@ -204,7 +204,22 @@ register_str_printer("Derivative", function(e) {
 
 register_bound_vars("Derivative", function(e) character())
 
+# One derivative pass shares a memo: an expression that occurs many times
+# is differentiated once. Keys identify nodes unless the constructor cache
+# is off, and then nothing is memoized.
+.diff_state <- new.env(parent = emptyenv())
 .diff1 <- function(e, x) {
+  if (!length(e$args) || .ctor_off()) return(.diff1_raw(e, x))
+  top <- is.null(.diff_state$memo)
+  if (top) { .diff_state$memo <- utils::hashtab(); on.exit(.diff_state$memo <- NULL) }
+  k <- paste(e$key, x$key, sep = "\002")
+  hit <- utils::gethash(.diff_state$memo, k)
+  if (!is.null(hit)) return(hit)
+  r <- .diff1_raw(e, x)
+  utils::sethash(.diff_state$memo, k, r)
+  r
+}
+.diff1_raw <- function(e, x) {
   if (identical(e$key, x$key)) return(S_One)
   t <- e$type
   if (!length(e$args)) return(S_Zero)

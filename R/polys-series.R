@@ -34,10 +34,7 @@
 .us_mul <- function(f, g) {
   if (!length(f) || !length(g)) return(f[0])
   n <- length(f) + length(g) - 1L
-  r <- .us_lift(f[0], n)
-  if (inherits(g, "bigq") && !inherits(r, "bigq")) r <- gmp::as.bigq(r)
-  for (i in seq_along(f)) for (j in seq_along(g)) r[i + j - 1L] <- r[i + j - 1L] + f[i] * g[j]
-  .us_strip(r)
+  .us_strip(.qq_mul(f, g))
 }
 .us_series_mul <- function(f, g, n) .us_trunc(.us_mul(.us_trunc(f, n), .us_trunc(g, n)), n)
 .us_series_pow <- function(f, k, n) {

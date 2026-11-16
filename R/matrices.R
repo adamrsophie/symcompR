@@ -346,6 +346,28 @@ rbind.symmatrix <- function(..., deparse.level = 1) {
 # are polynomials in commutative symbols with rational coefficients. Every
 # division is exact in that ring; NULL leaves other matrices to the
 # expression path below.
+# Gaussian elimination over QQ for a matrix of Integers and Rationals: one
+# bigq vector per row; NULL for any other entry
+.det_exact_number <- function(rows) {
+  n <- length(rows)
+  ents <- unlist(rows, recursive = FALSE)
+  if (!all(vapply(ents, function(e) e$type %in% c("Integer", "Rational"), NA))) return(NULL)
+  M <- lapply(rows, function(r) gmp::as.bigq(vapply(r, function(e) as.character(e$value), "")))
+  d <- gmp::as.bigq(1L)
+  for (k in seq_len(n)) {
+    p <- which(vapply(k:n, function(i) M[[i]][k] != 0, NA))
+    if (!length(p)) return(S_Zero)
+    p <- p[1L] + k - 1L
+    if (p != k) { tmp <- M[[k]]; M[[k]] <- M[[p]]; M[[p]] <- tmp; d <- -d }
+    piv <- M[[k]][k]; d <- d * piv
+    if (k < n) for (i in (k + 1L):n) {
+      f <- M[[i]][k] / piv
+      if (f != 0) M[[i]] <- M[[i]] - f * M[[k]]
+    }
+  }
+  make_rational(d)
+}
+
 .det_bareiss_qp <- function(rows) {
   n <- length(rows)
   ents <- unlist(rows, recursive = FALSE)
@@ -360,6 +382,14 @@ rbind.symmatrix <- function(..., deparse.level = 1) {
       if (is.null(q) || any(q$e < 0L)) return(NULL)
       P[[i]][[j]] <- q
     }
+  }
+  # a triangular matrix: the product of the diagonal
+  zl <- all(vapply(seq_len(n), function(i) all(vapply(seq_len(i - 1L), function(j) qp_is_zero(P[[i]][[j]]), NA)), NA))
+  zu <- zl || all(vapply(seq_len(n), function(i) all(vapply(seq_len(n - i) + i, function(j) qp_is_zero(P[[i]][[j]]), NA)), NA))
+  if (zl || zu) {
+    r <- P[[1L]][[1L]]
+    for (i in seq_len(n)[-1L]) r <- qp_mul(r, P[[i]][[i]])
+    return(qpoly_to_expr(r, gens))
   }
   sign <- 1
   prev <- NULL
@@ -395,6 +425,7 @@ rbind.symmatrix <- function(..., deparse.level = 1) {
   n <- length(rows)
   if (n == 0L) return(S_One)
   if (n == 1L) return(rows[[1L]][[1L]])
+  if (n > 2L && !is.null(r <- .det_exact_number(rows))) return(r)
   if (n > 2L && !is.null(r <- .det_bareiss_qp(rows))) return(r)
   if (n == 2L) return(expand(.sub(.mul(list(rows[[1L]][[1L]], rows[[2L]][[2L]])),
                                   .mul(list(rows[[1L]][[2L]], rows[[2L]][[1L]])))))

@@ -282,6 +282,13 @@ ask_fact <- function(e, fact) {
          algebraic = TRUE, integer = isint, positive = s > 0,
          negative = s < 0, zero = s == 0, irrational = FALSE,
          imaginary = FALSE, transcendental = FALSE, infinite = FALSE)
+  if (!prime) {
+    # the facts ask_fact answers directly; .facts derives the same ones
+    f <- c(f, complex = TRUE, hermitian = TRUE, noninteger = !isint, nonzero = s != 0,
+           nonnegative = s >= 0, nonpositive = s <= 0, extended_real = TRUE,
+           extended_positive = s > 0, extended_negative = s < 0, extended_nonzero = s != 0,
+           extended_nonnegative = s >= 0, extended_nonpositive = s <= 0)
+  }
   if (isint) {
     ev <- gmp::mod.bigz(gmp::numerator(v), 2) == 0
     f["even"] <- ev

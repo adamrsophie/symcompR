@@ -20,7 +20,7 @@
     if (is.list(z) && !is_sym(z)) { for (a in z) walk(a); return(invisible()) }
     if (!is_sym(z)) return(invisible())
     if (z$type == "Function" && !is.null(z$extra$imp)) {
-      ik <- .cg_imp_key(z$extra$imp)
+      ik <- if (is.null(z$extra$imp_key)) .cg_imp_key(z$extra$imp) else z$extra$imp_key
       if (!is.null(seen[[z$name]]) && !identical(seen[[z$name]], ik))
         .cg_err("ValueError", sprintf("We found more than one implementation with name \"%s\"", z$name))
       seen[[z$name]] <<- ik
@@ -34,11 +34,10 @@
 # f(*args) for an undefined function `name` that carries the implementation
 # `imp` (SymPy's _imp_ class attribute). The implementation is part of the
 # key, as two such functions with different implementations differ.
-.cg_imp_call <- function(name, imp, args) {
+.cg_imp_call <- function(name, imp, args, ik = .cg_imp_key(imp)) {
   r <- fcall(name, lapply(args, as_sym))
   if (!(r$type == "Function" && identical(r$name, name))) return(r)
-  ik <- .cg_imp_key(imp)
-  new_sym("Function", r$args, name = name, extra = list(imp = imp), key = paste0(r$key, "{imp:", ik, "}"))
+  new_sym("Function", r$args, name = name, extra = list(imp = imp, imp_key = ik), key = paste0(r$key, "{imp:", ik, "}"))
 }
 
 #' Add a numerical implementation to an undefined function
@@ -63,7 +62,8 @@ implemented_function <- function(symfunc, implementation) {
   else if (inherits(symfunc, "sym_function") && !is.null(attr(symfunc, "sym_name"))) name <- attr(symfunc, "sym_name")
   else .cg_err("ValueError", "\nsymfunc should be either a string or an UndefinedFunction instance.")
   force(implementation)
-  fn <- function(...) .cg_imp_call(name, implementation, list(...))
+  ik <- .cg_imp_key(implementation)
+  fn <- function(...) .cg_imp_call(name, implementation, list(...), ik)
   structure(fn, class = c("sym_function", "function"), sym_name = name, `_imp_` = implementation)
 }
 

@@ -187,6 +187,14 @@ dpoly <- function(c, x, K) structure(list(c = .dp_strip(c), x = x, K = K), class
 .dp_mul <- function(f, g) {
   if (.dp_zero(f) || .dp_zero(g)) return(.dp_set(f, list()))
   a <- f$c; b <- g$c; K <- f$K
+  # over ZZ and QQ the coefficients are exact numbers: one integer product
+  if (length(a) >= 4L && length(b) >= 4L && .dk(K) %in% c("ZZ", "QQ")) {
+    qa <- .dp_qvec(a); qb <- .dp_qvec(b)
+    if (!is.null(qa) && !is.null(qb)) {
+      pr <- gmp::as.bigq(.qq_mul(qa, qb))
+      return(.dp_set(f, lapply(seq_along(pr), function(i) make_rational(pr[i]))))
+    }
+  }
   n <- length(a) + length(b) - 1L
   out <- vector("list", n)
   for (k in seq_len(n)) {
@@ -201,7 +209,23 @@ dpoly <- function(c, x, K) structure(list(c = .dp_strip(c), x = x, K = K), class
 .dp_mul_term <- function(f, c, j) if (.dp_zero(f) || .d_zero(c)) .dp_set(f, list()) else
   .dp_set(f, c(lapply(f$c, function(z) .dn(f$K, .mul(list(z, c)))), rep(list(S_Zero), j)))
 .dp_add_term <- function(f, c, j) .dp_add(f, .dp_set(f, c(list(c), rep(list(S_Zero), j))))
-.dp_pow <- function(f, n) { r <- .dp_one(f); for (i in seq_len(n)) r <- .dp_mul(r, f); r }
+# the coefficients as one bigq vector, or NULL unless all are exact numbers
+.dp_qvec <- function(cs) {
+  if (!all(vapply(cs, function(z) z$type %in% c("Integer", "Rational"), TRUE))) return(NULL)
+  gmp::as.bigq(vapply(cs, function(z) as.character(z$value), ""))
+}
+.dp_pow <- function(f, n) {
+  # binary powering where products are exact numbers; one factor at a time
+  # elsewhere, so expression coefficients keep the form they had
+  if (!(.dk(f$K) %in% c("ZZ", "QQ"))) { r <- .dp_one(f); for (i in seq_len(n)) r <- .dp_mul(r, f); return(r) }
+  r <- .dp_one(f); b <- f
+  while (n > 0) {
+    if (n %% 2 == 1) r <- .dp_mul(r, b)
+    n <- n %/% 2
+    if (n > 0) b <- .dp_mul(b, b)
+  }
+  r
+}
 .dp_diff <- function(f) {
   n <- length(f$c) - 1L
   if (n < 1L) return(.dp_set(f, list()))

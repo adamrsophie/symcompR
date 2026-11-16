@@ -489,22 +489,8 @@ up_add <- function(a, b) {
 up_sub <- function(a, b) up_add(a, -b)
 
 up_mul <- function(a, b) {
-  la <- length(a)
-  lb <- length(b)
-  if (!la || !lb) return(.bq0())
-  out <- gmp::as.bigq(rep(0, la + lb - 1L))
-  if (la < lb) {
-    tmp <- a
-    a <- b
-    b <- tmp
-    lb <- length(b)
-  }
-  for (j in seq_len(lb)) {
-    if (b[j] == 0) next
-    idx <- j:(j + length(a) - 1L)
-    out[idx] <- out[idx] + a * b[j]
-  }
-  up_trim(out)
+  if (!length(a) || !length(b)) return(.bq0())
+  up_trim(gmp::as.bigq(.qq_mul(a, b)))
 }
 
 up_divmod <- function(a, b) {

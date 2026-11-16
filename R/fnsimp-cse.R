@@ -291,6 +291,8 @@
 
 .fs_cse <- function(exprs, symbols = NULL, optimizations = NULL, postprocess = NULL,
                     order = "canonical", ignore = list(), list = TRUE, prefix = "x") {
+  # the long key table lives for one call
+  on.exit(utils::clrhash(.fs_intern), add = TRUE)
   if (!isTRUE(list)) {
     single <- is_sym(exprs) || inherits(exprs, "symmatrix")
     r <- .fs_cse(if (single) base::list(exprs) else exprs, symbols, optimizations, postprocess = NULL,

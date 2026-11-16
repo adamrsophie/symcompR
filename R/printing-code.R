@@ -272,6 +272,12 @@ lambdify <- function(args, e, cse = FALSE) {
   ok
 }
 
+# functions whose numeric implementation is built from vectorized base R
+# calls only, with no scalar branches: these are called once on the vector
+.LAMB_VECTORIZED <- c("cot", "sec", "csc", "acot", "asec", "acsc", "coth", "sech", "csch",
+                      "acoth", "asech", "acsch", "erfinv", "erfcinv", "log10", "log2", "exp2",
+                      "Abs", "floor", "ceiling", "re", "im", "conjugate", "Heaviside", "hypot")
+
 .LAMB <- new.env()
 .LAMB$dv <- character()
 
@@ -335,6 +341,8 @@ print.DeferredVector <- function(x, ...) { cat(x$name, "\n"); invisible(x) }
              return(as.call(c(list(as.name(nm)), lapply(e$args, .to_call))))
            d <- .FUNS[[nm]]
            if (is.null(d) || is.null(d$numeric)) stop("cannot lambdify ", nm, "()")
+           # an elementwise numeric implementation takes the whole vector
+           if (nm %in% .LAMB_VECTORIZED) return(as.call(c(list(d$numeric), lapply(e$args, .to_call))))
            as.call(c(list(function(...) mapply(d$numeric, ...)), lapply(e$args, .to_call)))
          },
          Piecewise = {

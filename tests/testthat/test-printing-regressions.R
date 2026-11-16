@@ -75,3 +75,11 @@ test_that("implementations with different captured values are different function
   g <- function(z) z^2
   expect_identical(implemented_function("g", g)(x)$key, implemented_function("g", g)(x)$key)
 })
+
+test_that("lambdify calls elementwise numeric implementations once on the vector", {
+  x <- Symbol("x")
+  v <- c(-0.5, 0.1, 0.7)
+  f <- lambdify(x, erfinv(x) + cot(x + 2))
+  expect_equal(f(v), stats::qnorm((v + 1) / 2) / sqrt(2) + 1 / tan(v + 2))
+  expect_false(any(grepl("mapply", deparse(body(f)), fixed = TRUE)))
+})

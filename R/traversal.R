@@ -299,15 +299,20 @@ xreplace <- function(e, rule) {
   pairs <- lapply(pairs, function(p) {
     if (is.character(p[[1L]])) list(.resolve_name(e, p[[1L]]), p[[2L]]) else p
   })
-  keys <- vapply(pairs, function(p) p[[1L]]$key, "")
-  vals <- lapply(pairs, `[[`, 2L)
+  # the rule as one lookup table; a subtree that occurs many times is
+  # replaced once (when keys identify nodes, see .ctor_off)
+  rules <- utils::hashtab()
+  for (p in rev(pairs)) utils::sethash(rules, p[[1L]]$key, p[[2L]])
+  memo <- if (.ctor_off()) NULL else utils::hashtab()
   walk <- function(x) {
-    i <- match(x$key, keys)
-    if (!is.na(i)) return(vals[[i]])
+    v <- utils::gethash(rules, x$key)
+    if (!is.null(v)) return(v)
     if (!length(x$args)) return(x)
+    if (!is.null(memo) && !is.null(v <- utils::gethash(memo, x$key))) return(v)
     args <- lapply(x$args, walk)
-    if (identical(vapply(args, .k, ""), vapply(x$args, .k, ""))) return(x)
-    sym_rebuild(x, args)
+    r <- if (identical(vapply(args, .k, ""), vapply(x$args, .k, ""))) x else sym_rebuild(x, args)
+    if (!is.null(memo)) utils::sethash(memo, x$key, r)
+    r
   }
   walk(e)
 }

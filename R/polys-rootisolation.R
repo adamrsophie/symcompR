@@ -56,6 +56,16 @@
   half <- two^(bits - 1L)
   gmp::mod.bigz(gmp::divq.bigz(N + sum(half * pw), pw), two^bits) - half
 }
+# Exact product of two coefficient vectors over QQ (bigq or bigz): clear
+# the denominators once and multiply the integer vectors with .zp_mul.
+.qq_mul <- function(f, g) {
+  if (!inherits(f, "bigq") && !inherits(g, "bigq")) return(.zp_mul(.zp(f), .zp(g)))
+  f <- gmp::as.bigq(f); g <- gmp::as.bigq(g)
+  df <- Reduce(gmp::lcm.bigz, as.list(gmp::denominator(f)), gmp::as.bigz(1L))
+  dg <- Reduce(gmp::lcm.bigz, as.list(gmp::denominator(g)), gmp::as.bigz(1L))
+  fz <- gmp::as.bigz(f * df); gz <- gmp::as.bigz(g * dg)
+  gmp::as.bigq(.zp_mul(fz, gz)) / (df * dg)
+}
 .zp_add <- function(f, g) {
   n <- max(length(f), length(g))
   f <- c(.zp(rep(0, n - length(f))), f); g <- c(.zp(rep(0, n - length(g))), g)

@@ -206,8 +206,11 @@ Ops.FracElement <- function(e1, e2) {
   }
   a <- F(e1); b <- F(e2)
   switch(.Generic,
-    `+` = .fe_new(qp_add(qp_mul(a$n, b$d), qp_mul(b$n, a$d)), qp_mul(a$d, b$d), K),
-    `-` = .fe_new(qp_sub(qp_mul(a$n, b$d), qp_mul(b$n, a$d)), qp_mul(a$d, b$d), K),
+    # a shared denominator stays as it is; .fe_new still cancels
+    `+` = if (qp_equal(a$d, b$d)) .fe_new(qp_add(a$n, b$n), a$d, K)
+          else .fe_new(qp_add(qp_mul(a$n, b$d), qp_mul(b$n, a$d)), qp_mul(a$d, b$d), K),
+    `-` = if (qp_equal(a$d, b$d)) .fe_new(qp_sub(a$n, b$n), a$d, K)
+          else .fe_new(qp_sub(qp_mul(a$n, b$d), qp_mul(b$n, a$d)), qp_mul(a$d, b$d), K),
     `*` = .fe_new(qp_mul(a$n, b$n), qp_mul(a$d, b$d), K),
     `/` = .fe_new(qp_mul(a$n, b$d), qp_mul(a$d, b$n), K),
     `==` = qp_equal(a$n, b$n) && qp_equal(a$d, b$d), `!=` = !(qp_equal(a$n, b$n) && qp_equal(a$d, b$d)),

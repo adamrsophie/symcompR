@@ -122,3 +122,24 @@ test_that("matrix scalars sort before numbers in a sum", {
                      Trace(A) - 1, -Trace(A) + x), sstr, "")
   expect_equal(got, c("Trace(A) + 5", "A[0, 0] + 1", "x + A[0, 0] + 1", "Trace(A) - 1", "x - Trace(A)"))
 })
+
+test_that("exact number and triangular determinants take the direct routes", {
+  m <- matrix(c(2, -1, 0, 3, 4, 1, -2, 5, 1, 0, 3, 2, 7, -3, 1, 1), 4)
+  M <- Matrix(lapply(1:4, function(i) as.list(m[i, ])))
+  expect_equal(sstr(det(M)), as.character(round(base::det(m))))
+  Q <- Matrix(list(list(Rational(1, 2), 1, 2), list(Rational(1, 3), 4, 1), list(5, Rational(-1, 4), 3)))
+  expect_equal(sstr(det(Q)), sstr(cancel(symcompR:::.det_berkowitz(Q))))
+  expect_equal(sstr(det(Matrix(list(list(1, 2, 3), list(2, 4, 6), list(1, 1, 1))))), "0")
+  x <- Symbol("x"); y <- Symbol("y")
+  T <- Matrix(list(list(x + 1, y, 3), list(0, x * y, x), list(0, 0, y - 2)))
+  expect_equal(sstr(det(T)), sstr(expand((x + 1) * x * y * (y - 2))))
+})
+
+test_that("rational functions with a shared denominator add over it", {
+  x <- Symbol("x"); y <- Symbol("y")
+  d <- (x + y + 1)^2 + 1
+  M <- Matrix(list(lapply(1:3, function(i) (x^i + y) / d)))
+  N <- Matrix(lapply(1:3, function(i) list((y^i - x) / d)))
+  P <- DomainMatrix_from_Matrix(M)$matmul(DomainMatrix_from_Matrix(N))
+  expect_equal(sstr(P$to_Matrix()), paste0("Matrix([[", sstr(cancel((M %*% N)[1, 1])), "]])"))
+})
