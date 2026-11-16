@@ -32,10 +32,10 @@ skip_unless_full_tests()
   e
 }
 
-# review
+# matgeo module
 .mge <- .mgs_env()
 
-test_that("review: module matches SymPy", {
+test_that("matgeo module matches SymPy", {
   expect_identical(.mgs(evalq({ Matrix(list(list(1, 1), list(0, 1))) %^% n }, .mge)), "Matrix([[1, n], [0, 1]])")
   expect_identical(.mgs(evalq({ Matrix(list(list(2, 1), list(0, 2))) %^% n }, .mge)), "Matrix([[2^n, 2^(n - 1)*n], [0, 2^n]])")
   expect_identical(.mgs(evalq({ Matrix(list(list(1, 1), list(1, 0))) %^% n }, .mge)), "Matrix([[(1/2 - sqrt(5)/2)^n*(1/2 - sqrt(5)/10) + (1/2 + sqrt(5)/2)^n*(sqrt(5)/10 + 1/2), -sqrt(5)*(1/2 - sqrt(5)/2)^n/5 + sqrt(5)*(1/2 + sqrt(5)/2)^n/5], [(1/2 - sqrt(5)/2)^n*(1/2 - sqrt(5)/10)*(-sqrt(5)/2 - 1/2) + (-1/2 + sqrt(5)/2)*(1/2 + sqrt(5)/2)^n*(sqrt(5)/10 + 1/2), -sqrt(5)*(1/2 - sqrt(5)/2)^n*(-sqrt(5)/2 - 1/2)/5 + sqrt(5)*(-1/2 + sqrt(5)/2)*(1/2 + sqrt(5)/2)^n/5]])")

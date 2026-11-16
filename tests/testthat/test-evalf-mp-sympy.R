@@ -1,6 +1,6 @@
 skip_unless_full_tests()
 # N() against SymPy's str(N(expr, n)) for the functions evaluated through the
-# mpmath port: hypergeometric and Meijer G functions, the review examples and
+# mpmath port: hypergeometric and Meijer G functions, worked examples and
 # the special functions (Bessel, Airy, error functions, exponential
 # integrals, incomplete gamma, elliptic integrals, orthogonal polynomials,
 # zeta, polylog, Dirichlet eta, Lambert W) at 15 and 30 digits. Each row of

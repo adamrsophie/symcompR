@@ -94,7 +94,7 @@ test_that("sets, inequalities and logic", {
   expect_true(valid(Or(x, Not(x))))
 })
 
-test_that("calculus review regressions stay fixed", {
+test_that("calculus regressions stay fixed", {
   expect_equal(s(sym_integrate(1 / x^2, list(x, 1, -1))), "-oo")
   expect_equal(s(solve_univariate_inequality(log(x) < 0, x)), "(0 < x) & (x < 1)")
   expect_equal(s(solve_univariate_inequality(sqrt(x) < 2, x)), "(0 <= x) & (x < 4)")
@@ -105,7 +105,7 @@ test_that("calculus review regressions stay fixed", {
   expect_equal(s(product(i, list(i, 1, m))), "factorial(m)")
 })
 
-test_that("second calculus review regressions stay fixed", {
+test_that("more calculus regressions stay fixed", {
   a <- Symbol("a", positive = TRUE)
   expect_equal(s(sym_integrate(tan(x), list(x, 0, sym_pi))), "nan")
   expect_equal(s(sym_integrate(1 / (sym_I * x - 1), list(x, -1, 1))), "-I*(log(sqrt(2)) + I*pi/4) + I*(log(sqrt(2)) + 3*I*pi/4)")
@@ -121,7 +121,7 @@ test_that("second calculus review regressions stay fixed", {
   expect_true(.contains_key(series(x * log(x), x, 0, 1), (x * log(x))$key))
 })
 
-test_that("review fixes in calculus, sets and matrices", {
+test_that("calculus, sets and matrices follow SymPy", {
   x <- Symbol("x"); i <- Symbol("i", integer = TRUE); B <- Integer("9007199254740993")
   expect_equal(sstr(product(i, list(i, 1, oo))), "Product(i, (i, 1, oo))")
   expect_equal(sstr(1 + O(1)), "O(1)")
@@ -142,7 +142,7 @@ test_that("review fixes in calculus, sets and matrices", {
   expect_equal(sstr(distance(Point(2, 0), Segment(Point(0, 0), Point(1, 0)))), "1")
 })
 
-test_that("second calculus review fixes", {
+test_that("further calculus cases follow SymPy", {
   x <- Symbol("x"); i <- Symbol("i", integer = TRUE); n <- Symbol("n", integer = TRUE, positive = TRUE)
   expect_equal(sstr(diff(Derivative(zeta(x), x), x)), "Derivative(zeta(x), (x, 2))")
   expect_equal(sstr(limit(sign(x^2 - x / Integer(10000000)), x, 0)), "-1")

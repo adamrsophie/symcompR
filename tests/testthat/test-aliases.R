@@ -91,7 +91,7 @@ test_that("set printing follows SymPy default_sort_key", {
   expect_equal(latex(Reals), "\\mathbb{R}")
 })
 
-test_that("alias review fixes", {
+test_that("aliases follow SymPy", {
   x <- Symbol("x")
   expect_false(checksol(x, list(x = Rational(1, "10000000000000"))))
   expect_equal(as.character(continued_fraction_iterator(Integer("9007199254740993") + sqrt(S(2)), 3)),
@@ -113,7 +113,7 @@ test_that("alias review fixes", {
   expect_equal(unflatten(numeric()), list())
 })
 
-test_that("second alias review fixes", {
+test_that("more aliases follow SymPy", {
   x <- Symbol("x")
   expect_false(comp(Integer("9007199254740992"), Integer("9007199254740993"), tol = 0))
   expect_null(periodicity(x + sin(x), x))

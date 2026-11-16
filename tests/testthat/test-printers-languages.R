@@ -33,7 +33,7 @@ test_that("multiline_latex, MathML and dotprint", {
   expect_match(d, "\"Add(Integer(2), Symbol('x'))_()\" -> \"Integer(2)_(0,)\";", fixed = TRUE)
 })
 
-test_that("p13 review fixes for printers and transforms", {
+test_that("printers and transforms follow SymPy", {
   t <- Symbol("t"); s <- Symbol("s"); r <- Symbol("r", positive = TRUE); k <- Symbol("k", positive = TRUE)
   F <- Function("F"); n <- Symbol("n", integer = TRUE)
   expect_equal(sstr(hankel_transform(1/r, r, k, -1)), "-1/k")
@@ -80,7 +80,7 @@ test_that("TableForm text and LaTeX output follow SymPy", {
                capture.output(print(Matrix(list(list(1, 2), list(3, 4))))))
 })
 
-test_that("p14 h2 fixes: smtlib booleans, python keywords, hankel divergence sign", {
+test_that("smtlib booleans, python keywords, hankel divergence sign", {
   expect_equal(smtlib_code(Eq(x, TRUE, evaluate = FALSE)), "(declare-const x Bool)\n(assert (= x true))")
   expect_equal(smtlib_code(x), "(declare-const x Bool)\n(assert x)")
   expect_equal(python(Symbol("lambda") + 1), "lambda_ = Symbol('lambda')\ne = lambda_ + 1")
@@ -88,7 +88,7 @@ test_that("p14 h2 fixes: smtlib booleans, python keywords, hankel divergence sig
   expect_identical(hankel_transform(-1/r^3, r, k, 0), S_NegativeInfinity)
 })
 
-test_that("p15 review fixes: python names, smtlib order, TableForm formats, hankel sign", {
+test_that("python names, smtlib order, TableForm formats, hankel sign", {
   expect_equal(python(Symbol("lambda") + Symbol("lambda_")), "lambda__ = Symbol('lambda')\nlambda_ = Symbol('lambda_')\ne = lambda_ + lambda__")
   expect_equal(python(Function("lambda")(x)), "x = Symbol('x')\nlambda_ = Function('lambda')\ne = lambda_(x)")
   expect_equal(smtlib_code(list(Eq(x, y, evaluate = FALSE), y)),

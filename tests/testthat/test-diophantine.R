@@ -54,7 +54,7 @@ test_that("products, denominators, permutations and assumptions", {
   expect_equal(sstr(diop_solve(2*x + 3*y - 5)), "(3*t_0 - 5, 5 - 2*t_0)")
 })
 
-test_that("p11 review fixes", {
+test_that("diophantine edge cases follow SymPy", {
   expect_equal(s(diophantine(9*x^2 + 6*x*y + y^2 + x + y)), "(2*t^2 - 3*t + 1, -6*t^2 + 7*t - 2) ; (2*t^2 - t, -6*t^2 + t)")
   expect_equal(s(diophantine(9*x^2 + 6*x*y + y^2 + x)), "(-t^2, 3*t^2 + t)")
   b <- gmp::as.bigz(2)^100 + gmp::as.bigz(2)^47 + 1

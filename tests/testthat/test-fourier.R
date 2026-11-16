@@ -32,7 +32,7 @@ test_that("finite Fourier series and transformations", {
   expect_equal(sstr(sym_integrate(Piecewise(list(x, x < 1), list(2, TRUE)), list(x, 0, 3))), "9/2")
 })
 
-test_that("p12 review fixes for Fourier series, Piecewise integrals and ranges", {
+test_that("Fourier series, Piecewise integrals and ranges follow SymPy", {
   a <- Symbol("a", real = TRUE); n <- Symbol("n", integer = TRUE)
   expect_equal(sstr(sym_integrate(Piecewise(list(1, a > 0), list(0, TRUE)), list(x, 0, 1))), "Piecewise((1, a > 0), (0, True))")
   expect_identical(sym_integrate(Piecewise(list(1, x < 0)), list(x, -1, 1)), S_NaN)
@@ -53,7 +53,7 @@ test_that("p12 review fixes for Fourier series, Piecewise integrals and ranges",
   expect_equal(Intersection(Range(0, 10), Interval(a, 5))$type, "Intersection")
 })
 
-test_that("p13 h2 fix: resonant coefficients survive shifts and scalings", {
+test_that("resonant coefficients survive shifts and scalings", {
   x <- Symbol("x")
   s <- fourier_series(sin(x), list(x, -sym_pi, sym_pi), finite = FALSE)
   expect_equal(sstr(s$args[[3L]]$args[[3L]]),
@@ -64,7 +64,7 @@ test_that("p13 h2 fix: resonant coefficients survive shifts and scalings", {
                "-cos(x)/2 - 2*cos(2*x)/3 + 1")
 })
 
-test_that("p14 h2 fix: parameter-dependent resonances", {
+test_that("parameter-dependent resonances", {
   x <- Symbol("x"); a <- Symbol("a")
   expect_equal(sstr(subs(sigma_approximation(fourier_series(sin(a*x), list(x, -sym_pi, sym_pi), finite = FALSE), 2), a, 1)), "2*sin(x)/pi")
 })

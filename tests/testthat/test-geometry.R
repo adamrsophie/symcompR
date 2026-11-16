@@ -58,7 +58,7 @@ test_that("ellipses, parabolas, curves and similarity", {
   expect_equal(F(sym_integrate(sqrt(1 - x^2), x)), "x*sqrt(1 - x^2)/2 + asin(x)/2")
 })
 
-test_that("p14 review fixes: distances, collinear intersections, plane angles, translate, circle foci", {
+test_that("distances, collinear intersections, plane angles, translate, circle foci", {
   P3 <- Point3D
   expect_equal(sstr(distance(P3(1, 0, 1), Segment3D(P3(0, 0, 0), P3(2, 0, 0)))), "1")
   expect_equal(sstr(distance(Point(-1, 0), Ray2D(Point(0, 0), Point(1, 0)))), "1")
@@ -88,7 +88,7 @@ test_that("p14 review fixes: distances, collinear intersections, plane angles, t
   expect_equal(fmt(foci(Ellipse(Point(0, 0), 2, 2))), c("Point2D(0, 0)", "Point2D(0, 0)"))
 })
 
-test_that("p15 review fixes: touching segments, 3D line distance", {
+test_that("touching segments, 3D line distance", {
   fmt <- function(l) vapply(l, format, "")
   expect_equal(fmt(intersection(Segment(Point(0, 0), Point(1, 0)), Segment(Point(1, 0), Point(2, 0)))), "Point2D(1, 0)")
   expect_equal(fmt(intersection(Ray2D(Point(0, 0), Point(1, 0)), Segment(Point(-1, 0), Point(0, 0)))), "Point2D(0, 0)")

@@ -59,7 +59,7 @@ test_that("oo absorbs factors of known sign, as Mul.flatten", {
   expect_equal(sstr(floor(S_NegativeInfinity)), "-oo")
 })
 
-test_that("p15 review fixes for AccumBounds", {
+test_that("AccumBounds edge cases follow SymPy", {
   y <- Symbol("y", real = TRUE)
   s1 <- sin(Integer(1))
   cases <- list(

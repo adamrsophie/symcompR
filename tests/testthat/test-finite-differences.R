@@ -25,7 +25,7 @@ test_that("collect_const and kroneckersimp", {
   expect_equal(sstr(kroneckersimp(KroneckerDelta(i, j)*KroneckerDelta(i, 0))), "KroneckerDelta(0, i)*KroneckerDelta(i, j)")
 })
 
-test_that("p12 review fixes for simplify extras and coeff", {
+test_that("simplify extras and coeff follow SymPy", {
   w <- Symbol("w"); z <- Symbol("z")
   expect_equal(sstr(collect_const(2*x + 2*y + z) + w), "w + z + 2*(x + y)")
   j <- Symbol("j")
@@ -42,7 +42,7 @@ test_that("p12 review fixes for simplify extras and coeff", {
   expect_identical(solveset(sin(x) - Rational("10000000000001", "10000000000000"), x, Reals), S_EmptySet)
 })
 
-test_that("p13 h2 fix: embedded derivatives follow SymPy's Subs stencils", {
+test_that("embedded derivatives follow SymPy's Subs stencils", {
   x <- Symbol("x"); h <- Symbol("h"); f <- Function("f")
   expect_equal(sstr(differentiate_finite(diff(f(x), x), x, points = list(x - 1, x, x + 1))), "-2*f(x) + f(x - 1) + f(x + 1)")
   expect_equal(sstr(differentiate_finite(f(x)*diff(f(x), x), x, points = list(x - 1, x, x + 1))),
@@ -54,14 +54,14 @@ test_that("p13 h2 fix: embedded derivatives follow SymPy's Subs stencils", {
   expect_equal(sstr(differentiate_finite(diff(f(x), x), x, points = h)), "-2*f(x)/h^2 + f(-h + x)/h^2 + f(h + x)/h^2")
 })
 
-test_that("p14 h2 fixes: mixed embedded derivatives and a step evaluated at x0", {
+test_that("mixed embedded derivatives and a step evaluated at x0", {
   x <- Symbol("x"); y <- Symbol("y"); f <- Function("f"); g <- Function("g"); h <- Function("h")
   expect_equal(sstr(differentiate_finite(g(x)*Derivative(f(x, y), x, y), x)),
                "(-Derivative(f(x, y), y) + Derivative(f(x + 1, y), y))*g(x + 1/2) - (Derivative(f(x, y), y) - Derivative(f(x - 1, y), y))*g(x - 1/2)")
   expect_equal(sstr(differentiate_finite(f(x), x, points = h(x), x0 = 0)), "-f(-h(0)/2)/h(0) + f(h(0)/2)/h(0)")
 })
 
-test_that("p15 review fix: repeated variables merge in differentiate_finite", {
+test_that("repeated variables merge in differentiate_finite", {
   x <- Symbol("x"); y <- Symbol("y")
   expect_equal(sstr(simplify(differentiate_finite(x^3*y, x, y, x, points = x))), "6*x")
 })

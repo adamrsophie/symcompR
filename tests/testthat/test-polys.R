@@ -77,7 +77,7 @@ test_that("roots and solve", {
   expect_equal(vapply(solve(sin(x), x), sstr, ""), c("0", "pi"))
 })
 
-test_that("polys review regressions stay fixed", {
+test_that("polys regressions stay fixed", {
   expect_equal(s(expand(sqf((x + 1) * (y + 1)))), "x*y + x + y + 1")
   expect_length(solve(S(10)^20 * (x^5 - x + 1), x), 5L)
   expect_length(solve(list(x / y, y), list(x, y)), 0L)
@@ -88,7 +88,7 @@ test_that("polys review regressions stay fixed", {
   expect_true(is_zero_dimensional(list(x^2 - y, y^2 - x), x, y))
 })
 
-test_that("algebra review fixes", {
+test_that("algebra cases follow SymPy", {
   x <- Symbol("x"); y <- Symbol("y"); p <- Symbol("p", positive = TRUE); f <- Function("f")
   A <- Symbol("A", commutative = FALSE); B <- Symbol("B", commutative = FALSE)
   expect_equal(sstr(gammasimp(gamma(x + 1) * gamma(x + 2) / gamma(x) / gamma(x + 3))), "x/(x + 2)")
@@ -110,7 +110,7 @@ test_that("algebra review fixes", {
   expect_equal(sstr(coeff(x + 2, x, 0)), "2")
 })
 
-test_that("second algebra review fixes", {
+test_that("further algebra cases follow SymPy", {
   x <- Symbol("x"); y <- Symbol("y"); f <- Function("f")
   A <- Symbol("A", commutative = FALSE); B <- Symbol("B", commutative = FALSE)
   expect_equal(sstr(dsolve(Derivative(f(x), x) - Symbol("C1") * f(x), f(x), ics = list(list(0, 0, 2)))),

@@ -71,7 +71,7 @@ test_that("explicit matrix builders", {
   expect_equal(sstr(Permanent(Matrix(list(list(1, 2), list(3, 4))))), "10")
 })
 
-test_that("p12 review fixes for matrix expressions", {
+test_that("matrix expressions follow SymPy", {
   R1 <- MatrixSymbol("R", 2, 3); R2 <- MatrixSymbol("S", 3, 2)
   expect_equal(sstr(doit(Determinant(R1*R2))), "Determinant(R*S)")
   expect_equal(sstr(doit(Inverse(R1*R2))), "(R*S)^(-1)")
@@ -83,7 +83,7 @@ test_that("p12 review fixes for matrix expressions", {
   expect_equal(sstr(doit(Permanent(MatrixSymbol("A", nz, nz)))), "Permanent(A)")
 })
 
-test_that("p13 h2 fixes: block partitions, identity blocks, explicit blocks", {
+test_that("block partitions, identity blocks, explicit blocks", {
   A <- MatrixSymbol("A", 2, 2); B <- MatrixSymbol("B", 1, 1); C <- MatrixSymbol("C", 1, 1)
   expect_equal(sstr(block_collapse(BlockMatrix(list(list(Identity(2)))) * BlockDiagMatrix(Identity(1), Identity(1)))), "I")
   expect_equal(sstr(block_collapse(BlockMatrix(list(list(A))) * BlockDiagMatrix(B, C))),

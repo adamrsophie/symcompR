@@ -33,7 +33,7 @@ test_that("rsolve matches SymPy", {
   expect_equal(s(rsolve(y(n + 2) - 2*y(n + 1) + y(n), y(n), n)), "C0 + C1*n")
 })
 
-test_that("final review regressions stay fixed", {
+test_that("ODE regressions stay fixed", {
   expect_equal(sstr(dsolve(Derivative(f(x), x) - sym_I * f(x), f(x))), "Eq(f(x), C1*exp(I*x))")
   sol <- dsolve((x^2 + 2*f(x)) * Derivative(f(x), x) + 2*x*f(x) + 1, f(x), ics = list(list(0, 0, 1)))
   expect_equal(sstr(sol$args[[1L]]), "f(x)")

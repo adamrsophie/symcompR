@@ -49,7 +49,7 @@ test_that("incomplete gamma, elliptic integrals and orthogonal polynomials match
   check_n("assoc_legendre(5/2, 2, 1/2)", "4.10811266079151")
 })
 
-test_that("hypergeometric review examples match SymPy", {
+test_that("hypergeometric examples match SymPy", {
   expect_identical(sstr(N(hyper(list(1 + sym_I), list(2), -100))),
                    "0.00348029442321405 + 0.0186566128060348*I")
   expect_identical(sstr(N(hyper(list(1, 1, 1), list(2, 2), 1))), "1.64493406684823")

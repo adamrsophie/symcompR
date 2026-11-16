@@ -95,7 +95,7 @@ test_that("rsolve handles polynomial coefficients", {
   expect_null(rsolve(n*y(n + 1) - (n + 1)*y(n) - n, y(n), n))
 })
 
-test_that("p10 review fixes for the new solvers", {
+test_that("the new solvers follow SymPy", {
   x <- Symbol("x"); y <- Symbol("y"); a <- Symbol("a")
   n <- Symbol("n", integer = TRUE)
   M <- Integer("9007199254740992")

@@ -25,7 +25,7 @@ test_that("small helpers", {
   expect_equal(carmichael$find_first_n_carmichaels(3), c(561, 1105, 1729))
 })
 
-test_that("p14 review fixes: sqf_norm, polarify, splines, reshape", {
+test_that("sqf_norm, polarify, splines, reshape", {
   r <- sqf_norm(x - sqrt(Integer(2)), sqrt(Integer(2)))
   expect_equal(sstr(r[[3L]]), "x^2 - 2")
   expect_equal(sstr(polarify(x, lift = TRUE)), "polar_lift(x)")
@@ -41,7 +41,7 @@ test_that("p14 review fixes: sqf_norm, polarify, splines, reshape", {
   expect_equal(sstr(subs(bspline_basis(1, c(0, 1, 2), 0, xp), xp, Rational(1, 2))), "1/2")
 })
 
-test_that("p15 review fixes: sqf_norm over composite extensions, polarify of integrals", {
+test_that("sqf_norm over composite extensions, polarify of integrals", {
   s2 <- sqrt(Integer(2)); s3 <- sqrt(Integer(3))
   r <- sqf_norm(x - s2, 2*s2)
   expect_equal(sstr(r[[3L]]), "x^2 - 2")

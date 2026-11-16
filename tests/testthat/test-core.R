@@ -173,7 +173,7 @@ test_that("incremental sums are not quadratic in practice", {
   expect_lt(t, 5)
 })
 
-test_that("review regressions stay fixed", {
+test_that("core regressions stay fixed", {
   nca <- Symbol("a", commutative = FALSE)
   ncb <- Symbol("b", commutative = FALSE)
   f <- Function("f")
@@ -190,7 +190,7 @@ test_that("review regressions stay fixed", {
   expect_equal(s(nan^0), "1")
 })
 
-test_that("second review regressions stay fixed", {
+test_that("more core regressions stay fixed", {
   r <- Symbol("r", real = TRUE)
   expect_error(Symbol("q", nonnegative = TRUE, nonpositive = TRUE, zero = FALSE), "inconsistent")
   expect_true(is.na(is_finite(r^-2)))
@@ -257,7 +257,7 @@ test_that("Add terms print in SymPy order", {
   expect_equal(sstr(new_sym("Mul", list(S(-2), x + 2))), "-2*(x + 2)")
 })
 
-test_that("core review fixes", {
+test_that("core cases follow SymPy", {
   x <- Symbol("x"); a <- Symbol("a"); b <- Symbol("b"); c <- Symbol("c")
   expect_equal(sstr(sym_Mod(S(-3), 2)), "1")
   expect_equal(sstr(gamma(Rational(-1, 2))), "-2*sqrt(pi)")
@@ -281,7 +281,7 @@ test_that("core review fixes", {
   expect_equal(sstr(bernoulli(1, x)), "x - 1/2")
 })
 
-test_that("second core review fixes", {
+test_that("further core cases follow SymPy", {
   x <- Symbol("x")
   A <- Symbol("A", commutative = FALSE); B <- Symbol("B", commutative = FALSE)
   expect_false(exp(A) * B == B * exp(A))
@@ -340,7 +340,7 @@ test_that("coeff handles the targets zero, one and self", {
   expect_identical(coeff(x + 2, 0), S_Zero)
 })
 
-test_that("p10 review fixes in core logic", {
+test_that("core logic follows SymPy", {
   x <- Symbol("x"); y <- Symbol("y"); f <- Function("f")
   expect_equal(sstr(doit(Subs(Derivative(f(x, y), x), x, y))), "Subs(Derivative(f(x, y), x), x, y)")
   expect_equal(sstr(doit(Subs(x^4, x^2, y))), "y^2")
@@ -374,7 +374,7 @@ test_that("Add and set printing follow SymPy term order", {
   expect_equal(sstr(Function("F")(x - y)*exp(-x/2)), "F(x - y)*exp(-x/2)")
 })
 
-test_that("p11 review fixes: coeff, Float, Subs and periodic solveset", {
+test_that("coeff, Float, Subs and periodic solveset", {
   x <- Symbol("x"); y <- Symbol("y"); f <- Function("f")
   expect_identical(coeff(x + 2, 2), S_One)
   expect_identical(coeff(x, exp(x)), S_Zero)
@@ -399,7 +399,7 @@ test_that("p11 review fixes: coeff, Float, Subs and periodic solveset", {
   expect_equal(solveset(1/sin(x) - 1, x)$type, "Complement")
 })
 
-test_that("p13 h2 fixes: noncommutative coeff and per-root solveset conditions", {
+test_that("noncommutative coeff and per-root solveset conditions", {
   p <- Symbol("p", commutative = FALSE); q <- Symbol("q", commutative = FALSE); r <- Symbol("r", commutative = FALSE)
   A <- Symbol("A", commutative = FALSE); B <- Symbol("B", commutative = FALSE)
   C <- Symbol("C", commutative = FALSE); D <- Symbol("D", commutative = FALSE)
@@ -450,7 +450,7 @@ test_that("not_empty_in follows SymPy", {
   expect_error(not_empty_in(FiniteSet(x)), "symbols must be given")
 })
 
-test_that("p14 h2 fixes: contiguous nc coefficient filter, symbolic pi multiples, (-1)^even", {
+test_that("contiguous nc coefficient filter, symbolic pi multiples, (-1)^even", {
   p <- Symbol("p", commutative = FALSE); q <- Symbol("q", commutative = FALSE)
   r <- Symbol("r", commutative = FALSE); t <- Symbol("t", commutative = FALSE)
   expect_equal(sstr(coeff(p*q*r + p*q*t + q*p*r, p*q)), "1")
@@ -465,7 +465,7 @@ test_that("p14 h2 fixes: contiguous nc coefficient filter, symbolic pi multiples
   expect_equal(sstr(mat_shape(block_collapse(2*BlockDiagMatrix(Identity(2), Identity(3))))[[1L]]), "5")
 })
 
-test_that("p15 review fixes: assumptions keep symbols apart and catch contradictions", {
+test_that("assumptions keep symbols apart and catch contradictions", {
   x <- Symbol("x"); y <- Symbol("y")
   a <- Symbol("a", commutative = FALSE); b <- Symbol("b", commutative = FALSE)
   expect_equal(sstr(assuming(!Q$positive(a), refine(a*b - b*a))), "a*b - b*a")

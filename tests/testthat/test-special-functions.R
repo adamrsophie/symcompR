@@ -35,7 +35,7 @@ test_that("extra special functions match SymPy", {
   expect_equal(as.complex(N(hn1(0, 1))), complex(real = 0.841470984807897, imaginary = -0.54030230586814), tolerance = 1e-12)
 })
 
-test_that("third review round fixes", {
+test_that("polar, branch, special function and number theory helpers follow SymPy", {
   A <- Symbol("A", commutative = FALSE); B <- Symbol("B", commutative = FALSE); C <- Symbol("C", commutative = FALSE)
   expect_equal(s(factor_terms(B * A + A)), "A + B*A")
   expect_equal(s(unpolarify(sqrt(exp_polar(2 * sym_pi * sym_I)))), "-1")

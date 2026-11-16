@@ -1,35 +1,9 @@
-# Expected values are SymPy's outputs for the same calls
-# (sympy/printing/tests/test_numpy.py, test_tensorflow.py, test_pycode.py and
-# sympy/stats/tests/test_stochastic_process.py).
-
-skip_unless_full_tests()
-
-test_that("printing_test_numpy: test_issue_17006", {
-  M <- MatrixSymbol("M", 2L, 2L)
-  expect_identical(printer_doprint(NumPyPrinter(), M + Identity(2L)), "numpy.eye(2) + M")
-})
-
-test_that("printing_test_tensorflow: test_MatrixElement_printing", {
-  A <- MatrixSymbol("A", 1L, 3L)
-  B <- MatrixSymbol("B", 1L, 3L)
-  F <- new_sym("MatrixElement", list(A - B, S(0L), S(0L)))
-  expect_identical(tensorflow_code(F), "(tensorflow.math.add((-1)*B, A))[0, 0]")
-})
-
-test_that("printing_test_pycode: Assignment between IndexedBase objects without a shape", {
-  I <- IndexedBase("I")
-  J <- IndexedBase("J")
-  i <- Idx("i", list(0L, 2L))
-  j <- Idx("j", list(0L, 2L))
-  k <- Idx("k", list(0L, 2L))
-  expect_identical(printer_doprint(NumPyPrinter(), Assignment(I(i, k), I(i, j) * J(j, k))), "I = numpy.einsum(\",->\", I, J)")
-  expect_identical(printer_doprint(NumPyPrinter(), Assignment(I(i, j), J(j, i))), "I = J")
-  expect_identical(printer_doprint(NumPyPrinter(), Assignment(I(i), J(i, i))), "I = numpy.einsum(\"->\", J)")
-  expect_identical(printer_doprint(CuPyPrinter(), Assignment(I(i, k), I(i, j) * J(j, k))), "I = cupy.einsum(\",->\", I, J)")
-  expect_identical(printer_doprint(JaxPrinter(), Assignment(I(i, k), I(i, j) * J(j, k))), "I = jax.numpy.einsum(\",->\", I, J)")
-})
+# Regression cases for random variables and stochastic processes.
+# Expected values are SymPy's output for the same calls. A case that is slow
+# on one core starts with skip_on_cran() or skip_unless_full_tests().
 
 test_that("test_DiscreteMarkovChain: limiting and stationary distributions of a symbolic chain", {
+  skip_unless_full_tests()
   TO4 <- Matrix(list(list(Rational(1, 5), Rational(2, 5), Rational(2, 5)), list(Rational(1, 10), S_Half, Rational(2, 5)),
                      list(Rational(3, 5), Rational(3, 10), Rational(1, 10))))
   w <- ImmutableMatrix(list(list(Rational(11, 39), Rational(16, 39), Rational(4, 13))))
@@ -41,6 +15,7 @@ test_that("test_DiscreteMarkovChain: limiting and stationary distributions of a 
 })
 
 test_that("test_ContinuousMarkovChain: transition probabilities", {
+  skip_unless_full_tests()
   T2 <- Matrix(list(list(-S_One, S_One, S_Zero), list(S_One, -S_One, S_Zero), list(S_Zero, S_One, -S_One)))
   C2 <- ContinuousMarkovChain("C", list(0, 1, 2), T2)
   A <- rv_attr(C2, "generator_matrix")
@@ -50,6 +25,7 @@ test_that("test_ContinuousMarkovChain: transition probabilities", {
 })
 
 test_that("test_BernoulliProcess: free symbols", {
+  skip_unless_full_tests()
   B <- BernoulliProcess("B", p = Float(0.6), success = 1, failure = 0)
   t <- Symbol("t", positive = TRUE, integer = TRUE)
   x <- Symbol("x", positive = TRUE, integer = TRUE)
@@ -60,6 +36,7 @@ test_that("test_BernoulliProcess: free symbols", {
 })
 
 test_that("test_PoissonProcess and test_GammaProcess: simplified probabilities", {
+  skip_unless_full_tests()
   t <- Symbol("t", positive = TRUE)
   d <- Symbol("d", positive = TRUE)
   X <- PoissonProcess("X", 3)
@@ -73,6 +50,7 @@ test_that("test_PoissonProcess and test_GammaProcess: simplified probabilities",
 })
 
 test_that("test_GammaProcess_symbolic: expectation of a sum", {
+  skip_unless_full_tests()
   t <- Symbol("t", positive = TRUE)
   d <- Symbol("d", positive = TRUE)
   y <- Symbol("y", positive = TRUE)
@@ -85,6 +63,14 @@ test_that("test_GammaProcess_symbolic: expectation of a sum", {
 })
 
 test_that("test_handmade: the set of a finite distribution", {
+  skip_unless_full_tests()
   FH <- FiniteDistributionHandmade(Dict(list(1, 2), list(S(1) / 2, S(1) / 2)))
   expect_identical(sstr(rv_attr(FH, "set")), "{1, 2}")
+})
+
+test_that("a random indexed symbol is one of its free symbols", {
+  B <- BernoulliProcess("B", p = Rational(3, 5), success = 1, failure = 0)
+  t <- Symbol("t", positive = TRUE, integer = TRUE)
+  expect_identical(vapply(free_symbols(rv_getitem(B, 2 * t)), sstr, ""), c("B[2*t]", "t"))
+  expect_identical(vapply(free_symbols(rv_getitem(B, 4)), sstr, ""), "B[4]")
 })

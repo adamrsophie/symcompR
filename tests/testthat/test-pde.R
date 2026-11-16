@@ -53,7 +53,7 @@ test_that("pde_separate splits variables", {
                c("x*Derivative(X(x), (x, 2))/X(x)", "Derivative(T(t), t)/T(t)"))
 })
 
-test_that("p10 review fixes for PDEs", {
+test_that("PDE edge cases follow SymPy", {
   u <- f(x, y)
   expect_equal(sstr(doit(pdsolve(diff(u, x) - 1, u, hint = "1st_linear_constant_coeff_Integral"))), "Eq(f(x, y), x + F(-y))")
   r <- checkpdesol(diff(u, x), list(Eq(u, y), Eq(u, x)))

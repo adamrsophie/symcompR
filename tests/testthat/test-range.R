@@ -29,7 +29,7 @@ test_that("Range intersections", {
   expect_true(contains(DisjointUnion(FiniteSet(1, 2), FiniteSet(2, 3)), Tuple(1, 0)))
 })
 
-test_that("p13 h2 fixes: empty unbounded ranges, symbolic membership, unbounded intersections", {
+test_that("empty unbounded ranges, symbolic membership, unbounded intersections", {
   expect_equal(sstr(Range(Inf, -Inf, 1)), "Range(0, 0, 1)")
   expect_equal(sstr(Range(Inf, Inf)), "Range(0, 0, 1)")
   expect_equal(sstr(Range(-Inf, Inf, -1)), "Range(0, 0, 1)")
@@ -47,7 +47,7 @@ test_that("p13 h2 fixes: empty unbounded ranges, symbolic membership, unbounded 
   expect_equal(sstr(Intersection(Range(0, Inf), Interval(0, v))), "Range(0, 3, 1)")
 })
 
-test_that("p14 h2 fixes: unbounded range intersections and certified bounds", {
+test_that("unbounded range intersections and certified bounds", {
   expect_equal(sstr(Intersection(Range(-Inf, Inf), Range(-Inf, 5))), "Range(-oo, 5, 1)")
   expect_equal(sstr(Intersection(Range(-Inf, Inf), Range(Inf, -Inf, -1))), "Range(oo, -oo, -1)")
   expect_equal(sstr(Intersection(Range(-Inf, Inf), Range(-Inf, 6, 2))), "Range(-oo, 6, 2)")
@@ -58,7 +58,7 @@ test_that("p14 h2 fixes: unbounded range intersections and certified bounds", {
   expect_equal(sstr(Intersection(Range(0, Inf), Interval(0, sqrt(Integer(7)) + sin(Integer(1))))), "Range(0, 4, 1)")
 })
 
-test_that("p15 review fix: membership in a range starting at infinity", {
+test_that("membership in a range starting at infinity", {
   expect_true(contains(Range(Inf, 0, -2), 2))
   expect_false(contains(Range(Inf, 0, -2), 3))
 })

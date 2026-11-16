@@ -1,0 +1,66 @@
+# Regression cases for number theory, combinatorics, logic, sets and sequences.
+# Expected values are SymPy's output for the same calls. A case that is slow
+# on one core starts with skip_on_cran() or skip_unless_full_tests().
+
+test_that("number theory and logic follow SymPy", {
+  p <- Symbol("p"); q <- Symbol("q")
+  r <- integer_nthroot(gmp::as.bigz("1000000000000000000000000000000"), 3)
+  expect_true(inherits(r[[1L]], "bigz"))
+  expect_identical(as.character(r[[1L]]), "10000000000")
+  expect_true(isTRUE(r[[2L]]))
+  expect_identical(sstr(Or(p, Not(p))), "p | ~p")
+  expect_identical(sstr(eliminate_implications(Equivalent(p, q))), "(p | ~q) & (q | ~p)")
+  m <- satisfiable(And(Or(p, q), Not(And(p, q))), all_models = TRUE)
+  expect_length(m, 2L)
+})
+
+test_that("Set operators follow Set.__and__, __or__, __sub__, __xor__ and __pow__", {
+  skip_on_cran()
+  A <- Interval(0, 2); B <- Interval(1, 3)
+  expect_equal(sstr(A & B), "Interval(1, 2)")
+  expect_equal(sstr(A | B), "Interval(0, 3)")
+  expect_equal(sstr(A + B), "Interval(0, 3)")
+  expect_equal(sstr(Interval(0, 3) - Interval(1, 2)), "Union(Interval.Ropen(0, 1), Interval.Lopen(2, 3))")
+  expect_equal(sstr(A ^ B), "Union(Interval.Ropen(0, 1), Interval.Lopen(2, 3))")
+  expect_equal(sstr(FiniteSet(1, 2)^2), "ProductSet({1, 2}, {1, 2})")
+  expect_equal(sstr(FiniteSet(1, 2)^0), "{()}")
+})
+
+test_that("Schur numbers, group counts and common assumptions follow SymPy", {
+  skip_on_cran()
+  expect_equal(sstr(SchurNumber(4)), "44")
+  expect_equal(sstr(schur_lower_bound(SchurNumber(8))), "5039")
+  expect_equal(sstr(schur_lower_bound(SchurNumber(Symbol("k")))), "3^k/2 - 1/2")
+  expect_equal(schur_partition(9), list(c(3L, 2L), c(6L, 9L, 5L, 8L), c(1L, 4L, 7L)))
+  expect_equal(c(groups_count(16), groups_count(30), groups_count(625), groups_count(2310), groups_count(48)),
+               c(14, 4, 15, 36, 52))
+  expect_true(is_nilpotent_number(15)); expect_false(is_abelian_number(12))
+  expect_true(is_cyclic_number(15)); expect_false(is_cyclic_number(21))
+  ca <- common_assumptions(list(-4, 0, sqrt(Integer(2)), 2, sym_pi, oo))
+  expect_equal(names(ca), c("commutative", "composite", "extended_real", "imaginary", "odd"))
+  expect_equal(unname(ca), c(TRUE, FALSE, TRUE, FALSE, FALSE))
+})
+
+test_that("RecursiveSeq, nsolve options, nP/nC/nD and nsimplify follow SymPy", {
+  skip_on_cran()
+  n <- Symbol("n"); y <- Function("y"); x <- Symbol("x")
+  fib <- RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, list(0, 1))
+  expect_equal(vapply(sequence_terms(fib, 8), sstr, ""), c("0", "1", "1", "2", "3", "5", "8", "13"))
+  expect_equal(sstr(coeff(fib, 15)), "610")
+  g <- RecursiveSeq(n * y(n - 1), y(n), n, list(1), start = 1)
+  expect_equal(vapply(sequence_terms(g, 4), sstr, ""), c("1", "6", "6", "120"))
+  expect_equal(sstr(nsolve(x^2 - 2, x, c(1, 2))), "1.41421356237310")
+  expect_equal(sstr(nsolve(x^2 - 2, x, 1, maxsteps = 2, verify = FALSE)), "1.41237113402062")
+  expect_error(nsolve(x^2 - 2, x, 1, maxsteps = 2), "Could not find root")
+  expect_named(nsolve(x^2 - 2, x, 1, dict = TRUE)[[1L]], "x")
+  expect_equal(sstr(nP(c("a", "a", "b"), 2)), "3")
+  expect_equal(sstr(nC(5, 2, replacement = TRUE)), "15")
+  expect_equal(sstr(nD(c(1, 1, 2, 2))), "1")
+  expect_equal(sstr(nsimplify(1.414213562373095)), "sqrt(2)")
+  expect_equal(sstr(nsimplify(sym_pi, tolerance = 0.01)), "22/7")
+  expect_equal(sstr(nsimplify(4 / (1 + sqrt(5)))), "-1 + sqrt(5)")
+  expect_equal(sstr(nsimplify(sqrt(2.0) + sqrt(3.0))), "sqrt(2*sqrt(6) + 5)")
+  expect_equal(sstr(nsimplify(1.6180339887, constants = list(GoldenRatio))), "GoldenRatio")
+  expect_equal(sstr(nsimplify(log(2.0))), "log(2)")
+  expect_equal(sstr(nsimplify(0.5 * x + 0.25)), "x/2 + 1/4")
+})
