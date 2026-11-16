@@ -33,16 +33,5 @@ Authors:
   \item Adam R Sophie \email{adamrsophie@gmail.com} [copyright holder]
 }
 
-Other contributors:
-\itemize{
-  \item SymPy Development Team (Author of 'SymPy', from which the algorithms are ported) [copyright holder]
-  \item Fredrik Johansson (Author of 'mpmath', from which the multiprecision code is ported) [copyright holder]
-  \item mpmath contributors [copyright holder]
-  \item Erez Shinan (Author of 'lark', from which the Earley parser is ported) [copyright holder]
-  \item Matthew Rocklin (Author of 'multipledispatch', from which the dispatch code is ported) [copyright holder]
-  \item latex2sympy authors (Authors of 'latex2sympy', from which SymPy's LaTeX parser derives) [copyright holder]
-  \item Sergey B Kirpichev (Author of patches from 'Diofant' included in 'SymPy') [copyright holder]
-}
-
 }
 \keyword{internal}
