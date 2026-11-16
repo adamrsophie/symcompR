@@ -1,5 +1,5 @@
 Package: symcompR
-Title: Native Symbolic Computation Ported from 'SymPy'
+Title: Symbolic Computation in R
 Version: 0.1.0
 Authors@R:
     person("Adam R", "Sophie", email = "adamrsophie@gmail.com",
