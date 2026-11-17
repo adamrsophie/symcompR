@@ -34,3 +34,27 @@ holder\]
 Authors:
 
 - Adam R Sophie <adamrsophie@gmail.com> \[copyright holder\]
+
+Other contributors:
+
+- SymPy Development Team (Authors of 'SymPy', from which the algorithms
+  are ported; the individual authors are listed in inst/SYMPY-AUTHORS)
+  \[contributor, copyright holder\]
+
+- Fredrik Johansson (Author of 'mpmath', from which the multiprecision
+  code is ported) \[contributor, copyright holder\]
+
+- mpmath contributors (Contributors to 'mpmath') \[contributor,
+  copyright holder\]
+
+- Erez Shinan (Author of 'lark', from which the Earley parser is ported)
+  \[contributor, copyright holder\]
+
+- Matthew Rocklin (Author of 'multipledispatch', from which the dispatch
+  code is ported) \[contributor, copyright holder\]
+
+- latex2sympy authors (Authors of 'latex2sympy', from which SymPy's
+  LaTeX parser derives) \[contributor, copyright holder\]
+
+- Sergey B Kirpichev (Author of patches from 'Diofant' included in
+  'SymPy') \[contributor, copyright holder\]

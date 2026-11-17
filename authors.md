@@ -4,6 +4,28 @@
 
 - **Adam R Sophie**. Author, maintainer, copyright holder.
 
+- **SymPy Development Team**. Contributor, copyright holder.  
+  Authors of 'SymPy', from which the algorithms are ported; the
+  individual authors are listed in inst/SYMPY-AUTHORS
+
+- **Fredrik Johansson**. Contributor, copyright holder.  
+  Author of 'mpmath', from which the multiprecision code is ported
+
+- **mpmath contributors**. Contributor, copyright holder.  
+  Contributors to 'mpmath'
+
+- **Erez Shinan**. Contributor, copyright holder.  
+  Author of 'lark', from which the Earley parser is ported
+
+- **Matthew Rocklin**. Contributor, copyright holder.  
+  Author of 'multipledispatch', from which the dispatch code is ported
+
+- **latex2sympy authors**. Contributor, copyright holder.  
+  Authors of 'latex2sympy', from which SymPy's LaTeX parser derives
+
+- **Sergey B Kirpichev**. Contributor, copyright holder.  
+  Author of patches from 'Diofant' included in 'SymPy'
+
 ## Citation
 
 Source:
