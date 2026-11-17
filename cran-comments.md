@@ -13,9 +13,12 @@ minutes, then 24 minutes, on r-devel-windows-x86_64.
   problems". That step scales with the amount of R code (about 187,000
   lines), and it cannot be shortened without removing functionality. We would
   be grateful if the check time could be accepted for this reason.
-* `Authors@R` now lists only the maintainer; the authors of the ported
-  projects are credited through the `Copyright` field and `inst/COPYRIGHTS`,
-  which keeps their license notices.
+* Following the review of 2026-11-17, `Authors@R` lists the authors and
+  copyright holders of all ported code as contributors and copyright holders.
+  The SymPy authors are too many to list individually, so they appear as the
+  "SymPy Development Team", whose entry points to `inst/SYMPY-AUTHORS`
+  (SymPy's own AUTHORS file at the ported commit). `inst/COPYRIGHTS` refers
+  to it as well.
 
 The words flagged as possibly misspelled, "combinatorics" and
 "multiprecision", are spelled correctly; they are standard terms in

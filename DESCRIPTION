@@ -2,8 +2,24 @@ Package: symcompR
 Title: Symbolic Computation in R
 Version: 0.1.0
 Authors@R:
-    person("Adam R", "Sophie", email = "adamrsophie@gmail.com",
-           role = c("aut", "cre", "cph"))
+    c(person("Adam R", "Sophie", email = "adamrsophie@gmail.com",
+             role = c("aut", "cre", "cph")),
+      person("SymPy Development Team", role = c("ctb", "cph"),
+             comment = paste("Authors of 'SymPy', from which the algorithms",
+                             "are ported; the individual authors are listed",
+                             "in inst/SYMPY-AUTHORS")),
+      person("Fredrik", "Johansson", role = c("ctb", "cph"),
+             comment = "Author of 'mpmath', from which the multiprecision code is ported"),
+      person("mpmath contributors", role = c("ctb", "cph"),
+             comment = "Contributors to 'mpmath'"),
+      person("Erez", "Shinan", role = c("ctb", "cph"),
+             comment = "Author of 'lark', from which the Earley parser is ported"),
+      person("Matthew", "Rocklin", role = c("ctb", "cph"),
+             comment = "Author of 'multipledispatch', from which the dispatch code is ported"),
+      person("latex2sympy authors", role = c("ctb", "cph"),
+             comment = "Authors of 'latex2sympy', from which SymPy's LaTeX parser derives"),
+      person("Sergey B", "Kirpichev", role = c("ctb", "cph"),
+             comment = "Author of patches from 'Diofant' included in 'SymPy'"))
 Description: A native R computer algebra system ported from the Python
     library 'SymPy'. Provides exact integer and rational arithmetic,
     automatically simplified symbolic expressions, assumptions, symbolic
