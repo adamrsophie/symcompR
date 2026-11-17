@@ -180,3 +180,15 @@ test_that("a sign query on a large integer does not need primality", {
   expect_true(ask_fact(Integer(7), "prime"))
   expect_false(ask_fact(Integer(1), "prime"))
 })
+
+test_that("the constructor memo never returns arguments with other attributes", {
+  on.exit({ .ctor_state$off <- FALSE })
+  x <- Symbol("x")
+  e1 <- x^2 + 1
+  x2 <- Symbol("x")
+  attr(x2, "meta") <- "second"
+  e2 <- x2^2 + 1
+  pw <- Filter(function(a) a$type == "Pow", e2$args)[[1L]]
+  expect_identical(attr(pw$args[[1L]], "meta"), "second")
+  expect_identical(e1$key, e2$key)
+})

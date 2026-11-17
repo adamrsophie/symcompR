@@ -72,6 +72,19 @@ as_coeff_mul_split <- function(a) {
 # evaluate(FALSE), while global assumptions are in force, and for arguments
 # holding a Wild, whose properties are closures the key does not describe.
 .ctor_tab <- .htab()
+# A cache hit returns the arguments of the first construction, so an
+# argument carrying attributes of its own (a package attaching metadata to
+# a symbol) could come back as an earlier object with other attributes.
+# The memo is turned off for good when such an argument appears; objects
+# built before that point were made from plain arguments.
+.ctor_plain <- function(args) {
+  for (a in args) if (length(attributes(a)) > 2L && is_sym(a)) {
+    .ctor_state$off <- TRUE
+    .hclear(.ctor_tab)
+    return(FALSE)
+  }
+  TRUE
+}
 .ctor_off <- function() .ctor_state$off || .nc_state$any || .qm_state$on ||
   isTRUE(.EVAL$off) || length(global_assumptions$preds) > 0L
 .ctor_memo <- function(k, expr) {
@@ -83,15 +96,15 @@ as_coeff_mul_split <- function(a) {
   v
 }
 .add <- function(args) {
-  if (length(args) < 2L || .ctor_off()) return(.add_raw(args))
+  if (length(args) < 2L || .ctor_off() || !.ctor_plain(args)) return(.add_raw(args))
   .ctor_memo(paste(c("A", vapply(args, .subset2, "", "key")), collapse = "\002"), .add_raw(args))
 }
 .mul <- function(args, depth = 0L) {
-  if (length(args) < 2L || depth != 0L || .ctor_off()) return(.mul_raw(args, depth))
+  if (length(args) < 2L || depth != 0L || .ctor_off() || !.ctor_plain(args)) return(.mul_raw(args, depth))
   .ctor_memo(paste(c("M", vapply(args, .subset2, "", "key")), collapse = "\002"), .mul_raw(args, depth))
 }
 .pow <- function(b, e) {
-  if (!is_sym(b) || !is_sym(e) || .ctor_off()) return(.pow_raw(b, e))
+  if (!is_sym(b) || !is_sym(e) || .ctor_off() || !.ctor_plain(list(b, e))) return(.pow_raw(b, e))
   .ctor_memo(paste("P", .subset2(b, "key"), .subset2(e, "key"), sep = "\002"), .pow_raw(b, e))
 }
 
