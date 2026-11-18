@@ -182,7 +182,6 @@ test_that("a sign query on a large integer does not need primality", {
 })
 
 test_that("the constructor memo never returns arguments with other attributes", {
-  on.exit({ .ctor_state$off <- FALSE })
   x <- Symbol("x")
   e1 <- x^2 + 1
   x2 <- Symbol("x")
@@ -190,5 +189,18 @@ test_that("the constructor memo never returns arguments with other attributes", 
   e2 <- x2^2 + 1
   pw <- Filter(function(a) a$type == "Pow", e2$args)[[1L]]
   expect_identical(attr(pw$args[[1L]], "meta"), "second")
+  expect_identical(e1$key, e2$key)
+})
+
+test_that("the constructor memo checks attributes at every depth and stays on", {
+  y <- Symbol("y")
+  e1 <- (y^2 + 1) * 3
+  y2 <- Symbol("y")
+  attr(y2, "meta") <- "deep"
+  e2 <- (y2^2 + 1) * 3
+  find_y <- function(e) if (identical(e$type, "Symbol")) e else for (a in e$args) { r <- find_y(a); if (!is.null(r)) return(r) }
+  expect_identical(attr(find_y(e2), "meta"), "deep")
+  expect_null(attr(find_y((y^2 + 1) * 3), "meta"))
+  expect_false(.ctor_state$off)
   expect_identical(e1$key, e2$key)
 })
